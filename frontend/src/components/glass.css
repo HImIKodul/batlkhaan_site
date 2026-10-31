@@ -13,7 +13,7 @@
    (.mmri-shell-main), (3) content. Glass is transparent + reflective with minimal blur (3-6px); the whole
    environment (not the glass) takes the category family via --env-deep/main/hi. */
 :root{
-  --mmri-chrome:calc(var(--mmri-shell-height) + 60px);
+  --mmri-chrome:calc(var(--mmri-shell-height) + 100px);
   --env-deep:#4F7596;--env-main:#86A6C2;--env-hi:#C4DAEC;--env-shade:0%;
   --env-dark:#2E5073;--env-dark2:#284662;--env-white:#EEF6FF;
   --ambient-1:var(--env-main);
@@ -134,7 +134,7 @@ html[data-mmri-motion="reduced"] body::before,html[data-mmri-motion="reduced"] b
 /* Page sheet (layer 2): CLEAR glossy acrylic over the environment. Transparent body, 3px blur only, crisp bright rim,
    cyan inner edge, darker refracted lower edge, deep cast shadow, diagonal sheen. Pseudo-elements keep the filter
    from becoming a containing block for position:fixed popups inside <main>. */
-html body .mmri-shell-main{position:relative;z-index:0;margin:12px clamp(10px,5.5vw,92px) 40px;min-height:calc(100dvh - var(--mmri-chrome))}
+html body .mmri-shell-main{position:relative;z-index:0;margin:12px clamp(10px,5.5vw,92px) 80px;min-height:calc(100dvh - var(--mmri-chrome))}
 /* Liquid glass: nearly clear body (1px blur), thick refracting edge (bright top/left, cyan-pink dispersion along the lower
    right), glossy specular streaks and a wet light pooling in the lower-right. ::after is an iridescent 2px rim. */
 html body .mmri-shell-main::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:var(--radius-surface);pointer-events:none;
@@ -152,8 +152,7 @@ html body .mmri-shell-main::before{content:"";position:absolute;z-index:-1;inset
     inset -5px -7px 12px -5px rgba(110,210,255,.65),
     inset -2px -3px 0 rgba(255,160,225,.22),
     inset 0 0 38px rgba(255,255,255,.1),
-    10px 26px 46px -16px rgba(140,222,255,.34),0 44px 84px -26px rgba(170,235,255,.2),
-    4px 5px 0 rgba(30,60,96,.38),14px 18px 18px -4px rgba(8,24,48,.45),34px 46px 60px -14px rgba(6,20,44,.62),54px 72px 90px -28px rgba(120,200,255,.42)}
+    0 3px 4px rgba(4,12,30,.6),3px 14px 16px -2px rgba(4,12,30,.65),8px 30px 34px -6px rgba(4,12,30,.62),14px 52px 60px -12px rgba(4,12,30,.5),0 72px 70px -30px color-mix(in srgb,var(--env-hi) 75%,rgba(120,205,255,.6))}
 html body .mmri-shell-main::after{content:"";position:absolute;z-index:-1;inset:0;border-radius:var(--radius-surface);pointer-events:none;padding:2px;
   background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(150,230,255,.5) 22%,rgba(255,255,255,.08) 48%,rgba(255,170,230,.4) 76%,rgba(255,255,255,.9));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
@@ -173,7 +172,7 @@ html body .mmri-shell-main:has(.report-v3)::before{background:radial-gradient(90
   background:
     radial-gradient(80% 55% at 20% 0%,color-mix(in srgb,var(--domain-secondary) 55%,#fff) 0%,transparent 72%),
     linear-gradient(168deg,var(--domain-secondary) 0%,var(--domain-primary) 55%,var(--domain-deep) 125%);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.85),inset 2px 0 0 rgba(255,255,255,.35),inset -1px 0 0 rgba(0,0,0,.12),0 0 0 1px color-mix(in srgb,var(--domain-deep) 70%,transparent),3px 7px 0 0 color-mix(in srgb,var(--domain-deep) 78%,#000),10px 14px 10px -2px rgba(6,18,40,.42),22px 30px 34px -10px rgba(6,18,40,.5),10px 28px 30px -14px color-mix(in srgb,var(--domain-primary) calc(var(--tile-glow)*100%),transparent);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.85),inset 2px 0 0 rgba(255,255,255,.35),inset -1px 0 0 rgba(0,0,0,.12),0 0 0 1px color-mix(in srgb,var(--domain-deep) 55%,transparent),0 2px 3px rgba(6,18,40,.4),6px 12px 14px -4px rgba(6,18,40,.45),14px 28px 34px -12px rgba(6,18,40,.45),0 26px 30px -16px color-mix(in srgb,var(--domain-primary) calc(var(--tile-glow)*100%),transparent);
   transition:box-shadow .3s ease,border-color .3s ease,filter .3s ease}
 .cat-tile::before{content:"";position:absolute;z-index:0;inset:0 0 auto 0;height:46%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0))}
 .cat-tile{--tile-ink:#fff}
@@ -182,10 +181,10 @@ html body .mmri-shell-main:has(.report-v3)::before{background:radial-gradient(90
 .cat-tile__value b{font-size:clamp(40px,min(6dvh,5vw),76px);line-height:1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
 .cat-tile__value small{font-size:12px;line-height:1.2;font-weight:750;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
 /* No score yet: plain family colour made rich with light - a soft inner glow, a diagonal glass reflection and a faint lower
-   bloom. Hover only slides the reflection (no geometry change). */
-.cat-tile__value.is-empty{align-self:stretch;overflow:hidden;background:radial-gradient(70% 55% at 78% 92%,color-mix(in srgb,var(--domain-secondary) 55%,transparent),transparent 70%),radial-gradient(55% 40% at 22% 18%,rgba(255,255,255,.38),transparent 72%)}
-.cat-tile__value.is-empty::before{content:"";position:absolute;inset:-20% -40%;background:linear-gradient(112deg,transparent 38%,rgba(255,255,255,.34) 47%,rgba(255,255,255,.08) 54%,transparent 62%);background-size:220% 100%;background-position:100% 0;transition:background-position .9s var(--ease-smooth)}
-.cat-tile:hover .cat-tile__value.is-empty::before,.cat-tile:focus-visible .cat-tile__value.is-empty::before{background-position:0 0}
+   bloom. Hover only brightens the reflection (no geometry change). */
+.cat-tile__value.is-empty{align-self:stretch;justify-self:stretch;width:100%;height:100%;overflow:hidden;background:radial-gradient(70% 55% at 78% 92%,color-mix(in srgb,var(--domain-secondary) 55%,transparent),transparent 70%),radial-gradient(55% 40% at 22% 18%,rgba(255,255,255,.38),transparent 72%)}
+.cat-tile__value.is-empty::before{content:"";position:absolute;inset:0;background:linear-gradient(150deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.1) 28%,transparent 46%,transparent 100%);background-size:100% 100%;opacity:.9;transition:opacity .6s var(--ease-smooth)}
+.cat-tile:hover .cat-tile__value.is-empty::before,.cat-tile:focus-visible .cat-tile__value.is-empty::before{opacity:1}
 .cat-tile__label{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;flex:none;padding:0 12px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,244,255,.84));border-top:1px solid #fff;font-weight:750;line-height:1.25}
 .cat-tile:hover,.cat-tile:focus-visible{--tile-glow:.95;border-color:#fff;filter:brightness(1.06) saturate(1.08)}
 .cat-tile:focus-visible{outline:3px solid #fff;outline-offset:3px}
