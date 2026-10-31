@@ -1,0 +1,6 @@
+/** Step-6/6 final accepted 61,440-question integration target. */
+export const TARGET_METHODOLOGY_VERSION = process.env.MMRI_TARGET_METHODOLOGY_VERSION?.trim() || "3.0.4";
+export const TARGET_QUESTION_BANK_VERSION = process.env.MMRI_TARGET_QUESTION_BANK_VERSION?.trim() || "3.1.4";
+export const TARGET_QUESTION_BANK_ARRAY_SHA256 = process.env.MMRI_TARGET_QUESTION_BANK_ARRAY_SHA256?.trim() || "43eae5b831f0887fde16a729572b13b3ef7ab6a1a09fa7d0189c23e942d839cb";
+export const TARGET_METHODOLOGY_BUNDLE = process.env.MMRI_TARGET_METHODOLOGY_BUNDLE?.trim() || "methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json";
+export const TARGET_METHODOLOGY_BUNDLE_SHA256 = process.env.MMRI_TARGET_METHODOLOGY_BUNDLE_SHA256?.trim() || "aa5b2f844bb29249ff1ce6d38a44ad8aba9f8411c346aec30674e7511e287a3b";

@@ -1,0 +1,62 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+const require=createRequire(import.meta.url);
+let ts;try{ts=require('typescript')}catch{ts=require('/opt/nvm/versions/node/v22.16.0/lib/node_modules/typescript/lib/typescript.js')}
+const root=process.cwd();
+const read=(p)=>fs.readFileSync(path.join(root,p),'utf8');
+let passed=0;const checks=[];
+function ok(name,condition){checks.push({name,pass:!!condition});if(condition)passed++;}
+const schema=read('prisma/schema.prisma');
+const migration=read('prisma/migrations/20260912090000_step11_persistence_state_integrity/migration.sql');
+const engine=read('src/services/prisma-assessment-engine.ts');
+const api=read('src/api/app.ts');
+const query=read('src/api/services/query-service.ts');
+const helper=read('src/services/persistence-integrity.ts');
+const client=read('../frontend/src/api/client.ts');
+const inline=read('../frontend/src/components/AssessmentInline.tsx');
+const report=read('src/services/prisma-strategy-report-service.ts');
+
+for(const x of ['assessmentRevision','routingRevision','eventSequence','profileRevision','currentQuestionIssueId','resumeState','activeWriterLeaseId','writerLeaseExpiresAt','lastMaterializedAnswerEventSequence'])ok(`schema assessment field ${x}`,schema.includes(x));
+for(const x of ['model AnswerEvent {','model ResponseDraft {','model AssessmentStateSnapshot {','enum QuestionIssueStatus {','enum AssessmentSnapshotKind {'])ok(`schema primitive ${x}`,schema.includes(x));
+for(const x of ['@@unique([assessmentId, clientRequestId])','@@unique([assessmentId, eventSequence])','@@index([assessmentId, questionId, eventSequence])'])ok(`AnswerEvent event-chain constraint ${x}`,schema.includes(x));
+ok('issue lifecycle persisted',schema.includes('status       QuestionIssueStatus @default(ISSUED)')&&schema.includes('answeredAt   DateTime?'));
+ok('historical issue backfill migration',migration.includes('Backfill historical issue state')&&migration.includes("SET \"status\"='ANSWERED'"));
+ok('pause/resume audit enum repaired',schema.includes('ASSESSMENT_PAUSED')&&schema.includes('ASSESSMENT_RESUMED'));
+ok('writer lease 120s',helper.includes('WRITER_LEASE_TTL_MS = 120_000'));
+ok('heartbeat 30s',helper.includes('WRITER_LEASE_HEARTBEAT_MS = 30_000'));
+ok('optimistic revision guard',engine.includes('assertRevision(assessment.assessmentRevision, guard.expectedAssessmentRevision)'));
+ok('writer lease guard',engine.includes('assertWriterLease(assessment, writerLeaseId)'));
+ok('idempotency lookup before write',engine.indexOf('assessmentId_clientRequestId')<engine.indexOf('const answer = await tx.answer.create'));
+ok('immutable AnswerEvent before materialization writes',engine.indexOf('const answerEvent = await tx.answerEvent.create')<engine.indexOf('persistLiveCellMatrix(tx, assessmentId'));
+ok('AnswerEvent never updated/deleted after append',!engine.includes('answerEvent.update')&&!engine.includes('answerEvent.delete'));
+ok('draft consumed on accepted answer',engine.includes('tx.responseDraft.deleteMany({ where: terminal ? { assessmentId } : { assessmentId, questionIssueId: issue.id } })'));
+ok('issue marked answered',engine.includes('status: "ANSWERED", answeredAt: new Date()'));
+ok('current issue exact-match enforced',engine.includes('assessment.currentQuestionIssueId !== issue.id'));
+ok('single open issue issuance guard',engine.includes('Cannot issue another question while'));
+ok('canonical event is runtime evidence source',engine.indexOf('db.answerEvent.findMany')<engine.indexOf('db.answer.findMany'));
+ok('legacy pre-Step11 read compatibility explicit',engine.includes('Read-only compatibility for assessments created before PERSIST-v1.0-STEP11'));
+ok('terminal snapshot hash created',engine.includes('sha256Canonical(snapshotPayload)')&&engine.includes('assessmentStateSnapshot.create'));
+ok('terminal writer lease released',engine.includes('activeWriterLeaseId: terminal ? null : writerLeaseId'));
+ok('pause stores exact resume state',engine.includes('resumeState: { routingState: a.routingState, currentQuestionIssueId: a.currentQuestionIssueId }'));
+ok('resume restores validated issue',engine.includes('resumeQuestionIssueId = resume.currentQuestionIssueId ?? a.currentQuestionIssueId ?? null')&&engine.includes('issue.assessmentId !== assessmentId || issue.status !== "ISSUED"'));
+ok('draft server ACK route',api.includes('PUT","/api/v1/assessments/:assessmentId/draft'));
+ok('lease heartbeat route',api.includes('writer-lease/heartbeat'));
+ok('answer API requires idempotency/revision/issue',api.includes('clientRequestId, questionIssueId and expectedAssessmentRevision are required'));
+ok('resume payload exposes authoritative revisions',query.includes('assessmentRevision:a.assessmentRevision')&&query.includes('routingRevision:a.routingRevision')&&query.includes('eventSequence:a.eventSequence'));
+ok('resume payload restores draft',query.includes('draftRevision:draft.draftRevision'));
+ok('client writer id per browser tab',client.includes("sessionStorage.getItem(WRITER_KEY)"));
+ok('client sends writer header',client.includes("'X-MMRI-Writer-ID':writerId()"));
+ok('client answer sends request id',client.includes('clientRequestId:input.clientRequestId??requestId()'));
+ok('client autosave debounce 650ms',inline.includes('},650)'));
+ok('client lease heartbeat 30s',inline.includes('},30_000)'));
+ok('report reads frozen diagnosis snapshot',report.includes('prisma.diagnosisSnapshot.findUnique'));
+ok('report reads frozen strategy plan snapshot',report.includes('prisma.strategyPlanSnapshot.findUnique'));
+ok('report freezes report snapshot idempotently',report.includes('tx.reportSnapshot.upsert')||report.includes('tx.reportSnapshot.create'));
+ok('no silent methodology selection during assessment',engine.includes('this.cache.get(assessment.methodologyVersionId)'));
+
+const syntaxFiles=['src/services/persistence-integrity.ts','src/services/prisma-assessment-engine.ts','src/api/services/query-service.ts','src/api/app.ts','../frontend/src/api/client.ts','../frontend/src/components/AssessmentInline.tsx','../frontend/src/api/types.ts'];
+for(const f of syntaxFiles){const source=read(f);const out=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX},reportDiagnostics:true,fileName:f});const errs=(out.diagnostics??[]).filter(d=>d.category===ts.DiagnosticCategory.Error);ok(`typescript syntax ${f}`,errs.length===0);}
+const failed=checks.filter(x=>!x.pass);
+console.log(JSON.stringify({status:failed.length?'FAIL':'PASS',passed,total:checks.length,failed},null,2));
+if(failed.length)process.exit(1);

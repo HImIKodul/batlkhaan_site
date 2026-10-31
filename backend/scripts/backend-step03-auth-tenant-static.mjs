@@ -1,0 +1,34 @@
+import fs from 'node:fs';
+const read=p=>fs.readFileSync(p,'utf8');
+const app=read('src/api/app.ts');
+const access=read('src/api/auth/access.ts');
+const auth=read('src/api/auth/auth-service.ts');
+const cfg=read('src/api/config.ts');
+const pilot=read('src/pilot/pilot-service.ts');
+const calibration=read('src/calibration/calibration-service.ts');
+const migration=read('prisma/migrations/20261024130000_backend_auth_tenant_hardening/migration.sql');
+const verifier=read('src/verify-backend-auth-tenant-integrity.ts');
+const checks=[];const check=(name,ok)=>checks.push({name,pass:!!ok});
+
+check('assessment lookup is tenant scoped',access.includes('company: { memberships: { some: { userId, role: { in: [...allowed] as any } } } }')&&access.includes('throw notFound("Assessment not found")'));
+check('billing invoice lookup is tenant scoped',access.includes('billingInvoiceAccess')&&access.includes('billingInvoice.findFirst')&&access.includes('Billing invoice not found'));
+check('pilot enrollment lookup is tenant scoped',access.includes('pilotEnrollmentAccess')&&access.includes('pilotEnrollment.findFirst')&&access.includes('Pilot enrollment not found'));
+check('invoice routes authorize before object read',/billing\/invoices\/:invoiceId"[\s\S]{0,220}billingInvoiceAccess/.test(app)&&!/billing\/invoices\/:invoiceId"[\s\S]{0,140}billing\.getInvoice/.test(app.split('router.add("GET","/api/v1/billing/invoices/:invoiceId"')[1]?.split('});')[0]??''));
+check('pilot enrollment routes use tenant helper',(app.match(/pilotEnrollmentAccess\(/g)||[]).length===4);
+check('operator allowlist configured',cfg.includes('operatorEmails: Set<string>')&&cfg.includes('MMRI_OPERATOR_EMAILS')&&access.includes('requireOperator'));
+check('pilot management operator gated',(app.match(/requireOperator\(principal!,config\);/g)||[]).length>=15);
+check('calibration activation operator gated',/calibration\/proposals\/:proposalId\/activate[\s\S]{0,180}requireOperator/.test(app));
+check('membership mutation atomic',app.includes('/api/v1/companies/:companyId/members')&&app.includes('membership=await prisma.$transaction'));
+check('membership actor rechecked inside transaction',app.includes('const actor=await tx.companyMembership.findUnique'));
+check('inactive target users cannot be granted membership',app.includes('!user||user.status!=="ACTIVE"'));
+check('membership change audit is in transaction',app.includes('await tx.authAuditEvent.create')&&app.includes('eventType:"MEMBERSHIP_CHANGED"'));
+check('last owner application guard retained',app.includes('assertOwnerTransitionAllowed'));
+check('last owner database guard serialized',migration.includes('mmri_guard_last_company_owner')&&migration.includes('pg_advisory_xact_lock')&&migration.includes('A company must retain at least one OWNER'));
+check('pilot foreign IDs hidden',pilot.includes('pilotStudy.findFirst({where:{id:studyId,createdByUserId:userId}')&&!pilot.includes('Pilot study coordinator access required'));
+check('calibration foreign IDs hidden',calibration.includes('calibrationProposal.findFirst({where:{id:proposalId,OR:[')&&calibration.includes('findFirst({where:{id:proposalId,createdByUserId:userId}'));
+check('refresh replay invalidates access lineage',auth.includes('REFRESH_REPLAY')&&auth.includes('tokenVersion: { increment: 1 }'));
+check('connected DB verifier exists',verifier.includes("contract:'BACKEND-AUTH-TENANT-INTEGRITY-v1'")&&verifier.includes('companiesWithMembershipButNoOwner')&&verifier.includes('companiesWithoutActiveOwner'));
+
+const failed=checks.filter(x=>!x.pass);
+console.log(JSON.stringify({suite:'Backend completion Step 03/20 auth/tenant isolation',status:failed.length?'FAIL':'PASS',passed:checks.length-failed.length,total:checks.length,failed},null,2));
+if(failed.length)process.exit(1);
