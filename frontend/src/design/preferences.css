@@ -32,7 +32,7 @@ html[data-mmri-font-size="large"]{
    explicitly changes MMRI settings. */
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto!important}
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
 
 @media (forced-colors:active){

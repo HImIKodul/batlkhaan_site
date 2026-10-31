@@ -63,6 +63,16 @@ function sameNotices(a:ShellNotice[],b:ShellNotice[]){
 }
 function noticeTime(value?:string|null){const d=value?new Date(value):new Date();return Number.isNaN(d.getTime())?'':new Intl.DateTimeFormat('mn-MN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d)}
 
+/* The backend exposes no notification API: notices are derived from billing + assessments. Read/dismissed state is therefore
+   a per-browser preference (localStorage), keyed by company, and only hides/marks items locally. */
+type NoticeState={read:string[];dismissed:string[]};
+const noticeStateKey=()=>`mmri.notices.${session.companyId||'anon'}`;
+function loadNoticeState():NoticeState{
+ try{const v=JSON.parse(localStorage.getItem(noticeStateKey())||'null');if(v&&Array.isArray(v.read)&&Array.isArray(v.dismissed))return {read:v.read.slice(-200),dismissed:v.dismissed.slice(-200)}}catch{/* unavailable storage */}
+ return {read:[],dismissed:[]};
+}
+function saveNoticeState(state:NoticeState){try{localStorage.setItem(noticeStateKey(),JSON.stringify(state))}catch{/* unavailable storage */}}
+
 function MenuLink({route,icon,children,onNavigate}:{route:RouteName;icon:string;children:React.ReactNode;onNavigate:()=>void}){
  return <a role="menuitem" href={routeHref(route)} onClick={onNavigate}><Icon name={icon} size={17}/><span>{children}</span></a>;
 }
@@ -73,6 +83,11 @@ export function ShellHeader({route}:{route:RouteName}){
  const [noticeOpen,setNoticeOpen]=useState(false);
  const [notices,setNotices]=useState<ShellNotice[]>([]);
  const [noticesReady,setNoticesReady]=useState(false);
+ const [noticeState,setNoticeState]=useState<NoticeState>(()=>loadNoticeState());
+ const updateNoticeState=(fn:(s:NoticeState)=>NoticeState)=>setNoticeState(cur=>{const next=fn(cur);saveNoticeState(next);return next});
+
+ const visibleNotices=notices.filter(n=>!noticeState.dismissed.includes(n.id));
+ const unreadCount=visibleNotices.filter(n=>!noticeState.read.includes(n.id)).length;
  const [logoutBusy,setLogoutBusy]=useState(false);
  const [companyName,setCompanyName]=useState(()=>session.companyName||'');
  const headerRef=useRef<HTMLElement|null>(null);
@@ -135,6 +150,7 @@ export function ShellHeader({route}:{route:RouteName}){
   const publish=(rows:ShellNotice[])=>{
    if(!live)return;
    setNotices(current=>sameNotices(current,rows)?current:rows);
+   setNoticeState(loadNoticeState());
    setNoticesReady(true);
   };
   const run=async()=>{
@@ -214,8 +230,14 @@ export function ShellHeader({route}:{route:RouteName}){
    <div className="mmri-shell-actions">
     {loggedIn?<>
      <div className="mmri-notifications" ref={notificationRef}>
-      <button type="button" ref={notificationButtonRef} className="mmri-notification-trigger" aria-haspopup="dialog" aria-expanded={noticeOpen} aria-controls="mmri-notification-panel" aria-label={`Мэдэгдэл${notices.length?` — ${notices.length} шинэ`:''}`} onClick={()=>{setNoticeOpen(v=>!v);setAccountOpen(false)}}><Icon name="bell" size={30}/>{notices.length>0&&<span>{notices.length>9?'9+':notices.length}</span>}</button>
-      {noticeOpen&&<div ref={notificationPanelRef} id="mmri-notification-panel" className="mmri-notification-panel" role="dialog" aria-labelledby="mmri-notification-title" tabIndex={-1} aria-busy={!noticesReady||undefined}><header><strong id="mmri-notification-title">Мэдэгдэл</strong><small>{!noticesReady?'Шалгаж байна…':notices.length?`${notices.length} мэдээлэл`:'Шинэ мэдээлэл алга'}</small></header><div>{!noticesReady?<div className="mmri-notification-loading" role="status" aria-live="polite" aria-atomic="true"><span className="mmri-visually-hidden">Мэдэгдлийг шалгаж байна.</span>{[0,1,2].map(i=><span key={i} className="mmri-notification-loading__row" aria-hidden="true"><i/><b/><em/></span>)}</div>:notices.length?notices.map(item=><a key={item.id} href={item.kind==='report'?'#/report':'#/analysis'} onClick={()=>{if(item.kind==='report'&&item.areaId)sessionStorage.setItem(REPORT_AREA_KEY,item.areaId);setNoticeOpen(false)}}><span className={`mmri-notification-icon is-${item.kind}`}><Icon name={item.kind==='report'?'file':'check'} size={18}/></span><div><strong>{item.title}</strong><p>{item.detail}</p><small>{item.time}</small></div></a>):<p className="mmri-notification-empty">Төлбөр баталгаажих, оношилгоо дуусах, тайлан бэлэн болох үед энд харагдана.</p>}</div></div>}
+      <button type="button" ref={notificationButtonRef} className="mmri-notification-trigger" aria-haspopup="dialog" aria-expanded={noticeOpen} aria-controls="mmri-notification-panel" aria-label={`Мэдэгдэл${unreadCount?` — ${unreadCount} шинэ`:''}`} onClick={()=>{setNoticeOpen(v=>!v);setAccountOpen(false)}}><Icon name="bell" size={30}/>{unreadCount>0&&<span>{unreadCount>9?'9+':unreadCount}</span>}</button>
+      {noticeOpen&&<div ref={notificationPanelRef} id="mmri-notification-panel" className="mmri-notification-panel" role="dialog" aria-labelledby="mmri-notification-title" tabIndex={-1} aria-busy={!noticesReady||undefined}>
+       <header><div><strong id="mmri-notification-title">Мэдэгдэл</strong><small>{!noticesReady?'Шалгаж байна…':visibleNotices.length?`${unreadCount} уншаагүй · ${visibleNotices.length} нийт`:'Шинэ мэдээлэл алга'}</small></div><button type="button" className="mmri-notification-close" aria-label="Мэдэгдлийг хаах" onClick={()=>{setNoticeOpen(false);notificationButtonRef.current?.focus()}}><Icon name="close" size={18}/></button></header>
+       {visibleNotices.length>0&&<div className="mmri-notification-tools"><button type="button" disabled={unreadCount===0} onClick={()=>updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,...visibleNotices.map(n=>n.id)]))}))}>Бүгдийг уншсан болгох</button><button type="button" onClick={()=>updateNoticeState(s=>({...s,dismissed:Array.from(new Set([...s.dismissed,...visibleNotices.map(n=>n.id)]))}))}>Бүгдийг арилгах</button></div>}
+       <div className="mmri-notification-list">{!noticesReady?<div className="mmri-notification-loading" role="status" aria-live="polite" aria-atomic="true"><span className="mmri-visually-hidden">Мэдэгдлийг шалгаж байна.</span>{[0,1,2].map(i=><span key={i} className="mmri-notification-loading__row" aria-hidden="true"><i/><b/><em/></span>)}</div>:visibleNotices.length?visibleNotices.map(item=>{const unread=!noticeState.read.includes(item.id);return <div key={item.id} className={`mmri-notification-item${unread?' is-unread':' is-read'}`}>
+        <a href={item.kind==='report'?'#/report':'#/analysis'} onClick={()=>{if(item.kind==='report'&&item.areaId)sessionStorage.setItem(REPORT_AREA_KEY,item.areaId);updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,item.id]))}));setNoticeOpen(false)}}><span className={`mmri-notification-icon is-${item.kind}`}><Icon name={item.kind==='report'?'file':'check'} size={18}/></span><div><strong>{item.title}{unread&&<i className="mmri-notification-dot"><span className="mmri-visually-hidden"> (уншаагүй)</span></i>}</strong><p>{item.detail}</p><small>{item.time}</small></div></a>
+        <div className="mmri-notification-item__actions">{unread&&<button type="button" aria-label={`${item.title} — уншсан болгох`} onClick={()=>updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,item.id]))}))}>Уншсан</button>}<button type="button" aria-label={`${item.title} — арилгах`} onClick={()=>updateNoticeState(s=>({...s,dismissed:Array.from(new Set([...s.dismissed,item.id]))}))}><Icon name="close" size={16}/></button></div>
+       </div>}):<p className="mmri-notification-empty">Төлбөр баталгаажих, оношилгоо дуусах, тайлан бэлэн болох үед энд харагдана.</p>}</div></div>}
      </div>
      <div className="mmri-account" ref={accountRef}>
       <button type="button" ref={accountButtonRef} className="mmri-account-trigger" aria-label="Миний хэсэг" aria-haspopup="menu" aria-controls="mmri-account-menu" aria-expanded={accountOpen} onKeyDown={openAccountFromKeyboard} onClick={()=>setAccountOpen((value:boolean)=>!value)}>

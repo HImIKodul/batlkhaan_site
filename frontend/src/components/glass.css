@@ -31,7 +31,14 @@
   --radius-control:12px;--radius-button:14px;--radius-card:22px;--radius-surface:30px;--radius-modal:32px;
   --blur-clear:1px;--blur-regular:3px;--blur-content:3px;
   --border-light:rgba(255,255,255,.42);--border-strong:rgba(255,255,255,.62);--border-refract:rgba(20,45,70,.16);
-  --shadow-contact:1px 4px 9px rgba(8,22,42,.3);--shadow-ambient:6px 20px 36px -8px rgba(8,22,42,.4);
+  /* Physical elevation (one model for every floating layer): tight CONTACT shadow, offset down-right AMBIENT shadow, wide feathered
+     FAR shadow, and a faint UNDERSIDE reflection of the environment light. Floor -> air gap -> glass sheet -> air gap -> object. */
+  --elev-reflect:color-mix(in srgb,var(--env-hi) 55%,transparent);
+  --shadow-contact:1px 3px 6px rgba(8,22,42,.36),3px 8px 12px -3px rgba(8,22,42,.3);
+  --shadow-ambient:8px 22px 36px -10px rgba(8,22,42,.42),18px 40px 64px -22px rgba(8,22,42,.34),6px 26px 34px -18px var(--elev-reflect);
+  --elev-object:var(--shadow-contact),var(--shadow-ambient);
+  --elev-object-hover:var(--shadow-contact),8px 22px 36px -10px rgba(8,22,42,.46),18px 40px 64px -22px rgba(8,22,42,.36),6px 28px 38px -16px color-mix(in srgb,var(--env-hi) 85%,transparent);
+  --elev-overlay:2px 6px 10px rgba(4,12,30,.42),14px 34px 54px -14px rgba(4,12,30,.62),30px 64px 96px -30px rgba(4,12,30,.5),8px 34px 44px -22px var(--elev-reflect);
   --glass-radius:30px;--glass-border-highlight:rgba(255,255,255,.95);--glass-inner-highlight:rgba(255,255,255,.8);
   --glass-shadow-deep:rgba(4,12,30,.5);
   --glass-edge:rgba(255,255,255,.62);
@@ -152,6 +159,9 @@ html body .mmri-shell-main::after{content:"";position:absolute;z-index:-1;inset:
 /* Content pages (everything except the airy Homepage + Diagnosis, which carry their own coloured tiles/scrim) put white
    text straight on the sheet, so the sheet gets a dark-glass tint there: the liquid-glass rim/specular stay, text stays >= 4.5:1. */
 html body .mmri-shell-main:not(:has(.mmri-home2,.diagnosis-square-page))::before{background:radial-gradient(90% 38% at 8% 0%,rgba(255,255,255,.22),transparent 62%),radial-gradient(60% 40% at 100% 100%,rgba(150,225,255,.16),transparent 70%),linear-gradient(112deg,rgba(255,255,255,.12) 0,transparent 24%),rgba(12,36,68,.84)}
+/* Report: the selected category must stay clearly visible THROUGH the sheet - a category-coloured, less milky tint that is still dark
+   enough for white text (the old neutral navy tint washed the category out). */
+html body .mmri-shell-main:has(.report-v3)::before{background:radial-gradient(90% 38% at 8% 0%,rgba(255,255,255,.24),transparent 62%),radial-gradient(70% 50% at 100% 100%,color-mix(in srgb,var(--domain-secondary) 40%,transparent),transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--domain-primary) 46%,transparent),color-mix(in srgb,var(--domain-deep) 62%,transparent)),rgba(6,16,34,.4)}
 @media (max-width:767px){html body .mmri-shell-main{margin:10px 8px 14px}html body .mmri-shell-main::before,html body .mmri-shell-main::after{border-radius:24px}}
 
 /* .cat-tile: THE category component (homepage tiles + Diagnosis cards). Rounded rectangle, saturated family gradient with a
@@ -165,14 +175,17 @@ html body .mmri-shell-main:not(:has(.mmri-home2,.diagnosis-square-page))::before
   box-shadow:inset 0 2px 0 rgba(255,255,255,.85),inset 2px 0 0 rgba(255,255,255,.35),inset -1px 0 0 rgba(0,0,0,.12),0 0 0 1px color-mix(in srgb,var(--domain-deep) 70%,transparent),3px 7px 0 0 color-mix(in srgb,var(--domain-deep) 78%,#000),10px 14px 10px -2px rgba(6,18,40,.42),22px 30px 34px -10px rgba(6,18,40,.5),10px 28px 30px -14px color-mix(in srgb,var(--domain-primary) calc(var(--tile-glow)*100%),transparent);
   transition:box-shadow .3s ease,border-color .3s ease,filter .3s ease}
 .cat-tile::before{content:"";position:absolute;z-index:0;inset:0 0 auto 0;height:46%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0))}
-.cat-tile__art{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:grid;place-items:center;padding:12px}
-.cat-tile__art svg{height:100%;max-height:96px;width:auto;aspect-ratio:1}
+.cat-tile{--tile-ink:#fff}
+.cat-tile[data-area=finance]{--tile-ink:#2B1A00}.cat-tile[data-area=operations]{--tile-ink:#022B1F}
+.cat-tile__value{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:grid;place-content:center;justify-items:center;gap:2px;padding:12px;color:var(--tile-ink);border:0;background:none;font:inherit}
+.cat-tile__value b{font-size:clamp(40px,min(6dvh,5vw),76px);line-height:1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+.cat-tile__value small{font-size:12px;line-height:1.2;font-weight:750;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+.cat-tile__dash{display:block;width:34px;height:4px;border-radius:4px;background:color-mix(in srgb,var(--tile-ink) 38%,transparent)}
 .cat-tile__label{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;flex:none;padding:0 12px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,244,255,.84));border-top:1px solid #fff;font-weight:750;line-height:1.25}
 .cat-tile:hover,.cat-tile:focus-visible{--tile-glow:.95;border-color:#fff;filter:brightness(1.06) saturate(1.08)}
 .cat-tile:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .cat-tile:active{--tile-glow:.4}
 .cat-tile.is-selected{--tile-glow:1;border-color:#fff}
-.cat-tile__score{position:absolute;top:10px;right:10px;display:grid;place-items:center;min-width:34px;height:34px;padding:0 8px;border-radius:12px;background:rgba(255,255,255,.92);color:var(--domain-deep);font-size:16px;font-variant-numeric:tabular-nums}
 
 /* Guide buttons (reference_blue_buttons.png): long rectangular slabs of saturated royal-blue glass. Anatomy: bright cyan-white
    rim (brightest top-left), lighter blue lower lip, a solid dark-blue extruded edge = thickness, then a dark contact shadow
@@ -256,7 +269,7 @@ body .priority-advisory-head span,
 body .priority-register-summary p{color:#fff}
 body :is(.page-heading,.diagnosis-square-head,.priority-advisory-head,.priority-register-head,.technical-settings>header,.account-payment-history>header,.company-detail-editor>header,.profile-onboarding>header) :is(h1,p,b,span){text-shadow:none}
 .diagnosis-square-head__title{text-shadow:none}
-body .auth__message h1 em{color:rgba(255,255,255,.82)}
+body .auth__message h1 em{color:#DCEFFF}
 body .auth__proof li{background:linear-gradient(150deg,rgba(255,255,255,.18),rgba(255,255,255,.06));border-color:rgba(255,255,255,.4);outline:0}
 body .auth__proof b,
 body .auth__proof span{color:#fff}
@@ -268,4 +281,12 @@ body .auth__proof span{color:#fff}
    itself is never blurred. */
 html body .mmri-notification-panel,html body .mmri-account-menu{color:#fff;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(10,28,56,.9);
   -webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);border:1px solid rgba(255,255,255,.5);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),0 4px 8px rgba(4,12,30,.4),0 26px 44px -10px rgba(4,12,30,.6)}
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),var(--elev-overlay)}
+
+/* Entrance motion (one-shot, restrained). Reduced-motion users get the final state immediately via design/preferences.css. */
+@keyframes mmri-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes mmri-sweep{from{transform:translateX(-130%) skewX(-18deg)}to{transform:translateX(260%) skewX(-18deg)}}
+.mmri-enter{animation:mmri-rise .75s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--enter-delay,0s)}
+/* Specular sweep: a single soft light pass across a glass object after it appears. */
+.mmri-sweep{position:relative;overflow:hidden}
+.mmri-sweep::after{content:"";position:absolute;z-index:2;top:0;bottom:0;left:0;width:34%;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-130%) skewX(-18deg);animation:mmri-sweep 1.6s ease-out 1s 1 both}

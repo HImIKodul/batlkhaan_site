@@ -222,18 +222,16 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  if(!question)return <section className="mmri-questionnaire" aria-label={modeText}><div className="mmri-questionnaire__empty"><StatusBadge tone={actionError?'danger':'neutral'}>{actionError?'Ачаалж чадсангүй':'Асуулт хүлээгдэж байна'}</StatusBadge><h2>{actionError||'Одоогоор нээлттэй асуулт алга.'}</h2><p>Оношилгооны төлөвийг дахин шалгаж үргэлжлүүлнэ үү.</p><Button variant="secondary" onClick={load}>Дахин шалгах</Button></div></section>;
 
  return <section className="mmri-questionnaire" aria-label={modeText}>
-  <header className="mmri-questionnaire__session">
-   <div className="mmri-questionnaire__session-copy"><span>{modeText}</span><strong>Асуулт {questionNo} / {expectedTotal}</strong><small>Дасан зохицох оношилгоо шаардлагатай мэдээлэл бүрдвэл дээд хязгаараас өмнө дуусч болно.</small></div>
-   <div className="mmri-questionnaire__session-actions">
-    {!online?<StatusBadge tone="warning">Интернетгүй</StatusBadge>:draftState==='saving'?<SaveStatus state="saving"/>:draftState==='saved'?<SaveStatus state="saved"/>:draftState==='error'?<SaveStatus state="error"/>:<span className="mmri-questionnaire__autosave">Автоматаар хадгална</span>}
-    <Button variant="ghost" size="compact" disabled={busy||!online} loading={pausing} onClick={()=>void pause()}>Хадгалаад гарах</Button>
+  <header className="mmri-questionnaire__top">
+   <div className="mmri-questionnaire__top-row">
+    <strong className="mmri-questionnaire__count">Асуулт {questionNo}<span> / {expectedTotal}</span></strong>
+    <div className="mmri-questionnaire__session-actions">
+     {!online?<StatusBadge tone="warning">Интернетгүй</StatusBadge>:draftState==='saving'?<SaveStatus state="saving"/>:draftState==='saved'?<SaveStatus state="saved"/>:draftState==='error'?<SaveStatus state="error"/>:null}
+     <Button variant="ghost" size="compact" disabled={busy||!online} loading={pausing} onClick={()=>void pause()}>Хадгалаад гарах</Button>
+    </div>
    </div>
-  </header>
-
-  <div className="mmri-questionnaire__progress" aria-label="Оношилгооны явц">
-   <div className="mmri-questionnaire__progress-copy"><span><b>{answered}/{expectedTotal}</b> хариулсан · <b>{sessionProgress}%</b></span><small>Шаардлагатай мэдээлэл бүрдвэл тооноос өмнө дуусч болно.</small></div>
    <ProgressBar value={sessionProgress} label={`Оношилгооны явц ${sessionProgress} хувь`}/>
-  </div>
+  </header>
 
   {resumed&&<div className="mmri-questionnaire__resume" role="status"><span aria-hidden="true">✓</span><div><strong>Өмнөх явцаас үргэлжлүүллээ</strong><p>Өмнө хадгалсан хариултууд хэвээр байна.</p></div></div>}
   {!online&&<div className="mmri-questionnaire__network" role="alert"><strong>Интернет холболт тасарсан байна.</strong><span>Одоогийн сонголтыг серверт илгээх боломжгүй. Холболт сэргэх хүртэл энэ хуудсыг хаахгүй байгаарай.</span></div>}
@@ -241,7 +239,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
   <form className="mmri-questionnaire__form" key={question.id} onSubmit={(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();void submit()}}>
    <div className="mmri-questionnaire__question-head">
     {question.contextMn&&<span className="mmri-questionnaire__context">{question.contextMn}</span>}
-    <span className="mmri-questionnaire__eyebrow">Таны байгууллагын бодит байдалд хамгийн ойр хариултыг сонгоно уу.</span>
+    <span className="mmri-questionnaire__eyebrow">Хамгийн ойр хариултыг сонгоно уу.</span>
     <h1 ref={questionTitleRef} tabIndex={-1}>{displaySentence(question.textMn)}</h1>
    </div>
 
@@ -258,8 +256,9 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    {actionError&&<div className="mmri-questionnaire__error" role="alert"><strong>Үйлдлийг гүйцэтгэж чадсангүй.</strong><span>{actionError}</span></div>}
 
    <footer className="mmri-questionnaire__actions">
-    <Button type="button" variant="secondary" disabled={busy||answered<=0||!online} loading={rewinding} onClick={()=>void goBack()}>Буцах</Button>
-    <div className="mmri-questionnaire__primary-action"><span>{answer===null?'Үргэлжлүүлэхийн тулд нэг хариулт сонгоно уу.':'Сонгосон хариултыг баталгаажуулж дараагийн асуулт руу шилжинэ.'}</span><Button type="submit" size="touch" disabled={answer===null||busy||!online} loading={submitting}>Хариултаа баталгаажуулах</Button></div>
+    <Button type="button" variant="ghost" className="is-back" disabled={busy||answered<=0||!online} loading={rewinding} onClick={()=>void goBack()}>‹ Буцах</Button>
+    <Button type="button" variant="secondary" disabled={answer===null||busy||!online} onClick={()=>void saveDraftNow(answer)}>Хадгалах</Button>
+    <Button type="submit" size="touch" className="is-next" disabled={answer===null||busy||!online} loading={submitting}>Үргэлжлүүлэх ›</Button>
    </footer>
   </form>
  </section>

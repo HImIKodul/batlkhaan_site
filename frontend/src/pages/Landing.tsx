@@ -1,7 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import { AppShell,go } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { Glyph } from '../components/Glyphs';
 import { useAmbientEnvironment } from '../design/environment';
 import { api,session } from '../api/client';
 import { displayScore,isTerminal } from '../api/types';
@@ -24,8 +23,8 @@ const guideTone={a:'#EAF6FF',b:'#8CCBFF'};
 const tileOrder:BusinessAreaId[]=['marketing','it','finance','people','operations'];
 const guideColors:Record<GuideId,{a:string;b:string}>={about:guideTone,diagnosis:guideTone,result:guideTone,payment:guideTone};
 const guideStyle=(id:GuideId)=>({'--domain-primary':guideColors[id].a,'--domain-secondary':guideColors[id].b,'--glyph-a':guideColors[id].a,'--glyph-b':guideColors[id].b} as React.CSSProperties);
-function GuideTileIcon({guide}:{guide:Guide}){
- return <span className="mmri-home2__guide-visual" aria-hidden="true"><Glyph name={guide.id} size={150} light ink={guideColors[guide.id].a}/></span>;
+function GuideTileNo({n}:{n:number}){
+ return <span className="mmri-home2__guide-no" aria-hidden="true">{String(n).padStart(2,'0')}</span>;
 }
 
 function StepArrow(){return <span className="mmri-guide2__arrow" aria-hidden="true"><Icon name="arrow" size={22}/></span>}
@@ -145,15 +144,15 @@ export default function Landing(){
        onMouseEnter={()=>setPreviewArea(id)} onMouseLeave={()=>setPreviewArea(null)} onFocus={()=>setPreviewArea(id)} onBlur={()=>setPreviewArea(null)}
        onClick={()=>{if(has){sessionStorage.setItem(REPORT_AREA_KEY,id);go('report')}else{sessionStorage.setItem('business:billingArea',id);sessionStorage.setItem('business:billingMode','first');go('billing')}}}
        aria-label={has?`${area.name} — оноо ${Math.round(Number(score))}`:area.name}>
-        <span className="cat-tile__art" aria-hidden="true"><Glyph name={id} size={110} light ink={palette.deep}/>{has&&<b className="cat-tile__score">{Math.round(Number(score))}</b>}</span>
+        <span className="cat-tile__value" aria-hidden="true">{has?<><b>{Math.round(Number(score))}</b><small>оноо</small></>:<i className="cat-tile__dash"/>}</span>
         <span className="cat-tile__label">{area.name}</span>
       </button>})}
     </section>
    </div>
 
    <nav className="mmri-home2__guides" aria-label="BUSINESSMMRI гарын авлага">
-    {guides.map(g=><button type="button" key={g.id} className={`mmri-home2__guide glass-clear is-${g.id}`} style={guideStyle(g.id)} onClick={e=>{guideTriggerRef.current=e.currentTarget;setOpen(g.id)}} aria-haspopup="dialog" aria-expanded={open===g.id} aria-controls={open===g.id?'mmri-guide2-dialog':undefined} aria-label={g.title}>
-      <GuideTileIcon guide={g}/><span className="mmri-home2__guide-title">{g.short}</span>
+    {guides.map((g,gi)=><button type="button" key={g.id} className={`mmri-home2__guide glass-clear is-${g.id}`} style={guideStyle(g.id)} onClick={e=>{guideTriggerRef.current=e.currentTarget;setOpen(g.id)}} aria-haspopup="dialog" aria-expanded={open===g.id} aria-controls={open===g.id?'mmri-guide2-dialog':undefined} aria-label={g.title}>
+      <GuideTileNo n={gi+1}/><span className="mmri-home2__guide-title">{g.short}</span>
     </button>)}
    </nav>
   </main>
