@@ -33,6 +33,7 @@
   --border-light:rgba(255,255,255,.42);--border-strong:rgba(255,255,255,.62);--border-refract:rgba(20,45,70,.16);
   /* Physical elevation (one model for every floating layer): tight CONTACT shadow, offset down-right AMBIENT shadow, wide feathered
      FAR shadow, and a faint UNDERSIDE reflection of the environment light. Floor -> air gap -> glass sheet -> air gap -> object. */
+  --ease-smooth:cubic-bezier(.22,1,.36,1);
   --elev-reflect:color-mix(in srgb,var(--env-hi) 55%,transparent);
   --shadow-contact:1px 3px 6px rgba(8,22,42,.36),3px 8px 12px -3px rgba(8,22,42,.3);
   --shadow-ambient:8px 22px 36px -10px rgba(8,22,42,.42),18px 40px 64px -22px rgba(8,22,42,.34),6px 26px 34px -18px var(--elev-reflect);
@@ -180,7 +181,11 @@ html body .mmri-shell-main:has(.report-v3)::before{background:radial-gradient(90
 .cat-tile__value{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:grid;place-content:center;justify-items:center;gap:2px;padding:12px;color:var(--tile-ink);border:0;background:none;font:inherit}
 .cat-tile__value b{font-size:clamp(40px,min(6dvh,5vw),76px);line-height:1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
 .cat-tile__value small{font-size:12px;line-height:1.2;font-weight:750;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
-.cat-tile__dash{display:block;width:34px;height:4px;border-radius:4px;background:color-mix(in srgb,var(--tile-ink) 38%,transparent)}
+/* No score yet: plain family colour made rich with light - a soft inner glow, a diagonal glass reflection and a faint lower
+   bloom. Hover only slides the reflection (no geometry change). */
+.cat-tile__value.is-empty{align-self:stretch;overflow:hidden;background:radial-gradient(70% 55% at 78% 92%,color-mix(in srgb,var(--domain-secondary) 55%,transparent),transparent 70%),radial-gradient(55% 40% at 22% 18%,rgba(255,255,255,.38),transparent 72%)}
+.cat-tile__value.is-empty::before{content:"";position:absolute;inset:-20% -40%;background:linear-gradient(112deg,transparent 38%,rgba(255,255,255,.34) 47%,rgba(255,255,255,.08) 54%,transparent 62%);background-size:220% 100%;background-position:100% 0;transition:background-position .9s var(--ease-smooth)}
+.cat-tile:hover .cat-tile__value.is-empty::before,.cat-tile:focus-visible .cat-tile__value.is-empty::before{background-position:0 0}
 .cat-tile__label{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;flex:none;padding:0 12px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,244,255,.84));border-top:1px solid #fff;font-weight:750;line-height:1.25}
 .cat-tile:hover,.cat-tile:focus-visible{--tile-glow:.95;border-color:#fff;filter:brightness(1.06) saturate(1.08)}
 .cat-tile:focus-visible{outline:3px solid #fff;outline-offset:3px}
@@ -284,9 +289,12 @@ html body .mmri-notification-panel,html body .mmri-account-menu{color:#fff;backg
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),var(--elev-overlay)}
 
 /* Entrance motion (one-shot, restrained). Reduced-motion users get the final state immediately via design/preferences.css. */
-@keyframes mmri-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes mmri-rise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes mmri-sweep{from{transform:translateX(-130%) skewX(-18deg)}to{transform:translateX(260%) skewX(-18deg)}}
 .mmri-enter{animation:mmri-rise .75s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--enter-delay,0s)}
 /* Specular sweep: a single soft light pass across a glass object after it appears. */
 .mmri-sweep{position:relative;overflow:hidden}
 .mmri-sweep::after{content:"";position:absolute;z-index:2;top:0;bottom:0;left:0;width:34%;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-130%) skewX(-18deg);animation:mmri-sweep 1.6s ease-out 1s 1 both}
+
+/* Smooth scrolling + calmer scroll chaining; reduced-motion users get instant scrolling (design/preferences.css). */
+html{scroll-behavior:smooth;overscroll-behavior-y:none}

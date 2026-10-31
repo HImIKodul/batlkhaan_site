@@ -21,7 +21,7 @@ const stateMeta:Record<DomainState,{label:string;detail:string;icon:string}>={
 
 /** Category identity = colour only. The surface carries the score (or progress) as large type. */
 function SurfaceValue({value,caption}:{value:number|null;caption?:string}){
- return <span className="cat-tile__value" aria-hidden="true">{value===null?<i className="cat-tile__dash"/>:<><b>{Math.round(value)}</b>{caption&&<small>{caption}</small>}</>}</span>;
+ return <span className={`cat-tile__value${value===null?' is-empty':''}`} aria-hidden="true">{value!==null&&<><b>{Math.round(value)}</b>{caption&&<small>{caption}</small>}</>}</span>;
 }
 
 /** Status = one small pill (top-left of the card): coloured dot + state name. */

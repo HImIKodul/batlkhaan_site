@@ -144,7 +144,7 @@ export default function Landing(){
        onMouseEnter={()=>setPreviewArea(id)} onMouseLeave={()=>setPreviewArea(null)} onFocus={()=>setPreviewArea(id)} onBlur={()=>setPreviewArea(null)}
        onClick={()=>{if(has){sessionStorage.setItem(REPORT_AREA_KEY,id);go('report')}else{sessionStorage.setItem('business:billingArea',id);sessionStorage.setItem('business:billingMode','first');go('billing')}}}
        aria-label={has?`${area.name} — оноо ${Math.round(Number(score))}`:area.name}>
-        <span className="cat-tile__value" aria-hidden="true">{has?<><b>{Math.round(Number(score))}</b><small>оноо</small></>:<i className="cat-tile__dash"/>}</span>
+        <span className={`cat-tile__value${has?'':' is-empty'}`} aria-hidden="true">{has&&<><b>{Math.round(Number(score))}</b><small>оноо</small></>}</span>
         <span className="cat-tile__label">{area.name}</span>
       </button>})}
     </section>
