@@ -1,0 +1,31 @@
+/* Shared MMRI buttons — one control geometry/material contract. */
+.mmri-button{
+ display:inline-flex;align-items:center;justify-content:center;gap:var(--mmri-space-2);
+ min-height:var(--mmri-control-height-default);padding:0 20px;
+ border:1px solid transparent;border-radius:999px;
+ font:inherit;font-size:var(--mmri-type-compact-size);font-weight:700;letter-spacing:.02em;
+ cursor:pointer;text-decoration:none;transform:none;white-space:nowrap;
+ transition:filter .3s ease,background .3s ease,border-color .3s ease,box-shadow .3s ease,color .3s ease,opacity .3s ease
+}
+.mmri-button--compact{min-height:var(--mmri-control-height-compact);padding:0 14px;font-size:var(--mmri-type-meta-size)}
+.mmri-button--touch{min-height:var(--mmri-control-height-touch)}
+.mmri-button--full{width:100%}
+/* Primary = the same cobalt glass family as the guides/CTA: bright rim, glossy top, lower lip, cast shadow down-right. */
+.mmri-button--primary{background:radial-gradient(70% 100% at 10% 0%,rgba(140,200,255,.5),transparent 70%),linear-gradient(172deg,#2F6FF0,#1650DC 50%,#0A32A8);color:#fff;border-color:rgba(190,230,255,.9);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -5px 7px -3px rgba(110,190,255,.6),2px 4px 0 #08205F,6px 10px 12px -3px rgba(0,8,40,.45)}
+.mmri-button--primary:hover:not(:disabled){filter:brightness(1.1) saturate(1.05);border-color:rgba(255,255,255,.8)}
+.mmri-button--primary:active:not(:disabled){filter:brightness(.95)}
+.mmri-button--secondary{background:rgba(10,30,60,.55);color:#fff;border-color:rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.4);-webkit-backdrop-filter:blur(3px) saturate(125%);backdrop-filter:blur(3px) saturate(125%)}
+.mmri-button--secondary:hover:not(:disabled){background:rgba(10,30,60,.72);border-color:rgba(255,255,255,.85)}
+.mmri-button--ghost{background:transparent;color:var(--mmri-color-accent)}
+.mmri-button--ghost:hover:not(:disabled){background:rgba(120,140,255,.16)}
+.mmri-button--danger{background:linear-gradient(180deg,#EF4444,#B91C1C);border-color:rgba(255,255,255,.4);color:#fff}
+.mmri-button--danger:hover:not(:disabled){background:linear-gradient(180deg,#F25757,#C42222)}
+.mmri-button:disabled{opacity:.6;filter:saturate(.8);cursor:not-allowed;box-shadow:none}
+.mmri-button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.mmri-button svg{flex:none}
+.mmri-button__spinner{width:var(--mmri-control-spinner-size);height:var(--mmri-control-spinner-size);border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:mmri-spin .8s linear infinite}
+@keyframes mmri-spin{to{transform:rotate(360deg)}}
+
+@media (max-width:767px){
+ .mmri-button:not(.mmri-button--compact){min-height:var(--mmri-touch-target-min)}
+}

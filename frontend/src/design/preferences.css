@@ -1,0 +1,42 @@
+/* ============================================================================
+   MMRI User Preferences (text size + system accessibility only)
+   This is the single intentional preference layer. It consumes the data-mmri-*
+   attributes written by Settings/App and must stay last in the CSS import list.
+   It is not a repair/override dump: only user-selected accessibility/theme modes
+   belong here.
+   ============================================================================ */
+
+/* Type scale — drive the shared type tokens rather than zooming the page. */
+html[data-mmri-font-size="small"]{
+  --mmri-type-display-public-size:54px;--mmri-type-display-public-line:59px;
+  --mmri-type-display-product-size:40px;--mmri-type-display-product-line:46px;
+  --mmri-type-page-size:33px;--mmri-type-page-line:39px;
+  --mmri-type-section-size:22px;--mmri-type-section-line:30px;
+  --mmri-type-body-large-size:17px;--mmri-type-body-large-line:27px;
+  --mmri-type-body-size:15px;--mmri-type-body-line:24px;
+  --mmri-type-compact-size:14px;--mmri-type-compact-line:21px;
+  --mmri-type-meta-size:12px;--mmri-type-meta-line:17px;
+}
+html[data-mmri-font-size="large"]{
+  --mmri-type-display-public-size:66px;--mmri-type-display-public-line:70px;
+  --mmri-type-display-product-size:48px;--mmri-type-display-product-line:54px;
+  --mmri-type-page-size:40px;--mmri-type-page-line:46px;
+  --mmri-type-section-size:27px;--mmri-type-section-line:35px;
+  --mmri-type-body-large-size:20px;--mmri-type-body-large-line:30px;
+  --mmri-type-body-size:18px;--mmri-type-body-line:28px;
+  --mmri-type-compact-size:16px;--mmri-type-compact-line:24px;
+  --mmri-type-meta-size:14px;--mmri-type-meta-line:20px;
+}
+
+/* Step 8/10 — system accessibility preferences must work even before a user
+   explicitly changes MMRI settings. */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+@media (forced-colors:active){
+  :root{--mmri-glass-bg:Canvas;--mmri-glass-bg-strong:Canvas;--mmri-glass-bg-overlay:Canvas;--mmri-glass-border:CanvasText;--mmri-glass-edge:CanvasText;--mmri-color-border:CanvasText;--mmri-color-border-strong:CanvasText}
+  :where(a,button,input,select,textarea,summary,[role=tab],[role=menuitem],[role=option],[tabindex]):focus-visible{outline:3px solid Highlight!important;outline-offset:3px!important}
+  :where(.mmri-glass,.mmri-surface,.mmri-card){forced-color-adjust:auto;box-shadow:none!important}
+}

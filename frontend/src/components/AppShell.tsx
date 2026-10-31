@@ -1,0 +1,283 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Icon } from './Icon';
+import { api, session } from '../api/client';
+import { isTerminal } from '../api/types';
+import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
+import { REPORT_AREA_KEY,isTestBusiness } from '../data/experience';
+
+export type RouteName='home'|'login'|'billing'|'analysis'|'profile'|'assessment'|'results'|'priorities'|'report'|'settings'|'states';
+
+const analysisRoutes=new Set<RouteName>(['analysis','assessment','results','priorities']);
+const primaryNav:[RouteName,string][]=[['home','Нүүр'],['analysis','Оношилгоо'],['report','Тайлан']];
+
+const domainThemeRoutes=new Set<RouteName>(['billing','assessment','results','priorities','report']);
+const domainThemeIds=new Set<BusinessAreaId>(['it','marketing','finance','people','operations']);
+function shellDomainForRoute(route:RouteName):BusinessAreaId|null{
+ if(!domainThemeRoutes.has(route))return null;
+ let raw='';
+ if(route==='billing')raw=sessionStorage.getItem('business:billingArea')||'';
+ else if(route==='assessment')raw=sessionStorage.getItem('business:testArea')||sessionStorage.getItem(REPORT_AREA_KEY)||'';
+ else raw=sessionStorage.getItem(REPORT_AREA_KEY)||'';
+ return domainThemeIds.has(raw as BusinessAreaId)?raw as BusinessAreaId:null;
+}
+
+export function routeHref(route:RouteName){
+ if(route==='home')return '#/';
+ if(route==='login')return '#/login';
+ if(route==='report')return '#/report';
+ if(route==='billing')return '#/billing';
+ if(route==='assessment')return '#/questions';
+ if(route==='results')return '#/results';
+ const view:Partial<Record<RouteName,string>>={
+  analysis:'diagnosis',profile:'company',priorities:'priorities',settings:'account',states:'states'
+ };
+ const v=view[route]??'diagnosis';
+ return v==='diagnosis'?'#/analysis':`#/analysis?view=${v}`;
+}
+
+export function go(route:RouteName){window.location.hash=routeHref(route).slice(1)}
+
+function mainActive(route:RouteName,target:RouteName){
+ if(target==='home')return route==='home';
+ if(target==='analysis')return analysisRoutes.has(route);
+ if(target==='report')return route==='report';
+ return false;
+}
+
+function initials(name:string){
+ const cleaned=(name||'Байгууллага').trim();
+ const letters=cleaned.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()).join('');
+ return letters||'Б';
+}
+
+function navIcon(route:RouteName){
+ if(route==='home')return 'home';
+ if(route==='analysis')return 'chart';
+ return 'file';
+}
+
+type ShellNotice={id:string;kind:'payment'|'report';title:string;detail:string;time:string;areaId?:BusinessAreaId};
+function sameNotices(a:ShellNotice[],b:ShellNotice[]){
+ if(a.length!==b.length)return false;
+ return a.every((row,index)=>{const next=b[index];return !!next&&row.id===next.id&&row.kind===next.kind&&row.title===next.title&&row.detail===next.detail&&row.time===next.time&&row.areaId===next.areaId});
+}
+function noticeTime(value?:string|null){const d=value?new Date(value):new Date();return Number.isNaN(d.getTime())?'':new Intl.DateTimeFormat('mn-MN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d)}
+
+function MenuLink({route,icon,children,onNavigate}:{route:RouteName;icon:string;children:React.ReactNode;onNavigate:()=>void}){
+ return <a role="menuitem" href={routeHref(route)} onClick={onNavigate}><Icon name={icon} size={17}/><span>{children}</span></a>;
+}
+
+export function ShellHeader({route}:{route:RouteName}){
+ const [mobileOpen,setMobileOpen]=useState(false);
+ const [accountOpen,setAccountOpen]=useState(false);
+ const [noticeOpen,setNoticeOpen]=useState(false);
+ const [notices,setNotices]=useState<ShellNotice[]>([]);
+ const [noticesReady,setNoticesReady]=useState(false);
+ const [logoutBusy,setLogoutBusy]=useState(false);
+ const [companyName,setCompanyName]=useState(()=>session.companyName||'');
+ const headerRef=useRef<HTMLElement|null>(null);
+ const accountRef=useRef<HTMLDivElement|null>(null);
+ const notificationRef=useRef<HTMLDivElement|null>(null);
+ const accountButtonRef=useRef<HTMLButtonElement|null>(null);
+ const notificationButtonRef=useRef<HTMLButtonElement|null>(null);
+ const notificationPanelRef=useRef<HTMLDivElement|null>(null);
+ const publicMenuButtonRef=useRef<HTMLButtonElement|null>(null);
+ const loggedIn=!!session.accessToken;
+
+ useEffect(()=>{
+  const closeOutside=(event:MouseEvent)=>{
+   const target=event.target as Node;
+   if(headerRef.current&&!headerRef.current.contains(target))setMobileOpen(false);
+   if(accountRef.current&&!accountRef.current.contains(target))setAccountOpen(false);
+   if(notificationRef.current&&!notificationRef.current.contains(target))setNoticeOpen(false);
+  };
+  const closeOnFocusOutside=(event:FocusEvent)=>{
+   const target=event.target as Node;
+   if(accountRef.current&&!accountRef.current.contains(target))setAccountOpen(false);
+   if(notificationRef.current&&!notificationRef.current.contains(target))setNoticeOpen(false);
+  };
+  const closeOnEscape=(event:KeyboardEvent)=>{
+   if(event.key!=='Escape')return;
+   if(noticeOpen){setNoticeOpen(false);notificationButtonRef.current?.focus();return}
+   if(accountOpen){setAccountOpen(false);accountButtonRef.current?.focus();return}
+   if(mobileOpen){setMobileOpen(false);publicMenuButtonRef.current?.focus();}
+  };
+  document.addEventListener('mousedown',closeOutside);
+  document.addEventListener('keydown',closeOnEscape);
+  document.addEventListener('focusin',closeOnFocusOutside);
+  return()=>{document.removeEventListener('mousedown',closeOutside);document.removeEventListener('keydown',closeOnEscape);document.removeEventListener('focusin',closeOnFocusOutside)};
+ },[accountOpen,mobileOpen,noticeOpen]);
+
+ useEffect(()=>{
+  if(!loggedIn||companyName)return;
+  let live=true;
+  void api.listCompanies().then(companies=>{
+   if(!live||!companies.length)return;
+   const selected=companies.find(x=>x.id===session.companyId)??companies[0];
+   session.companyId=selected.id;
+   session.companyName=selected.name;
+   setCompanyName(selected.name);
+  }).catch(()=>{});
+  return()=>{live=false};
+ },[loggedIn,companyName]);
+
+
+ useEffect(()=>{
+  if(!noticeOpen)return;
+  requestAnimationFrame(()=>notificationPanelRef.current?.focus());
+ },[noticeOpen]);
+
+ const displayCompany=companyName||session.companyName||'Таны байгууллага';
+ useEffect(()=>{
+  if(!loggedIn)return;
+  let live=true;
+  let timer:number|null=null;
+  const publish=(rows:ShellNotice[])=>{
+   if(!live)return;
+   setNotices(current=>sameNotices(current,rows)?current:rows);
+   setNoticesReady(true);
+  };
+  const run=async()=>{
+   if(!live||document.visibilityState==='hidden'||navigator.onLine===false)return;
+   if(isTestBusiness(displayCompany)){
+    publish([
+     {id:'demo-report',kind:'report',title:'Тайлан бэлэн болсон',detail:'Үйлдвэрлэл ба үйл ажиллагааны менежментийн тайланг үзэх боломжтой.',time:'Өнөөдөр · 07:45',areaId:'operations'},
+     {id:'demo-paid',kind:'payment',title:'Төлбөр баталгаажсан',detail:'Маркетингийн менежментийн оношилгооны эрх нээгдсэн.',time:'Өнөөдөр · 07:41',areaId:'marketing'},
+    ]);return;
+   }
+   const companyId=session.companyId;if(!companyId){if(live)setNoticesReady(true);return;}
+   try{
+    const [billing,assessments]=await Promise.all([api.getBillingStatus(companyId),api.listAssessments(companyId)]);
+    const rows:ShellNotice[]=[];
+    for(const invoice of billing.invoices.filter(x=>x.status==='PAID').slice(0,2))rows.push({id:`pay-${invoice.id}`,kind:'payment',title:'Төлбөр баталгаажсан',detail:'Оношилгооны төлбөр амжилттай баталгаажсан.',time:noticeTime(invoice.paidAt||invoice.updatedAt)});
+    for(const assessment of assessments.filter(x=>isTerminal(x.status)).sort((a,b)=>new Date(b.completedAt||b.updatedAt).getTime()-new Date(a.completedAt||a.updatedAt).getTime()).slice(0,3)){
+     const stored=(assessment.domainCode||localStorage.getItem(`mmri.assessmentArea.${assessment.id}`)||'marketing') as BusinessAreaId;const area=businessAreaById(stored);
+     rows.push({id:`report-${assessment.id}`,kind:'report',title:'Тайлан бэлэн болсон',detail:`${area.name} чиглэлийн тайланг үзэх боломжтой.`,time:noticeTime(assessment.completedAt||assessment.updatedAt),areaId:area.id});
+    }
+    publish(rows.slice(0,5));
+   }catch{if(live){setNoticesReady(true)}}
+  };
+  const schedule=()=>{if(timer!==null)window.clearInterval(timer);timer=window.setInterval(()=>void run(),30000)};
+  const resume=()=>{if(document.visibilityState==='visible'&&navigator.onLine!==false)void run()};
+  void run();schedule();
+  document.addEventListener('visibilitychange',resume);
+  window.addEventListener('online',resume);
+  return()=>{live=false;if(timer!==null)window.clearInterval(timer);document.removeEventListener('visibilitychange',resume);window.removeEventListener('online',resume)};
+ },[loggedIn,displayCompany]);
+ const closeMenus=()=>{setMobileOpen(false);setAccountOpen(false);setNoticeOpen(false)};
+ const logout=async()=>{
+  if(logoutBusy)return;
+  setLogoutBusy(true);
+  try{await api.logout()}catch{/* api.logout clears the local session in finally */}
+  finally{setLogoutBusy(false);closeMenus();go('home')}
+ };
+
+ const openAccountFromKeyboard=(event:React.KeyboardEvent<HTMLButtonElement>)=>{
+  if(!['ArrowDown','Enter',' '].includes(event.key))return;
+  event.preventDefault();
+  setAccountOpen(true);
+  requestAnimationFrame(()=>accountRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus());
+ };
+ const handleMenuKeys=(event:React.KeyboardEvent<HTMLDivElement>)=>{
+  const items=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])')) as HTMLElement[];
+  if(!items.length)return;
+  const current=items.indexOf(document.activeElement as HTMLElement);
+  if(event.key==='ArrowDown'){
+   event.preventDefault();items[(current+1+items.length)%items.length].focus();
+  }else if(event.key==='ArrowUp'){
+   event.preventDefault();items[(current-1+items.length)%items.length].focus();
+  }else if(event.key==='Home'){
+   event.preventDefault();items[0].focus();
+  }else if(event.key==='End'){
+   event.preventDefault();items[items.length-1].focus();
+  }else if(event.key==='Escape'){
+   event.preventDefault();setAccountOpen(false);accountButtonRef.current?.focus();
+  }
+ };
+
+ return <header className={`mmri-shell-header ${loggedIn?'is-authenticated':'is-public'}`} ref={headerRef}>
+  <div className="mmri-shell-inner">
+   <a className="mmri-brand" href="#/" onClick={closeMenus} aria-label="BUSINESSMMRI.MN — Нүүр">
+    <span className="mmri-brand-mark" aria-hidden="true"><Icon name="logo" size={22}/></span>
+    <span className="mmri-brand-copy">
+     <strong>BUSINESSMMRI.MN</strong>
+    </span>
+   </a>
+
+   <nav className="mmri-primary-nav" aria-label="Үндсэн цэс">
+    {primaryNav.map(([target,label])=>{
+     const active=mainActive(route,target);
+     return <a key={target} href={routeHref(target)} aria-current={active?'page':undefined} className={active?'is-active':''} onClick={closeMenus}><Icon name={navIcon(target)} size={17}/><span>{label}</span></a>;
+    })}
+   </nav>
+
+   <div className="mmri-shell-actions">
+    {loggedIn?<>
+     <div className="mmri-notifications" ref={notificationRef}>
+      <button type="button" ref={notificationButtonRef} className="mmri-notification-trigger" aria-haspopup="dialog" aria-expanded={noticeOpen} aria-controls="mmri-notification-panel" aria-label={`Мэдэгдэл${notices.length?` — ${notices.length} шинэ`:''}`} onClick={()=>{setNoticeOpen(v=>!v);setAccountOpen(false)}}><Icon name="bell" size={30}/>{notices.length>0&&<span>{notices.length>9?'9+':notices.length}</span>}</button>
+      {noticeOpen&&<div ref={notificationPanelRef} id="mmri-notification-panel" className="mmri-notification-panel" role="dialog" aria-labelledby="mmri-notification-title" tabIndex={-1} aria-busy={!noticesReady||undefined}><header><strong id="mmri-notification-title">Мэдэгдэл</strong><small>{!noticesReady?'Шалгаж байна…':notices.length?`${notices.length} мэдээлэл`:'Шинэ мэдээлэл алга'}</small></header><div>{!noticesReady?<div className="mmri-notification-loading" role="status" aria-live="polite" aria-atomic="true"><span className="mmri-visually-hidden">Мэдэгдлийг шалгаж байна.</span>{[0,1,2].map(i=><span key={i} className="mmri-notification-loading__row" aria-hidden="true"><i/><b/><em/></span>)}</div>:notices.length?notices.map(item=><a key={item.id} href={item.kind==='report'?'#/report':'#/analysis'} onClick={()=>{if(item.kind==='report'&&item.areaId)sessionStorage.setItem(REPORT_AREA_KEY,item.areaId);setNoticeOpen(false)}}><span className={`mmri-notification-icon is-${item.kind}`}><Icon name={item.kind==='report'?'file':'check'} size={18}/></span><div><strong>{item.title}</strong><p>{item.detail}</p><small>{item.time}</small></div></a>):<p className="mmri-notification-empty">Төлбөр баталгаажих, оношилгоо дуусах, тайлан бэлэн болох үед энд харагдана.</p>}</div></div>}
+     </div>
+     <div className="mmri-account" ref={accountRef}>
+      <button type="button" ref={accountButtonRef} className="mmri-account-trigger" aria-label="Миний хэсэг" aria-haspopup="menu" aria-controls="mmri-account-menu" aria-expanded={accountOpen} onKeyDown={openAccountFromKeyboard} onClick={()=>setAccountOpen((value:boolean)=>!value)}>
+       <span className="mmri-account-avatar" aria-hidden="true"><Icon name="user" size={28}/></span>
+      </button>
+      {accountOpen&&<div id="mmri-account-menu" className="mmri-account-menu" role="menu" aria-label="Бүртгэлийн цэс" onKeyDown={handleMenuKeys}>
+       <div className="mmri-account-context">
+        <span className="mmri-account-context-mark" aria-hidden="true">{initials(displayCompany)}</span>
+        <div><small>Байгууллага</small><strong>{displayCompany}</strong></div>
+       </div>
+       <a role="menuitem" href="#/settings?section=payments" onClick={closeMenus}><Icon name="receipt" size={19}/><span>Төлбөрийн түүх</span></a>
+       <MenuLink route="profile" icon="building" onNavigate={closeMenus}>Байгууллагын мэдээлэл</MenuLink>
+       <a role="menuitem" href="#/settings?section=technical" onClick={closeMenus}><Icon name="gear" size={19}/><span>Тохиргоо</span></a>
+       <div className="mmri-account-divider" aria-hidden="true"/>
+       <button type="button" role="menuitem" className="mmri-account-logout" disabled={logoutBusy} onClick={()=>void logout()}><Icon name="logout" size={19}/><span>{logoutBusy?'Гарч байна…':'Системээс гарах'}</span></button>
+      </div>}
+     </div></>:<>
+      <a className="mmri-shell-login" href="#/login" onClick={closeMenus}>Нэвтрэх</a>
+      <a className="mmri-shell-primary" href="#/login" onClick={closeMenus}>Оношилгоо эхлүүлэх</a>
+      <button type="button" ref={publicMenuButtonRef} className="mmri-public-menu-trigger" onClick={()=>setMobileOpen((value:boolean)=>!value)} aria-label="Үндсэн цэс" aria-controls="mmri-public-mobile-menu" aria-expanded={mobileOpen}><Icon name={mobileOpen?'close':'menu'} size={20}/></button>
+     </>}
+   </div>
+  </div>
+
+  {!loggedIn&&mobileOpen&&<div id="mmri-public-mobile-menu" className="mmri-public-mobile-menu">
+   <nav aria-label="Мобайл үндсэн цэс">
+    {primaryNav.map(([target,label])=>{
+     const active=mainActive(route,target);
+     return <a key={target} href={routeHref(target)} aria-current={active?'page':undefined} className={active?'is-active':''} onClick={closeMenus}>{label}</a>;
+    })}
+   </nav>
+   <div className="mmri-public-mobile-actions">
+    <a href="#/login" onClick={closeMenus}>Нэвтрэх</a>
+    <a className="is-primary" href="#/login" onClick={closeMenus}>Оношилгоо эхлүүлэх</a>
+   </div>
+  </div>}
+ </header>;
+}
+
+export function AppShell({route,children}:{route:RouteName;children:React.ReactNode;assessmentMode?:boolean}){
+ const [online,setOnline]=useState(()=>typeof navigator==='undefined'?true:navigator.onLine!==false);
+ const loggedIn=!!session.accessToken;
+ const domainId=loggedIn?shellDomainForRoute(route):null;
+ useEffect(()=>{
+  const on=()=>setOnline(true),off=()=>setOnline(false);
+  window.addEventListener('online',on);window.addEventListener('offline',off);
+  return()=>{window.removeEventListener('online',on);window.removeEventListener('offline',off)};
+ },[]);
+ if(route==='login')return <>{children}</>;
+
+ return <div className={`app-shell mmri-shell ${loggedIn?'is-authenticated':'is-public'} ${domainId?'has-domain-theme':''}`} data-mmri-domain={domainId||undefined}>
+  <a className="mmri-skip-link" href="#main-content">Үндсэн агуулга руу шилжих</a>
+  <ShellHeader route={route}/>
+  {!online&&<div className="mmri-offline-banner" role="status"><Icon name="offline" size={18}/><div><b>Сүлжээний холболт тасарсан</b><span>Баталгаажаагүй өөрчлөлтийг хадгалагдсан гэж үзэхгүй.</span></div></div>}
+  <main id="main-content" className="mmri-shell-main" tabIndex={-1}>{children}</main>
+  {loggedIn&&<nav className="mmri-bottom-nav" aria-label="Мобайл үндсэн цэс">
+   {primaryNav.map(([target,label])=>{
+    const active=mainActive(route,target);
+    return <a key={target} href={routeHref(target)} aria-current={active?'page':undefined} className={active?'is-active':''}><Icon name={navIcon(target)} size={19}/><span>{label}</span></a>;
+   })}
+  </nav>}
+ </div>;
+}
+
+export function PageContainer({children,className='',...props}:React.HTMLAttributes<HTMLDivElement>){return <div {...props} className={`page-container ${className}`}>{children}</div>}

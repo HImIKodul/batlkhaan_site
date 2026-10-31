@@ -1,0 +1,77 @@
+/* Diagnosis hub: one-screen liquid-glass domain tiles, ring status top-right, glass sheet on selection. */
+.diagnosis-square-page{max-width:1380px;margin-inline:auto;padding:6px 28px 14px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:0;height:calc(100dvh - var(--mmri-chrome));color:#fff}
+.diagnosis-square-head{text-align:center}
+.diagnosis-square-head__title{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.diagnosis-square-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(12px,1.4vw,20px);align-items:stretch;align-content:center;min-height:0;max-height:100%}
+/* Diagnosis card = .cat-tile (glass.css): big icon on the family gradient, light label strip with title, compact status, CTA. */
+.diagnosis-square{height:clamp(290px,calc(100dvh - 250px),520px);--domain-glow:color-mix(in srgb,var(--area-accent) 60%,transparent);cursor:default}
+.diagnosis-square__icon{display:grid;place-items:center;flex:1 1 auto;width:100%;min-height:0;margin:0;padding:18px 14px 6px;border:0;background:none;cursor:pointer;font:inherit;color:inherit;position:relative;z-index:1}
+.diagnosis-domain-symbol,.diagnosis-domain-symbol__main{display:grid;place-items:center;height:100%}
+.diagnosis-domain-symbol svg{height:100%;max-height:clamp(96px,17dvh,170px);width:auto;aspect-ratio:1}
+.diagnosis-square .diagnosis-square__label{flex-direction:column;gap:6px;padding:12px 14px 14px;height:auto}
+.diagnosis-square h2{margin:0;width:100%;font-size:clamp(14px,2dvh,17px);line-height:1.28;font-weight:800;color:#10263f;min-height:3.85em;display:flex;align-items:center;justify-content:center}
+.diagnosis-square__name{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;min-height:44px;text-align:center;font-weight:inherit;letter-spacing:inherit;line-height:inherit}
+.diagnosis-square__icon:focus-visible,.diagnosis-square__name:focus-visible{outline:3px solid var(--domain-deep);outline-offset:3px;border-radius:14px}
+.diagnosis-square__meta{min-height:18px;margin:0;font-size:12.5px;line-height:1.4;color:#40566f;font-weight:600}
+.diagnosis-square__meta b{color:#10263f;font-variant-numeric:tabular-nums}
+.diagnosis-pay-button b{letter-spacing:.04em}
+/* CTA = family-coloured liquid-glass slab: bright rim, glossy sheen, lighter lower lip, extruded edge, light beneath. */
+.diagnosis-square .mmri-button{position:relative;isolation:isolate;overflow:hidden;margin-top:2px;min-height:42px;padding-inline:10px;white-space:nowrap;font-size:clamp(11.5px,1.1vw,14.5px);border-radius:12px;border:1.5px solid rgba(255,255,255,.85);color:#fff;
+  background:radial-gradient(70% 100% at 12% 0%,color-mix(in srgb,var(--domain-secondary) 45%,transparent),transparent 70%),linear-gradient(172deg,color-mix(in srgb,var(--domain-primary) 40%,var(--domain-deep)),var(--domain-deep));
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -5px 7px -3px rgba(255,255,255,.35),2px 4px 0 color-mix(in srgb,var(--domain-deep) 85%,#000),6px 10px 10px -2px rgba(6,18,40,.4),8px 14px 16px -6px color-mix(in srgb,var(--domain-primary) 80%,transparent);transition:box-shadow .3s,filter .3s}
+.diagnosis-square .mmri-button::before{content:"";position:absolute;z-index:-1;inset:2px 6px auto 6px;height:46%;border-radius:8px 8px 50% 50%/8px 8px 60% 60%;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0));pointer-events:none}
+.diagnosis-square .mmri-button:hover:not(:disabled){filter:brightness(1.1) saturate(1.1)}
+
+/* Selected domain: backdrop is already the domain environment; the sheet is see-through glass. */
+.mmri-dialog-layer--area{background:radial-gradient(900px 640px at 50% 40%,transparent,rgba(20,38,60,.3));-webkit-backdrop-filter:blur(3px) saturate(125%);backdrop-filter:blur(3px) saturate(125%);animation:mmri-fade .4s var(--mmri-ease-standard) both}
+.mmri-dialog-layer--area .mmri-dialog{width:min(720px,100%);color:#fff;background:linear-gradient(150deg,rgba(255,255,255,.26),color-mix(in srgb,var(--area-accent) 12%,rgba(60,92,132,.5)) 62%,rgba(255,255,255,.10));border:1px solid var(--popup-border);border-radius:34px;-webkit-backdrop-filter:blur(3px) saturate(125%);backdrop-filter:blur(3px) saturate(125%);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.65),inset 0 -40px 60px color-mix(in srgb,var(--area-accent) 22%,transparent),0 30px 80px rgba(28,48,78,.42),0 6px 18px rgba(28,48,78,.22);animation:mmri-pop .42s cubic-bezier(.16,1,.3,1) both}
+.mmri-dialog-layer--area .mmri-dialog__header{border-bottom-color:rgba(255,255,255,.28);padding:24px 28px 16px}
+.mmri-dialog-layer--area .mmri-dialog__header h2{font-size:clamp(21px,2.6vw,28px);line-height:1.2;color:#fff}
+.mmri-dialog-layer--area .mmri-dialog__header p{color:rgba(255,255,255,.86)}
+.mmri-dialog-layer--area .mmri-dialog__header .mmri-icon-button{width:52px;height:52px;border-radius:50%;font-size:28px;line-height:1;color:#fff;background:linear-gradient(160deg,rgba(255,255,255,.3),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.6),0 8px 22px rgba(8,22,42,.35)}
+.mmri-dialog-layer--area .mmri-dialog__body{padding:14px 28px 10px}
+.mmri-dialog-layer--area .mmri-dialog__footer{border-top-color:rgba(255,255,255,.28);padding:16px 28px 24px}
+.mmri-dialog-layer--area .mmri-dialog__footer .mmri-button{border-radius:999px;border:1px solid rgba(255,255,255,.9);background:linear-gradient(180deg,#fff,#E9EEFF);color:#14208E}
+.diagnosis-sheet{display:grid;justify-items:center;gap:12px;text-align:center}
+.diagnosis-sheet p{margin:0;color:rgba(255,255,255,.92);line-height:1.6}
+.diagnosis-sheet__icon{display:grid;place-items:center;width:150px;height:150px}
+.diagnosis-sheet__icon svg{width:100%;height:100%}
+
+/* Status pill: one small frosted-white pill, top-left of the card. Dot colour = state. */
+.diagnosis-status-icon{--st:#94A3B8;position:absolute;top:12px;left:12px;z-index:3;display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 24px);padding:6px 12px 6px 10px;border-radius:999px;background:rgba(255,255,255,.92);color:#10263f;font-size:clamp(10.5px,.9vw,12px);line-height:1.2;font-weight:750;white-space:nowrap;box-shadow:2px 4px 8px rgba(6,18,40,.28)}
+.diagnosis-status-icon.is-ready{--st:#1650DC}.diagnosis-status-icon.is-progress{--st:#E08A00}.diagnosis-status-icon.is-report{--st:#16A34A}
+.diagnosis-status-icon>i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--st)}
+.diagnosis-status-icon>span{overflow:hidden;text-overflow:ellipsis}
+
+@media (max-width:1000px),(max-height:639px){
+ .diagnosis-square-page{height:auto;min-height:calc(100dvh - var(--mmri-shell-height))}
+ .diagnosis-square-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .diagnosis-square{grid-column:span 2;height:auto}
+ .diagnosis-square:nth-child(4){grid-column:2/span 2}.diagnosis-square:nth-child(5){grid-column:4/span 2}
+ .diagnosis-square__icon{min-height:130px}
+}
+@media (max-width:700px){
+ .diagnosis-square-page{padding:12px 12px calc(var(--mmri-mobile-bottom-clearance) - 8px);gap:0;height:auto}
+ .diagnosis-square-head{display:none}
+ .diagnosis-square-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .diagnosis-square,.diagnosis-square:nth-child(4),.diagnosis-square:nth-child(5){grid-column:auto;min-height:0;height:auto;border-radius:22px}
+ .diagnosis-square:last-child{grid-column:1/-1;width:calc(50% - 5px);justify-self:center}
+ .diagnosis-square__icon{min-height:96px;flex:none;height:96px;padding-top:34px}
+ .diagnosis-domain-symbol svg{max-height:62px}
+ .diagnosis-square h2{font-size:12px;min-height:3.9em}
+ .diagnosis-square__meta{font-size:11.5px;min-height:16px}
+ .diagnosis-square .mmri-button{min-height:38px;font-size:11px;padding-inline:6px}
+ .diagnosis-square .diagnosis-square__label{padding:8px 8px 10px}
+ .diagnosis-status-icon{top:8px;left:8px;max-width:calc(100% - 16px);padding:4px 8px 4px 7px;font-size:9.5px;gap:4px}
+}
+
+/* Narrow desktops: compact status pill so the state name + % never truncates. */
+@media (min-width:1001px) and (max-width:1279px){
+ .diagnosis-status-icon{top:8px;left:8px;max-width:calc(100% - 16px);padding:4px 8px 4px 7px;gap:5px;font-size:10px}
+}
+/* Very narrow phones: one card per row instead of two ~125px columns. */
+@media (max-width:380px){
+ .diagnosis-square-grid{grid-template-columns:1fr}
+ .diagnosis-square:last-child{width:auto;grid-column:auto}
+ .diagnosis-status-icon{font-size:10.5px}
+}

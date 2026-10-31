@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": false, "declaration": true, "emitDeclarationOnly": true, "outDir": "ds-lib/dist/types", "rootDir": "src" },
+  "include": ["src/ds-entry.tsx", "src/**/*.d.ts"]
+}

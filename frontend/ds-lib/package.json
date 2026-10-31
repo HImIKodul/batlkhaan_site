@@ -1,0 +1,13 @@
+{
+  "name": "@mmri/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MMRI (BusinessMMRI.mn) UI components: liquid-glass design system",
+  "type": "module",
+  "main": "./dist/index.es.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/types/ds-entry.d.ts",
+  "exports": { ".": { "types": "./dist/types/ds-entry.d.ts", "import": "./dist/index.es.js" }, "./style.css": "./dist/style.css" },
+  "files": ["dist"],
+  "peerDependencies": { "react": ">=18", "react-dom": ">=18" }
+}
