@@ -82,7 +82,6 @@ class RouteErrorBoundary extends React.Component<{route:RouteName;locationKey:st
 export default function App(){
  const [route,setRoute]=useState<RouteName>(getRoute());
  const [locationKey,setLocationKey]=useState(currentHash);
- useEffect(()=>{document.documentElement.dataset.mmriFontSize=localStorage.getItem('mmri.fontSize')||'normal'},[]);
  const [sessionReady,setSessionReady]=useState(false);
  useEffect(()=>{let live=true;void restoreSession().finally(()=>{if(live)setSessionReady(true)});return()=>{live=false}},[]);
  useEffect(()=>{

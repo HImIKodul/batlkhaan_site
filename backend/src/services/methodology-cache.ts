@@ -199,8 +199,10 @@ export class MethodologyDefinitionCache {
       aiGeneration: required("MMRI_FINAL_AI_Generation_Contract.json")
     };
 
+    if (!methodology.bundleSha256) throw new Error(`Methodology ${methodology.version} has no bundleSha256; refusing to load an unpinned bundle.`);
     return {
       version: methodology.version,
+      bundleSha256: methodology.bundleSha256,
       domainCode: (methodology.domainCode ?? "marketing") as MethodologyDefinition["domainCode"],
       engineKind: methodology.domainCode === "marketing" ? "MARKETING_V3" : "BUSINESSMRI_V2",
       cellWeightByCategoryCell,

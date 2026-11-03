@@ -1,5 +1,5 @@
 import { prisma } from "../db.js";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { MethodologyDefinitionCache } from "./methodology-cache.js";
 import { authorityFactorWithMetadata, type RespondentAuthorityMetadata } from "../engine/authority.js";
 import { calculateRuntimeSnapshot } from "../engine/calculation.js";
@@ -10,7 +10,6 @@ import { categoryId, diagnosticCellId, methodologyId, moduleId, purposeId, quest
 import { conflict } from "../api/errors.js";
 import { assertRevision, assertWriterLease, leaseExpiry, requireWriterId, sha256Canonical, type AnswerWriteGuard, type PersistenceWriteGuard } from "./persistence-integrity.js";
 import {
-  TARGET_METHODOLOGY_BUNDLE_SHA256,
   TARGET_METHODOLOGY_VERSION,
   TARGET_QUESTION_BANK_VERSION
 } from "../methodology-target.js";
@@ -323,7 +322,7 @@ export class PrismaAssessmentEngine {
         data: {
           status: nextStatus, routingState: decision.state, overallPartialScore: snapshot.overall.partialScore, overallOfficialScore: snapshot.overall.officialScore, overallConfidence: snapshot.overall.confidence, coverage: snapshot.overall.coverage, aggregationVersion: snapshot.overall.aggregationVersion, completedAt: terminal ? new Date() : null,
           assessmentRevision: { increment: 1 }, routingRevision: { increment: 1 }, eventSequence: { increment: 1 }, lastMaterializedAnswerEventSequence: answerEventSequence, currentQuestionIssueId: null, writerLeaseExpiresAt: terminal ? null : leaseExpiry(), activeWriterLeaseId: terminal ? null : writerLeaseId,
-          ...(terminal ? { pausedAt: null, resumeState: null } : {})
+          ...(terminal ? { pausedAt: null, resumeState: Prisma.DbNull } : {})
         }
       });
 
@@ -335,7 +334,7 @@ export class PrismaAssessmentEngine {
       if (terminal) {
         const snapshotPayload = terminalSnapshotPayload(assessmentId, assessment.mode, nextStatus, decision.state, definition, newAssessmentRevision, answerEventSequence, snapshot);
         const payloadHash = sha256Canonical(snapshotPayload);
-        await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT", assessmentRevision: newAssessmentRevision, eventSequence: answerEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: TARGET_METHODOLOGY_BUNDLE_SHA256, traceVersion: "MMRI-TRACE-1.0" } });
+        await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT", assessmentRevision: newAssessmentRevision, eventSequence: answerEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: requireBundleSha256(definition), traceVersion: "MMRI-TRACE-1.0" } });
         await tx.auditEvent.create({ data: { assessmentId, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT" } } });
         await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, overall: snapshot.overall } } });
       }
@@ -487,7 +486,7 @@ export class PrismaAssessmentEngine {
         }
       }
       const nextRevision = a.status === "PAUSED" ? a.assessmentRevision + 1 : a.assessmentRevision;
-      await tx.assessment.update({ where: { id: a.id }, data: { status: "IN_PROGRESS", routingState: resume.routingState ?? a.routingState, currentQuestionIssueId: resumeQuestionIssueId, resumeState: null, pausedAt: null, completedAt: null, activeWriterLeaseId: writerLeaseId, writerLeaseExpiresAt: leaseExpiry(now), ...(a.status === "PAUSED" ? { assessmentRevision: { increment: 1 }, eventSequence: { increment: 1 } } : {}) } });
+      await tx.assessment.update({ where: { id: a.id }, data: { status: "IN_PROGRESS", routingState: resume.routingState ?? a.routingState, currentQuestionIssueId: resumeQuestionIssueId, resumeState: Prisma.DbNull, pausedAt: null, completedAt: null, activeWriterLeaseId: writerLeaseId, writerLeaseExpiresAt: leaseExpiry(now), ...(a.status === "PAUSED" ? { assessmentRevision: { increment: 1 }, eventSequence: { increment: 1 } } : {}) } });
       await tx.auditEvent.create({ data: { assessmentId: a.id, eventType: a.status === "PAUSED" ? "ASSESSMENT_RESUMED" : "WRITER_LEASE_RENEWED", entityType: "Assessment", entityId: a.id, payload: { writerLeaseId, assessmentRevision: nextRevision, expiresAt: leaseExpiry(now).toISOString() } } });
       return { status: "IN_PROGRESS", assessmentRevision: nextRevision };
     });
@@ -587,7 +586,7 @@ export class PrismaAssessmentEngine {
       const payloadHash = sha256Canonical(snapshotPayload);
       const existingSnapshot = await tx.assessmentStateSnapshot.findFirst({ where: { assessmentId, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT" }, orderBy: { createdAt: "desc" } });
       if (!existingSnapshot) {
-        await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT", assessmentRevision: nextRevision, eventSequence: nextEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: TARGET_METHODOLOGY_BUNDLE_SHA256, traceVersion: "MMRI-TRACE-1.0" } });
+        await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT", assessmentRevision: nextRevision, eventSequence: nextEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: requireBundleSha256(definition), traceVersion: "MMRI-TRACE-1.0" } });
         await tx.auditEvent.create({ data: { assessmentId, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, explicitCompletionRequest: true } } });
       }
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, explicitCompletionRequest: true, assessmentRevision: nextRevision } } });
@@ -635,7 +634,7 @@ export class PrismaAssessmentEngine {
           aggregationVersion: snapshot.overall.aggregationVersion,
           completedAt,
           pausedAt: null,
-          resumeState: (await import("@prisma/client")).Prisma.DbNull,
+          resumeState: Prisma.DbNull,
           assessmentRevision,
           routingRevision: assessmentRevision,
           eventSequence,
@@ -649,7 +648,7 @@ export class PrismaAssessmentEngine {
       const snapshotPayload = terminalSnapshotPayload(assessmentId, "QUICK", status, routingState, definition, assessmentRevision, eventSequence, snapshot);
       const payloadHash = sha256Canonical(snapshotPayload);
       await tx.assessmentStateSnapshot.deleteMany({ where: { assessmentId, kind: "QUICK_RESULT" } });
-      await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: "QUICK_RESULT", assessmentRevision, eventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: TARGET_METHODOLOGY_BUNDLE_SHA256, traceVersion: "MMRI-TRACE-1.0" } });
+      await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: "QUICK_RESULT", assessmentRevision, eventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: requireBundleSha256(definition), traceVersion: "MMRI-TRACE-1.0" } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState, demoFastSeed: true, answerEvents: eventSequence, overall: snapshot.overall } } });
       return { snapshot, cellPersistence, eventSequence };
     }, { maxWait: 10000, timeout: 30000 });
@@ -697,7 +696,7 @@ async function finalizeTerminalWithoutOpenQuestion(
       aggregationVersion: snapshot.overall.aggregationVersion,
       completedAt: current.completedAt ?? new Date(),
       pausedAt: null,
-      resumeState: null,
+      resumeState: Prisma.DbNull,
       assessmentRevision: { increment: 1 },
       routingRevision: { increment: 1 },
       eventSequence: { increment: 1 },
@@ -712,7 +711,7 @@ async function finalizeTerminalWithoutOpenQuestion(
   const kind = current.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT";
   const existingSnapshot = await tx.assessmentStateSnapshot.findFirst({ where: { assessmentId: assessment.id, kind }, orderBy: { createdAt: "desc" } });
   if (!existingSnapshot) {
-    await tx.assessmentStateSnapshot.create({ data: { assessmentId: assessment.id, kind, assessmentRevision: nextRevision, eventSequence: nextEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: current.methodologyVersionId, versionBundleHash: TARGET_METHODOLOGY_BUNDLE_SHA256, traceVersion: "MMRI-TRACE-1.0" } });
+    await tx.assessmentStateSnapshot.create({ data: { assessmentId: assessment.id, kind, assessmentRevision: nextRevision, eventSequence: nextEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: current.methodologyVersionId, versionBundleHash: requireBundleSha256(definition), traceVersion: "MMRI-TRACE-1.0" } });
     await tx.auditEvent.create({ data: { assessmentId: assessment.id, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, kind, lifecycleAutoFinalized: true } } });
   }
   await tx.auditEvent.create({ data: { assessmentId: assessment.id, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessment.id, payload: { routingState: decision.state, lifecycleAutoFinalized: true, initialStart, assessmentRevision: nextRevision, overall: snapshot.overall } } });
@@ -1060,6 +1059,13 @@ function jsonSafe<T>(value: T): any {
   return JSON.parse(JSON.stringify(value));
 }
 
+/** The snapshot pins the exact bundle of the assessment's own methodology version (never a global target hash). */
+function requireBundleSha256(definition: MethodologyDefinition): string {
+  if (!definition.bundleSha256) throw new Error(`Methodology ${definition.version} (${definition.domainCode ?? "unknown"}) has no bundleSha256; refusing to freeze an unpinned snapshot.`);
+  return definition.bundleSha256;
+}
+
+
 function terminalSnapshotPayload(
   assessmentId: string,
   mode: AssessmentMode,
@@ -1078,7 +1084,7 @@ function terminalSnapshotPayload(
   const purposes = [...snapshot.purposes.entries()].sort(([a],[b]) => a.localeCompare(b)).map(([id, value]) => ({ id, ...jsonSafe(value) }));
   return {
     traceVersion: "MMRI-TRACE-1.0", assessmentId, mode, status, routingState, methodologyVersion: definition.version, questionBankVersion: TARGET_QUESTION_BANK_VERSION,
-    versionBundleHash: TARGET_METHODOLOGY_BUNDLE_SHA256, assessmentRevision, eventSequence, overall: jsonSafe(snapshot.overall), categories, cells, purposes, contradictions: jsonSafe(snapshot.contradictions)
+    versionBundleHash: requireBundleSha256(definition), assessmentRevision, eventSequence, overall: jsonSafe(snapshot.overall), categories, cells, purposes, contradictions: jsonSafe(snapshot.contradictions)
   };
 }
 

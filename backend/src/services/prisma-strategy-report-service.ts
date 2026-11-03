@@ -61,6 +61,19 @@ export class PrismaStrategyReportService {
   private readonly cache = new MethodologyDefinitionCache(prisma);
   private readonly traceability = new TraceabilityService();
   private readonly terminalContextCache = new Map<string, Promise<any>>();
+  /**
+   * The first read of a completed assessment (e.g. /recommendations and /action-plan fired in parallel by the
+   * Priorities page) freezes its diagnosis/strategy snapshots. Concurrent first calls must share one freeze;
+   * otherwise the loser hits the one-snapshot-per-assessment unique constraint and returns a spurious 400.
+   */
+  private readonly freezeInFlight = new Map<string, Promise<any>>();
+  private singleFlight<T>(key: string, run: () => Promise<T>): Promise<T> {
+    const current = this.freezeInFlight.get(key);
+    if (current) return current as Promise<T>;
+    const started: Promise<T> = run().finally(() => { if (this.freezeInFlight.get(key) === started) this.freezeInFlight.delete(key); });
+    this.freezeInFlight.set(key, started);
+    return started;
+  }
   private readonly reportGenerationInFlight = new Map<string, Promise<any>>();
   private readonly fallbackUpgradesInFlight = new Map<string, Promise<unknown>>();
   private readonly pdfArtifacts = new ReportPdfArtifactService();
@@ -143,7 +156,9 @@ export class PrismaStrategyReportService {
     return {...ctx,strategyRunId};
   }
 
-  async freezeDiagnosisResult(assessmentId:string):Promise<DiagnosisResultV13>{
+  freezeDiagnosisResult(assessmentId:string):Promise<DiagnosisResultV13>{ return this.singleFlight(`diagnosis:${assessmentId}`,()=>this.freezeDiagnosisResultOnce(assessmentId)); }
+
+  private async freezeDiagnosisResultOnce(assessmentId:string):Promise<DiagnosisResultV13>{
     const existing=await prisma.diagnosisSnapshot.findUnique({where:{assessmentId}});
     if(existing){
       const assessment=await prisma.assessment.findUnique({where:{id:assessmentId},include:{methodologyVersion:true}});
@@ -172,7 +187,9 @@ export class PrismaStrategyReportService {
     return result;
   }
 
-  async freezeStrategyPlan(assessmentId:string):Promise<FrozenStrategyPlanSnapshot>{
+  freezeStrategyPlan(assessmentId:string):Promise<FrozenStrategyPlanSnapshot>{ return this.singleFlight(`strategy:${assessmentId}`,()=>this.freezeStrategyPlanOnce(assessmentId)); }
+
+  private async freezeStrategyPlanOnce(assessmentId:string):Promise<FrozenStrategyPlanSnapshot>{
     const diagnosis=await this.freezeDiagnosisResult(assessmentId);
     const existing=await prisma.strategyPlanSnapshot.findUnique({where:{assessmentId}});
     if(existing){

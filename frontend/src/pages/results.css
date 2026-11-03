@@ -1,10 +1,10 @@
 /* Results (completed diagnosis). Premium glass around analytical surfaces; reading hierarchy remains solid and restrained. */
-.result-workspace{--result-accent:var(--mmri-color-brand);--result-accent-ink:var(--mmri-color-brand);--result-accent-soft:var(--mmri-color-brand-soft);max-width:1100px;margin-inline:auto;padding:32px 24px 64px;display:grid;gap:32px}
-.result-workspace[data-result-domain=marketing]{--result-accent:var(--mmri-domain-marketing);--result-accent-ink:var(--mmri-domain-marketing-ink);--result-accent-soft:var(--mmri-domain-marketing-soft)}
-.result-workspace[data-result-domain=it]{--result-accent:var(--mmri-domain-it);--result-accent-ink:var(--mmri-domain-it-ink);--result-accent-soft:var(--mmri-domain-it-soft)}
-.result-workspace[data-result-domain=finance]{--result-accent:var(--mmri-domain-finance);--result-accent-ink:var(--mmri-domain-finance-ink);--result-accent-soft:var(--mmri-domain-finance-soft)}
-.result-workspace[data-result-domain=people]{--result-accent:var(--mmri-domain-people);--result-accent-ink:var(--mmri-domain-people-ink);--result-accent-soft:var(--mmri-domain-people-soft)}
-.result-workspace[data-result-domain=operations]{--result-accent:var(--mmri-domain-operations);--result-accent-ink:var(--mmri-domain-operations-ink);--result-accent-soft:var(--mmri-domain-operations-soft)}
+.result-workspace{--result-accent:var(--mmri-color-brand);--result-accent-ink:color-mix(in srgb,var(--result-accent) 38%,#fff);--result-accent-soft:var(--mmri-color-brand-soft);max-width:1100px;margin-inline:auto;padding:32px 24px 64px;display:grid;gap:32px}
+.result-workspace[data-result-domain=marketing]{--result-accent:var(--mmri-domain-marketing);--result-accent-soft:var(--mmri-domain-marketing-soft)}
+.result-workspace[data-result-domain=it]{--result-accent:var(--mmri-domain-it);--result-accent-soft:var(--mmri-domain-it-soft)}
+.result-workspace[data-result-domain=finance]{--result-accent:var(--mmri-domain-finance);--result-accent-soft:var(--mmri-domain-finance-soft)}
+.result-workspace[data-result-domain=people]{--result-accent:var(--mmri-domain-people);--result-accent-soft:var(--mmri-domain-people-soft)}
+.result-workspace[data-result-domain=operations]{--result-accent:var(--mmri-domain-operations);--result-accent-soft:var(--mmri-domain-operations-soft)}
 .result-workspace section,.result-workspace header{min-width:0}
 .result-page-title{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;padding:22px 24px;border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:22px;background:radial-gradient(circle at 92% 12%,var(--result-accent-soft),transparent 34%),var(--mmri-glass-bg);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow);-webkit-backdrop-filter:var(--mmri-glass-blur);backdrop-filter:var(--mmri-glass-blur)}
 .result-page-title>div:first-child span{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--result-accent-ink)}

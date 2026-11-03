@@ -15,12 +15,6 @@
 .technical-settings__group>p{margin:0 0 16px;color:var(--mmri-color-text-muted);font-size:14px}
 
 /* settings: text size (segmented) + account list */
-.technical-settings__choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.technical-settings__choices button{display:grid;justify-items:center;align-content:center;gap:4px;min-height:84px;padding:10px;border:1px solid var(--mmri-glass-border);border-radius:20px;background:rgba(255,255,255,.08);color:var(--mmri-color-text);font:inherit;cursor:pointer;transition:background .3s,border-color .3s,box-shadow .3s}
-.technical-settings__choices button:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.6)}
-.technical-settings__choices button.is-active{background:linear-gradient(180deg,#fff,#E4EAFF);border-color:#fff;color:#17229A;box-shadow:inset 0 1px 0 #fff,0 8px 20px rgba(8,22,42,.3)}
-.technical-settings__choices button:focus-visible{outline:3px solid #fff;outline-offset:2px}
-.technical-settings__choices b{font-weight:700}
 .font-preview{font-weight:800;line-height:1}.font-preview.is-small{font-size:16px}.font-preview.is-normal{font-size:22px}.font-preview.is-large{font-size:30px}
 .technical-settings__account{display:grid;gap:14px}
 .technical-settings__account ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
@@ -106,7 +100,6 @@
  .technical-settings,.account-payment-history,.company-detail-editor,.profile-onboarding,.profile-login-required{gap:14px;padding-block:14px 32px}
  .technical-settings>header>span,.account-payment-history>header>span,.company-detail-editor>header>span{width:52px;height:52px;border-radius:18px}
  .technical-settings__group,.technical-settings__account,.company-detail-editor__name,.company-detail-editor__grid,.profile-company-card,.profile-question-card,.profile-setup-preview{padding:16px;border-radius:24px}
- .technical-settings__choices button{min-height:64px}
  .company-detail-editor__grid{grid-template-columns:1fr}
  .company-detail-editor__bar{bottom:calc(var(--mmri-bottom-nav-height) + 10px)}
  .account-payment-history>section>article{grid-template-columns:1fr 1fr;gap:10px 14px;padding:14px}

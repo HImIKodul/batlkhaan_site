@@ -1,51 +1,52 @@
 /* Public/landing home: one-screen hero + radar + four liquid-glass guide tiles + guide dialog. */
 .mmri-home2{position:relative;isolation:isolate;background:transparent;color:#fff}
 .mmri-home2__stage{position:relative;max-width:1320px;margin-inline:auto;padding:0 30px;display:flex;flex-direction:column;justify-content:space-evenly;height:calc(100dvh - var(--mmri-chrome))}
-.mmri-home2__hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(24px,3.4vw,52px);align-items:center;min-height:0}
+.mmri-home2__hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:clamp(24px,3.4vw,52px);align-items:center;min-height:0}
 /* Hero: local light control behind the text only (a dark scrim, no blur), so the headline is crisp at any background tone. */
-.mmri-home2__message-inner{display:grid;gap:clamp(12px,2.2dvh,22px);justify-items:start;max-width:600px}
-.mmri-home2__message h1{margin:0;display:grid;gap:.35em;text-shadow:0 2px 4px rgba(4,14,34,.6),0 6px 30px rgba(4,14,34,.75);font-size:clamp(26px,min(2.9vw,5dvh),42px);line-height:1.14;font-weight:800;letter-spacing:-.022em;color:#fff;text-wrap:balance}
-.mmri-home2__message h1 em{font-style:normal;font-weight:700;color:#fff}
+.mmri-home2__message-inner{display:grid;gap:clamp(18px,3.2dvh,32px);justify-items:start;max-width:640px;animation:mmri-rise var(--motion-reveal) var(--ease-smooth) both}
+.mmri-home2__message h1{margin:0;display:grid;gap:.3em;font-size:clamp(32px,min(4.1vw,6.4dvh),60px);line-height:1.06;font-weight:700;letter-spacing:-.035em;color:#fff;text-wrap:balance;text-shadow:0 1px 3px rgba(4,14,34,.5),0 6px 28px rgba(4,14,34,.55)}
+.mmri-home2__message h1 em{font-style:normal;font-weight:500;color:rgba(255,255,255,.9)}
 /* Primary CTA: simpler sibling of the guide crystal - cobalt glass pill, bright rim, extruded lower edge, blue light beneath. */
-.mmri-home2__start{position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:12px;height:54px;padding:0 28px;border:2px solid transparent;border-radius:16px;
-  background:radial-gradient(70% 100% at 10% 0%,rgba(140,200,255,.55),transparent 70%),linear-gradient(172deg,#2F6FF0 0%,#1650DC 45%,#0A32A8 100%);background-clip:padding-box;color:#fff;font:inherit;font-size:14.5px;font-weight:800;letter-spacing:.05em;cursor:pointer;
-  box-shadow:inset 0 0 0 1.5px rgba(150,215,255,.9),inset 0 2px 0 1.5px rgba(235,248,255,.9),inset 0 -6px 8px -3px rgba(70,170,255,.65),0 0 0 2px rgba(120,200,255,.8),3px 6px 0 2px #08205F,10px 14px 14px rgba(0,8,40,.45),18px 26px 30px -6px rgba(20,110,255,.6);transition:box-shadow .3s,filter .3s}
-.mmri-home2__start::before{content:"";position:absolute;z-index:-1;inset:4px 8px auto 8px;height:42%;border-radius:10px 10px 50% 50%/10px 10px 60% 60%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0))}
-.mmri-home2__start:hover{filter:brightness(1.1) saturate(1.1);box-shadow:inset 0 0 0 1.5px rgba(190,235,255,1),inset 0 2px 0 1.5px #fff,inset 0 -6px 8px -3px rgba(90,190,255,.85),0 0 0 2px rgba(150,220,255,.95),3px 6px 0 2px #08205F,10px 14px 14px rgba(0,8,40,.45),20px 28px 36px -6px rgba(30,130,255,.85)}
-.mmri-home2__start:active{filter:brightness(.97)}
+.mmri-home2__start{position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;gap:12px;height:54px;padding:0 26px;border:1px solid rgba(200,225,255,.6);border-radius:var(--radius-button);color:#fff;font:inherit;font-size:14.5px;font-weight:600;letter-spacing:.06em;cursor:pointer;
+  background:linear-gradient(180deg,rgba(140,188,255,.42),rgba(34,92,232,.55));-webkit-backdrop-filter:blur(8px) saturate(150%);backdrop-filter:blur(8px) saturate(150%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(8,30,120,.4),0 1px 3px rgba(4,12,40,.45),0 12px 28px -8px rgba(30,100,255,.6);transition:box-shadow var(--motion-fast) ease,border-color var(--motion-fast) ease,background var(--motion-fast) ease;animation:mmri-rise var(--motion-reveal) var(--ease-smooth) .12s both}
+.mmri-home2__start::before{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;background:radial-gradient(80% 140% at 14% 0%,rgba(255,255,255,.28),transparent 62%)}
+.mmri-home2__start:hover{border-color:rgba(235,245,255,.9);background:linear-gradient(180deg,rgba(160,203,255,.52),rgba(44,102,240,.62));box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(8,30,120,.4),0 1px 3px rgba(4,12,40,.45),0 16px 34px -8px rgba(40,110,255,.75)}
+.mmri-home2__start:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(4,12,40,.4)}
 .mmri-home2__start:focus-visible{outline:3px solid #fff;outline-offset:5px}
 
 /* Five category tiles replace the old radar: 3 + 2, identical size, centred on the right. */
 .mmri-home2__tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(26px,4.4dvh,40px) clamp(14px,1.8vw,22px);width:min(100%,660px);margin-inline:auto;align-content:center;min-height:0}
-.mmri-cat-tile{grid-column:span 2;height:clamp(128px,21.5dvh,196px)}
-.mmri-cat-tile:nth-child(4){grid-column:2/span 2}
-.mmri-cat-tile:nth-child(5){grid-column:4/span 2}
-.mmri-cat-tile .cat-tile__label{height:clamp(50px,8.2dvh,66px);font-size:clamp(12px,1.75dvh,14px)}
+.mmri-cat-tile{grid-column:span 2;height:clamp(128px,21.5dvh,196px);animation:mmri-rise var(--motion-reveal) var(--ease-smooth) both}
+.mmri-cat-tile:nth-child(4){grid-column:2/span 2;margin-top:clamp(-6px,-.6dvh,0px);animation-delay:.18s}
+.mmri-cat-tile:nth-child(5){grid-column:4/span 2;margin-top:clamp(14px,3dvh,30px);animation-delay:.22s}
+.mmri-cat-tile .cat-tile__label{height:auto;font-size:clamp(12.5px,1.8dvh,14.5px)}
+.mmri-cat-tile:nth-child(2){margin-top:clamp(14px,3dvh,30px);animation-delay:.1s}.mmri-cat-tile:nth-child(3){margin-top:clamp(0px,.6dvh,6px);animation-delay:.14s}
 
 .mmri-home2__guides{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;width:100%;margin-inline:auto}
-.mmri-home2__guide{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px;height:clamp(76px,10.5dvh,98px);padding:0 18px 0 14px;font:inherit;text-align:left;cursor:pointer}
+.mmri-home2__guide{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px;height:clamp(52px,7.6dvh,64px);padding:0 18px 0 14px;font:inherit;text-align:left;cursor:pointer;animation:mmri-rise var(--motion-reveal) var(--ease-smooth) .26s both}
 .mmri-home2__guide:focus-visible{outline:3px solid #fff;outline-offset:5px}
-.mmri-home2__guide-no{display:grid;place-items:center;min-width:clamp(34px,4.6dvh,44px);font-size:clamp(17px,2.4dvh,22px);font-weight:800;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:rgba(214,238,255,.92);text-shadow:0 0 12px rgba(120,200,255,.7)}
-.mmri-home2__guide-title{position:relative;z-index:1;display:flex;align-items:center;padding:0 0 0 6px;font-size:14px;line-height:1.3;font-weight:750;text-wrap:balance;color:#fff;text-shadow:0 1px 6px rgba(0,20,90,.55)}
+.mmri-home2__guide-no{display:grid;place-items:center;min-width:clamp(30px,4dvh,38px);font-size:clamp(15px,2.1dvh,19px);font-weight:500;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:rgba(214,236,255,.9)}
+.mmri-home2__guide-title{position:relative;z-index:1;display:flex;align-items:center;padding:0 0 0 6px;font-size:14px;line-height:1.3;font-weight:600;text-wrap:balance;color:#fff;text-shadow:0 1px 4px rgba(0,20,90,.45)}
 
 @media (min-width:1001px) and (max-width:1279px){
  .mmri-home2__stage{padding-inline:20px}
  .mmri-home2__guides{gap:14px}
- .mmri-home2__guide{padding:0 10px 0 8px;gap:2px;height:clamp(84px,11.5dvh,100px)}
+ .mmri-home2__guide{padding:0 10px 0 8px;gap:2px;height:clamp(54px,8dvh,66px)}
  .mmri-home2__guide-title{font-size:12.5px;padding-left:4px}
- .mmri-cat-tile .cat-tile__label{height:clamp(58px,9.4dvh,72px);padding:0 6px;font-size:12px}
+ .mmri-cat-tile .cat-tile__label{height:auto;padding:0 12px 12px;font-size:12.5px}
 }
 
 /* guide dialog: see-through liquid glass over the transformed environment */
 .mmri-guide2::-webkit-scrollbar,.mmri-guide2__panel::-webkit-scrollbar{display:none}
 .mmri-guide2{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}
-.mmri-guide2::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 640px at 50% 40%,rgba(255,255,255,.04),rgba(4,14,52,.34));-webkit-backdrop-filter:blur(20px) saturate(120%);backdrop-filter:blur(20px) saturate(120%);animation:mmri-fade .4s var(--mmri-ease-standard) both}
-.mmri-guide2__panel{z-index:1;--gr-under:.5;position:relative;font-family:Inter,var(--mmri-font-family);width:min(1180px,100%);max-height:calc(100dvh - 28px);overflow:auto;scrollbar-width:none;overscroll-behavior:contain;padding:22px 28px 24px;border-radius:var(--radius-modal);animation:mmri-pop .42s cubic-bezier(.16,1,.3,1) both}
-.mmri-guide2__close{position:absolute;top:16px;right:16px;z-index:2;display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.68);border-radius:var(--radius-control);background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.05));color:#fff;cursor:pointer;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(10,30,60,.3),0 8px 12px -3px rgba(4,12,30,.5);transition:box-shadow .3s,border-color .3s}
-.mmri-guide2__close:hover{border-color:#fff;box-shadow:inset 0 1.5px 0 #fff,inset 0 -1px 0 rgba(10,30,60,.25),0 0 20px rgba(255,255,255,.55),0 8px 12px -3px rgba(4,12,30,.5)}
+.mmri-guide2::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 640px at 50% 40%,rgba(255,255,255,.04),rgba(4,14,52,.34));-webkit-backdrop-filter:blur(20px) saturate(120%);backdrop-filter:blur(20px) saturate(120%);animation:mmri-fade .26s ease both}
+.mmri-guide2__panel{z-index:1;--gr-under:.5;position:relative;font-family:Inter,var(--mmri-font-family);width:min(1180px,100%);max-height:calc(100dvh - 28px);overflow:auto;scrollbar-width:none;overscroll-behavior:contain;padding:22px 28px 24px;border-radius:var(--radius-modal);animation:mmri-pop .28s var(--ease-smooth) both}
+.mmri-guide2__close{position:absolute;top:16px;right:16px;z-index:2;display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.68);border-radius:var(--radius-control);background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.05));color:#fff;cursor:pointer;box-shadow:var(--highlight-glass),var(--elevation-1);transition:box-shadow var(--motion-fast),border-color var(--motion-fast)}
+.mmri-guide2__close:hover{border-color:#fff;background:rgba(255,255,255,.16)}
 .mmri-guide2__close svg{width:26px;height:26px}
 @keyframes mmri-fade{from{opacity:0}to{opacity:1}}
-@keyframes mmri-pop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes mmri-pop{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.mmri-guide2,.mmri-guide2__panel{animation:none}}
 .mmri-guide2__header{max-width:52em;padding-right:64px;margin-bottom:18px}
 .mmri-guide2__header>span{font-size:12px;font-weight:800;letter-spacing:.14em;color:#BFE3FF}
@@ -114,9 +115,5 @@ html body .mmri-guide2__panel.glass-regular{background:linear-gradient(155deg,rg
   -webkit-backdrop-filter:blur(4px) saturate(130%);backdrop-filter:blur(4px) saturate(130%);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.95),inset 2px 0 0 rgba(200,235,255,.5),inset 0 -3px 0 rgba(90,170,255,.7),inset 0 -26px 30px -18px rgba(80,170,255,.45),6px 8px 10px rgba(2,10,40,.5),28px 38px 40px -6px rgba(0,4,30,.8),46px 64px 72px -16px rgba(60,160,255,.55)}
 
-/* Entrance: hero text, CTA, tiles and guides rise in sequence once; light sweeps across the hero panel. */
-.mmri-home2__message-inner{animation:mmri-rise .8s cubic-bezier(.16,1,.3,1) both}
-.mmri-home2__start{animation:mmri-rise .8s cubic-bezier(.16,1,.3,1) .25s both}
-.mmri-cat-tile{animation:mmri-rise .75s cubic-bezier(.16,1,.3,1) both}
-.mmri-cat-tile:nth-child(1){animation-delay:.12s}.mmri-cat-tile:nth-child(2){animation-delay:.2s}.mmri-cat-tile:nth-child(3){animation-delay:.28s}.mmri-cat-tile:nth-child(4){animation-delay:.36s}.mmri-cat-tile:nth-child(5){animation-delay:.44s}
-.mmri-home2__guide{animation:mmri-rise .75s cubic-bezier(.16,1,.3,1) .5s both}
+/* Entrance: one calm reveal (opacity + 8px), sequenced a few tens of ms apart. No sweeps, no looping motion. */
+.mmri-cat-tile:nth-child(1){animation-delay:.06s}

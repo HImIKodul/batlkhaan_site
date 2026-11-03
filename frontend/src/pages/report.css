@@ -5,22 +5,20 @@
 .report-company span{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.8)}
 .report-company h1{margin:4px 0 0;font-size:clamp(26px,3.2vw,36px);line-height:1.15;font-weight:800;color:#fff;overflow-wrap:anywhere}
 /* PDF button: fixed size, fixed place in the header, no hover/active movement */
-.report-top-download{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;box-sizing:border-box;width:176px;height:46px;padding:0;border:1px solid rgba(255,255,255,.85);border-radius:999px;background:linear-gradient(180deg,#fff,#E4EAFF);color:#17229A;font:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 10px 24px rgba(8,22,42,.35);transition:background .3s,box-shadow .3s;transform:none}
-.report-top-download:active:not(:disabled){background:#D5DDFF}
+.report-top-download{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;box-sizing:border-box;width:176px;height:46px;padding:0;border:1px solid rgba(255,255,255,.42);border-radius:var(--radius-button);background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);color:#fff;font:inherit;font-size:14px;font-weight:600;letter-spacing:.02em;cursor:pointer;box-shadow:var(--highlight-glass),var(--elevation-1);transition:background var(--motion-fast) ease,border-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease;transform:none}
+.report-top-download:active:not(:disabled){background:rgba(255,255,255,.08);box-shadow:none}
 .report-top-download:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .report-top-download:disabled{cursor:progress;opacity:.8}
 .report-top-download svg{flex:none}
-.report-top-download.is-done{background:linear-gradient(180deg,#8FF0C2,#34D399);color:#064E3B}
-.report-top-download.is-failed{background:linear-gradient(180deg,#FFC2C7,#FF8A94);color:#7F1D1D}
+.report-top-download.is-done{background:rgba(52,211,153,.3);border-color:#34D399}
+.report-top-download.is-failed{background:rgba(248,113,113,.3);border-color:#F87171}
 .report-top-download[aria-busy="true"] svg{animation:mmri-spin 1s linear infinite}
 
 /* domain tabs: status badge sits on the top-right corner, outside the tab body */
 .report-domain-switcher{display:flex;flex-wrap:wrap;gap:12px;padding-top:8px}
-.report-domain-switcher>button{position:relative;display:flex;align-items:center;gap:12px;height:76px;min-width:76px;padding:0 12px;border:1px solid rgba(255,255,255,.7);outline:0;border-radius:24px;background:linear-gradient(150deg,rgba(255,255,255,.5),color-mix(in srgb,var(--domain-accent) 10%,rgba(255,255,255,.18)));color:var(--domain-ink,var(--domain-accent));font:inherit;cursor:pointer;-webkit-backdrop-filter:blur(3px) saturate(125%);backdrop-filter:blur(3px) saturate(125%);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.95),inset 0 -14px 20px color-mix(in srgb,var(--domain-accent) 14%,transparent),0 10px 26px rgba(20,40,110,.16);transition:background .35s,box-shadow .35s,border-color .35s;transform:none}
-.report-domain-switcher>button:hover{border-color:#fff;box-shadow:inset 0 1.5px 1px #fff,inset 0 -14px 20px color-mix(in srgb,var(--domain-accent) 22%,transparent),0 14px 32px rgba(20,40,110,.20),0 0 40px -6px color-mix(in srgb,var(--domain-accent) 55%,transparent);transform:none}
-.report-domain-switcher>button.is-active{border-color:#fff;background:linear-gradient(150deg,rgba(255,255,255,.72),color-mix(in srgb,var(--domain-accent) 26%,rgba(255,255,255,.3)));box-shadow:inset 0 1.5px 1px #fff,inset 0 -16px 24px color-mix(in srgb,var(--domain-accent) 28%,transparent),0 14px 32px rgba(20,40,110,.20),0 0 54px -4px color-mix(in srgb,var(--domain-accent) 70%,transparent)}
-.report-domain-switcher__icon{display:grid;place-items:center}
-.report-domain-switcher__icon svg{width:50px;height:50px}
+.report-domain-switcher>button{position:relative;display:flex;align-items:center;gap:12px;height:64px;min-width:64px;padding:0 7px;border:1px solid rgba(255,255,255,.22);outline:0;border-radius:14px;background:rgba(255,255,255,.06);color:#fff;font:inherit;cursor:pointer;box-shadow:var(--elevation-1);transition:background var(--motion-fast) ease,border-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease;transform:none}
+.report-domain-switcher>button:hover{border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.12);transform:none}
+.report-domain-switcher>button.is-active{border-color:#fff;background:rgba(255,255,255,.16);padding:0 16px 0 7px;box-shadow:var(--elevation-2)}
 .report-domain-switcher__active-copy strong{font-size:14px;font-weight:700;color:#fff;white-space:nowrap}
 .report-domain-switcher__state{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;width:30px;height:30px;padding:0;background:none;border:0}
 .report-domain-switcher__state svg{width:30px;height:30px}
@@ -45,9 +43,9 @@
 
 /* page 1 */
 .report-score-stage{display:grid;justify-items:center;gap:14px;padding:16px 0 8px}
-.report-score{display:grid;place-items:center;align-content:center;gap:2px;width:232px;height:232px;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:50%;background:radial-gradient(circle at 30% 18%,rgba(255,255,255,.34),rgba(255,255,255,.06) 45%,rgba(4,14,34,.55) 100%);-webkit-backdrop-filter:blur(3px) saturate(125%);backdrop-filter:blur(3px) saturate(125%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -14px 24px -10px rgba(8,22,42,.55),0 0 0 4px var(--score-color,var(--report-accent)),0 0 0 6px rgba(255,255,255,.25),var(--shadow-contact),0 24px 40px -10px rgba(8,22,42,.5)}
-.report-score span{padding-bottom:3px;border-bottom:2px solid var(--score-color,transparent);font-size:12px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.9)}
-.report-score strong{font-size:120px;line-height:.95;font-weight:850;color:#fff;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
+.report-score{display:grid;place-items:center;align-content:center;gap:4px;padding:8px 0}
+.report-score span{padding-bottom:4px;border-bottom:2px solid var(--score-color,rgba(255,255,255,.5));font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.9)}
+.report-score strong{font-size:clamp(88px,11vw,132px);line-height:.95;font-weight:600;color:#fff;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
 .report-score-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;font-size:13px;color:var(--mmri-color-text-muted);text-align:center}
 .report-score-meta strong{color:var(--report-accent-light);font-weight:800}
 .report-score-meta span{font-variant-numeric:tabular-nums}
@@ -145,7 +143,7 @@
  .report-v3{padding-inline:8px}
  .report-top-download{width:100%;max-width:none}
  .report-domain-switcher{gap:8px}
- .report-domain-switcher>button{height:54px;min-width:54px;padding-inline:10px}
+ .report-domain-switcher>button{height:54px;min-width:54px;padding-inline:10px;max-width:calc(100% - 10px)}
  .report-domain-switcher__icon svg{width:30px;height:30px}
  .report-version-strip{margin-inline:-2px}
  .report-score{width:142px;height:142px}
@@ -158,7 +156,7 @@
 }
 
 /* Final control-surface polish: controls may be glass; report paper stays solid. */
-.report-top-download:hover:not(:disabled){background:#fff;box-shadow:inset 0 1px 0 #fff,0 12px 28px rgba(8,22,42,.4)}
+.report-top-download:hover:not(:disabled){background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.8);box-shadow:var(--highlight-glass),var(--elevation-2)}
 @media (max-width:520px){.report-v3__top{padding:14px;border-radius:18px}.report-version-strip{padding:7px}}
 
 /* Step 5/10 — deterministic browser/demo PDF fallback.
@@ -254,4 +252,4 @@
 }
 
 /* Category = colour only: the switcher chip is the family gradient (no icon). */
-.report-domain-switcher__icon{flex:none;display:block;width:50px;height:50px;border-radius:16px;border:1px solid rgba(255,255,255,.7);background:linear-gradient(168deg,var(--domain-secondary,var(--domain-accent)),var(--domain-primary,var(--domain-accent)) 60%,color-mix(in srgb,var(--domain-accent) 60%,#000) 130%);box-shadow:inset 0 2px 0 rgba(255,255,255,.7),2px 4px 8px rgba(8,22,42,.35)}
+.report-domain-switcher__icon{flex:none;display:block;width:48px;height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.4);background:linear-gradient(160deg,var(--domain-secondary,var(--domain-accent)),var(--domain-primary,var(--domain-accent)));box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}

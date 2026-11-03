@@ -24,14 +24,10 @@ import './design/preferences.css';
 
 function applyStoredTechnicalPreferences(){
   const root=document.documentElement;
-  root.dataset.mmriFontSize=localStorage.getItem('mmri.fontSize')||'normal';
   root.style.colorScheme='dark';
 }
 
 applyStoredTechnicalPreferences();
-window.addEventListener('storage',(event)=>{
-  if(event.key===null||event.key==='mmri.fontSize')applyStoredTechnicalPreferences();
-});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

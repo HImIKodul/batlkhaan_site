@@ -135,6 +135,8 @@ export interface SecondaryEdge {
 
 export interface MethodologyDefinition {
   version: string;
+  /** SHA-256 of the exact bundle imported as this methodology version (methodology_versions.bundleSha256). */
+  bundleSha256?: string;
   domainCode?: "marketing" | "it" | "finance" | "people" | "operations";
   engineKind?: "MARKETING_V3" | "BUSINESSMRI_V2";
   cellWeightByCategoryCell?: Map<string, number>;

@@ -17,7 +17,13 @@ let memoryAccessToken:string|null=null;
 const WRITER_KEY='mmri.writerId';
 function writerId(){let id=sessionStorage.getItem(WRITER_KEY);if(!id){id=globalThis.crypto?.randomUUID?.()??`writer-${Date.now()}-${Math.random().toString(36).slice(2)}`;sessionStorage.setItem(WRITER_KEY,id)}return id}
 function requestId(){return globalThis.crypto?.randomUUID?.()??`req-${Date.now()}-${Math.random().toString(36).slice(2)}`}
-export class ApiError extends Error{status:number;code?:string;details?:unknown;requestId?:string;constructor(status:number,message:string,body?:any){const fallback='Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.';super(mnText(message,fallback));this.name='ApiError';this.status=status;this.code=body?.error?.code;this.details=body?.error?.details;this.requestId=body?.error?.requestId;}}
+const KNOWN_ERRORS:[RegExp,string][]=[
+ [/invalid email or password/i,'Имэйл эсвэл нууц үг буруу байна.'],
+ [/already exists/i,'Энэ имэйлээр бүртгэл аль хэдийн үүссэн байна.'],
+ [/another active writer|writer lease/i,'Энэ оношилгоо өөр цонх эсвэл төхөөрөмж дээр нээлттэй байна. 2 минут орчим хүлээгээд дахин оролдоно уу.']
+];
+function knownErrorMn(message:string){return KNOWN_ERRORS.find(([re])=>re.test(message))?.[1]}
+export class ApiError extends Error{status:number;code?:string;details?:unknown;requestId?:string;constructor(status:number,message:string,body?:any){const fallback='Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.';super(knownErrorMn(message)??mnText(message,fallback));this.name='ApiError';this.status=status;this.code=body?.error?.code;this.details=body?.error?.details;this.requestId=body?.error?.requestId;}}
 export const session={
  get accessToken(){return memoryAccessToken},set accessToken(v:string|null){memoryAccessToken=v},
  get userId(){return localStorage.getItem(K.user)},set userId(v:string|null){v?localStorage.setItem(K.user,v):localStorage.removeItem(K.user)},
