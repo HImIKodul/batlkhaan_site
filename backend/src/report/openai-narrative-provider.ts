@@ -51,7 +51,8 @@ function jitteredBackoff(base:number,attemptIndex:number,max:number){
 }
 function requestId(headers:Headers):string|null{return headers.get("x-request-id")||headers.get("request-id")||headers.get("openai-request-id")}
 function safeProviderMessage(body:any,status:number){
-  const code=errorCode(body); const msg=String(body?.error?.message??"request failed").replace(/\s+/g," ").slice(0,260);
+  const code=errorCode(body); // Provider errors are stored and returned to the client in aiAudit: never carry credentials or their echo.
+  const msg=String(body?.error?.message??"request failed").replace(/\s+/g," ").replace(/incorrect api key provided:[^.]*\.?/ig,"API key rejected.").replace(/\b(?:sk|rk|pk)-[A-Za-z0-9_*\-]{3,}/g,"[redacted]").replace(/bearer\s+[A-Za-z0-9._\-]+/ig,"bearer [redacted]").slice(0,260);
   return `AI report provider HTTP ${status}${code?` [${code}]`:""}: ${msg}`;
 }
 

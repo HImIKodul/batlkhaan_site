@@ -69,3 +69,6 @@
  .diagnosis-square:last-child{width:auto;grid-column:auto}
  .diagnosis-status-icon{font-size:10.5px}
 }
+.diagnosis-square__retake{display:inline-flex;align-items:center;min-height:32px;margin:-4px 0;padding:0 2px;border:0;background:none;font:inherit;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--tile-ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;opacity:.92}
+.diagnosis-square__retake:hover{opacity:1}
+.diagnosis-square__retake:focus-visible{outline:2px solid currentColor;outline-offset:3px;border-radius:4px}

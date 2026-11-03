@@ -19,6 +19,7 @@ import { MemoryRateLimiter } from "./http/rate-limit.js";
 import { publicRouting } from "./presenters.js";
 import { AssessmentQueryService } from "./services/query-service.js";
 import { PrismaStrategyReportService, ReportGenerationInProgressError } from "../services/prisma-strategy-report-service.js";
+import { isResultTerminalAssessmentStatus } from "../services/assessment-lifecycle.js";
 import { createNarrativeProviderFromEnv } from "./ai-report-provider.js";
 import { BillingService } from "../billing/billing-service.js";
 import { TARGET_METHODOLOGY_VERSION } from "../methodology-target.js";
@@ -46,6 +47,30 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   const engine=new PrismaAssessmentEngine();
   const narrativeProvider=createNarrativeProviderFromEnv(config.environment);
   const strategyReports=new PrismaStrategyReportService(engine,narrativeProvider);
+  /**
+   * First-time report generation includes a provider call that can take about a minute, which is longer than a
+   * reverse proxy will hold a request. A request therefore waits at most REPORT_REQUEST_WAIT_MS and otherwise answers
+   * the existing 409 REPORT_GENERATION_IN_PROGRESS while the generation continues (single-flight, lease protected)
+   * so the client can poll. Published reports are returned immediately.
+   */
+  const REPORT_REQUEST_WAIT_MS=Math.max(1000,Number(process.env.MMRI_REPORT_REQUEST_WAIT_MS??25_000)||25_000);
+  const withinRequestBudget=async<T>(work:Promise<T>):Promise<T>=>{
+    let timer:NodeJS.Timeout|undefined;
+    const budget=new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is in progress",{retryAfterSeconds:3})),REPORT_REQUEST_WAIT_MS)});
+    work.catch(()=>undefined);
+    try{return await Promise.race([work,budget])}finally{if(timer)clearTimeout(timer)}
+  };
+  /** Build the report in the background as soon as a diagnosis completes, so the first view is normally instant. */
+  const reportPrewarmEnabled=(process.env.MMRI_REPORT_PREWARM??"true").trim().toLowerCase()!=="false";
+  const scheduleReportPrewarm=(assessmentId:string)=>{
+    if(!reportPrewarmEnabled)return;
+    setImmediate(()=>{void(async()=>{
+      try{
+        const a=await prisma.assessment.findUnique({where:{id:assessmentId},select:{status:true}});
+        if(a&&isResultTerminalAssessmentStatus(a.status))await strategyReports.generateReport(assessmentId);
+      }catch(error:any){console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"report_prewarm_skipped",assessmentId,reason:String(error?.message??error).slice(0,160)}))}
+    })()});
+  };
   const queries=new AssessmentQueryService(engine,strategyReports);
   const billing=new BillingService(config);
   const apiLimiter=new MemoryRateLimiter(config.apiRateLimit,config.rateLimitWindowMs);
@@ -328,6 +353,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const result=await engine.submitAnswer(params.assessmentId,String(b.questionId),Number(b.optionIndex),text(b.respondentId),{writerLeaseId:writerId(req),clientRequestId:String(b.clientRequestId),questionIssueId:String(b.questionIssueId),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
     const routing=await queries.resumePayload(params.assessmentId);
     ok(res,{accepted:true,answerId:result.answerId,assessmentRevision:result.assessmentRevision,routing});
+    scheduleReportPrewarm(params.assessmentId);
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/back",async({req,res,principal,params})=>{
@@ -354,6 +380,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const b=await readJson(req,config.requestBodyLimitBytes); if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
     const result=await engine.completeAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
     ok(res,{completed:result.completed,reason:result.reason,routingState:result.routingState,status:result.status,assessmentRevision:result.assessmentRevision});
+    if(result.completed)scheduleReportPrewarm(params.assessmentId);
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/status",async({res,principal,params})=>{
@@ -406,7 +433,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
 
   router.add("GET","/api/v1/assessments/:assessmentId/report",async({res,principal,params})=>{
     const access=await assessmentAccess(principal!.userId,params.assessmentId,REPORT_READ); requireTerminal(access.assessment.status); await requireReportReady(params.assessmentId);
-    try{ok(res,access.membership.role==="VIEWER"?await strategyReports.readPublishedReport(params.assessmentId):await strategyReports.generateReport(params.assessmentId));}
+    try{ok(res,access.membership.role==="VIEWER"?await strategyReports.readPublishedReport(params.assessmentId):await withinRequestBudget(strategyReports.generateReport(params.assessmentId)));}
     catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");throw error;}
   });
 

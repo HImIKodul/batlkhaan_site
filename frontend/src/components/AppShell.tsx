@@ -61,7 +61,7 @@ function sameNotices(a:ShellNotice[],b:ShellNotice[]){
  if(a.length!==b.length)return false;
  return a.every((row,index)=>{const next=b[index];return !!next&&row.id===next.id&&row.kind===next.kind&&row.title===next.title&&row.detail===next.detail&&row.time===next.time&&row.areaId===next.areaId});
 }
-function noticeTime(value?:string|null){const d=value?new Date(value):new Date();return Number.isNaN(d.getTime())?'':new Intl.DateTimeFormat('mn-MN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d)}
+function noticeTime(value?:string|null){const d=value?new Date(value):new Date();if(Number.isNaN(d.getTime()))return '';const p=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
 
 /* The backend exposes no notification API: notices are derived from billing + assessments. Read/dismissed state is therefore
    a per-browser preference (localStorage), keyed by company, and only hides/marks items locally. */

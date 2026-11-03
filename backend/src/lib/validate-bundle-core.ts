@@ -67,5 +67,59 @@ export function validateBundle(bundle: MethodologyBundle): ValidationIssue[] {
     }
   }
 
+  errors.push(...recommendationContractIssues(bundle));
+  return errors;
+}
+
+const REC_CONTRACT = "MMRI_FINAL_Recommendation_Engine_Contract.json";
+const AUTH_CONTRACT = "MMRI_FINAL_Respondent_Authority_Contract.json";
+/** Category-id prefix of each non-Marketing domain; Marketing categories are MSxx. */
+const DOMAIN_ID_PREFIX: Record<string, string> = { finance: "FINMRI-", it: "ISMRI-", people: "HRMRI-", operations: "OPMRI-" };
+
+/**
+ * Recommendation/authority contract integrity. A recommendation resolves its objective through
+ * categoryObjectives[category]; a contract copied from another domain silently yields zero
+ * recommendations. Imports and bundle validation must therefore fail on any of these.
+ */
+export function recommendationContractIssues(bundle: MethodologyBundle): ValidationIssue[] {
+  const errors: ValidationIssue[] = [];
+  const fail = (code: string, message: string) => errors.push({ code, message });
+  const domain = bundle.domainCode ?? "marketing";
+  const rec = bundle.contracts?.[REC_CONTRACT];
+  const objectives: any[] = rec?.composition?.categoryObjectives;
+  if (!Array.isArray(objectives)) { fail("REC_OBJECTIVES_MISSING", "Recommendation contract has no composition.categoryObjectives."); return errors; }
+
+  const categoryIds = new Set(bundle.categories.map(c => c.ID));
+  const ids = objectives.map(o => String(o?.category ?? ""));
+  if (objectives.length !== 64) fail("REC_OBJECTIVE_COUNT", `Expected 64 category objectives, got ${objectives.length}.`);
+  if (new Set(ids).size !== ids.length) fail("REC_OBJECTIVE_DUPLICATE", `Duplicate objective category ids: ${ids.filter((x, i) => ids.indexOf(x) !== i).slice(0, 5).join(", ")}.`);
+  const orphans = ids.filter(id => !categoryIds.has(id));
+  if (orphans.length) fail("REC_OBJECTIVE_ORPHAN", `${orphans.length} objective(s) reference no category of this bundle (e.g. ${orphans.slice(0, 5).join(", ")}).`);
+  const missing = [...categoryIds].filter(id => !ids.includes(id));
+  if (missing.length) fail("REC_OBJECTIVE_MISSING_CATEGORY", `${missing.length} categor(ies) have no objective (e.g. ${missing.slice(0, 5).join(", ")}).`);
+
+  const roleIds = new Set<string>((bundle.contracts?.[AUTH_CONTRACT]?.roles ?? []).map((r: any) => String(r.id)));
+  const nameById = new Map(bundle.categories.map(c => [c.ID, c.Category]));
+  for (const o of objectives) {
+    if (domain !== "marketing" && nameById.has(o.category) && o.name !== nameById.get(o.category)) fail("REC_OBJECTIVE_NAME", `${o.category}: objective name does not equal the category name.`);
+    if (!String(o.objective ?? "").trim()) fail("REC_OBJECTIVE_EMPTY", `${o.category}: empty objective text.`);
+    if (!roleIds.has(String(o.defaultOwner)) || !roleIds.has(String(o.sponsor))) fail("REC_OBJECTIVE_ROLE", `${o.category}: owner/sponsor is not a role of this bundle's authority contract.`);
+  }
+  const cellIds = new Set(bundle.cellTemplates.map((c: any) => c.ID));
+  for (const iv of rec.composition.cellInterventions ?? []) {
+    if (!cellIds.has(iv.cell)) fail("REC_INTERVENTION_CELL", `Intervention ${iv.code} targets unknown cell ${iv.cell}.`);
+  }
+
+  if (domain !== "marketing") {
+    const prefix = DOMAIN_ID_PREFIX[domain];
+    const marketingIds = ids.filter(id => /^MS\d+$/.test(id));
+    if (marketingIds.length) fail("REC_MARKETING_IDS", `Non-Marketing (${domain}) recommendation contract contains ${marketingIds.length} Marketing ids (${marketingIds.slice(0, 3).join(", ")}...).`);
+    const foreign = ids.filter(id => !id.startsWith(prefix));
+    if (foreign.length) fail("REC_FOREIGN_IDS", `${domain} contract has ${foreign.length} id(s) outside ${prefix}* (e.g. ${foreign.slice(0, 3).join(", ")}).`);
+    const text = JSON.stringify([objectives, rec.composition.cellInterventions]);
+    if (/аркетинг/i.test(text)) fail("REC_MARKETING_TEXT", `${domain} recommendation contract contains Marketing wording.`);
+    const roles: any[] = bundle.contracts?.[AUTH_CONTRACT]?.roles ?? [];
+    if (roles.some(r => /аркетинг|MARKETING/i.test(`${r.label} ${r.code} ${r.scope}`))) fail("AUTH_MARKETING_ROLES", `${domain} authority contract has Marketing role definitions.`);
+  }
   return errors;
 }

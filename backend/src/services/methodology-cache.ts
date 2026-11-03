@@ -13,6 +13,7 @@ import type {
   ModuleDef
 } from "../engine/types.js";
 import { questionKey } from "../engine/utils.js";
+import { resolveQuestionBankVersion } from "../methodology-provenance.js";
 import { validateHierarchicalWeights } from "../engine/weighting.js";
 
 /**
@@ -203,6 +204,7 @@ export class MethodologyDefinitionCache {
     return {
       version: methodology.version,
       bundleSha256: methodology.bundleSha256,
+      questionBankVersion: resolveQuestionBankVersion({ domainCode: methodology.domainCode, version: methodology.version, validation: methodology.validation }),
       domainCode: (methodology.domainCode ?? "marketing") as MethodologyDefinition["domainCode"],
       engineKind: methodology.domainCode === "marketing" ? "MARKETING_V3" : "BUSINESSMRI_V2",
       cellWeightByCategoryCell,

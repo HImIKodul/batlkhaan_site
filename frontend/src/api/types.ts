@@ -64,7 +64,7 @@ export function displayScore(x:{officialScore?:number|null;partialScore?:number|
 }
 export function pct01(v:number|null|undefined):number|null{return v==null?null:Math.round(v*100);}
 export function isTerminal(status:string|undefined|null){return !!status&&['COMPLETED','COMPLETED_WITH_REVIEW','EXHAUSTED'].includes(status);}
-export function formatDate(value:string|null|undefined){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('mn-MN',{year:'numeric',month:'2-digit',day:'2-digit'});}
+export function formatDate(value:string|null|undefined){if(!value)return '—';const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';const p=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}`}
 
 
 export type BillingPlanCode='DIAGNOSTIC'|'RETAKE';

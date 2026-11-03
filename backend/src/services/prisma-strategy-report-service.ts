@@ -70,7 +70,8 @@ export class PrismaStrategyReportService {
   private singleFlight<T>(key: string, run: () => Promise<T>): Promise<T> {
     const current = this.freezeInFlight.get(key);
     if (current) return current as Promise<T>;
-    const started: Promise<T> = run().finally(() => { if (this.freezeInFlight.get(key) === started) this.freezeInFlight.delete(key); });
+    const t0 = Date.now();
+    const started: Promise<T> = run().then(result => { console.log(JSON.stringify({ ts: new Date().toISOString(), level: "info", event: "freeze_timing", key: key.split(":")[0], assessmentId: key.split(":")[1], ms: Date.now() - t0 })); return result; }).finally(() => { if (this.freezeInFlight.get(key) === started) this.freezeInFlight.delete(key); });
     this.freezeInFlight.set(key, started);
     return started;
   }
@@ -396,7 +397,10 @@ export class PrismaStrategyReportService {
   }
 
   private async generateReportInternal(assessmentId:string,upgradeInline:boolean){
-    const payload=await this.freezeReportPayload(assessmentId);
+    const timing:Record<string,number>={};const t0=Date.now();let tp=t0;
+    const mark=(phase:string)=>{const now=Date.now();timing[phase]=(timing[phase]??0)+(now-tp);tp=now};
+    const emit=(outcome:string)=>console.log(JSON.stringify({ts:new Date().toISOString(),level:"info",event:"report_generation_timing",assessmentId,outcome,totalMs:Date.now()-t0,phasesMs:timing}));
+    const payload=await this.freezeReportPayload(assessmentId);mark("freeze_report_payload");
     const row=await prisma.reportSnapshot.findFirst({where:{assessmentId,externalId:payload.reportId}}); if(!row)throw new Error("Frozen report snapshot missing");
     assertFrozenReportBinding(payload);
     const auditView=(r:any)=>({modelIdentifier:r.modelIdentifier,modelConfig:r.modelConfig,promptVersion:r.promptVersion,validatorVersion:r.validatorVersion,generationAttemptCount:r.generationAttemptCount,providerHttpAttemptCount:r.providerHttpAttemptCount??0,providerRetryCount:r.providerRetryCount??0,providerRequestIds:r.providerRequestIds??[],narrativeHash:r.narrativeHash,providerError:r.providerError??null,nextAiRetryAt:r.nextAiRetryAt??null,generationFailureCount:r.generationFailureCount??0});
@@ -423,13 +427,16 @@ export class PrismaStrategyReportService {
     await prisma.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATION_STARTED",entityType:"ReportSnapshot",entityId:row.id,payload:{leaseId,previousState:row.generationState,promptVersion:MMRI_AI_REPORT_PROMPT_VERSION,validatorVersion:MMRI_NARRATIVE_VALIDATOR_VERSION,provider:this.narrativeProvider?.metadata.provider??"NONE",modelIdentifier:this.narrativeProvider?.metadata.modelIdentifier??"deterministic-fallback"}}});
 
     try{
+      mark("lease_and_audit");
       const result=await generateValidatedNarrative(payload,this.narrativeProvider);
+      mark("narrative_ai_and_validation");
       const narrativeHash=sha256Json(result.narrative);
       // Renew ownership before provenance freezing so a slow trace build cannot let another
       // process publish a competing narrative for the same frozen report.
       const renewed=await prisma.reportSnapshot.updateMany({where:{id:row.id,generationLeaseId:leaseId},data:{generationLeaseExpiresAt:new Date(Date.now()+leaseMs)}});
       if(renewed.count!==1)throw new ReportGenerationInProgressError();
       const trace=await this.traceability.freezePublicationTrace(assessmentId,payload,result.narrative,prisma,row.id);
+      mark("publication_trace");
       const completedAt=new Date(); const cooldownMs=AI_RETRY_COOLDOWN_MS();
       const nextAiRetryAt=result.state==="AI_FALLBACK_USED"&&Boolean(this.narrativeProvider)&&Boolean(result.providerError)&&cooldownMs>0?new Date(completedAt.getTime()+cooldownMs):null;
       const updated=await prisma.$transaction(async(tx:any)=>{
@@ -440,6 +447,7 @@ export class PrismaStrategyReportService {
         await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,diagnosisResultHash:payload.diagnosisResultHash,strategyHash:payload.strategyHash,planHash:payload.planHash,bindingHash:payload.bindingHash,narrativeHash,modelIdentifier:result.providerMetadata.modelIdentifier,promptVersion:result.providerMetadata.promptVersion,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,providerError:result.providerError,leaseId}}});
         return tx.reportSnapshot.findUnique({where:{id:row.id}});
       },{maxWait:10000,timeout:30000});
+      mark("publish_transaction");emit(result.state);
       return {payload,narrative:result.narrative,validation:result.validation,generationState:result.state,aiAudit:updated?auditView(updated):{...result.providerMetadata,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,narrativeHash,providerError:result.providerError,nextAiRetryAt}};
     }catch(error:any){
       const message=error instanceof Error?error.message.slice(0,500):"Report generation failed";

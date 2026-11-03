@@ -118,7 +118,8 @@ try {
       sourceMethodology: bundle.sourceMethodology,
       bundleSha256,
       status: "VALIDATING",
-      validation: bundle.validation as any,
+      // questionBankVersion is persisted here (no dedicated column) so snapshots can pin the bank of THIS version.
+      validation: { ...(bundle.validation as any), questionBankVersion: bundle.questionBankVersion ?? null } as any,
       generatedAtUtc: bundle.generatedAtUtc ? new Date(bundle.generatedAtUtc) : null
     }
   });

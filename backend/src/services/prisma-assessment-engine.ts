@@ -11,7 +11,6 @@ import { conflict } from "../api/errors.js";
 import { assertRevision, assertWriterLease, leaseExpiry, requireWriterId, sha256Canonical, type AnswerWriteGuard, type PersistenceWriteGuard } from "./persistence-integrity.js";
 import {
   TARGET_METHODOLOGY_VERSION,
-  TARGET_QUESTION_BANK_VERSION
 } from "../methodology-target.js";
 import { methodologyTargetForDomain, normalizeDomainCode, type DomainCode } from "../domain-methodology.js";
 import { ACTIVE_ASSESSMENT_STATUSES, RESULT_TERMINAL_ASSESSMENT_STATUSES, canMutateRespondents, isResultTerminalAssessmentStatus } from "./assessment-lifecycle.js";
@@ -302,7 +301,7 @@ export class PrismaAssessmentEngine {
       const acknowledgement = jsonSafe({ accepted: true, answerId: answer.id, assessmentRevision: newAssessmentRevision, routingRevision: newRoutingRevision, eventSequence: answerEventSequence, routing: decision });
       const answerEvent = await tx.answerEvent.create({
         data: {
-          assessmentId, questionIssueId: issue.id, questionId: dbQuestionId, answerId: answer.id, respondentId: respondentId ?? null, clientRequestId, eventSequence: answerEventSequence, optionIndex, answerState: option.state, rawValue: { optionIndex, labelMn: option.labelMn, state: option.state, score: option.score }, authority, effectiveReliability: evidence.reliability, methodologyVersion: definition.version, questionBankVersion: TARGET_QUESTION_BANK_VERSION, acknowledgement,
+          assessmentId, questionIssueId: issue.id, questionId: dbQuestionId, answerId: answer.id, respondentId: respondentId ?? null, clientRequestId, eventSequence: answerEventSequence, optionIndex, answerState: option.state, rawValue: { optionIndex, labelMn: option.labelMn, state: option.state, score: option.score }, authority, effectiveReliability: evidence.reliability, methodologyVersion: definition.version, questionBankVersion: requireQuestionBankVersion(definition), acknowledgement,
           questionExternalId, primaryCategoryExternalId: question.categoryId, primaryCellExternalId: question.cellId, questionPath: question.path, sourceKindSnapshot: question.sourceKind, normalizedScore: option.score
         }
       });
@@ -398,7 +397,7 @@ export class PrismaAssessmentEngine {
           authority: previousEvent.authority,
           effectiveReliability: previousEvent.effectiveReliability,
           methodologyVersion: definition.version,
-          questionBankVersion: TARGET_QUESTION_BANK_VERSION,
+          questionBankVersion: requireQuestionBankVersion(definition),
           acknowledgement: retractionAck,
           questionExternalId: externalId,
           primaryCategoryExternalId: question.categoryId,
@@ -1059,6 +1058,13 @@ function jsonSafe<T>(value: T): any {
   return JSON.parse(JSON.stringify(value));
 }
 
+
+/** Snapshot/event provenance pins the question bank of the assessment's own methodology version. */
+function requireQuestionBankVersion(definition: MethodologyDefinition): string {
+  if (!definition.questionBankVersion) throw new Error(`Methodology ${definition.version} (${definition.domainCode ?? "unknown"}) has no resolvable questionBankVersion; refusing to stamp unpinned provenance.`);
+  return definition.questionBankVersion;
+}
+
 /** The snapshot pins the exact bundle of the assessment's own methodology version (never a global target hash). */
 function requireBundleSha256(definition: MethodologyDefinition): string {
   if (!definition.bundleSha256) throw new Error(`Methodology ${definition.version} (${definition.domainCode ?? "unknown"}) has no bundleSha256; refusing to freeze an unpinned snapshot.`);
@@ -1083,7 +1089,7 @@ function terminalSnapshotPayload(
   });
   const purposes = [...snapshot.purposes.entries()].sort(([a],[b]) => a.localeCompare(b)).map(([id, value]) => ({ id, ...jsonSafe(value) }));
   return {
-    traceVersion: "MMRI-TRACE-1.0", assessmentId, mode, status, routingState, methodologyVersion: definition.version, questionBankVersion: TARGET_QUESTION_BANK_VERSION,
+    traceVersion: "MMRI-TRACE-1.0", assessmentId, mode, status, routingState, methodologyVersion: definition.version, questionBankVersion: requireQuestionBankVersion(definition),
     versionBundleHash: requireBundleSha256(definition), assessmentRevision, eventSequence, overall: jsonSafe(snapshot.overall), categories, cells, purposes, contradictions: jsonSafe(snapshot.contradictions)
   };
 }
