@@ -20,17 +20,25 @@ const stages:{title:string;text:string}[]=[
  {title:'Цаашид юуг хийх вэ?',text:'Стратегийн зорилго, 12 сарын төлөвлөгөөг гаргана.'},
 ];
 
+const pagedQuery='(max-width:820px),(max-height:780px)';
 export function AboutGuide(){
+ const paged=useMedia(pagedQuery);const [page,setPage]=useState(0);
+ const showMetrics=!paged||page===0,showFlow=!paged||page===1;
  return <div className="mmri-guide2__about">
-  <ul className="mmri-guide2__metrics" aria-label="Платформын үзүүлэлтүүд">
+  {showMetrics&&<ul className="mmri-guide2__metrics" aria-label="Платформын үзүүлэлтүүд">
    {metrics.map(m=><li key={m.value} className="mmri-guide2__card mmri-guide2__metric"><strong>{m.value}</strong><span>{m.label}</span></li>)}
-  </ul>
-  <ol className="mmri-guide2__flow" aria-label="Гурван үе шат">
+  </ul>}
+  {showFlow&&<ol className="mmri-guide2__flow" aria-label="Гурван үе шат">
    {stages.map((s,i)=><li key={s.title} className={`mmri-guide2__stage ${i%2?'is-left':'is-right'}`}>
     <span className="mmri-guide2__node" aria-hidden="true">{i+1}</span>
     <div className="mmri-guide2__card mmri-guide2__stage-card"><strong>{s.title}</strong><p>{s.text}</p></div>
    </li>)}
-  </ol>
+  </ol>}
+  {paged&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
+   <button type="button" className="mmri-guide2__nav-btn" disabled={page===0} onClick={()=>setPage(0)}><Icon name="back" size={18}/>Өмнөх</button>
+   <span className="mmri-guide2__counter" role="status" aria-live="polite">{page+1}<em> / 2</em></span>
+   <button type="button" className="mmri-guide2__nav-btn is-primary" disabled={page===1} onClick={()=>setPage(1)}>Дараах<Icon name="arrow" size={18}/></button>
+  </div>}
  </div>;
 }
 
@@ -83,9 +91,8 @@ const reportRows:{key:'rating'|'strength'|'weakness'|'problem'|'top5'|'plan';lab
  {key:'plan',label:'Төлөвлөгөө'},
 ];
 
-export function ReportGuide(){
- return <div className="mmri-guide2__report">
-  <p className="mmri-guide2__example" role="note"><span className="mmri-guide2__tag">ЖИШЭЭ</span>Доорх агуулга нь тайлангийн бүтцийг харуулсан жишээ тайлбар юм. Бодит байгууллагын оноо, оношилгооны дүн биш бөгөөд бодит үр дүн таны хариултаас хамаарна.</p>
+function ReportMatrix(){
+ return <>
   <p className="mmri-guide2__hint" aria-hidden="true">← Таван чиглэлийг харахын тулд хэвтээ гүйлгэнэ үү →</p>
   <div className="mmri-guide2__table-wrap"><div className="mmri-guide2__table-scroll" role="region" aria-label="Таван чиглэлийн тайлангийн жишээ харьцуулалт, хэвтээ гүйлгэж болно" tabIndex={0}>
    <table className="mmri-guide2__table">
@@ -104,6 +111,52 @@ export function ReportGuide(){
     </tr>)}</tbody>
    </table>
   </div></div>
+ </>;
+}
+
+/* Compact view (narrow or short viewports): the same content, one area at a time. Tabs choose the area; the sections of the chosen area are split into pages on
+   phones so every panel fits the popup without an inner scrollbar. */
+const compactQuery='(max-width:1000px),(max-height:740px)';
+const narrowQuery='(max-width:700px),(max-height:680px)';
+function useMedia(q:string){
+ const get=()=>typeof window!=='undefined'&&typeof window.matchMedia==='function'&&window.matchMedia(q).matches;
+ const [m,setM]=useState(get);
+ useEffect(()=>{if(typeof window.matchMedia!=='function')return;const mq=window.matchMedia(q);const f=()=>setM(mq.matches);f();mq.addEventListener('change',f);return()=>mq.removeEventListener('change',f)},[q]);
+ return m;
+}
+const phonePages:('rating'|'strength'|'weakness'|'problem'|'top5'|'plan')[][]=[['rating','strength'],['weakness','problem'],['top5'],['plan']];
+function ReportCompact(){
+ const [area,setArea]=useState(0);const [page,setPage]=useState(0);
+ const narrow=useMedia(narrowQuery);const col=reportColumns[area];
+ const keys=narrow?phonePages[page]:reportRows.map(r=>r.key);
+ const pages=narrow?phonePages.length:1;
+ const tabRefs=React.useRef<(HTMLButtonElement|null)[]>([]);
+ const onKey=(e:React.KeyboardEvent)=>{const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;e.preventDefault();const n=(area+d+reportColumns.length)%reportColumns.length;setArea(n);setPage(0);tabRefs.current[n]?.focus()};
+ return <div className="mmri-guide2__compact" data-area={col.id}>
+  <div className="mmri-guide2__tabs" role="tablist" aria-label="Таван чиглэл" onKeyDown={onKey}>
+   {reportColumns.map((c,i)=><button key={c.id} ref={el=>{tabRefs.current[i]=el}} type="button" role="tab" id={`rg-tab-${c.id}`} aria-selected={i===area} aria-controls="rg-panel" tabIndex={i===area?0:-1} data-area={c.id} className={`mmri-guide2__tab${i===area?' is-active':''}`} onClick={()=>{setArea(i);setPage(0)}}><i className="mmri-domain__mark" aria-hidden="true"/><span>{c.name}</span></button>)}
+  </div>
+  <div id="rg-panel" role="tabpanel" aria-labelledby={`rg-tab-${col.id}`} className="mmri-guide2__dpanel">
+   {keys.map(k=>{const row=reportRows.find(r=>r.key===k)!;return <section key={k} className={`mmri-guide2__dsec is-${k}`}>
+    <h3>{row.label}</h3>
+    {k==='top5'?<ol>{col.cells.top5.map(t=><li key={t}>{t}</li>)}</ol>
+     :k==='plan'?<ul className="mmri-guide2__plan">{col.cells.plan.map(([range,text])=><li key={range}><b>{range}:</b> {text}</li>)}</ul>
+     :<p>{col.cells[k]}</p>}
+   </section>})}
+  </div>
+  {narrow&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
+   <button type="button" className="mmri-guide2__nav-btn" disabled={page===0} onClick={()=>setPage(page-1)}><Icon name="back" size={18}/>Өмнөх</button>
+   <span className="mmri-guide2__counter" role="status" aria-live="polite">{page+1}<em> / {pages}</em></span>
+   <button type="button" className="mmri-guide2__nav-btn is-primary" disabled={page===pages-1} onClick={()=>setPage(page+1)}>Дараах<Icon name="arrow" size={18}/></button>
+  </div>}
+ </div>;
+}
+
+export function ReportGuide(){
+ const compact=useMedia(compactQuery);
+ return <div className="mmri-guide2__report">
+  <p className="mmri-guide2__example" role="note"><span className="mmri-guide2__tag">ЖИШЭЭ</span>Доорх агуулга нь тайлангийн бүтцийг харуулсан жишээ тайлбар юм. Бодит байгууллагын оноо, оношилгооны дүн биш бөгөөд бодит үр дүн таны хариултаас хамаарна.</p>
+  {compact?<ReportCompact/>:<ReportMatrix/>}
   <p className="mmri-guide2__pdf-note"><Icon name="download" size={18}/>Дашрамд хэлэхэд, төрөл бүрийн үр дүн тусдаа PDF тайлан болж гарна.</p>
  </div>;
 }
@@ -156,7 +209,8 @@ export function HowToGuide(){
   return()=>document.removeEventListener('keydown',onKey);
  },[]);
  const total=walkSteps.length;
- return <div className="mmri-guide2__howto">
+ const compact=useMedia(pagedQuery);const [view,setView]=useState<'text'|'shot'>('text');
+ return <div className="mmri-guide2__howto" data-compact={compact||undefined}>
   <section className="mmri-guide2__walk" aria-roledescription="Алхам алхмаар заавар" aria-label="Оношилгоо хийлгэх алхмууд">
    <ol className="mmri-guide2__track" data-walk-nav aria-label="Алхмууд">
     {walkSteps.map((s,i)=><li key={s.title} className={`mmri-guide2__track-item${i===index?' is-active':''}${i<index?' is-done':''}`}>
@@ -174,16 +228,20 @@ export function HowToGuide(){
       <button type="button" className="mmri-guide2__nav-btn is-primary" onClick={()=>go(index+1)} disabled={index===last}>Дараах<Icon name="arrow" size={18}/></button>
      </div>
     </div>
+    {compact&&<div className="mmri-guide2__views" role="tablist" aria-label="Алхмын агуулга">
+     <button type="button" role="tab" aria-selected={view==='text'} className={`mmri-guide2__view${view==='text'?' is-active':''}`} onClick={()=>setView('text')}>Тайлбар</button>
+     <button type="button" role="tab" aria-selected={view==='shot'} className={`mmri-guide2__view${view==='shot'?' is-active':''}`} onClick={()=>setView('shot')}>Дэлгэцийн зураг</button>
+    </div>}
     <div className="mmri-guide2__walk-body" key={index}>
-     <div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>
-     <figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
-      <div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>
+     {(!compact||view==='text')&&<div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>}
+     {(!compact||view==='shot')&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
+      {!compact&&<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>}
       <div className="mmri-guide2__phone"><img src={shotSrc(step.shot,'m')} alt={`${step.alt} (гар утасны харагдац)`} width={390} height={844} decoding="async"/></div>
-     </figure>
+     </figure>}
     </div>
    </div>
-   <aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
-    <p>Төлбөр нь зөвхөн сонгосон чиглэлийн оношилгоонд хамаарна. Өөр чиглэл сонгох эсвэл дахин оношилгоо хийх бүрд 300,000 төгрөгийн төлбөр төлж, шинэ тайлан үүсэхийг анхаарна уу.</p></aside>
+   {(!compact||view==='text')&&<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
+    <p>Төлбөр нь зөвхөн сонгосон чиглэлийн оношилгоонд хамаарна. Өөр чиглэл сонгох эсвэл дахин оношилгоо хийх бүрд 300,000 төгрөгийн төлбөр төлж, шинэ тайлан үүсэхийг анхаарна уу.</p></aside>}
   </section>
  </div>;
 }
