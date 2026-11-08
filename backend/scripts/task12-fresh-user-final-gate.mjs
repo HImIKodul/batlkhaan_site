@@ -15,7 +15,9 @@ const tag=`MMRI-TASK12-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
 const email=`mmri.task12.${Date.now()}.${crypto.randomBytes(2).toString("hex")}@example.com`;
 const password=`Task12-Final-${crypto.randomBytes(12).toString("base64url")}!`;
 const companyName=`${tag} FINAL GATE BUSINESS`;
-const domainCode="marketing";
+/* MMRI_TASK12_DOMAIN selects the diagnosis domain (default marketing) so the same gate can be run for all five domains. */
+const domainCode=process.env.MMRI_TASK12_DOMAIN||"marketing";
+if(!["marketing","it","finance","people","operations"].includes(domainCode))throw new Error(`task12: unknown domain ${domainCode}`);
 let accessToken="", refreshCookie="", userId="", companyId="", assessmentId="", invoiceId="";
 let checks=0;
 
