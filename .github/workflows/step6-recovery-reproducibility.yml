@@ -1,0 +1,73 @@
+name: MMRI Recovery Step 6 Reproducibility
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'scripts/step6-reproducibility-acceptance.mjs'
+      - '.nvmrc'
+      - '.npmrc'
+      - '.github/workflows/step6-recovery-reproducibility.yml'
+jobs:
+  reproducible-release:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: mmri
+          POSTGRES_PASSWORD: mmri_ci
+          POSTGRES_DB: mmri_recovery
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mmri -d mmri_recovery"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://mmri:mmri_ci@127.0.0.1:5432/mmri_recovery?schema=public
+      NODE_ENV: test
+      MMRI_INTEGRATION_RESET_OK: YES
+      MMRI_ENVIRONMENT: integration
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Require committed lockfiles
+        run: |
+          test -f backend/package-lock.json
+          test -f frontend/package-lock.json
+      - name: Verify source reproducibility contract
+        run: node scripts/step6-reproducibility-acceptance.mjs
+      - name: Verify lockfile structure
+        run: node ops/verify-lockfiles.mjs
+      - name: Install exact dependencies
+        run: |
+          (cd backend && npm ci --no-audit --no-fund)
+          (cd frontend && npm ci --no-audit --no-fund)
+      - name: Apply committed Prisma migration chain
+        working-directory: backend
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+          npx prisma migrate status
+      - name: Import and verify MMRI v2.0.0 candidate
+        working-directory: backend
+        run: |
+          npm run validate:v2:bundle
+          npm run db:import:v2
+          npm run db:verify:v2
+      - name: Build and deterministic regressions
+        run: |
+          bash VERIFY_WITHOUT_DB.sh
+          (cd backend && npm run typecheck && npm test && npm run build:prod)
+          (cd frontend && npm run build)
+      - name: Disposable connected v2 runtime gate
+        working-directory: backend
+        run: npm run postgres:gate

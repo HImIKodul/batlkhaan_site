@@ -1,0 +1,63 @@
+name: Step 23 Pilot Readiness
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'backend/**'
+      - 'scripts/step23-*'
+      - 'deploy/PILOT_*'
+      - '.github/workflows/step23-pilot-readiness.yml'
+jobs:
+  pilot-plumbing:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: mmri
+          POSTGRES_PASSWORD: mmri_ci
+          POSTGRES_DB: mmri
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mmri -d mmri"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://mmri:mmri_ci@127.0.0.1:5432/mmri?schema=public
+      NODE_ENV: test
+      JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef
+      JWT_REFRESH_SECRET: abcdef0123456789abcdef0123456789abcdef0123456789
+      COOKIE_SECRET: 00112233445566778899aabbccddeeff0011223344556677
+      METRICS_TOKEN: 7766554433221100ffeeddccbbaa99887766554433221100
+      CORS_ORIGINS: http://127.0.0.1:5173
+      QPAY_PROVIDER: MOCK
+      QPAY_BASE_URL: http://127.0.0.1:4000/mock-qpay
+      QPAY_CALLBACK_BASE_URL: http://127.0.0.1:4000
+      MMRI_ALLOW_DESTRUCTIVE_RESET: YES
+      MMRI_ENVIRONMENT: integration
+      MMRI_INTEGRATION_ACTIVATE_CANDIDATE: YES
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Require reproducible backend lockfile
+        run: test -f backend/package-lock.json || { echo 'Generate and commit backend/package-lock.json before connected pilot deployment.'; exit 1; }
+      - name: Install backend
+        working-directory: backend
+        run: npm ci
+      - name: Generate Prisma and create disposable CI schema
+        working-directory: backend
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run db:import:v2
+          npm run db:verify:v2:active
+      - name: Step 23 source gate
+        run: node scripts/step23-pilot-acceptance-v3.11.mjs
+      - name: Start API
+        working-directory: backend
+        run: npm run api:dev > /tmp/mmri-api.log 2>&1 &
+      - name: Wait for API
+        run: for i in $(seq 1 40); do curl -fsS http://127.0.0.1:4000/ready && exit 0; sleep 2; done; cat /tmp/mmri-api.log; exit 1
+      - name: Pilot API plumbing E2E
+        run: node scripts/step23-pilot-api-e2e.mjs

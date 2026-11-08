@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+const need=n=>{const v=(process.env[n]??'').trim();if(!v)throw new Error(`${n} is required`);return v;};
+const releaseSha=need('RELEASE_SHA');
+const images={api:need('MMRI_API_IMAGE'),web:need('MMRI_WEB_IMAGE'),migrate:need('MMRI_MIGRATE_IMAGE')};
+for(const [k,v] of Object.entries(images))if(!/@sha256:[a-f0-9]{64}$/i.test(v))throw new Error(`${k} image is not immutable`);
+const migrationChain=fs.readFileSync('deploy/MIGRATION_CHAIN_SHA256.txt','utf8').trim().split(/\s+/)[0];
+const payload={format:'MMRI-RELEASE-MANIFEST-1.0',releaseSha,createdAt:new Date().toISOString(),migrationChainSha256:migrationChain,images,node:process.version,billingProvider:(process.env.MMRI_BILLING_PROVIDER??'').trim(),aiProvider:(process.env.MMRI_AI_REPORT_PROVIDER??'').trim(),apiReplicaCount:Number(process.env.MMRI_API_REPLICA_COUNT??'1')};
+const canonical=JSON.stringify(payload,null,2)+'\n';
+const sha256=crypto.createHash('sha256').update(canonical).digest('hex');
+const dir=path.resolve(process.env.MMRI_RELEASE_MANIFEST_DIR||'deploy/releases');fs.mkdirSync(dir,{recursive:true,mode:0o700});
+const safe=releaseSha.replace(/[^A-Za-z0-9._-]/g,'_');const file=path.join(dir,`${safe}.json`);fs.writeFileSync(file,canonical,{mode:0o600});fs.writeFileSync(file+'.sha256',`${sha256}  ${path.basename(file)}\n`,{mode:0o600});
+console.log(JSON.stringify({status:'PASS',file,sha256},null,2));
