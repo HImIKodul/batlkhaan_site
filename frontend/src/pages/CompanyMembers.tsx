@@ -20,7 +20,7 @@ export default function CompanyMembers({companyId}:{companyId:string}){
   {msg&&<div className={`mmri-support-alert ${msg.tone==='error'?'is-error':''}`} role={msg.tone==='error'?'alert':'status'}>{msg.text}</div>}
   {rows&&<Table caption="Гишүүд"><thead><tr><th>Имэйл</th><th>Эрх</th><th><span className="mmri-visually-hidden">Үйлдэл</span></th></tr></thead><tbody>
    {rows.map(m=><tr key={m.userId}><td>{m.displayName?`${m.displayName} · `:''}{m.email}{m.isSelf&&<> <StatusBadge>Та</StatusBadge></>}</td>
-    <td><Select aria-label={`${m.email} — эрх`} value={m.role} disabled={!!busy||m.isSelf} onChange={e=>void run(`r${m.userId}`,'Эрх шинэчлэгдлээ.',()=>api.addCompanyMember(companyId,{email:m.email,role:e.target.value as Role}))}>{ROLES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</Select></td>
+    <td><Select aria-label={`${m.email} · эрх`} value={m.role} disabled={!!busy||m.isSelf} onChange={e=>void run(`r${m.userId}`,'Эрх шинэчлэгдлээ.',()=>api.addCompanyMember(companyId,{email:m.email,role:e.target.value as Role}))}>{ROLES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</Select></td>
     <td><Button variant="secondary" disabled={!!busy} onClick={()=>setRemoving(m)}>{m.isSelf?'Гарах':'Хасах'}</Button></td></tr>)}</tbody></Table>}
   <form className="account-data__actions" onSubmit={e=>{e.preventDefault();void run('add','Гишүүн нэмэгдлээ.',async()=>{await api.addCompanyMember(companyId,{email:email.trim(),role});setEmail('')})}} autoComplete="off">
    <Field label="Имэйл"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="off"/></Field>

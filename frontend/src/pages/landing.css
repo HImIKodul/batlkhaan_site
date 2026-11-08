@@ -280,6 +280,9 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
  .mmri-guide2__howto[data-compact] .mmri-guide2__walk-copy p{font-size:13.5px;line-height:1.4}
  .mmri-guide2__howto[data-compact] .mmri-guide2__walk-copy{padding:8px 12px 10px}
  .mmri-guide2__howto[data-compact] .mmri-guide2__notice{padding:6px 10px}
+ .mmri-guide2__howto[data-compact] .mmri-guide2__walk-copy small{font-size:11.5px;line-height:1.3}
+ .mmri-guide2__howto[data-compact] .mmri-guide2__walk-head{padding-block:4px}
+ .mmri-guide2__howto[data-compact] .mmri-guide2__nav-btn{height:38px}
  .mmri-guide2__howto[data-compact] .mmri-guide2__notice p{font-size:11.5px;line-height:1.35}
  .mmri-guide2__metric{min-height:78px}.mmri-guide2__stage-card{min-height:58px;padding:8px 16px}
 }
