@@ -753,7 +753,7 @@ function normalizeError(error:any,environment="development",context?:{requestId:
   const message=String(error?.message??"Unexpected server error");
   // Internal errors (ORM/database invocations, stack traces, file paths, code fragments) are never echoed to a client, in any environment.
   if(/invocation|Prisma|ConnectorError|node_modules|\/home\/|\n\s+at\s|\$\{|=>|`/.test(message)){
-    console.error(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"internal_exception_masked",requestId:context?.requestId,path:context?.path,errorName:String(error?.name??"Error").slice(0,80)}));
+    console.error(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"internal_exception_masked",requestId:context?.requestId,path:context?.path,errorName:String(error?.name??"Error").slice(0,80),errorCode:typeof error?.code==="string"?error.code.slice(0,20):undefined,errorModel:typeof error?.meta?.modelName==="string"?error.meta.modelName.slice(0,60):undefined}));
     return new ApiError(500,"INTERNAL_ERROR","Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.");
   }
   if(environment==="production"){
