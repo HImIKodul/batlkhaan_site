@@ -7,10 +7,10 @@ import { decryptSecret, encryptSecret, newTotpSecret, verifyTotp } from "./totp.
 import type { RequestFingerprint } from "../auth/auth-service.js";
 
 export type AdminRole = "SUPER_ADMIN" | "REPORT_REVIEWER" | "BILLING_REVIEWER";
-export type Permission = "reports.read" | "reports.edit" | "reports.approve" | "reports.publish" | "payments.read" | "payments.decide" | "companies.read" | "support.manage" | "notifications.read" | "audit.read" | "admins.manage" | "ops.read";
+export type Permission = "reports.read" | "reports.edit" | "reports.approve" | "reports.publish" | "payments.read" | "payments.decide" | "companies.read" | "support.manage" | "notifications.read" | "audit.read" | "admins.manage" | "ops.read" | "accounts.manage";
 /* Permissions are decided here on the server from the database role. Nothing the browser sends can widen them. */
 export const ROLE_PERMISSIONS: Record<AdminRole, readonly Permission[]> = {
-  SUPER_ADMIN: ["reports.read", "reports.edit", "reports.approve", "reports.publish", "payments.read", "payments.decide", "companies.read", "support.manage", "notifications.read", "audit.read", "admins.manage", "ops.read"],
+  SUPER_ADMIN: ["reports.read", "reports.edit", "reports.approve", "reports.publish", "payments.read", "payments.decide", "companies.read", "support.manage", "notifications.read", "audit.read", "admins.manage", "ops.read", "accounts.manage"],
   REPORT_REVIEWER: ["reports.read", "reports.edit", "reports.approve", "reports.publish", "companies.read", "support.manage", "notifications.read"],
   BILLING_REVIEWER: ["payments.read", "payments.decide", "companies.read", "support.manage", "notifications.read"]
 };
