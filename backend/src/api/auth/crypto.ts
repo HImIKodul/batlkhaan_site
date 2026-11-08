@@ -53,6 +53,8 @@ export interface AccessTokenClaims {
   sub: string;
   email: string;
   tv: number;
+  /** Refresh-session family this access token is bound to (absent on tokens issued before MMRI-19). */
+  fid?: string;
   jti: string;
   iss: string;
   aud: string;
@@ -60,13 +62,14 @@ export interface AccessTokenClaims {
   exp: number;
 }
 
-export function signAccessToken(input: { userId: string; email: string; tokenVersion: number }, config: ApiConfig): string {
+export function signAccessToken(input: { userId: string; email: string; tokenVersion: number; familyId?: string }, config: ApiConfig): string {
   const now = Math.floor(Date.now() / 1000);
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const claims: AccessTokenClaims = {
     sub: input.userId,
     email: input.email,
     tv: input.tokenVersion,
+    ...(input.familyId ? { fid: input.familyId } : {}),
     jti: randomUUID(),
     iss: config.issuer,
     aud: config.audience,
@@ -98,7 +101,7 @@ export function verifyAccessToken(token: string, config: ApiConfig): AccessToken
   if (
     claims.iss !== config.issuer || claims.aud !== config.audience ||
     typeof claims.sub!=="string" || !claims.sub || typeof claims.email!=="string" || !claims.email ||
-    !Number.isSafeInteger(claims.tv) || claims.tv<0 || typeof claims.jti!=="string" || !claims.jti ||
+    !Number.isSafeInteger(claims.tv) || claims.tv<0 || (claims.fid!==undefined&&(typeof claims.fid!=="string"||!claims.fid)) || typeof claims.jti!=="string" || !claims.jti ||
     !Number.isSafeInteger(claims.iat) || !Number.isSafeInteger(claims.exp) ||
     claims.iat > now + 60 || claims.exp <= now || claims.exp <= claims.iat ||
     claims.exp - claims.iat > config.accessTokenTtlSeconds + 5

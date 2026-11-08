@@ -3,7 +3,13 @@ import { PrismaAssessmentEngine } from "../../services/prisma-assessment-engine.
 import { numberOrNull } from "../presenters.js";
 import type { PrismaStrategyReportService } from "../../services/prisma-strategy-report-service.js";
 import { DOMAIN_CODES } from "../../domain-methodology.js";
+import { derivedContentWithheld } from "../../services/report-review-policy.js";
 import { ACTIVE_ASSESSMENT_STATUSES, RESULT_TERMINAL_ASSESSMENT_STATUSES, isResultTerminalAssessmentStatus, isTerminalAssessmentStatus, lifecyclePhase } from "../../services/assessment-lifecycle.js";
+
+/** Scores are derived content: while a mandatory review has not published, no customer summary may carry them (same decision as the report/results read gate). */
+function redactOverall(overall:{partialScore:number|null;officialScore:number|null;isOfficial:boolean;coverage:number|null;aggregationVersion?:any},withheld:boolean){
+  return withheld?{...overall,partialScore:null,officialScore:null,isOfficial:false,coverage:null}:overall;
+}
 
 export class AssessmentQueryService {
   constructor(private readonly engine: PrismaAssessmentEngine, private readonly strategyReports: PrismaStrategyReportService) {}
@@ -14,11 +20,14 @@ export class AssessmentQueryService {
       include:{methodologyVersion:true},
       orderBy:{createdAt:"desc"}
     });
+    const withheldIds=new Set<string>();
+    for(const a of rows){ if(a.completedAt||isTerminalAssessmentStatus(a.status)){ if((await derivedContentWithheld(prisma,a)).withheld)withheldIds.add(a.id); } }
     return rows.map(a=>({
+      reportAvailable:!withheldIds.has(a.id),
       id:a.id, companyId:a.companyId, domainCode:a.domainCode, methodologyVersion:a.methodologyVersion.version, mode:a.mode, status:a.status, routingState:a.routingState,
       previousAssessmentId:a.previousAssessmentId, parentAssessmentId:a.parentAssessmentId, entitlementId:a.entitlementId,
       assessmentRevision:a.assessmentRevision, routingRevision:a.routingRevision, eventSequence:a.eventSequence, currentQuestionIssueId:a.currentQuestionIssueId,
-      overall:{partialScore:numberOrNull(a.overallPartialScore),officialScore:numberOrNull(a.overallOfficialScore),isOfficial:a.status==="COMPLETED"&&a.overallOfficialScore!==null,coverage:numberOrNull(a.coverage),aggregationVersion:a.aggregationVersion},
+      overall:redactOverall({partialScore:numberOrNull(a.overallPartialScore),officialScore:numberOrNull(a.overallOfficialScore),isOfficial:a.status==="COMPLETED"&&a.overallOfficialScore!==null,coverage:numberOrNull(a.coverage),aggregationVersion:a.aggregationVersion},withheldIds.has(a.id)),
       startedAt:a.startedAt, completedAt:a.completedAt, createdAt:a.createdAt, updatedAt:a.updatedAt
     }));
   }
@@ -28,12 +37,14 @@ export class AssessmentQueryService {
     if (!a) return null;
     const answered=await prisma.answer.count({where:{assessmentId,active:true}});
     const asked=await prisma.assessmentAskedQuestion.count({where:{assessmentId}});
+    const withheld=(a.completedAt||isTerminalAssessmentStatus(a.status))?(await derivedContentWithheld(prisma,a)).withheld:false;
     return {
+      reportAvailable:!withheld,
       id:a.id, companyId:a.companyId, companyName:a.company.name, domainCode:a.domainCode, methodologyVersion:a.methodologyVersion.version,
       previousAssessmentId:a.previousAssessmentId, parentAssessmentId:a.parentAssessmentId, entitlementId:a.entitlementId,
       mode:a.mode, status:a.status, routingState:a.routingState, answeredQuestions:answered, askedQuestions:asked,
       assessmentRevision:a.assessmentRevision, routingRevision:a.routingRevision, eventSequence:a.eventSequence, currentQuestionIssueId:a.currentQuestionIssueId,
-      overall:{ partialScore:numberOrNull(a.overallPartialScore), officialScore:numberOrNull(a.overallOfficialScore), isOfficial:a.status==="COMPLETED"&&a.overallOfficialScore!==null, coverage:numberOrNull(a.coverage), aggregationVersion:a.aggregationVersion },
+      overall:redactOverall({ partialScore:numberOrNull(a.overallPartialScore), officialScore:numberOrNull(a.overallOfficialScore), isOfficial:a.status==="COMPLETED"&&a.overallOfficialScore!==null, coverage:numberOrNull(a.coverage), aggregationVersion:a.aggregationVersion },withheld),
       startedAt:a.startedAt, completedAt:a.completedAt, createdAt:a.createdAt, updatedAt:a.updatedAt
     };
   }
@@ -49,7 +60,7 @@ export class AssessmentQueryService {
     ]);
     const terminal=isTerminalAssessmentStatus(assessment.status);
     const resultTerminal=isResultTerminalAssessmentStatus(assessment.status);
-    const reportReady=resultTerminal&&Boolean(terminalSnapshot);
+    const reportReady=resultTerminal&&Boolean(terminalSnapshot)&&assessment.reportAvailable!==false;
     return {
       assessmentId:assessment.id,
       domainCode:assessment.domainCode,
@@ -74,9 +85,10 @@ export class AssessmentQueryService {
         canRequestCompletion:assessment.status==="IN_PROGRESS"&&openQuestion===null,
         canViewResults:reportReady,
         reportReady,
-        reportGenerated:Boolean(publishedReport),
+        reportGenerated:Boolean(publishedReport)&&assessment.reportAvailable!==false,
+        reviewPending:assessment.reportAvailable===false,
         terminalSnapshotId:terminalSnapshot?.id??null,
-        publishedReportId:publishedReport?.id??null,
+        publishedReportId:assessment.reportAvailable===false?null:(publishedReport?.id??null),
         isTerminal:terminal,
         isResultTerminal:resultTerminal
       },

@@ -8,6 +8,12 @@ import type { AssessmentMode, ProfileAnswer } from "../engine/types.js";
 import { loadApiConfig, type ApiConfig } from "./config.js";
 import { ApiError, badRequest, conflict, notFound } from "./errors.js";
 import { AuthService } from "./auth/auth-service.js";
+import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
+import { createMailer } from "./mail/mailer.js";
+import { DataLifecycleService } from "./account/data-lifecycle-service.js";
+import { AdminService } from "./admin/admin-service.js";
+import { ReviewService } from "./admin/review-service.js";
+import { registerAdminRoutes } from "./admin/admin-routes.js";
 import { authenticate, assessmentAccess, billingInvoiceAccess, pilotEnrollmentAccess, requireCompanyRole, requireOperator, type CompanyRole } from "./auth/access.js";
 import { assertOwnerTransitionAllowed } from "./auth/role-policy.js";
 import { parseCookies, refreshCookie, clearRefreshCookie } from "./auth/cookies.js";
@@ -44,9 +50,15 @@ const COMPANY_ADMIN: CompanyRole[]=["OWNER","ADMIN"];
 export function createApi(config:ApiConfig=loadApiConfig()) {
   const router=new Router();
   const auth=new AuthService(config);
+  const mailer=createMailer(config);
+  const passwordReset=new PasswordResetService(config,mailer);
+  const dataLifecycle=new DataLifecycleService(config);
   const engine=new PrismaAssessmentEngine();
   const narrativeProvider=createNarrativeProviderFromEnv(config.environment);
   const strategyReports=new PrismaStrategyReportService(engine,narrativeProvider);
+  const adminService=new AdminService(config);
+  const reviews=new ReviewService(config,strategyReports);
+  reviewGate=id=>reviews.assertCustomerMayRead(id);
   /**
    * First-time report generation includes a provider call that can take about a minute, which is longer than a
    * reverse proxy will hold a request. A request therefore waits at most REPORT_REQUEST_WAIT_MS and otherwise answers
@@ -115,6 +127,84 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,{user:result.user,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
   },false);
 
+  /* Password recovery. The request endpoint answers identically for known and unknown addresses and takes at least a fixed time either way. */
+  router.add("POST","/api/v1/auth/password-reset/request",async({req,res})=>{
+    const started=Date.now();
+    const ip=clientIp(req,config); authIpLimiter.check(`pwreset:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
+    const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
+    authAccountLimiter.check(`pwreset:acct:${emailKey}`);
+    try{await passwordReset.requestReset(body.email,fingerprint(req,config))}
+    catch(error:any){console.log(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"password_reset_request_failed",reason:String(error?.message??error).slice(0,120)}))}
+    const wait=PASSWORD_RESET_MIN_RESPONSE_MS-(Date.now()-started);if(wait>0)await new Promise(r=>setTimeout(r,wait));
+    json(res,202,{data:{accepted:true,message:"Хэрэв энэ имэйл хаягаар бүртгэл байвал нууц үг сэргээх холбоосыг илгээлээ. Имэйлээ шалгана уу."}});
+  },false);
+
+  router.add("POST","/api/v1/auth/password-reset/confirm",async({req,res})=>{
+    const ip=clientIp(req,config); authIpLimiter.check(`pwreset-confirm:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
+    await passwordReset.confirmReset(body.token,body.password,fingerprint(req,config));
+    res.setHeader("set-cookie",clearRefreshCookie(config));
+    ok(res,{reset:true,message:"Нууц үг амжилттай солигдлоо. Шинэ нууц үгээрээ нэвтэрнэ үү."});
+  },false);
+
+  /* Data export and erasure (see docs/DATA_LIFECYCLE.md). Exports are attachments, never cached. Erasure needs the OWNER role, the password and an exact typed confirmation. */
+  const exportHeaders=(name:string)=>({"content-disposition":`attachment; filename="${name}"`,"cache-control":"no-store"});
+  router.add("GET","/api/v1/account/export",async({req,res,principal})=>{
+    authAccountLimiter.check(`export:user:${principal!.userId}`);
+    json(res,200,{data:await dataLifecycle.exportAccount(principal!.userId,fingerprint(req,config))},exportHeaders("mmri-account-export.json"));
+  });
+  router.add("GET","/api/v1/companies/:companyId/export",async({req,res,principal,params})=>{
+    authAccountLimiter.check(`export:user:${principal!.userId}`);
+    json(res,200,{data:await dataLifecycle.exportCompany(principal!.userId,params.companyId,fingerprint(req,config))},exportHeaders("mmri-company-export.json"));
+  });
+  router.add("POST","/api/v1/companies/:companyId/erase",async({req,res,principal,params})=>{
+    authIpLimiter.check(`erase:ip:${clientIp(req,config)}`);authAccountLimiter.check(`erase:user:${principal!.userId}`);
+    const body=await readJson(req,config.requestBodyLimitBytes);
+    ok(res,await dataLifecycle.eraseCompany(principal!.userId,params.companyId,{confirmName:body.confirmName,password:body.password},fingerprint(req,config)));
+  });
+  router.add("POST","/api/v1/account/erase",async({req,res,principal})=>{
+    authIpLimiter.check(`erase:ip:${clientIp(req,config)}`);authAccountLimiter.check(`erase:user:${principal!.userId}`);
+    const body=await readJson(req,config.requestBodyLimitBytes);
+    const result=await dataLifecycle.eraseAccount(principal!.userId,{confirmEmail:body.confirmEmail,password:body.password},fingerprint(req,config));
+    res.setHeader("set-cookie",clearRefreshCookie(config));
+    ok(res,result);
+  });
+
+  /* Administration Center (separate session, MFA, server-side roles). See backend/src/api/admin. */
+  registerAdminRoutes({router,config,admin:adminService,reviews,ipLimiter:new MemoryRateLimiter(300,config.rateLimitWindowMs),loginLimiter:new MemoryRateLimiter(Math.max(3,Number(process.env.MMRI_ADMIN_LOGIN_RATE_LIMIT??10)||10),config.rateLimitWindowMs),readJson,clientIp:req=>clientIp(req,config),fingerprint:req=>fingerprint(req,config)});
+
+  /* Customer side of the review workflow, disputes and support. */
+  router.add("GET","/api/v1/assessments/:assessmentId/review-status",async({res,principal,params})=>{
+    await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); ok(res,await reviews.customerState(params.assessmentId));
+  });
+  router.add("POST","/api/v1/billing/invoices/:invoiceId/dispute",async({req,res,principal,params})=>{
+    authAccountLimiter.check(`dispute:user:${principal!.userId}`);
+    const inv=await prisma.billingInvoice.findUnique({where:{id:params.invoiceId},select:{id:true,companyId:true}}); if(!inv)throw notFound("Нэхэмжлэх олдсонгүй.");
+    await requireCompanyRole(principal!.userId,inv.companyId,["OWNER","ADMIN"] as any);
+    const body=await readJson(req,config.requestBodyLimitBytes); const summary=String(body.summary??"").replace(/\s*[\u2014\u2015]\s*/g," - ").trim().slice(0,2000);
+    if(summary.length<10)throw badRequest("Маргааны тайлбарыг дор хаяж 10 тэмдэгтээр бичнэ үү.");
+    const existing=await prisma.paymentDispute.findFirst({where:{invoiceId:inv.id,status:{in:["OPEN","UNDER_REVIEW","MORE_INFORMATION_REQUIRED"]}}});
+    if(existing)throw conflict("Энэ нэхэмжлэхийн маргаан аль хэдийн нээлттэй байна.");
+    const dsp=await prisma.paymentDispute.create({data:{invoiceId:inv.id,companyId:inv.companyId,summary,openedByUserId:principal!.userId,events:{create:{userId:principal!.userId,kind:"CUSTOMER_REPLY",body:summary}}}});
+    await reviews.notify("PAYMENT_DISPUTE",`PAYMENT_DISPUTE:${dsp.id}`,{type:"DISPUTE",id:dsp.id},"Төлбөрийн маргаан нээгдлээ","Хэрэглэгч төлбөрийн маргаан нээлээ.","HIGH");
+    created(res,{id:dsp.id,status:dsp.status});
+  });
+  router.add("GET","/api/v1/companies/:companyId/disputes",async({res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,["OWNER","ADMIN"] as any);
+    const rows=await prisma.paymentDispute.findMany({where:{companyId:params.companyId},orderBy:{createdAt:"desc"},include:{events:{where:{kind:{in:["INFO_REQUEST","CUSTOMER_REPLY","DECISION"]}},orderBy:{createdAt:"asc"},select:{kind:true,body:true,createdAt:true}}}});
+    ok(res,rows.map(r=>({id:r.id,invoiceId:r.invoiceId,status:r.status,summary:r.summary,createdAt:r.createdAt,refundApproved:!!r.refundApprovedAt,refundExecuted:!!r.refundExecutedAt,events:r.events})));
+  });
+  router.add("POST","/api/v1/support/cases",async({req,res,principal})=>{
+    authAccountLimiter.check(`support:user:${principal!.userId}`);
+    const body=await readJson(req,config.requestBodyLimitBytes); const categories=["ACCOUNT_ACCESS","COMPANY_DETAILS","REPORT_QUESTION","PAYMENT_DISPUTE","TECHNICAL_ERROR","REPORT_REVIEW_REQUEST","DATA_REQUEST"];
+    if(!categories.includes(body.category))throw badRequest("Ангилал буруу байна.");
+    const subject=String(body.subject??"").replace(/\s*[\u2014\u2015]\s*/g," - ").trim().slice(0,200); const text=String(body.message??"").replace(/\s*[\u2014\u2015]\s*/g," - ").trim().slice(0,4000);
+    if(subject.length<3||text.length<5)throw badRequest("Гарчиг болон тайлбар шаардлагатай.");
+    let companyId:string|null=null; if(body.companyId){await requireCompanyRole(principal!.userId,String(body.companyId),["OWNER","ADMIN","ASSESSOR","CONSULTANT","VIEWER"] as any);companyId=String(body.companyId)}
+    const c=await prisma.supportCase.create({data:{category:body.category,subject,companyId,userId:principal!.userId,events:{create:{userId:principal!.userId,kind:"CUSTOMER_MESSAGE",body:text}}}});
+    await reviews.notify("SYSTEM_WARNING",`SUPPORT_CASE:${c.id}`,{type:"SUPPORT",id:c.id},"Шинэ тусламжийн хүсэлт",subject,"INFO");
+    created(res,{id:c.id,status:c.status});
+  });
+
   router.add("POST","/api/v1/auth/refresh",async({req,res})=>{
     refreshLimiter.check(`refresh:ip:${clientIp(req,config)}`);
     requireTrustedBrowserOrigin(req,config);
@@ -142,9 +232,16 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,billing.catalog());
   },false);
 
-  router.add("GET","/api/v1/companies/:companyId/billing/status",async({res,principal,params})=>{
+  /* MMRI-07: every company role that may use diagnosis/reports needs entitlement state + paid summary; invoice history stays OWNER/ADMIN-only (MMRI-23: paged). */
+  router.add("GET","/api/v1/companies/:companyId/billing/status",async({res,principal,params,query})=>{
+    const membership=await requireCompanyRole(principal!.userId,params.companyId,ALL_ROLES);
+    ok(res,await billing.getCompanyStatus(params.companyId,{includeInvoices:COMPANY_ADMIN.includes(membership.role as CompanyRole),limit:Number(query.get("limit")??50),offset:Number(query.get("offset")??0)}));
+  });
+
+  router.add("GET","/api/v1/companies/:companyId/billing/invoices",async({res,principal,params,query})=>{
     await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN);
-    ok(res,await billing.getCompanyStatus(params.companyId));
+    const status=await billing.getCompanyStatus(params.companyId,{includeInvoices:true,limit:Number(query.get("limit")??50),offset:Number(query.get("offset")??0)});
+    ok(res,{invoices:status.invoices,total:status.history.total,limit:status.history.limit,offset:status.history.offset,hasMore:status.history.hasMore});
   });
 
   router.add("POST","/api/v1/companies/:companyId/billing/invoices",async({req,res,principal,params})=>{
@@ -163,8 +260,11 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,await billing.mockPay(params.invoiceId));
   });
 
+  /* Customer-triggered payment check. Authorised like every invoice route, then throttled per user and invoice because each call asks the payment provider. Only the provider's verified answer can mark an invoice paid. */
+  const reconcileLimiter=new MemoryRateLimiter(6,60_000);
   router.add("POST","/api/v1/billing/invoices/:invoiceId/reconcile",async({res,principal,params})=>{
     await billingInvoiceAccess(principal!.userId,params.invoiceId,COMPANY_ADMIN);
+    reconcileLimiter.check(`reconcile:${principal!.userId}:${params.invoiceId}`);
     ok(res,await billing.reconcileInvoice(params.invoiceId));
   });
 
@@ -237,6 +337,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       seen.add(questionId);
       return {questionId,optionIndexes};
     });
+    await engine.validateProfileAnswersForSave(profileAnswers as ProfileAnswer[]);
     const basicRows=Array.isArray(body.basicInfoAnswers)?body.basicInfoAnswers:[];
     let basicInfoAnswers:Record<string,unknown>[]=[];
     if(basicRows.length){
@@ -257,7 +358,9 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
 
   router.add("GET","/api/v1/companies/:companyId/assessments",async({res,principal,params})=>{
     await requireCompanyRole(principal!.userId,params.companyId,ALL_ROLES);
-    ok(res,await queries.listCompanyAssessments(params.companyId));
+    const list:any[]=await queries.listCompanyAssessments(params.companyId) as any;
+    const rv=await prisma.reportReview.findMany({where:{companyId:params.companyId},select:{assessmentId:true,status:true,deadlineAt:true}}); const rm=new Map(rv.map(x=>[x.assessmentId,x]));
+    ok(res,list.map((a:any)=>({...a,reviewStatus:rm.get(a.id)?.status??null,estimatedAvailableAt:rm.get(a.id)&&rm.get(a.id)!.status!=="PUBLISHED"?rm.get(a.id)!.deadlineAt:null})));
   });
 
   router.add("GET","/api/v1/companies/:companyId/diagnosis-lifecycle",async({res,principal,params})=>{
@@ -293,6 +396,38 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       throw error;
     }
     created(res,membership);
+  });
+
+  /* MMRI-24: members can be listed (OWNER/ADMIN) and individually revoked. The last OWNER can never be removed (service guard + DB trigger). */
+  router.add("GET","/api/v1/companies/:companyId/members",async({res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN);
+    const rows=await prisma.companyMembership.findMany({where:{companyId:params.companyId},include:{user:{select:{id:true,email:true,displayName:true,status:true}}},orderBy:{createdAt:"asc"}});
+    ok(res,rows.map((r:any)=>({userId:r.userId,email:r.user.email,displayName:r.user.displayName,status:r.user.status,role:r.role,createdAt:r.createdAt,isSelf:r.userId===principal!.userId})));
+  });
+
+  router.add("DELETE","/api/v1/companies/:companyId/members/:userId",async({req,res,principal,params})=>{
+    try{
+      await prisma.$transaction(async(tx:any)=>{
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${params.companyId}))`;
+        const actor=await tx.companyMembership.findUnique({where:{companyId_userId:{companyId:params.companyId,userId:principal!.userId}}});
+        if(!actor)throw new ApiError(403,"FORBIDDEN","Insufficient permission");
+        const isSelf=params.userId===principal!.userId;
+        if(!isSelf&&!COMPANY_ADMIN.includes(actor.role as CompanyRole))throw new ApiError(403,"FORBIDDEN","Insufficient permission");
+        const target=await tx.companyMembership.findUnique({where:{companyId_userId:{companyId:params.companyId,userId:params.userId}}});
+        if(!target)throw notFound("Member not found");
+        if(!isSelf&&target.role==="OWNER"&&actor.role!=="OWNER")throw new ApiError(403,"FORBIDDEN","Only an owner may remove another owner");
+        if(target.role==="OWNER"){
+          const ownerCount=await tx.companyMembership.count({where:{companyId:params.companyId,role:"OWNER"}});
+          assertOwnerTransitionAllowed("OWNER","ADMIN",ownerCount);
+        }
+        await tx.companyMembership.delete({where:{companyId_userId:{companyId:params.companyId,userId:params.userId}}});
+        await tx.authAuditEvent.create({data:{userId:principal!.userId,eventType:"MEMBERSHIP_CHANGED",ipHash:hashAuditValue(clientIp(req,config),config.auditSalt),userAgentHash:hashAuditValue(req.headers["user-agent"],config.auditSalt),metadata:{companyId:params.companyId,targetUserId:params.userId,previousRole:target.role,nextRole:null}}});
+      },{maxWait:10000,timeout:30000});
+    }catch(error:any){
+      if(String(error?.message??"").includes("A company must retain at least one OWNER"))throw conflict("A company must retain at least one OWNER");
+      throw error;
+    }
+    noContent(res);
   });
 
   router.add("POST","/api/v1/companies/:companyId/assessments",async({req,res,principal,params})=>{
@@ -353,7 +488,8 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const result=await engine.submitAnswer(params.assessmentId,String(b.questionId),Number(b.optionIndex),text(b.respondentId),{writerLeaseId:writerId(req),clientRequestId:String(b.clientRequestId),questionIssueId:String(b.questionIssueId),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
     const routing=await queries.resumePayload(params.assessmentId);
     ok(res,{accepted:true,answerId:result.answerId,assessmentRevision:result.assessmentRevision,routing});
-    scheduleReportPrewarm(params.assessmentId);
+    if(config.reportReviewRequired){const rv=await prisma.reportReview.findUnique({where:{assessmentId:params.assessmentId},select:{id:true,status:true}});if(rv?.status==="SUBMITTED")setImmediate(()=>{void reviews.generateDraft(rv.id)});else if(!rv)scheduleReportPrewarm(params.assessmentId)}
+    else scheduleReportPrewarm(params.assessmentId);
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/back",async({req,res,principal,params})=>{
@@ -379,8 +515,11 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     const b=await readJson(req,config.requestBodyLimitBytes); if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
     const result=await engine.completeAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
-    ok(res,{completed:result.completed,reason:result.reason,routingState:result.routingState,status:result.status,assessmentRevision:result.assessmentRevision});
-    if(result.completed)scheduleReportPrewarm(params.assessmentId);
+    const reviewTask:any=result.completed&&config.reportReviewRequired?await prisma.reportReview.findUnique({where:{assessmentId:params.assessmentId}}):null;
+    if(result.completed&&config.reportReviewRequired&&!reviewTask)throw conflict("Report review record is missing for a completed assessment");
+    ok(res,{completed:result.completed,reason:result.reason,routingState:result.routingState,status:result.status,assessmentRevision:result.assessmentRevision,reviewRequired:Boolean(reviewTask)});
+    if(result.completed&&reviewTask&&reviewTask.status==="SUBMITTED")setImmediate(()=>{void reviews.generateDraft(reviewTask.id)});
+    else if(result.completed)scheduleReportPrewarm(params.assessmentId);
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/status",async({res,principal,params})=>{
@@ -393,7 +532,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/results",async({res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); const r=await queries.results(params.assessmentId); if(!r)throw notFound("Assessment not found"); ok(res,r);
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); await reviewGate(params.assessmentId); const r=await queries.results(params.assessmentId); if(!r)throw notFound("Assessment not found"); ok(res,r);
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/strategy/generate",async({res,principal,params})=>{
@@ -402,20 +541,20 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/diagnosis",async({res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); ok(res,await strategyReports.getDiagnosis(params.assessmentId));
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); await reviewGate(params.assessmentId); ok(res,await strategyReports.getDiagnosis(params.assessmentId));
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/recommendations",async({res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); ok(res,await strategyReports.getRecommendations(params.assessmentId));
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); await reviewGate(params.assessmentId); ok(res,await strategyReports.getRecommendations(params.assessmentId));
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/action-plan",async({res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status);
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,ALL_ROLES); requireTerminal(access.assessment.status); await reviewGate(params.assessmentId);
     ok(res,await strategyReports.getActionPlan(params.assessmentId));
   });
 
   router.add("PATCH","/api/v1/assessments/:assessmentId/action-plan/milestones/:milestoneId",async({req,res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,REVIEW_WRITE); requireTerminal(access.assessment.status); const b:any=await readJson(req,config.requestBodyLimitBytes);
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,REVIEW_WRITE); requireTerminal(access.assessment.status); await reviewGate(params.assessmentId); const b:any=await readJson(req,config.requestBodyLimitBytes);
     const patch:any={};
     if(b.status!==undefined){const status=String(b.status);if(!["NOT_STARTED","IN_PROGRESS","DONE","BLOCKED","SKIPPED"].includes(status))throw badRequest("Ажлын төлөв буруу байна");patch.status=status}
     if(b.progressPercent!==undefined){const n=Number(b.progressPercent);if(!Number.isInteger(n)||n<0||n>100)throw badRequest("Ахиц 0-100 бүхэл тоо байна");patch.progressPercent=n}
@@ -464,7 +603,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/trace",async({res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,["OWNER","ADMIN","CONSULTANT"]); requireTerminal(access.assessment.status); ok(res,await strategyReports.getTraceability(params.assessmentId));
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,["OWNER","ADMIN","CONSULTANT"]); requireTerminal(access.assessment.status); await reviewGate(params.assessmentId); ok(res,await strategyReports.getTraceability(params.assessmentId));
   });
 
 
@@ -594,6 +733,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       const url=new URL(req.url??"/","http://localhost");
       if(!acceptingTraffic&&!["/live","/health","/ready","/metrics"].includes(url.pathname))throw new ApiError(503,"SERVICE_DRAINING","Service is restarting; retry shortly");
       if(!["/live","/health","/ready","/metrics"].includes(url.pathname))apiLimiter.check(`api:${clientIp(req,config)}`);
+      try{decodeURIComponent(url.pathname)}catch{throw new ApiError(400,"MALFORMED_URL","Request path is not valid URL encoding")}
       const match=router.match(req.method??"GET",url.pathname); if(!match)throw notFound("Route not found");
       const principal=match.route.auth?await authenticate(req.headers.authorization,config):undefined;
       await match.route.handler({req,res,params:match.params,query:url.searchParams,requestId,principal});
@@ -603,12 +743,19 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       json(res,e.status,{error:{code:e.code,message:e.message,details:e.details,requestId}});
     }
   });
-  return {server,router,config,beginDrain:()=>{acceptingTraffic=false;},operationalSnapshot:()=>operationalMetrics.snapshot()};
+  return {server,router,config,reviews,beginDrain:()=>{acceptingTraffic=false;},operationalSnapshot:()=>operationalMetrics.snapshot()};
 }
 
 function normalizeError(error:any,environment="development",context?:{requestId:string;path:string;releaseSha:string;instanceId:string}):ApiError {
   if(error instanceof ApiError)return error;
+  // Serializable write conflicts / deadlocks are transient concurrency outcomes, not malformed requests.
+  if(error?.code==="P2034"||error?.code==="40001"||error?.code==="40P01")return new ApiError(409,"CONCURRENT_UPDATE","Зэрэгцээ хүсэлт илэрлээ. Дахин оролдоно уу.");
   const message=String(error?.message??"Unexpected server error");
+  // Internal errors (ORM/database invocations, stack traces, file paths, code fragments) are never echoed to a client, in any environment.
+  if(/invocation|Prisma|ConnectorError|node_modules|\/home\/|\n\s+at\s|\$\{|=>|`/.test(message)){
+    console.error(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"internal_exception_masked",requestId:context?.requestId,path:context?.path,errorName:String(error?.name??"Error").slice(0,80)}));
+    return new ApiError(500,"INTERNAL_ERROR","Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.");
+  }
   if(environment==="production"){
     // Unknown exceptions may contain SQL, filesystem paths, provider details or other operational data.
     // Preserve only the broad status class; never echo the raw exception to a production customer.
@@ -633,6 +780,8 @@ function securityHeaders(res:ServerResponse,requestId:string,config:ApiConfig){
   res.setHeader("cache-control","no-store");
   res.setHeader("content-security-policy","default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   if(config.environment==="production")res.setHeader("strict-transport-security","max-age=31536000; includeSubDomains");
+  /* Lets a browser session or test prove which backend revision answered (health alone cannot: old and new builds both say "ok"). Not sent in production. */
+  if(config.environment!=="production")res.setHeader("x-mmri-release",config.releaseSha);
 }
 function applyCors(req:IncomingMessage,res:ServerResponse,config:ApiConfig){const origin=req.headers.origin;if(!origin)return;if(!config.allowedOrigins.has(origin))throw new ApiError(403,"CORS_ORIGIN_DENIED","Origin is not allowed");res.setHeader("access-control-allow-origin",origin);res.setHeader("access-control-allow-credentials","true");res.setHeader("vary","Origin");}
 function requireTrustedBrowserOrigin(req:IncomingMessage,config:ApiConfig){const origin=req.headers.origin;if(config.environment==="production"&&!origin)throw new ApiError(403,"BROWSER_ORIGIN_REQUIRED","Origin header is required for cookie-authenticated requests");if(origin&&!config.allowedOrigins.has(origin))throw new ApiError(403,"CORS_ORIGIN_DENIED","Origin is not allowed");}
@@ -641,7 +790,8 @@ function handleCorsPreflight(req:IncomingMessage,res:ServerResponse,config:ApiCo
 function clientIp(req:IncomingMessage,config:ApiConfig){if(config.trustProxy){const f=req.headers["x-forwarded-for"];const raw=Array.isArray(f)?f[0]:f;const parts=(raw??"").split(",").map(x=>x.trim()).filter(Boolean);if(parts.length){const index=Math.max(0,parts.length-config.trustProxyHops);const forwarded=parts[index];if(forwarded&&forwarded.length<=128)return forwarded;}}return req.socket.remoteAddress||"unknown";}
 function fingerprint(req:IncomingMessage,config:ApiConfig){return{ip:clientIp(req,config),userAgent:req.headers["user-agent"]};}
 function requireTerminal(status:string){if(!["COMPLETED","COMPLETED_WITH_REVIEW","EXHAUSTED"].includes(status))throw conflict("Results are available only after the assessment reaches a terminal state");}
-async function requireReportReady(assessmentId:string){const snapshot=await prisma.assessmentStateSnapshot.findFirst({where:{assessmentId},select:{id:true}});if(!snapshot)throw conflict("Assessment is terminal but its immutable result snapshot is not ready");}
+let reviewGate:(assessmentId:string)=>Promise<void>=async()=>{};
+async function requireReportReady(assessmentId:string){await reviewGate(assessmentId);const snapshot=await prisma.assessmentStateSnapshot.findFirst({where:{assessmentId},select:{id:true}});if(!snapshot)throw conflict("Assessment is terminal but its immutable result snapshot is not ready");}
 function text(v:any):string|undefined{if(v===null||v===undefined)return undefined;const s=String(v).trim();return s||undefined;}
 function intOrNull(v:any):number|null{if(v===null||v===undefined||v==="")return null;const n=Number(v);if(!Number.isInteger(n)||n<0)throw badRequest("Expected a non-negative integer");return n;}
 function numOrNull(v:any):number|null{if(v===null||v===undefined||v==="")return null;const n=Number(v);if(!Number.isFinite(n)||n<0)throw badRequest("Expected a non-negative number");return n;}

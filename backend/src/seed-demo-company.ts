@@ -11,7 +11,11 @@ import type { MethodologyDefinition, ProfileAnswer, QuestionDef } from "./engine
 import { TARGET_METHODOLOGY_VERSION, TARGET_QUESTION_BANK_VERSION } from "./methodology-target.js";
 
 const DEMO_EMAIL = "demo@mmri.mn";
-const DEMO_PASSWORD = "Demo2026!!";
+const DEMO_PASSWORD = process.env.MMRI_DEMO_PASSWORD?.trim() || "Demo2026!!";
+if (process.env.NODE_ENV === "production" && process.env.MMRI_ALLOW_DEMO_SEED !== "YES") {
+  console.error("REFUSING: the demo company has a known password and must not be seeded into a production database.");
+  process.exit(2);
+}
 const DEMO_COMPANY_NAME = "Өрнөх Маркет ХХК";
 const DEMO_TAG = "MMRI_DEMO_COMPANY_V2_FAST";
 const DEMO_QUESTION_BANK_VERSION = TARGET_QUESTION_BANK_VERSION;

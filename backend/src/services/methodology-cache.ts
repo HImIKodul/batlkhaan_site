@@ -43,8 +43,11 @@ export class MethodologyDefinitionCache {
   get(methodologyVersionId: string): Promise<MethodologyDefinition> {
     let current = this.cache.get(methodologyVersionId);
     if (!current) {
-      current = this.load(methodologyVersionId);
-      this.cache.set(methodologyVersionId, current);
+      const loading = this.load(methodologyVersionId);
+      current = loading;
+      this.cache.set(methodologyVersionId, loading);
+      // MMRI-21: never keep a rejected load; evict only if the entry is still this promise (not a newer one).
+      loading.catch(() => { if (this.cache.get(methodologyVersionId) === loading) this.cache.delete(methodologyVersionId); });
     }
     return current;
   }

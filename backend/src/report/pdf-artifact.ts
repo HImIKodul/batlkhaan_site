@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { FrozenReportPayload, NarrativeDraft, NarrativeClaim } from "./types.js";
 import { sha256Json } from "../lib/hash.js";
+import { deterministicFallbackNarrative } from "./fallback-renderer.js";
 
 export const MMRI_PDF_GENERATOR_VERSION="MMRI-PDF-1.5-BUSINESS-REPORT" as const;
 export const MMRI_PDF_SOURCE_VERSION="MMRI-PDF-SOURCE-1.0" as const;
@@ -10,6 +11,8 @@ export interface ReportPdfFinding {
   nameMn:string;
   score:number;
   narrativeMn:string;
+  /** Approved narrative text shown on the PDF; empty when it equals the deterministic default (which the name and score already express). MMRI-13. */
+  explanationMn?:string;
   basis?:"VALIDATED"|"RELATIVE_RANK";
 }
 export interface ReportPdfAction {
@@ -20,6 +23,8 @@ export interface ReportPdfAction {
   kpiMn:string;
   ownerRoleLabelMn:string;
   narrativeMn:string;
+  /** Approved S06 explanation (reviewer or AI wording) when it differs from the deterministic default. MMRI-13. */
+  explanationMn?:string;
   currentScore:number|null;
   targetScore:number|null;
 }
@@ -71,6 +76,17 @@ function claimTextByTrace(draft:NarrativeDraft,sectionId:string,traceId:string):
   const section=draft.sections.find(s=>s.id===sectionId);
   return section?.claims.find((c:NarrativeClaim)=>c.sourceTraceIds.includes(traceId))?.textMn?.trim()||"";
 }
+const plainText=(v:string)=>v.replace(/\s*[\u2014\u2015]\s*/g," - ").replace(/\s+/g," ").trim();
+/** The approved text when it differs from the deterministic fallback claim bound to the same reference; otherwise "". */
+function editedExplanation(approved:string,fallback:string):string{
+  if(!approved)return "";
+  const a=plainText(approved),f=plainText(fallback);
+  if(a===f)return "";
+  // A reviewer who appended a qualification keeps the default sentence (name, score and action facts are already printed next to it);
+  // the PDF then shows the added wording itself. Any other edit is shown in full.
+  if(f&&a.startsWith(f)){const rest=a.slice(f.length).trim();return rest||"";}
+  return approved;
+}
 function conclusionText(draft:NarrativeDraft):string{
   const section=draft.sections.find(s=>s.id==="S10");
   return section?.claims.map(c=>c.textMn.trim()).filter(Boolean).join(" ")||"";
@@ -93,18 +109,26 @@ function validatePdfSourceInput(payload:FrozenReportPayload,narrative:NarrativeD
 export function buildReportPdfSource(payload:FrozenReportPayload,narrative:NarrativeDraft):ReportPdfSource{
   validatePdfSourceInput(payload,narrative);
   const narrativeHash=sha256Json(narrative);
+  const baseline=deterministicFallbackNarrative(payload);
   const strengths=payload.strengths.slice(0,5).map(s=>({
     id:s.id,nameMn:s.nameMn,score:s.score,...(s.basis?{basis:s.basis}:{}),
-    narrativeMn:claimTextByTrace(narrative,"S04",`strength:${s.id}`)||claimTextByTrace(narrative,"S04",`category:${s.categoryId}`)||`${s.nameMn} нь харьцангуй тогтвортой чадавх байна.`
+    narrativeMn:claimTextByTrace(narrative,"S04",`strength:${s.id}`)||claimTextByTrace(narrative,"S04",`category:${s.categoryId}`)||`${s.nameMn} нь харьцангуй тогтвортой чадавх байна.`,
+    explanationMn:editedExplanation(
+      claimTextByTrace(narrative,"S04",`strength:${s.id}`)||claimTextByTrace(narrative,"S04",`category:${s.categoryId}`),
+      claimTextByTrace(baseline,"S04",`strength:${s.id}`)||claimTextByTrace(baseline,"S04",`category:${s.categoryId}`))
   }));
   const weaknesses=payload.weaknesses.slice(0,5).map(w=>({
     id:w.id,nameMn:w.nameMn,score:w.score,...(w.basis?{basis:w.basis}:{}),
-    narrativeMn:claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`)||`${w.nameMn} нь эхэлж бэхжүүлэх шаардлагатай чадавх байна.`
+    narrativeMn:claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`)||`${w.nameMn} нь эхэлж бэхжүүлэх шаардлагатай чадавх байна.`,
+    explanationMn:editedExplanation(
+      claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`),
+      claimTextByTrace(baseline,"S05",`weakness:${w.id}`)||claimTextByTrace(baseline,"S05",`category:${w.categoryId}`))
   }));
   const criticalActions=payload.priorityActions.slice(0,5).map(a=>({
     id:a.id,titleMn:a.titleMn,actionMn:a.actionMn,deliverableMn:a.deliverableMn,kpiMn:a.kpiMn,
     ownerRoleLabelMn:payload.displayDictionary[a.ownerRoleId]||a.ownerRoleId,currentScore:a.currentCellScore,targetScore:a.targetCellScore,
-    narrativeMn:claimTextByRef(narrative,"S06","recommendationId",a.id)||`${a.titleMn}. ${a.actionMn}`
+    narrativeMn:claimTextByRef(narrative,"S06","recommendationId",a.id)||`${a.titleMn}. ${a.actionMn}`,
+    explanationMn:editedExplanation(claimTextByRef(narrative,"S06","recommendationId",a.id),claimTextByRef(baseline,"S06","recommendationId",a.id))
   }));
   return {
     sourceVersion:MMRI_PDF_SOURCE_VERSION,

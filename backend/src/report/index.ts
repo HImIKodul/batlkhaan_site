@@ -9,3 +9,4 @@ export * from "./openai-narrative-provider.js";
 
 export * from "./integrity.js";
 export * from "./pdf-artifact.js";
+export * from "./pdf-budget.js";

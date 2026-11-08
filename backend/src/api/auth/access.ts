@@ -12,6 +12,13 @@ export async function authenticate(authorization: string | undefined, config: Ap
   const claims = verifyAccessToken(match[1], config);
   const user = await prisma.user.findUnique({ where: { id: claims.sub }, select: { id:true,email:true,status:true,tokenVersion:true } });
   if (!user || user.status !== "ACTIVE" || user.tokenVersion !== claims.tv) throw unauthorized("Session is no longer valid");
+  // MMRI-19: an access token is bound to its login's refresh-session family. Logout (or family revocation) revokes every
+  // row of the family, so the token dies immediately instead of living until expiry. One indexed lookup (familyId index).
+  // Tokens without `fid` were issued before this change and expire on their own within the access TTL.
+  if (claims.fid) {
+    const live = await prisma.refreshSession.findFirst({ where: { familyId: claims.fid, userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } }, select: { id: true } });
+    if (!live) throw unauthorized("Session is no longer valid");
+  }
   return { userId: user.id, email: user.email, tokenVersion: user.tokenVersion };
 }
 
@@ -54,5 +61,9 @@ export async function pilotEnrollmentAccess(userId:string,enrollmentId:string,al
 }
 
 export function requireOperator(principal:Principal,config:ApiConfig):void{
-  if(!config.operatorEmails.has(principal.email.trim().toLowerCase()))throw notFound("Route not found");
+  // Production grants operator access by immutable user id only; the e-mail list is a non-production convenience
+  // (config.ts rejects it in production) because registration does not verify e-mail ownership.
+  const byId=config.operatorUserIds.has(principal.userId);
+  const byEmail=config.environment!=="production"&&config.operatorEmails.has(principal.email.trim().toLowerCase());
+  if(!byId&&!byEmail)throw notFound("Route not found");
 }

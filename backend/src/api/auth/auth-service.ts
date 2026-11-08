@@ -4,6 +4,9 @@ import type { ApiConfig } from "../config.js";
 import { conflict, unauthorized } from "../errors.js";
 import { hashAuditValue, hashPassword, hashRefreshToken, newRefreshToken, signAccessToken, verifyPassword } from "./crypto.js";
 
+/** MMRI-16: a refresh token that was rotated this recently may be presented once more by a second tab/request that read the same cookie before the rotated one arrived. Beyond this window reuse is treated as theft. */
+export const REFRESH_REUSE_GRACE_MS = 10_000;
+
 export interface RequestFingerprint { ip?: string; userAgent?: string; }
 
 function publicUser(user: any) {
@@ -48,6 +51,9 @@ export class AuthService {
     const session = await prisma.refreshSession.findUnique({ where: { tokenHash }, include: { user: true } });
     if (!session) throw unauthorized("Refresh session invalid");
     if (session.revokedAt) {
+      if (this.withinReuseGrace(session)) return this.refreshSibling(session, fp);
+      // Revoked by logout/expiry (never rotated): the session is simply dead. Not evidence of theft, so do not sign out the user's other devices.
+      if (!session.rotatedAt) throw unauthorized("Refresh session revoked");
       await prisma.$transaction([
         prisma.refreshSession.updateMany({ where: { familyId: session.familyId, revokedAt: null }, data: { revokedAt: new Date() } }),
         prisma.user.update({ where: { id: session.userId }, data: { tokenVersion: { increment: 1 } } })
@@ -74,6 +80,9 @@ export class AuthService {
       });
     } catch (error) {
       if (!(error instanceof Error) || error.message !== "REFRESH_ROTATION_RACE") throw error;
+      // Lost a simultaneous-rotation race. If the winner rotated just now this is a legitimate second tab, not a replay.
+      const winner = await prisma.refreshSession.findUnique({ where: { id: session.id }, include: { user: true } });
+      if (winner && this.withinReuseGrace(winner)) return this.refreshSibling(winner, fp);
       await prisma.$transaction([
         prisma.refreshSession.updateMany({ where: { familyId: session.familyId, revokedAt: null }, data: { revokedAt: new Date() } }),
         prisma.user.update({ where: { id: session.userId }, data: { tokenVersion: { increment: 1 } } })
@@ -84,7 +93,32 @@ export class AuthService {
     await this.audit(session.userId, "REFRESH", fp);
     return {
       user: publicUser(session.user),
-      accessToken: signAccessToken({ userId: session.user.id, email: session.user.email, tokenVersion: session.user.tokenVersion }, this.config),
+      accessToken: signAccessToken({ userId: session.user.id, email: session.user.email, tokenVersion: session.user.tokenVersion, familyId: session.familyId }, this.config),
+      refreshToken: nextToken,
+      accessTokenExpiresIn: this.config.accessTokenTtlSeconds
+    };
+  }
+
+  private withinReuseGrace(session: any): boolean {
+    return !!session.rotatedAt && Date.now() - session.rotatedAt.getTime() <= REFRESH_REUSE_GRACE_MS
+      && session.expiresAt > new Date() && session.user?.status === "ACTIVE";
+  }
+
+  /** Concurrent-tab recovery: issue an additional live token in the same family. The family stays valid; real replay after the window still revokes it. */
+  private async refreshSibling(session: any, fp: RequestFingerprint) {
+    // A logout/revocation after the rotation must win: only siblings of a still-live family are allowed.
+    const live = await prisma.refreshSession.findFirst({ where: { familyId: session.familyId, revokedAt: null, expiresAt: { gt: new Date() } }, select: { id: true } });
+    if (!live) throw unauthorized("Refresh session revoked");
+    const nextToken = newRefreshToken();
+    await prisma.refreshSession.create({ data: {
+      userId: session.userId, tokenHash: hashRefreshToken(nextToken), familyId: session.familyId,
+      expiresAt: new Date(Date.now() + this.config.refreshTokenTtlSeconds * 1000),
+      ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt)
+    }});
+    await this.audit(session.userId, "REFRESH", fp, { familyId: session.familyId, concurrentReuseWithinGrace: true });
+    return {
+      user: publicUser(session.user),
+      accessToken: signAccessToken({ userId: session.user.id, email: session.user.email, tokenVersion: session.user.tokenVersion, familyId: session.familyId }, this.config),
       refreshToken: nextToken,
       accessTokenExpiresIn: this.config.accessTokenTtlSeconds
     };
@@ -95,7 +129,8 @@ export class AuthService {
     const tokenHash = hashRefreshToken(refreshToken);
     const session = await prisma.refreshSession.findUnique({ where: { tokenHash } });
     if (!session) return;
-    if (!session.revokedAt) await prisma.refreshSession.update({ where: { id: session.id }, data: { revokedAt: new Date() } });
+    // Revoke the whole login family (also a stale rotated cookie ends the live session) and, via authenticate(), every access token bound to it. Other devices are separate families and are unaffected.
+    await prisma.refreshSession.updateMany({ where: { familyId: session.familyId, revokedAt: null }, data: { revokedAt: new Date() } });
     await this.audit(session.userId, "LOGOUT", fp);
   }
 
@@ -111,7 +146,7 @@ export class AuthService {
       userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt)
     }});
     return {
-      accessToken: signAccessToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion }, this.config),
+      accessToken: signAccessToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion, familyId }, this.config),
       refreshToken,
       accessTokenExpiresIn: this.config.accessTokenTtlSeconds
     };

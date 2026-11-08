@@ -1,0 +1,39 @@
+FROM node:22-bookworm-slim AS build
+WORKDIR /app
+# node:*-slim has no OpenSSL; without it `prisma generate` picks the openssl-1.1.x engine and the runtime cannot load it.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY prisma ./prisma
+RUN npx prisma generate
+COPY tsconfig.json tsconfig.production.json ./
+COPY src ./src
+RUN npx tsc -p tsconfig.production.json
+RUN npm prune --omit=dev
+
+FROM node:22-bookworm-slim AS runtime
+ENV NODE_ENV=production \
+    MMRI_PDF_PYTHON_PATH=/usr/bin/python3 \
+    MMRI_PDF_RENDERER_SCRIPT=/app/pdf_renderer/render_report_pdf.py \
+    MMRI_REPORT_STORAGE_DIR=/var/lib/mmri/report-storage
+WORKDIR /app
+# The compose named volume mounts at MMRI_REPORT_STORAGE_DIR. Docker seeds a fresh named volume with the
+# ownership of this image directory, so it must exist and belong to the non-root runtime user (MMRI-10).
+# Fixed uid/gid so the migrate and api images agree on volume ownership.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 python3-reportlab fonts-noto-core poppler-utils openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && groupadd --system --gid 10001 mmri \
+ && useradd --system --uid 10001 --gid mmri --home /app mmri \
+ && mkdir -p /var/lib/mmri/report-storage \
+ && chown -R mmri:mmri /var/lib/mmri \
+ && chmod 750 /var/lib/mmri/report-storage
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+COPY methodology ./methodology
+COPY pdf_renderer ./pdf_renderer
+USER mmri
+EXPOSE 4000
+CMD ["node","dist/api/server.js"]

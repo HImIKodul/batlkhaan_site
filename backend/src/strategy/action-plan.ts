@@ -51,10 +51,13 @@ function buildPlanDependencies(selected: Recommendation[], rootContract: any): P
       sourceTraceIds: [...new Set([...upstream.sourceTraceIds, ...downstream.sourceTraceIds, `dependency:${id}`])]
     });
   };
+  const evidenceTypes = new Set(["VALIDATE_CAUSE","COLLECT_EVIDENCE","RESOLVE_EVIDENCE"]);
+  /* Evidence collection/validation never waits for a root-cause fix: gathering facts about a capability has no causal prerequisite, and chaining it
+     behind executions pushed every evidence action out of the 365-day window for evidence-poor assessments (F-ROADMAP). */
   for (const upstream of selected) for (const downstream of selected) {
+    if (evidenceTypes.has(downstream.type)) continue;
     if (isDependency(upstream, downstream, rootContract)) add("ROOT_CAUSE_GRAPH", upstream, downstream);
   }
-  const evidenceTypes = new Set(["VALIDATE_CAUSE","COLLECT_EVIDENCE","RESOLVE_EVIDENCE"]);
   for (const downstream of selected) {
     if (downstream.type !== "EXECUTION" && downstream.type !== "LOCAL_IMPROVEMENT") continue;
     for (const upstream of selected) {
@@ -295,6 +298,37 @@ export function buildActionPlan(
     if (!changed) { scheduleStable = true; break; }
   }
   if (!scheduleStable) throw new Error("Action-plan scheduler could not satisfy dependency/capacity constraints deterministically");
+
+  /* F-ROADMAP compaction. The overflow rule above only ever moves actions LATER, so free earlier horizons stayed empty while evidence-collection and
+     validation actions ended up beyond day 365. Deterministic second pass: for every action that is still deferred (evidence/validation first, then
+     by schedule score), take the EARLIEST horizon that satisfies capacity and dependency ordering. Executions never start before their contract start
+     horizon; evidence/validation may start as early as H0. Scores, selection and capacity limits are untouched; nothing is invented. */
+  const evidenceTypeSet = new Set(["VALIDATE_CAUSE","COLLECT_EVIDENCE","RESOLVE_EVIDENCE"]);
+  const capacityHolds = (): boolean => {
+    for (const h of horizonIds) {
+      const active = selected.filter(r => activeRequiredHorizons(r, startById.get(r.id)!, scheduleTemplates).includes(h));
+      if (active.length > maxActive || active.filter(r => r.effortLevel >= 4).length > maxHigh) return false;
+    }
+    return true;
+  };
+  const dependenciesHold = (): boolean => dependencies.every(d => {
+    const up = startById.get(d.upstreamRecommendationId)!, down = startById.get(d.downstreamRecommendationId)!;
+    if (up === "DEFERRED_BEYOND_V1") return down === "DEFERRED_BEYOND_V1";
+    if (down === "DEFERRED_BEYOND_V1") return true;
+    return d.kind === "SAME_FINDING_EVIDENCE" ? horizonIndex(up) < horizonIndex(down) : horizonIndex(up) <= horizonIndex(down);
+  });
+  const compactionOrder = [...selected].sort((a,b) =>
+    (Number(evidenceTypeSet.has(b.type)) - Number(evidenceTypeSet.has(a.type))) ||
+    (scoreById.get(b.id)! - scoreById.get(a.id)!) || (b.priority - a.priority) || a.id.localeCompare(b.id));
+  for (const rec of compactionOrder) {
+    if (startById.get(rec.id) !== "DEFERRED_BEYOND_V1") continue;
+    const lowest = evidenceTypeSet.has(rec.type) ? 0 : horizonIndex(initialStart(rec.type, rec.priorityBand, contract.initialStartMatrix ?? []).horizon);
+    for (let i = lowest; i < horizonIds.length; i++) {
+      startById.set(rec.id, horizonIds[i]);
+      if (capacityHolds() && dependenciesHold()) break;
+      startById.set(rec.id, "DEFERRED_BEYOND_V1");
+    }
+  }
 
   const milestones: PlanMilestone[] = [];
   for (const rec of selected) {

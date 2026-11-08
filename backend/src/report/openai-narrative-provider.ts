@@ -1,4 +1,5 @@
 import type { FrozenReportPayload, NarrativeDraft, NarrativeProviderMetadata, NarrativeProviderResult, NarrativeProviderTelemetry, NarrativeValidationResult } from "./types.js";
+import { NarrativeProviderError } from "./types.js";
 import type { NarrativeProvider } from "./coordinator.js";
 import { aiGenerationInput, aiRepairInput, aiSystemInstructions, MMRI_AI_REPORT_PROMPT_VERSION, narrativeJsonSchema } from "./ai-prompt.js";
 import { assertFrozenReportIntegrity, MMRI_AI_BOUNDARY_VERSION } from "./integrity.js";
@@ -72,6 +73,7 @@ export class OpenAiNarrativeProvider implements NarrativeProvider{
     assertFrozenReportIntegrity(payload);
     const started=Date.now(); const requestIds:string[]=[]; let attempts=0; let retries=0; let finalStatus:number|null=null;
     let lastError:Error|undefined;
+    try{
     while(attempts<=this.maxRetries){
       const elapsed=Date.now()-started; const remaining=this.totalTimeoutMs-elapsed;
       if(remaining<=0)break;
@@ -110,5 +112,10 @@ export class OpenAiNarrativeProvider implements NarrativeProvider{
       }finally{clearTimeout(timer);}
     }
     throw lastError??new Error(`AI report provider total timeout exceeded after ${this.totalTimeoutMs}ms`);
+    }catch(error:any){
+      // MMRI-43: carry the attempts, retries, final status, duration and request ids of the failed call to the coordinator.
+      if(error instanceof NarrativeProviderError)throw error;
+      throw new NarrativeProviderError(error instanceof Error?error.message:"AI narrative provider failure",{httpAttempts:attempts,retryCount:retries,requestIds,finalHttpStatus:finalStatus,durationMs:Date.now()-started});
+    }
   }
 }

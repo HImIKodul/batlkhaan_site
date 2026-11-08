@@ -145,7 +145,9 @@ export function buildDiagnosisResultV13(input: BuildDiagnosisResultInput): Diagn
   // to FINDING_TARGET from the actual capability scores, flagged RELATIVE_RANK so it is never presented as validated.
   const scoredCapabilities=capabilities.filter(c=>c.score!==null&&!c.confirmedNotApplicable);
   const rankedStrengthIds=new Set(strengthsAll.map(x=>x.capabilityId));
-  const strengthExtras=scoredCapabilities.filter(c=>!rankedStrengthIds.has(c.id)).sort((a,b)=>b.score!-a.score!||(b.confidence??0)-(a.confidence??0)||a.id.localeCompare(b.id)).slice(0,Math.max(0,FINDING_TARGET-strengthsAll.length));
+  const validatedWeakIds=new Set(weaknessesAll.map(x=>x.capabilityId));
+  // MMRI-03: relative-rank strengths must be disjoint from validated weaknesses and not below the weakness threshold (fewer strengths is acceptable).
+  const strengthExtras=scoredCapabilities.filter(c=>!rankedStrengthIds.has(c.id)&&!validatedWeakIds.has(c.id)&&c.score!>=weakThreshold).sort((a,b)=>b.score!-a.score!||(b.confidence??0)-(a.confidence??0)||a.id.localeCompare(b.id)).slice(0,Math.max(0,FINDING_TARGET-strengthsAll.length));
   strengthExtras.forEach(c=>{rankedStrengthIds.add(c.id);strengthsAll.push({capabilityId:c.id,capabilityNameMn:c.nameMn,moduleId:c.moduleId,moduleCode:c.moduleCode,moduleNameMn:c.moduleNameMn,score:c.score!,confidence:c.confidence??0,coverage:c.coverage??0,sourceTraceIds:[`category:${c.id}`],basis:"RELATIVE_RANK"})});
   const rankedWeaknessIds=new Set(weaknessesAll.map(x=>x.capabilityId));
   const weaknessExtras=scoredCapabilities.filter(c=>!rankedWeaknessIds.has(c.id)&&!rankedStrengthIds.has(c.id)).sort((a,b)=>a.score!-b.score!||(b.confidence??0)-(a.confidence??0)||a.id.localeCompare(b.id)).slice(0,Math.max(0,FINDING_TARGET-weaknessesAll.length));

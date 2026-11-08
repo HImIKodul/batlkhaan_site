@@ -7,12 +7,13 @@ import { evidenceFromAnswer } from "../engine/evidence.js";
 import { routeNextQuestion } from "../engine/routing.js";
 import type { AssessmentMode, DirectEvidence, MethodologyDefinition, ProfileAnswer, RankedQuestion, RoutingDecision, RuntimeSnapshot } from "../engine/types.js";
 import { categoryId, diagnosticCellId, methodologyId, moduleId, purposeId, questionId } from "../lib/ids.js";
-import { conflict } from "../api/errors.js";
+import { badRequest, conflict } from "../api/errors.js";
 import { assertRevision, assertWriterLease, leaseExpiry, requireWriterId, sha256Canonical, type AnswerWriteGuard, type PersistenceWriteGuard } from "./persistence-integrity.js";
 import {
   TARGET_METHODOLOGY_VERSION,
 } from "../methodology-target.js";
 import { methodologyTargetForDomain, normalizeDomainCode, type DomainCode } from "../domain-methodology.js";
+import { enqueueReviewInTx } from "./report-review-policy.js";
 import { ACTIVE_ASSESSMENT_STATUSES, RESULT_TERMINAL_ASSESSMENT_STATUSES, canMutateRespondents, isResultTerminalAssessmentStatus } from "./assessment-lifecycle.js";
 
 export class PrismaAssessmentEngine {
@@ -46,6 +47,23 @@ export class PrismaAssessmentEngine {
     },{maxWait:10000,timeout:30000});
   }
 
+  /**
+   * MMRI-28: apply the exact assessment-start profile rules (validateProfile) at save time. Reads only the
+   * profile contract (not the 12k-question bank). The profile config is identical for every domain's methodology.
+   * Throws ApiError 400 with the underlying reason.
+   */
+  async validateProfileAnswersForSave(answers: ProfileAnswer[]): Promise<void> {
+    const target = methodologyTargetForDomain("marketing");
+    let version = await prisma.methodologyVersion.findUnique({ where: { version: target.methodologyVersion } });
+    if (!version || version.status !== "ACTIVE") version = await prisma.methodologyVersion.findFirst({ where: { status: "ACTIVE" } });
+    if (!version) throw conflict("No ACTIVE methodology is available to validate the profile");
+    const contract = await prisma.methodologyContract.findFirst({ where: { methodologyVersionId: version.id, sourceName: "MMRI_FINAL_Company_Profile_Config.json" } });
+    const questions = ((contract?.definition as any)?.profileQuestions ?? []) as any[];
+    if (!questions.length) throw conflict("Profile question contract is missing for the active methodology");
+    try { validateProfileAgainstQuestions(questions, answers); }
+    catch (error: any) { throw badRequest("Суурь мэдээллийн хариулт буруу байна.", { reason: String(error?.message ?? error) }); }
+  }
+
   async addRespondent(assessmentId: string, roleExternalId: string, displayName?: string, authorityMetadata?: RespondentAuthorityMetadata) {
     const assessment = await prisma.assessment.findUnique({ where: { id: assessmentId } });
     if (!assessment) throw new Error(`Assessment ${assessmentId} not found`);
@@ -69,8 +87,9 @@ export class PrismaAssessmentEngine {
       const definition = await this.cache.get(assessment.methodologyVersionId);
       validateProfile(definition, profileAnswers);
       const now = new Date();
-      await tx.assessment.update({
-        where: { id: assessmentId },
+      // MMRI-20: conditional update so two concurrent starts cannot both claim the lease / double-increment revisions.
+      const startClaim = await tx.assessment.updateMany({
+        where: { id: assessmentId, status: "PROFILE_PENDING", activeWriterLeaseId: null, assessmentRevision: assessment.assessmentRevision },
         data: {
           mode,
           status: "IN_PROGRESS",
@@ -84,6 +103,7 @@ export class PrismaAssessmentEngine {
           startedAt: assessment.startedAt ?? now
         }
       });
+      if (startClaim.count !== 1) throw conflict("Assessment was started by another request");
       await tx.auditEvent.create({ data: { assessmentId, eventType: "PROFILE_UPDATED", entityType: "Assessment", entityId: assessmentId, payload: { profileAnswers, persistenceContract: "PERSIST-v1.0-STEP11" } } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "WRITER_LEASE_ACQUIRED", entityType: "Assessment", entityId: assessmentId, payload: { writerLeaseId, expiresAt: leaseExpiry(now).toISOString() } } });
       const snapshot = calculateRuntimeSnapshot(definition, []);
@@ -336,6 +356,7 @@ export class PrismaAssessmentEngine {
         await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT", assessmentRevision: newAssessmentRevision, eventSequence: answerEventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: requireBundleSha256(definition), traceVersion: "MMRI-TRACE-1.0" } });
         await tx.auditEvent.create({ data: { assessmentId, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT" } } });
         await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, overall: snapshot.overall } } });
+        await enqueueReviewInTx(tx, assessmentId);
       }
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ANSWER_CREATED", entityType: "Answer", entityId: answer.id, payload: { questionExternalId, optionIndex, authority, clientRequestId } } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "EVIDENCE_CREATED", entityType: "Answer", entityId: answer.id, payload: { primaryCell: question.cellId, secondaryTargetCount: question.secondaryTargets.length } } });
@@ -485,7 +506,9 @@ export class PrismaAssessmentEngine {
         }
       }
       const nextRevision = a.status === "PAUSED" ? a.assessmentRevision + 1 : a.assessmentRevision;
-      await tx.assessment.update({ where: { id: a.id }, data: { status: "IN_PROGRESS", routingState: resume.routingState ?? a.routingState, currentQuestionIssueId: resumeQuestionIssueId, resumeState: Prisma.DbNull, pausedAt: null, completedAt: null, activeWriterLeaseId: writerLeaseId, writerLeaseExpiresAt: leaseExpiry(now), ...(a.status === "PAUSED" ? { assessmentRevision: { increment: 1 }, eventSequence: { increment: 1 } } : {}) } });
+      // MMRI-20: compare-and-swap on the exact state we validated above, so two concurrent resumes/claims cannot both win the writer lease.
+      const claimed = await tx.assessment.updateMany({ where: { id: a.id, status: a.status, assessmentRevision: a.assessmentRevision, activeWriterLeaseId: a.activeWriterLeaseId ?? null, writerLeaseExpiresAt: a.writerLeaseExpiresAt ?? null }, data: { status: "IN_PROGRESS", routingState: resume.routingState ?? a.routingState, currentQuestionIssueId: resumeQuestionIssueId, resumeState: Prisma.DbNull, pausedAt: null, completedAt: null, activeWriterLeaseId: writerLeaseId, writerLeaseExpiresAt: leaseExpiry(now), ...(a.status === "PAUSED" ? { assessmentRevision: { increment: 1 }, eventSequence: { increment: 1 } } : {}) } });
+      if (claimed.count !== 1) throw conflict("Assessment was changed or claimed by another writer; reload and retry");
       await tx.auditEvent.create({ data: { assessmentId: a.id, eventType: a.status === "PAUSED" ? "ASSESSMENT_RESUMED" : "WRITER_LEASE_RENEWED", entityType: "Assessment", entityId: a.id, payload: { writerLeaseId, assessmentRevision: nextRevision, expiresAt: leaseExpiry(now).toISOString() } } });
       return { status: "IN_PROGRESS", assessmentRevision: nextRevision };
     });
@@ -589,6 +612,7 @@ export class PrismaAssessmentEngine {
         await tx.auditEvent.create({ data: { assessmentId, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, explicitCompletionRequest: true } } });
       }
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, explicitCompletionRequest: true, assessmentRevision: nextRevision } } });
+      await enqueueReviewInTx(tx, assessmentId);
       return { completed: true, reason: decision.stopReason, routingState: decision.state, status: nextStatus, assessmentRevision: nextRevision };
     }, { maxWait: 10000, timeout: 30000 });
   }
@@ -714,6 +738,7 @@ async function finalizeTerminalWithoutOpenQuestion(
     await tx.auditEvent.create({ data: { assessmentId: assessment.id, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, kind, lifecycleAutoFinalized: true } } });
   }
   await tx.auditEvent.create({ data: { assessmentId: assessment.id, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessment.id, payload: { routingState: decision.state, lifecycleAutoFinalized: true, initialStart, assessmentRevision: nextRevision, overall: snapshot.overall } } });
+  await enqueueReviewInTx(tx, assessment.id);
   return { status: nextStatus, assessmentRevision: nextRevision, eventSequence: nextEventSequence };
 }
 
@@ -1095,7 +1120,11 @@ function terminalSnapshotPayload(
 }
 
 function validateProfile(definition: MethodologyDefinition, answers: ProfileAnswer[]): void {
-  const questions = definition.contracts.companyProfile.profileQuestions ?? [];
+  validateProfileAgainstQuestions(definition.contracts.companyProfile.profileQuestions ?? [], answers);
+}
+
+/** Shared rule set used both at assessment start and when a company profile is saved (MMRI-28). */
+export function validateProfileAgainstQuestions(questions: any[], answers: ProfileAnswer[]): void {
   const map = new Map(answers.map(a => [a.questionId,a.optionIndexes]));
   for (const q of questions) {
     if (q.required && !map.has(q.id)) throw new Error(`Required profile question ${q.id} is missing`);

@@ -67,6 +67,7 @@ export async function generateValidatedNarrative(payload: FrozenReportPayload, p
       }
       providerError=`AI narrative validation did not pass after controlled generation${attempts>1?" and repair":""}: ${validation.issues.slice(0,5).map(x=>x.checkId).join(",")||validation.state}`.slice(0,500);
     } catch (error) {
+      absorb((error as {telemetry?:NarrativeProviderTelemetry}|null)?.telemetry); // MMRI-43: failed calls keep their attempt telemetry
       providerError=error instanceof Error ? error.message.slice(0,500) : "AI narrative provider failure";
     }
   }

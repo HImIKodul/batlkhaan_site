@@ -14,6 +14,17 @@ function jsonArray(value: unknown): string[] {
 function unique<T>(values: T[]): T[] { return [...new Set(values)]; }
 function sorted<T>(values: T[], key: (value:T)=>string): T[] { return [...values].sort((a,b)=>key(a).localeCompare(key(b))); }
 
+/** The part of a trace graph that does not depend on the narrative text structure (everything except report/claim nodes, their edges and their checks). */
+function provenanceCore(g: TraceGraphEnvelope): unknown {
+  const narrativeRelations = new Set(["CONTAINS_CLAIM", "CLAIM_GROUNDED_IN", "RENDERED_FROM_SNAPSHOT", "RENDERED_WITH_VERSION_BUNDLE"]);
+  const { reportClaims: _c, reports: _r, ...nodes } = (g as any).nodes ?? {};
+  return {
+    traceVersion: g.traceVersion, assessmentId: g.assessmentId, versionBundle: g.versionBundle, sourceSnapshot: g.sourceSnapshot, nodes,
+    edges: ((g as any).edges ?? []).filter((e: TraceEdge) => !narrativeRelations.has(e.relation)),
+    replay: (g as any).replay
+  };
+}
+
 export interface TraceGraphEnvelope {
   traceVersion: typeof TRACE_VERSION;
   assessmentId: string;
@@ -226,12 +237,17 @@ export class TraceabilityService {
     if(failed.length) throw new Error(`Trace publication gate failed: ${failed.map(x=>`${x.id}:${x.detail}`).join(" | ")}`);
     const graphHash=sha256Json(graph);
     const client=db as any;
-    const externalId=`TRACE-${payload.reportId}`;
-    const existing=await client.traceSnapshot.findFirst({where:{assessmentId,externalId}});
-    if(existing){
-      if(existing.graphHash!==graphHash)throw new Error("Published trace graph is immutable and no longer matches regenerated provenance");
-      return {traceSnapshot:existing,graph,graphHash,verified:true};
-    }
+    /* MMRI-31: published provenance is append-only, never rewritten. The first publication of a report freezes `TRACE-<reportId>`; when a later,
+       validated narrative revision (an eligible fallback-to-AI upgrade) has a different claim structure, its graph is frozen as its own revision
+       `TRACE-<reportId>-R<n>` and the earlier revision stays untouched. Only the narrative-dependent parts (report/claim nodes and edges) may differ:
+       a change to the underlying evidence/scoring/plan provenance still fails as immutable. */
+    const baseId=`TRACE-${payload.reportId}`;
+    const family:any[]=(await client.traceSnapshot.findMany({where:{assessmentId,externalId:{startsWith:baseId}},orderBy:{createdAt:"asc"}})).filter((r:any)=>r.externalId===baseId||/^-R\d+$/.test(String(r.externalId).slice(baseId.length)));
+    const sameGraph=family.find((r:any)=>r.graphHash===graphHash);
+    if(sameGraph)return {traceSnapshot:sameGraph,graph,graphHash,verified:true};
+    const latest=family.at(-1);
+    if(latest&&sha256Json(provenanceCore(latest.graph as TraceGraphEnvelope))!==sha256Json(provenanceCore(graph)))throw new Error("Published trace graph is immutable and no longer matches regenerated provenance");
+    const externalId=latest?`${baseId}-R${family.length+1}`:baseId;
     const traceSnapshot=await client.traceSnapshot.create({data:{assessmentId,externalId,traceVersion:TRACE_VERSION,sourceSnapshotId:graph.sourceSnapshot.id,sourceSnapshotHash:graph.sourceSnapshot.hash,versionBundleId:graph.versionBundle.id,versionBundleHash:graph.versionBundle.hash,graphHash,graph,publicationStatus:"PASS",reportSnapshotId:reportSnapshotId??null}});
     await client.auditEvent.create({data:{assessmentId,eventType:"TRACE_GRAPH_FROZEN",entityType:"TraceSnapshot",entityId:traceSnapshot.id,payload:{traceVersion:TRACE_VERSION,graphHash,sourceSnapshotHash:graph.sourceSnapshot.hash,versionBundleHash:graph.versionBundle.hash}}});
     await client.auditEvent.create({data:{assessmentId,eventType:"TRACE_GRAPH_VERIFIED",entityType:"TraceSnapshot",entityId:traceSnapshot.id,payload:{checks:graph.publicationChecks,graphHash}}});

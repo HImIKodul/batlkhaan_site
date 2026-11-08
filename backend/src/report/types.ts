@@ -160,6 +160,12 @@ export interface NarrativeProviderTelemetry {
   durationMs: number;
 }
 
+/** MMRI-43: a failing provider call still reports what it did. Providers attach this to the error they throw. */
+export class NarrativeProviderError extends Error {
+  readonly telemetry: NarrativeProviderTelemetry;
+  constructor(message: string, telemetry: NarrativeProviderTelemetry) { super(message); this.name = "NarrativeProviderError"; this.telemetry = telemetry; }
+}
+
 export interface NarrativeProviderResult {
   draft: NarrativeDraft;
   telemetry?: NarrativeProviderTelemetry;

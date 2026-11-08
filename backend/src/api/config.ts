@@ -33,6 +33,14 @@ export interface ApiConfig {
   shutdownDrainMs: number;
   shutdownForceTimeoutMs: number;
   reportStorageDir: string;
+  /** "mock" writes messages to a local file (development and tests only). "disabled" sends nothing. No real mail provider is implemented yet. */
+  adminSessionIdleMinutes: number;
+  /** Rollout flag: when true, newly completed assessments need administrator approval before the customer sees the report. */
+  reportReviewRequired: boolean;
+  mailProvider: "mock" | "disabled";
+  mockMailDir: string;
+  publicAppUrl: string;
+  passwordResetTtlMinutes: number;
   billingProvider: BillingProviderMode;
   billingEnforcement: boolean;
   diagnosticPriceMnt: number | null;
@@ -47,6 +55,8 @@ export interface ApiConfig {
   manualPaymentQrImage: string;
   manualPaymentShortUrl: string;
   operatorEmails: Set<string>;
+  /** Immutable user ids allowed to use operator routes. The only operator grant honoured in production (an e-mail address is not proof of ownership: registration does not verify it). */
+  operatorUserIds: Set<string>;
 }
 
 function requireSecret(name: string, fallback: string, environment: string): string {
@@ -75,6 +85,17 @@ function normalizeOrigin(value:string){
   catch{throw new Error(`Invalid ALLOWED_ORIGINS entry: ${value}`);}
 }
 
+
+function operatorUserIdSet(raw:string|undefined):Set<string>{
+  const out=new Set<string>();
+  for(const part of (raw??"").split(",")){
+    const id=part.trim();
+    if(!id)continue;
+    if(!/^[A-Za-z0-9_-]{8,64}$/.test(id))throw new Error(`Invalid MMRI_OPERATOR_USER_IDS entry: ${id.slice(0,12)}`);
+    out.add(id);
+  }
+  return out;
+}
 
 function operatorEmailSet(raw:string|undefined):Set<string>{
   const out=new Set<string>();
@@ -148,6 +169,14 @@ export function loadApiConfig(): ApiConfig {
   const environment = (process.env.NODE_ENV ?? "development").trim().toLowerCase();
   const origins = (process.env.ALLOWED_ORIGINS ?? "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173")
     .split(",").map(x => x.trim()).filter(Boolean).map(normalizeOrigin);
+  /* LOCAL DEVELOPMENT ONLY: the Vite dev/preview servers may run on 5173-5176 (the next free port when 5173 is taken). Never added in production. */
+  if(environment!=="production")for(const port of [5173,5174,5175,5176])for(const host of ["localhost","127.0.0.1"]){const o=`http://${host}:${port}`;if(!origins.includes(o))origins.push(o);}
+  const mailProvider=((process.env.MMRI_MAIL_PROVIDER??(environment==="production"?"disabled":"mock")).trim().toLowerCase()) as "mock"|"disabled";
+  if(!["mock","disabled"].includes(mailProvider))throw new Error("MMRI_MAIL_PROVIDER must be mock or disabled (no real mail provider is implemented yet)");
+  if(environment==="production"&&mailProvider==="mock")throw new Error("MMRI_MAIL_PROVIDER=mock is forbidden in production");
+  const publicAppUrl=cleanBaseUrl(process.env.MMRI_PUBLIC_APP_URL??origins[0]??"http://localhost:5173");
+  const passwordResetTtlMinutes=intEnv("MMRI_PASSWORD_RESET_TTL_MINUTES",30,5,120);
+  const mockMailDir=(process.env.MMRI_MOCK_MAIL_DIR??"").trim()||new URL("../../.mock-mailbox",import.meta.url).pathname;
   const billingProvider=((process.env.MMRI_BILLING_PROVIDER??(environment==="production"?"qpay":"mock")).trim().toLowerCase()) as BillingProviderMode;
   if(!["qpay","mock","manual"].includes(billingProvider))throw new Error("MMRI_BILLING_PROVIDER must be qpay, mock or manual");
   const qpayClientId=(process.env.QPAY_CLIENT_ID??"").trim();
@@ -162,6 +191,8 @@ export function loadApiConfig(): ApiConfig {
   const manualPaymentQrImage=(process.env.MMRI_MANUAL_PAYMENT_QR_IMAGE??"").trim();
   const manualPaymentShortUrl=(process.env.MMRI_MANUAL_PAYMENT_SHORT_URL??"").trim();
   const operatorEmails=operatorEmailSet(process.env.MMRI_OPERATOR_EMAILS);
+  const operatorUserIds=operatorUserIdSet(process.env.MMRI_OPERATOR_USER_IDS);
+  if(environment==="production"&&operatorEmails.size>0)throw new Error("MMRI_OPERATOR_EMAILS is not honoured in production (e-mail ownership is not verified); list immutable account ids in MMRI_OPERATOR_USER_IDS and remove MMRI_OPERATOR_EMAILS");
   const billingEnforcement=boolEnv("MMRI_BILLING_ENFORCEMENT", environment==="production");
   const diagnosticPriceMnt=priceEnv("MMRI_DIAGNOSTIC_PRICE_MNT")??300000;
   const retakePriceMnt=priceEnv("MMRI_RETAKE_PRICE_MNT")??300000;
@@ -195,7 +226,7 @@ export function loadApiConfig(): ApiConfig {
     if(environment==="production"&&new URL(qpayBaseUrl).hostname.toLowerCase().includes("sandbox"))throw new Error("QPAY_BASE_URL must not point to the QPay sandbox in production");
   }
   if(billingProvider==="manual"&&environment==="production"){
-    if(operatorEmails.size===0)throw new Error("MMRI_OPERATOR_EMAILS is required when MMRI_BILLING_PROVIDER=manual in production");
+    if(operatorUserIds.size===0)throw new Error("MMRI_OPERATOR_USER_IDS is required when MMRI_BILLING_PROVIDER=manual in production");
     if(!manualPaymentQrText&&!manualPaymentQrImage&&!manualPaymentShortUrl)throw new Error("Manual payment mode requires MMRI_MANUAL_PAYMENT_QR_TEXT, MMRI_MANUAL_PAYMENT_QR_IMAGE or MMRI_MANUAL_PAYMENT_SHORT_URL");
     if(manualPaymentQrText.length>4096)throw new Error("MMRI_MANUAL_PAYMENT_QR_TEXT is too large");
     if(manualPaymentShortUrl){let u:URL;try{u=new URL(manualPaymentShortUrl)}catch{throw new Error("MMRI_MANUAL_PAYMENT_SHORT_URL must be a valid URL")};if(u.protocol!=="https:")throw new Error("MMRI_MANUAL_PAYMENT_SHORT_URL must use HTTPS in production");if(manualPaymentShortUrl.length>2048)throw new Error("MMRI_MANUAL_PAYMENT_SHORT_URL is too large");}
@@ -240,6 +271,12 @@ export function loadApiConfig(): ApiConfig {
     shutdownDrainMs,
     shutdownForceTimeoutMs,
     reportStorageDir:path.resolve(process.env.MMRI_REPORT_STORAGE_DIR||process.env.REPORT_STORAGE_DIR||path.join(process.cwd(),"report-storage")),
+    adminSessionIdleMinutes:intEnv("MMRI_ADMIN_SESSION_IDLE_MINUTES",30,5,120),
+    reportReviewRequired:boolEnv("MMRI_REPORT_REVIEW_REQUIRED",false),
+    mailProvider,
+    mockMailDir,
+    publicAppUrl,
+    passwordResetTtlMinutes,
     billingProvider,
     billingEnforcement,
     diagnosticPriceMnt,
@@ -253,6 +290,7 @@ export function loadApiConfig(): ApiConfig {
     manualPaymentQrText,
     manualPaymentQrImage,
     manualPaymentShortUrl,
-    operatorEmails
+    operatorEmails,
+    operatorUserIds
   };
 }

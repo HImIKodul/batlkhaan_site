@@ -93,28 +93,60 @@ export class BillingService {
     await this.recoverOrphanedEntitlementClaims(companyId,domainCode);
     await this.expireStaleEntitlements(companyId);
 
-    const active=await prisma.assessment.findFirst({where:{companyId,domainCode,status:{in:[...ACTIVE_ASSESSMENT_STATUSES] as any}},select:{id:true,status:true}});
-    if(active)throw new ApiError(409,"ASSESSMENT_ALREADY_ACTIVE","Энэ чиглэлийн оношилгоо аль хэдийн эхэлсэн байна. Шинэ төлбөр үүсгэхийн оронд одоо байгаа оношилгоогоо үргэлжлүүлнэ үү.");
-
-    const prior=await prisma.assessment.findFirst({where:{companyId,domainCode,status:{in:["COMPLETED","COMPLETED_WITH_REVIEW","EXHAUSTED"]}},select:{id:true}});
-    if(planCode==="RETAKE"&&!prior)throw new ApiError(409,"RETAKE_NOT_AVAILABLE","Дахин оношилгоо авахын өмнө нэг бүрэн оношилгоо дууссан байх шаардлагатай.");
-    if(planCode==="DIAGNOSTIC"&&prior)throw new ApiError(409,"RETAKE_REQUIRED","Энэ чиглэлийн анхны оношилгоо аль хэдийн дууссан байна. Дахин оношилгооны эрх сонгоно уу.");
-    const covered=await this.hasUsablePlan(companyId,planCode,domainCode);
-    if(covered)throw new ApiError(409,"ENTITLEMENT_ALREADY_ACTIVE","Энэ байгууллагад төлөгдсөн, эхлүүлээгүй оношилгоо аль хэдийн байна.");
-    const existing=await prisma.billingInvoice.findFirst({where:{companyId,domainCode,planCode,amountMnt,status:{in:["CREATED","PENDING"]}},orderBy:{createdAt:"desc"}});
-    if(existing)return this.presentInvoice(existing);
-
+    await this.assertPurchaseEligible(prisma,companyId,planCode,domainCode);
     const callbackToken=randomBytes(32).toString("base64url");
     const senderInvoiceNo=`MMRI-${Date.now()}-${randomUUID().slice(0,8)}`;
-    const local=await prisma.billingInvoice.create({data:{companyId,domainCode,createdByUserId:userId,planCode,amountMnt,provider:this.provider.name,senderInvoiceNo,callbackTokenHash:hashToken(callbackToken),status:"CREATED"}});
+    /* PAY-CONC-3: the "open invoice already exists?" check and the insert must be one atomic step, otherwise parallel requests all pass the check
+       and each create an invoice. A transaction-scoped advisory lock keyed by company/domain/plan serialises them (no schema change, works across instances). */
+    const claimed=await prisma.$transaction(async(tx:any)=>{
+      await this.lockPurchase(tx,companyId,domainCode);
+      // MMRI-11: the pre-lock check above can be stale (a payment may have activated since). Re-decide eligibility under the same lock activation takes.
+      await this.assertPurchaseEligible(tx,companyId,planCode,domainCode);
+      const open=await tx.billingInvoice.findFirst({where:{companyId,domainCode,planCode,amountMnt,status:{in:["CREATED","PENDING"]}},orderBy:{createdAt:"desc"}});
+      if(open)return {existing:open,local:null};
+      const created=await tx.billingInvoice.create({data:{companyId,domainCode,createdByUserId:userId,planCode,amountMnt,provider:this.provider.name,senderInvoiceNo,callbackTokenHash:hashToken(callbackToken),status:"CREATED"}});
+      return {existing:null,local:created};
+    });
+    if(claimed.existing)return this.presentInvoice(claimed.existing);
+    const local=claimed.local;
     const callbackUrl=`${this.config.billingCallbackBaseUrl}/api/v1/billing/qpay/callback/${encodeURIComponent(local.id)}?token=${encodeURIComponent(callbackToken)}`;
+    let remote:Awaited<ReturnType<PaymentProviderAdapter["createInvoice"]>>;
     try{
-      const remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`MMRI · ${domainCode} · ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
-      const updated=await prisma.billingInvoice.update({where:{id:local.id},data:{providerInvoiceId:remote.providerInvoiceId,qrText:remote.qrText,qrImage:remote.qrImage,shortUrl:remote.shortUrl,deeplinks:remote.deeplinks as any,providerMetadata:safeProviderMetadata(remote.raw),status:"PENDING"}});
-      return this.presentInvoice(updated);
+      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`MMRI · ${domainCode} · ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
     }catch(error:any){
-      await prisma.billingInvoice.update({where:{id:local.id},data:{status:"FAILED",failureReason:String(error?.message??"Provider error").slice(0,500)}}).catch(()=>{});
+      // Compare-and-set: only a still-CREATED row may become FAILED (a concurrent cancel/recovery decision is never overwritten).
+      await prisma.billingInvoice.updateMany({where:{id:local.id,status:"CREATED"},data:{status:"FAILED",failureReason:String(error?.message??"Provider error").slice(0,500)}}).catch(()=>{});
       throw new ApiError(502,"PAYMENT_PROVIDER_ERROR","Төлбөрийн нэхэмжлэх үүсгэж чадсангүй. Дахин оролдоно уу.");
+    }
+    const remoteData={providerInvoiceId:remote.providerInvoiceId,qrText:remote.qrText,qrImage:remote.qrImage,shortUrl:remote.shortUrl,deeplinks:remote.deeplinks as any,providerMetadata:safeProviderMetadata(remote.raw)};
+    let moved:{count:number};
+    try{
+      // MMRI-22: CREATED -> PENDING only if nobody cancelled/failed the row while the provider call was outstanding.
+      moved=await prisma.billingInvoice.updateMany({where:{id:local.id,status:"CREATED"},data:{...remoteData,status:"PENDING"}});
+    }catch{
+      // The remote invoice exists but the local write failed: never lose its id. Retry once, then cancel it remotely and keep the id on a FAILED row for reconcile.
+      moved=await prisma.billingInvoice.updateMany({where:{id:local.id,status:"CREATED"},data:{...remoteData,status:"PENDING"}}).catch(()=>({count:-1}));
+      if(moved.count===-1){
+        await this.stranded(local.id,remote.providerInvoiceId,"Нэхэмжлэхийн мэдээллийг хадгалж чадсангүй.",remoteData);
+        throw new ApiError(502,"PAYMENT_PROVIDER_ERROR","Төлбөрийн нэхэмжлэх үүсгэж чадсангүй. Дахин оролдоно уу.");
+      }
+    }
+    if(moved.count===0){
+      // The row was cancelled/failed meanwhile. Keep the remote id (reconcile honours a later payment) and cancel the remote invoice best-effort.
+      await this.stranded(local.id,remote.providerInvoiceId,null,remoteData);
+      throw new ApiError(409,"INVOICE_CANCELLED_DURING_CREATION","Нэхэмжлэх үүсгэх явцад цуцлагдсан тул шинэ нэхэмжлэх үүсгэнэ үү.");
+    }
+    return this.presentInvoice(await prisma.billingInvoice.findUniqueOrThrow({where:{id:local.id}}));
+  }
+
+  /** Record the provider id of a remote invoice that has no usable local row, then try to cancel it remotely. Status is only changed from CREATED. */
+  private async stranded(localId:string,providerInvoiceId:string,failureReason:string|null,remoteData:Record<string,unknown>){
+    await prisma.billingInvoice.updateMany({where:{id:localId,status:"CREATED"},data:{status:"FAILED",failureReason}}).catch(()=>{});
+    await prisma.billingInvoice.updateMany({where:{id:localId,providerInvoiceId:null},data:remoteData as any}).catch(()=>{
+      console.log(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"stranded_remote_invoice_unrecorded",invoiceId:localId,providerInvoiceId}));
+    });
+    try{await this.provider.cancelInvoice(providerInvoiceId)}catch{
+      console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"stranded_remote_invoice_cancel_failed",invoiceId:localId,providerInvoiceId}));
     }
   }
 
@@ -124,27 +156,33 @@ export class BillingService {
     return this.presentInvoice(row);
   }
 
-  async getCompanyStatus(companyId:string){
+  /** `includeInvoices` (company OWNER/ADMIN only): invoice history rows. Every role gets entitlement state and the all-invoice paid summary. */
+  async getCompanyStatus(companyId:string,opts:{includeInvoices?:boolean;limit?:number;offset?:number}={}){
     await this.recoverInterruptedInvoiceCreations(companyId);
     await this.recoverOrphanedEntitlementClaims(companyId);
     await this.expireStaleEntitlements(companyId);
-    const [entitlements,invoices]=await Promise.all([
+    const limit=Math.min(Math.max(Math.trunc(opts.limit??50)||50,1),200), offset=Math.max(Math.trunc(opts.offset??0)||0,0);
+    // MMRI-23: totals come from aggregates over ALL invoices, never from the (paged) history rows.
+    const [entitlements,groups,invoices]=await Promise.all([
       prisma.companyEntitlement.findMany({where:{companyId},orderBy:{createdAt:"desc"}}),
-      prisma.billingInvoice.findMany({where:{companyId},orderBy:{createdAt:"desc"},take:50})
+      prisma.billingInvoice.groupBy({by:["status"],where:{companyId},_count:{_all:true},_sum:{amountMnt:true}}),
+      opts.includeInvoices?prisma.billingInvoice.findMany({where:{companyId},orderBy:[{createdAt:"desc"},{id:"desc"}],skip:offset,take:limit}):Promise.resolve([] as any[])
     ]);
-    const paidInvoices=invoices.filter((x:any)=>x.status==="PAID");
-    const refundedInvoices=invoices.filter((x:any)=>x.status==="REFUNDED");
+    const g=(status:string)=>groups.find((x:any)=>x.status===status);
+    const count=(...statuses:string[])=>statuses.reduce((n,st)=>n+Number(g(st)?._count._all??0),0);
+    const total=groups.reduce((n:number,x:any)=>n+Number(x._count._all),0);
     return {
       enforcement:this.config.billingEnforcement,
       provider:this.provider.name,
       entitlements:entitlements.map((x:any)=>({id:x.id,domainCode:x.domainCode,planCode:x.planCode,status:x.status,startsAt:x.startsAt,endsAt:x.endsAt,assessmentLimit:x.assessmentLimit,assessmentsUsed:x.assessmentsUsed})),
       invoices:invoices.map((x:any)=>this.presentInvoiceSummary(x)),
+      history:{total,limit,offset,hasMore:!!opts.includeInvoices&&offset+invoices.length<total,restricted:!opts.includeInvoices},
       summary:{
-        totalPaidMnt:paidInvoices.reduce((sum:number,x:any)=>sum+Number(x.amountMnt??0),0),
-        paidCount:paidInvoices.length,
-        refundedMnt:refundedInvoices.reduce((sum:number,x:any)=>sum+Number(x.amountMnt??0),0),
-        refundedCount:refundedInvoices.length,
-        pendingCount:invoices.filter((x:any)=>x.status==="CREATED"||x.status==="PENDING").length
+        totalPaidMnt:Number(g("PAID")?._sum.amountMnt??0),
+        paidCount:count("PAID"),
+        refundedMnt:Number(g("REFUNDED")?._sum.amountMnt??0),
+        refundedCount:count("REFUNDED"),
+        pendingCount:count("CREATED","PENDING")
       }
     };
   }
@@ -158,12 +196,20 @@ export class BillingService {
     if(invoice.status==="FAILED")throw new ApiError(409,"FAILED_INVOICE_CANNOT_BE_CANCELLED","Амжилтгүй болсон нэхэмжлэхийг дахин цуцлах шаардлагагүй.");
     if(invoice.providerInvoiceId&&invoice.provider==="QPAY"){
       if(this.provider.name!=="QPAY")throw new ApiError(409,"PAYMENT_PROVIDER_MISMATCH","Энэ QPay нэхэмжлэхийг цуцлах төлбөрийн үйлчилгээ одоогоор идэвхгүй байна.");
+      // A payment may already have been made but not yet reported to us: ask the provider first, and never cancel a paid invoice.
+      let verification:ProviderPaymentResult|null=null;
+      try{verification=await this.provider.checkInvoicePayment(invoice.providerInvoiceId,invoice.amountMnt)}catch{throw new ApiError(502,"PAYMENT_VERIFICATION_ERROR","QPay төлбөрийн баталгаажуулалт түр амжилтгүй боллоо. Дахин оролдоно уу.")}
+      if(verification.paid){await this.activatePaidInvoice(invoice.id,verification);throw new ApiError(409,"PAID_INVOICE_CANNOT_BE_CANCELLED","Төлбөр хийгдсэн байсан тул нэхэмжлэхийг цуцлах боломжгүй.")}
       try{await this.provider.cancelInvoice(invoice.providerInvoiceId)}catch{
         throw new ApiError(502,"PAYMENT_PROVIDER_ERROR","Нэхэмжлэхийг төлбөрийн үйлчилгээ дээр цуцалж чадсангүй. Дахин оролдоно уу.");
       }
     }
-    const updated=await prisma.billingInvoice.update({where:{id:invoice.id},data:{status:"CANCELLED",failureReason:null}});
-    return this.presentInvoice(updated);
+    // Guarded transition: only an open invoice may become CANCELLED. A payment confirmed concurrently (callback, reconcile) wins and is never overwritten.
+    const changed=await prisma.billingInvoice.updateMany({where:{id:invoice.id,status:{in:["CREATED","PENDING"]}},data:{status:"CANCELLED",failureReason:null}});
+    const latest=await prisma.billingInvoice.findUnique({where:{id:invoice.id}});
+    if(!latest)throw notFound("Billing invoice not found");
+    if(changed.count===0&&(latest.status==="PAID"||latest.status==="REFUNDED"))throw new ApiError(409,latest.status==="PAID"?"PAID_INVOICE_CANNOT_BE_CANCELLED":"REFUNDED_INVOICE_CANNOT_BE_CANCELLED","Төлбөр хийгдсэн тул нэхэмжлэхийг цуцлах боломжгүй.");
+    return this.presentInvoice(latest);
   }
 
   async handleProviderCallback(invoiceId:string,callbackToken:string){
@@ -187,7 +233,8 @@ export class BillingService {
     const invoice=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
     if(!invoice)throw notFound("Billing invoice not found");
     if(invoice.status==="PAID"||invoice.status==="REFUNDED")return this.presentInvoice(invoice);
-    if(invoice.status!=="CREATED"&&invoice.status!=="PENDING")throw new ApiError(409,"INVOICE_NOT_RECONCILABLE","Энэ нэхэмжлэхийг төлбөртэй тулгах боломжгүй төлөвт байна.");
+    // CANCELLED stays reconcilable for provider invoices: a payment confirmed after a local cancel must be honoured, not lost.
+    if(invoice.status!=="CREATED"&&invoice.status!=="PENDING"&&!((invoice.status==="CANCELLED"||(invoice.status==="FAILED"&&invoice.providerInvoiceId))&&invoice.provider==="QPAY"))throw new ApiError(409,"INVOICE_NOT_RECONCILABLE","Энэ нэхэмжлэхийг төлбөртэй тулгах боломжгүй төлөвт байна.");
     if(invoice.provider!=="QPAY"||!invoice.providerInvoiceId)throw new ApiError(409,"AUTOMATIC_RECONCILIATION_UNAVAILABLE","Энэ төлбөрийн төрөл автоматаар шалгагдахгүй.");
     if(this.provider.name!=="QPAY")throw new ApiError(409,"PAYMENT_PROVIDER_MISMATCH","QPay payment verification is not active on this server.");
     let verification:ProviderPaymentResult;
@@ -246,18 +293,21 @@ export class BillingService {
     if(!Number.isSafeInteger(paidAmount)||paidAmount<=0)throw new ApiError(502,"INVALID_PROVIDER_PAYMENT_AMOUNT","Төлбөрийн үйлчилгээ баталгаажуулах боломжгүй дүн буцаалаа.");
     if(!verification.paymentId)throw new ApiError(502,"MISSING_PROVIDER_PAYMENT_ID","Төлбөрийн үйлчилгээ гүйлгээний баталгаажуулах дугаар буцаасангүй.");
     const providerPaymentId=paymentReference(verification.paymentId,"provider payment id");
-    return prisma.$transaction(async(tx:any)=>{
+    return this.withSerializableRetry(()=>prisma.$transaction(async(tx:any)=>{
+      const head=await tx.billingInvoice.findUnique({where:{id:invoiceId},select:{companyId:true,domainCode:true}});
+      if(!head)throw notFound("Billing invoice not found");
+      await this.lockPurchase(tx,head.companyId,head.domainCode as DomainCode);
       const current=await tx.billingInvoice.findUnique({where:{id:invoiceId}});
       if(!current)throw notFound("Billing invoice not found");
       if(current.status==="REFUNDED")return this.presentInvoice(current);
       if(current.status==="PAID")return this.presentInvoice(current);
-      if(current.status!=="CREATED"&&current.status!=="PENDING")throw new ApiError(409,"INVOICE_NOT_PAYABLE","Энэ нэхэмжлэх төлбөрөөр идэвхжих боломжгүй төлөвт байна.");
+      if(current.status!=="CREATED"&&current.status!=="PENDING"&&current.status!=="CANCELLED"&&!(current.status==="FAILED"&&current.providerInvoiceId))throw new ApiError(409,"INVOICE_NOT_PAYABLE","Энэ нэхэмжлэх төлбөрөөр идэвхжих боломжгүй төлөвт байна.");
       if(paidAmount<current.amountMnt)throw new ApiError(409,"PARTIAL_PAYMENT","Төлбөрийн дүн нэхэмжлэхийн дүнгээс бага байна.");
       const duplicate=await tx.billingInvoice.findFirst({where:{providerPaymentId,id:{not:current.id}},select:{id:true}});
       if(duplicate)throw new ApiError(409,"PAYMENT_ALREADY_USED","Нэг төлбөрөөр хоёр нэхэмжлэх идэвхжүүлэх боломжгүй.");
 
       const transitioned=await tx.billingInvoice.updateMany({
-        where:{id:current.id,status:{in:["CREATED","PENDING"]}},
+        where:{id:current.id,OR:[{status:{in:["CREATED","PENDING","CANCELLED"]}},{status:"FAILED",providerInvoiceId:{not:null}}]},
         data:{status:"PAID",paidAt:new Date(),lastVerifiedAt:new Date(),providerPaymentId,providerMetadata:safeProviderMetadata(verification.raw),failureReason:null}
       });
       if(transitioned.count===0){
@@ -266,6 +316,7 @@ export class BillingService {
         throw new ApiError(409,"PAYMENT_STATE_CHANGED","Нэхэмжлэхийн төлөв зэрэг өөрчлөгдсөн тул төлбөрийг автоматаар идэвхжүүлсэнгүй.");
       }
 
+      if(current.status==="CANCELLED"||current.status==="FAILED")console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"payment_confirmed_after_cancel_reconciled",invoiceId:current.id}));
       await tx.companyEntitlement.upsert({
         where:{sourceInvoiceId:current.id},
         create:{companyId:current.companyId,domainCode:current.domainCode,sourceInvoiceId:current.id,planCode:current.planCode,status:"ACTIVE",startsAt:new Date(),endsAt:null,assessmentLimit:1,assessmentsUsed:0},
@@ -273,7 +324,17 @@ export class BillingService {
       });
       const paid=await tx.billingInvoice.findUnique({where:{id:invoiceId}});
       return this.presentInvoice(paid);
-    },{isolationLevel:"Serializable"} as any);
+    },{isolationLevel:"Serializable"} as any));
+  }
+
+  /** Bounded retry for transient Serializable conflicts (P2034); the transaction body is idempotent. */
+  private async withSerializableRetry<T>(run:()=>Promise<T>,attempts=4):Promise<T>{
+    for(let i=1;;i++){
+      try{return await run()}catch(error:any){
+        if(error?.code!=="P2034"||i>=attempts)throw error;
+        await new Promise(r=>setTimeout(r,15*i+Math.floor(Math.random()*25)));
+      }
+    }
   }
 
   async claimAssessmentEntitlement(companyId:string,rawDomainCode:unknown="marketing"):Promise<{entitlementId:string|null;claimedDiagnostic:boolean}> {
@@ -301,8 +362,22 @@ export class BillingService {
     await prisma.companyEntitlement.updateMany({where:{id:claim.entitlementId,status:"CONSUMED",assessmentsUsed:1,sourceInvoice:{status:"PAID"}},data:{assessmentsUsed:0,status:"ACTIVE"}});
   }
 
-  private async hasUsablePlan(companyId:string,planCode:BillingPlanCode,domainCode:DomainCode){
-    return !!(await prisma.companyEntitlement.findFirst({where:{companyId,domainCode,planCode,status:"ACTIVE",assessmentsUsed:{lt:1},sourceInvoice:{status:"PAID"}}}));
+  /** One serialization boundary per company/domain shared by invoice creation and payment activation (transaction-scoped advisory lock; no schema change, works across instances). */
+  private async lockPurchase(tx:any,companyId:string,domainCode:DomainCode){
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`mmri-purchase:${companyId}:${domainCode}`}))`;
+  }
+
+  private async assertPurchaseEligible(db:any,companyId:string,planCode:BillingPlanCode,domainCode:DomainCode){
+    const active=await db.assessment.findFirst({where:{companyId,domainCode,status:{in:[...ACTIVE_ASSESSMENT_STATUSES] as any}},select:{id:true,status:true}});
+    if(active)throw new ApiError(409,"ASSESSMENT_ALREADY_ACTIVE","Энэ чиглэлийн оношилгоо аль хэдийн эхэлсэн байна. Шинэ төлбөр үүсгэхийн оронд одоо байгаа оношилгоогоо үргэлжлүүлнэ үү.");
+    const prior=await db.assessment.findFirst({where:{companyId,domainCode,status:{in:["COMPLETED","COMPLETED_WITH_REVIEW","EXHAUSTED"]}},select:{id:true}});
+    if(planCode==="RETAKE"&&!prior)throw new ApiError(409,"RETAKE_NOT_AVAILABLE","Дахин оношилгоо авахын өмнө нэг бүрэн оношилгоо дууссан байх шаардлагатай.");
+    if(planCode==="DIAGNOSTIC"&&prior)throw new ApiError(409,"RETAKE_REQUIRED","Энэ чиглэлийн анхны оношилгоо аль хэдийн дууссан байна. Дахин оношилгооны эрх сонгоно уу.");
+    if(await this.hasUsablePlan(planCode,companyId,domainCode,db))throw new ApiError(409,"ENTITLEMENT_ALREADY_ACTIVE","Энэ байгууллагад төлөгдсөн, эхлүүлээгүй оношилгоо аль хэдийн байна.");
+  }
+
+  private async hasUsablePlan(planCode:BillingPlanCode,companyId:string,domainCode:DomainCode,db:any=prisma){
+    return !!(await db.companyEntitlement.findFirst({where:{companyId,domainCode,planCode,status:"ACTIVE",assessmentsUsed:{lt:1},sourceInvoice:{status:"PAID"}}}));
   }
 
   private async expireStaleEntitlements(_companyId:string){

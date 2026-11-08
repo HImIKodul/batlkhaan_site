@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: mmri
+      POSTGRES_PASSWORD: mmri
+      POSTGRES_DB: mmri
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mmri -d mmri"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  gate:
+    build:
+      context: .
+      dockerfile: Dockerfile.integration
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://mmri:mmri@postgres:5432/mmri?schema=public
+      NODE_ENV: test
+      MMRI_INTEGRATION_RESET_OK: YES
+      ACCESS_TOKEN_ISSUER: mmri-api
+      ACCESS_TOKEN_AUDIENCE: mmri-web
+      ACCESS_TOKEN_SECRET: integration-gate-access-secret-1234567890
+      PASSWORD_PEPPER: integration-gate-password-pepper-1234567890
+      AUDIT_HASH_SALT: integration-gate-audit-salt-1234567890
+      ALLOWED_ORIGINS: http://localhost:3000
+    command: ["bash", "scripts/run-postgres-gate.sh"]
