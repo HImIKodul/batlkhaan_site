@@ -64,6 +64,24 @@ const evM=plan4.milestones.find(m=>m.recommendationId===lowEv.id);
 check('S4: crowded-out evidence action is scheduled inside H0-H4 (compaction)',!!evM&&H.includes(evM.horizon),evM?.horizon);
 check('S4: it uses an earlier free horizon than the crowded contract start',!!evM&&H.indexOf(evM.horizon)<2,evM?.horizon);
 check('S4: both executions keep their slots',ex4.every(r=>plan4.milestones.some(m=>m.recommendationId===r.id&&H.includes(m.horizon))));
+// S5: People/Operations-like company at capacity 1 (one action at a time): three P3 local improvements + two P4 evidence actions.
+// Before the fix the first 30 days were empty (evidence in H2/H3, one execution phase in H4 => 3 milestones).
+const li=[1,2,3].map(n=>mk(n,'LOCAL_IMPROVEMENT','P3',55,'C0'+(n+2)));
+const ev5=[mk(8,'COLLECT_EVIDENCE','P4',47,'C13','MS08'),mk(9,'COLLECT_EVIDENCE','P4',47,'C13','MS09')];
+const plan5=buildActionPlan(methodology,result(1,li,ev5));
+check('S5: at least 5 milestones scheduled inside the window',scheduled(plan5).length>=5,String(scheduled(plan5).length));
+check('S5: the first 30 days (H0-H1) are not empty',plan5.milestones.some(m=>['H0','H1'].includes(m.horizon)));
+check('S5: both evidence actions start in H0-H1',ev5.every(r=>{const m=plan5.milestones.find(x=>x.recommendationId===r.id);return m&&['H0','H1'].includes(m.horizon)}));
+check('S5: one local improvement runs through at least two required phases',li.some(r=>plan5.milestones.filter(m=>m.recommendationId===r.id&&m.requirement==='Required'&&H.includes(m.horizon)).length>=2));
+for(const h of H){const ids=new Set(plan5.milestones.filter(m=>m.requirement==='Required'&&m.horizon===h).map(m=>m.recommendationId));check(`S5: capacity 1 respected in ${h}`,ids.size<=1,String(ids.size))}
+// S6 (discriminating): capacity 1, one P3 local improvement + one P4 evidence action, both contract-start H2. The overflow rule alone pushes the improvement
+// later and leaves H0-H1 empty; the compaction pass must put the evidence in H0 and let the improvement run H2-H4.
+const li6=mk(1,'LOCAL_IMPROVEMENT','P3',55,'C03');const ev6=mk(9,'COLLECT_EVIDENCE','P4',47,'C13','MS09');
+const plan6=buildActionPlan(methodology,result(1,[li6],[ev6]));
+const evH=plan6.milestones.find(m=>m.recommendationId===ev6.id)?.horizon;
+const liReq=plan6.milestones.filter(m=>m.recommendationId===li6.id&&m.requirement==='Required'&&H.includes(m.horizon)).map(m=>m.horizon);
+check('S6: evidence action starts in H0 (first two weeks are used)',evH==='H0',evH);
+check('S6: the improvement keeps its contract start (H2) and runs three required phases H2-H4',JSON.stringify(liReq)===JSON.stringify(['H2','H3','H4']),liReq.join(','));
 // determinism
 check('deterministic: identical input -> identical plan',JSON.stringify(buildActionPlan(methodology,result(2,ex,[mk(6,'COLLECT_EVIDENCE','P3',50)])))===JSON.stringify(buildActionPlan(methodology,result(2,ex,[mk(6,'COLLECT_EVIDENCE','P3',50)]))));
 const failed=results.filter(r=>r.status==='FAIL');console.log(JSON.stringify({status:failed.length?'FAIL':'PASS',passed:results.length-failed.length,failed:failed.length},null,1));process.exit(failed.length?1:0);

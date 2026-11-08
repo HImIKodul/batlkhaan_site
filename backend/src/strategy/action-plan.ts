@@ -300,8 +300,8 @@ export function buildActionPlan(
   if (!scheduleStable) throw new Error("Action-plan scheduler could not satisfy dependency/capacity constraints deterministically");
 
   /* F-ROADMAP compaction. The overflow rule above only ever moves actions LATER, so free earlier horizons stayed empty while evidence-collection and
-     validation actions ended up beyond day 365. Deterministic second pass: for every action that is still deferred (evidence/validation first, then
-     by schedule score), take the EARLIEST horizon that satisfies capacity and dependency ordering. Executions never start before their contract start
+     validation actions ended up beyond day 365. Deterministic second pass: for every action (evidence/validation first, then by schedule score), take the EARLIEST horizon,
+     earlier than its current start, that satisfies capacity and dependency ordering; this fills empty early horizons and rescues deferred actions. Executions never start before their contract start
      horizon; evidence/validation may start as early as H0. Scores, selection and capacity limits are untouched; nothing is invented. */
   const evidenceTypeSet = new Set(["VALIDATE_CAUSE","COLLECT_EVIDENCE","RESOLVE_EVIDENCE"]);
   const capacityHolds = (): boolean => {
@@ -321,12 +321,14 @@ export function buildActionPlan(
     (Number(evidenceTypeSet.has(b.type)) - Number(evidenceTypeSet.has(a.type))) ||
     (scoreById.get(b.id)! - scoreById.get(a.id)!) || (b.priority - a.priority) || a.id.localeCompare(b.id));
   for (const rec of compactionOrder) {
-    if (startById.get(rec.id) !== "DEFERRED_BEYOND_V1") continue;
+    const previous = startById.get(rec.id)!;
     const lowest = evidenceTypeSet.has(rec.type) ? 0 : horizonIndex(initialStart(rec.type, rec.priorityBand, contract.initialStartMatrix ?? []).horizon);
-    for (let i = lowest; i < horizonIds.length; i++) {
+    // Take the earliest feasible horizon that is strictly earlier than the current start (a deferred action may use any horizon up to H4).
+    const upTo = previous === "DEFERRED_BEYOND_V1" ? horizonIds.length - 1 : horizonIndex(previous) - 1;
+    for (let i = lowest; i <= upTo; i++) {
       startById.set(rec.id, horizonIds[i]);
       if (capacityHolds() && dependenciesHold()) break;
-      startById.set(rec.id, "DEFERRED_BEYOND_V1");
+      startById.set(rec.id, previous);
     }
   }
 
