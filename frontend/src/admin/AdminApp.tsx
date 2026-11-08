@@ -7,6 +7,8 @@ import './admin.css';
 const AdminReports=lazy(()=>import('./AdminReports'));
 const AdminData=lazy(()=>import('./AdminData'));
 const AdminAccounts=lazy(()=>import('./AdminAccounts'));
+const AdminCompanies=lazy(()=>import('./AdminCompanies'));
+const AdminAccess=lazy(()=>import('./AdminAccess'));
 
 export const isAdminHash=(h:string)=>/^#\/admin(\/|$|\?)/.test(h);
 const parse=(hash:string)=>{const [path,query='']=hash.replace(/^#\/admin\/?/,'').split('?');const parts=path.split('/').filter(Boolean);return {section:parts[0]||'',id:parts[1]||'',query:new URLSearchParams(query)}};
@@ -40,7 +42,12 @@ function Login({onLoggedIn}:{onLoggedIn:()=>void}){
   {err&&<div className="adm-error" role="alert">{err}</div>}<button type="submit" className="adm-btn adm-btn--primary adm-btn--wide" disabled={busy||!email||!pw||code.replace(/\s/g,'').length!==6}>{busy?'Нэвтэрч байна':'Нэвтрэх'}</button></form></main>
 }
 
-const NAV:[string,string,string][]=[['','Хяналтын самбар','reports.read|payments.read|notifications.read'],['reports','Тайлангийн хяналт','reports.read'],['users','Хэрэглэгчид','accounts.manage'],['companies','Байгууллагууд','companies.read'],['payments','Төлбөрийн хяналт','payments.read'],['support','Тусламж','support.manage'],['notifications','Мэдэгдэл','notifications.read'],['settings','Тохиргоо','admins.manage']];
+const NAV:[string,string,string][]=[['','Хяналтын самбар','reports.read|payments.read|notifications.read'],['reports','Тайлангийн хяналт','reports.read'],['users','Хэрэглэгчид','accounts.manage'],['companies','Байгууллагууд','companies.read'],['payments','Төлбөрүүд','payments.read'],['support','Тусламж','support.manage'],['notifications','Мэдэгдэл','notifications.read'],['settings','Тохиргоо','admins.manage']];
+
+/* SUPER_ADMIN sees four plain sections; the specialist tools (report review, support, notifications, administrators) stay available under «Бусад». */
+const SUPER_NAV:[string,string,string][]=[['users','Хэрэглэгчид','Хэрэглэгч хайх, идэвхгүй болгох, имэйл засах'],['companies','Компаниуд','Компанийн мэдээлэл, хүмүүс, оношилгоо'],['access','Оношилгооны эрх','Чиглэл бүрийн оношилгооны эрх олгох, цуцлах'],['payments','Төлбөрүүд','Төлбөр, нэхэмжлэх, буцаалтын хүсэлт']];
+const MORE_NAV:[string,string,string][]=[['reports','Тайлан хянах','reports.read'],['support','Тусламж','support.manage'],['notifications','Мэдэгдэл','notifications.read'],['settings','Тохиргоо','admins.manage']];
+function SuperHome(){return <Page title="Удирдлагын төв"><p className="adm-note">Юу хийх вэ? Доорх дөрвөөс сонгоно уу.</p><div className="adm-home">{SUPER_NAV.map(([k,t,d])=><a key={k} className="adm-home__card" href={adminHref(k)}><b>{t}</b><span>{d}</span></a>)}</div></Page>}
 
 function Dashboard({me}:{me:AdminMe}){
  const {loading,error,data,reload}=useAsync(()=>adminApi.get('/dashboard'),[]);
@@ -98,18 +105,22 @@ export default function AdminApp(){
  if(state==='out'||!me){if(route.section!=='login'&&hash!==adminHref('login')){window.location.hash=adminHref('login')}return <Login onLoggedIn={()=>{window.location.hash=adminHref();void load()}}/>}
  if(route.section==='login'){window.location.hash=adminHref();return null}
  const can=(perm:string)=>perm.split('|').some(p=>me.permissions.includes(p));
- const items=NAV.filter(([,,perm])=>can(perm));
+ const isSuper=can('accounts.manage');
+ const items=isSuper?SUPER_NAV.map(([k,l])=>[k,l,''] as [string,string,string]):NAV.filter(([,,perm])=>can(perm));
+ const more=isSuper?MORE_NAV.filter(([,,perm])=>can(perm)):[];
  const logout=async()=>{try{await adminApi.logout()}catch{/* session may already be gone */}adminSession.token=null;setMe(null);setState('out');window.location.hash=adminHref('login')};
  const active=route.section;
  let body:React.ReactNode;
- if(active==='')body=<Dashboard me={me}/>;else if(active==='reports'&&can('reports.read'))body=<Suspense fallback={<Loading/>}><AdminReports id={route.id} query={route.query} me={me}/></Suspense>;
- else if(active==='users'&&can('accounts.manage'))body=<Suspense fallback={<Loading/>}><AdminAccounts id={route.id} query={route.query} me={me}/></Suspense>;
+ if(active==='')body=isSuper?<SuperHome/>:<Dashboard me={me}/>;else if(active==='reports'&&can('reports.read'))body=<Suspense fallback={<Loading/>}><AdminReports id={route.id} query={route.query} me={me}/></Suspense>;
+ else if(active==='users'&&isSuper)body=<Suspense fallback={<Loading/>}><AdminAccounts id={route.id} query={route.query} me={me}/></Suspense>;
+ else if(active==='companies'&&isSuper)body=<Suspense fallback={<Loading/>}><AdminCompanies id={route.id} query={route.query} me={me}/></Suspense>;
+ else if(active==='access'&&isSuper)body=<Suspense fallback={<Loading/>}><AdminAccess id={route.id} query={route.query} me={me}/></Suspense>;
  else if(['companies','payments','support'].includes(active))body=<Suspense fallback={<Loading/>}><AdminData section={active} id={route.id} query={route.query} me={me}/></Suspense>;
  else if(active==='notifications')body=<Notifications/>;else if(active==='settings'&&can('admins.manage'))body=<Settings me={me}/>;else body=<Page title="Хандах эрхгүй"><Empty text="Энэ хэсэгт хандах эрх танд байхгүй байна."/></Page>;
  return <div className="adm-shell">
   <a className="adm-skip" href="#adm-main" onClick={e=>{e.preventDefault();document.getElementById('adm-main')?.focus()}}>Үндсэн агуулга руу шилжих</a>
   <header className="adm-top"><button type="button" className="adm-burger" aria-label="Цэс" aria-expanded={menu} onClick={()=>setMenu(!menu)}>☰</button><a className="adm-brand" href={adminHref()}>MMRI <b>Удирдлага</b></a><div className="adm-top__right"><a className="adm-bell" href={adminHref('notifications')} aria-label={`Мэдэгдэл${unread?`, уншаагүй ${unread}`:''}`}>🔔{unread>0&&<span className="adm-bell__n">{unread>99?'99+':unread}</span>}</a><span className="adm-who" title={me.email}>{me.email}<small>{me.role}</small></span><button type="button" className="adm-btn" onClick={()=>void logout()}>Гарах</button></div></header>
-  <nav className={`adm-nav${menu?' is-open':''}`} aria-label="Үндсэн цэс">{items.map(([k,label])=>{const secondary=k==='notifications'||k==='settings';return <React.Fragment key={k}>{k==='notifications'&&<span className="adm-nav__sep" role="separator"/>}<a href={adminHref(k)} className={`${active===k?'is-active':''}${secondary?' is-secondary':''}`.trim()} aria-current={active===k?'page':undefined}>{label}</a></React.Fragment>})}</nav>
+  <nav className={`adm-nav${menu?' is-open':''}`} aria-label="Үндсэн цэс">{isSuper?<>{items.map(([k,label])=><a key={k} href={adminHref(k)} className={active===k?'is-active':''} aria-current={active===k?'page':undefined}>{label}</a>)}{more.length>0&&<details className="adm-more" open={more.some(([k])=>k===active)||undefined}><summary>Бусад</summary>{more.map(([k,label])=><a key={k} href={adminHref(k)} className={`is-secondary${active===k?' is-active':''}`} aria-current={active===k?'page':undefined}>{label}</a>)}</details>}</>:items.map(([k,label])=>{const secondary=k==='notifications'||k==='settings';return <React.Fragment key={k}>{k==='notifications'&&<span className="adm-nav__sep" role="separator"/>}<a href={adminHref(k)} className={`${active===k?'is-active':''}${secondary?' is-secondary':''}`.trim()} aria-current={active===k?'page':undefined}>{label}</a></React.Fragment>})}</nav>
   <main id="adm-main" className="adm-main" tabIndex={-1}>{body}</main>
   {reauth&&<ReauthModal onDone={reauth} onCancel={()=>reauth(false)}/>}
  </div>

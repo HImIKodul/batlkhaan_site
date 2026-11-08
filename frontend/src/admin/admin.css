@@ -100,3 +100,17 @@
 .adm-btn--danger{background:#B3261E;border-color:#8F1D17;color:#fff}.adm-btn--danger:hover:not(:disabled){background:#9A1F18}
 .adm-filters__wide{grid-column:1/-1}.adm-acc__ents{display:grid;gap:10px}
 .adm-actions__row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.adm-actions__row label{flex:1 1 280px}
+
+/* SUPER_ADMIN plain layout: four big start cards, "Бусад" fold, domain cards, confirmation dialog */
+.adm-home{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.adm-home__card{display:grid;gap:6px;padding:20px;border-radius:20px;border:1px solid #fff;background:rgba(255,255,255,.82);box-shadow:0 12px 26px -18px rgba(4,20,120,.55);text-decoration:none;color:var(--a-ink)}
+.adm-home__card b{font-size:21px}.adm-home__card span{font-size:15px;color:var(--a-ink2);line-height:1.4}.adm-home__card:hover{background:#fff;box-shadow:0 0 0 2px #3B7BFF,0 12px 26px -18px rgba(4,20,120,.55)}
+.adm-home__card:focus-visible{outline:3px solid #0B3FD0;outline-offset:2px}
+.adm-more>summary{cursor:pointer;padding:10px 14px;border-radius:12px;font-weight:650;color:var(--a-ink2);list-style:none}.adm-more>summary::-webkit-details-marker{display:none}
+.adm-more>summary::after{content:" ▾"}.adm-more[open]>summary::after{content:" ▴"}.adm-more>a{display:block}
+.adm-domains{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.adm-domain{display:grid;gap:8px;align-content:start;border-top:5px solid var(--acc,#6C8CF0)}.adm-domain h3{display:flex;align-items:center;gap:8px;margin:0;font-size:18px}
+.adm-domain .mmri-domain__mark{width:13px;height:13px;border-radius:3px;rotate:45deg;background:linear-gradient(135deg,var(--acc2,#BCD),var(--acc,#6C8CF0) 70%)}.adm-domain p{margin:0;font-size:14.5px;line-height:1.45}
+.adm-sub{display:block;font-size:13px;color:var(--a-ink2)}.adm-pick li{padding:6px 0}
+.adm-confirm{width:min(520px,100%)}.adm-confirm__what ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:15px;line-height:1.45}.adm-confirm textarea{min-height:64px;padding:8px 12px;border-radius:12px;border:1px solid var(--a-line);font:inherit;resize:vertical}
+.adm-modal__row{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
