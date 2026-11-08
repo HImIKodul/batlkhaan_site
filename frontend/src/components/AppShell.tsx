@@ -300,7 +300,6 @@ export function AppShell({route,children}:{route:RouteName;children:React.ReactN
  if(route==='login')return <>{children}</>;
 
  return <div className={`app-shell mmri-shell ${loggedIn?'is-authenticated':'is-public'} ${domainId?'has-domain-theme':''}`} data-mmri-domain={domainId||undefined} data-route={route}>
-  <span className="mmri-shell-aurora" aria-hidden="true"><b/><b/><b/>{DOMAIN_IDS.map(d=><i key={d} data-d={d}/>)}</span>
   <span className="mmri-shell-rims" aria-hidden="true">{['neutral',...DOMAIN_IDS].map(d=><i key={d} data-d={d}/>)}</span>
   <a className="mmri-skip-link" href="#main-content">Үндсэн агуулга руу шилжих</a>
   <ShellHeader route={route}/>

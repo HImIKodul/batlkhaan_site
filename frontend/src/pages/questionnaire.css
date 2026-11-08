@@ -95,3 +95,12 @@ html:root body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri
 .mmri-radio-card__glint{z-index:1}
 .mmri-radio-card__glint i{width:18%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.75) 50%,transparent);animation-duration:4.2s;animation-delay:.3s}
 @media (prefers-reduced-motion:reduce){html:root body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card.is-selected{animation:none}.mmri-radio-card__glint{display:none}}
+
+/* ===== Questionnaire material v3 (reference 10): translucent stage that lets the scene show, answer rows = soft luminous tinted glass ===== */
+html:root body.mmri-prism-page .mmri-questionnaire .mmri-questionnaire__form{background:linear-gradient(118deg,rgba(255,255,255,.4) 0 5%,rgba(255,255,255,.08) 6% 18%,transparent 19%),linear-gradient(160deg,rgba(224,236,255,.34),rgba(170,190,255,.24) 55%,rgba(196,176,255,.28));box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px rgba(214,226,255,.6),inset 0 -26px 44px -34px rgba(70,70,220,.45),0 22px 36px -22px rgba(10,24,120,.55)}
+html:root body.mmri-prism-page .mmri-questionnaire .mmri-questionnaire__top{background:linear-gradient(135deg,rgba(210,224,255,.42),rgba(160,180,255,.3) 60%,rgba(176,160,250,.34))}
+html:root body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card{
+ background-image:linear-gradient(180deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.06) 46%,transparent 50%),radial-gradient(60% 160% at 100% 50%,color-mix(in srgb,var(--ac) 70%,#fff),transparent 72%),radial-gradient(40% 140% at 0 50%,color-mix(in srgb,var(--ac) 45%,#fff),transparent 70%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 46%,rgba(255,255,255,.74)),color-mix(in srgb,var(--ac) 34%,rgba(255,255,255,.7)));
+ border:1.5px solid color-mix(in srgb,var(--ac) 55%,#fff);transition:box-shadow .22s ease,border-color .22s ease,background-color .22s ease}
+html:root body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card.is-selected{
+ background-image:linear-gradient(180deg,rgba(255,255,255,.5) 0,rgba(255,255,255,.05) 46%,transparent 50%),radial-gradient(70% 170% at 100% 50%,color-mix(in srgb,var(--ac) 88%,#fff),transparent 74%),radial-gradient(45% 150% at 0 50%,color-mix(in srgb,var(--ac) 62%,#fff),transparent 72%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 66%,rgba(255,255,255,.62)),color-mix(in srgb,var(--ac) 52%,rgba(255,255,255,.6)))}

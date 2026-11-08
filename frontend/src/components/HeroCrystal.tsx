@@ -1,12 +1,12 @@
-import React,{useEffect,useLayoutEffect,useRef} from 'react';
+import React,{useLayoutEffect,useRef} from 'react';
 import { Icon } from './Icon';
 
 /**
  * Homepage hero (reference 02), two calm figures, both decorative and free of any result figure or control:
- *  A) a stack of three glass slabs in isometric 3D (the report: diagnosis -> strengths/weaknesses -> plan), floating slowly;
- *  B) inside the clear window, a radar that holds the five business areas (rings, five axes, a slow sweep, area names).
+ *  A) a fan of four translucent report slabs in one shared perspective (reference 02), floating slowly;
+ *  B) inside the clear window, a neutral five-axis radar framework for the five business areas (rings, axes, five coloured points, names); no values are drawn.
  * The window is a REAL clear opening: the page sheet (`.mmri-shell::before`) is masked with a rounded hole exactly over it (CSS var --hx-hole, rebuilt on resize).
- * Motion: slow breathing / sweep (CSS transform only) and a very small pointer parallax (max 2.5 px, damped in rAF, mouse only, reset on leave). Hover never changes colours or the page.
+ * Motion: one slow float (stack) and one halo pulse + perimeter sheen (radar), CSS transform/opacity only. No pointer-driven movement; hover only highlights the local point and never touches the page theme.
  */
 const AREAS=['Маркетинг','Мэдээллийн технологи','Санхүү','Хүний нөөц','Үйлдвэрлэл ба үйл ажиллагаа'] as const;
 const SHORT=['Маркетинг','МТ','Санхүү','Хүний нөөц','Үйлдвэрлэл'] as const;
@@ -43,24 +43,10 @@ export default function HeroCrystal(){
   return()=>{ro.disconnect();window.removeEventListener('resize',apply);shell.classList.remove('has-hx-hole');shell.style.removeProperty('--hx-hole')};
  },[]);
 
- /* tiny, damped parallax (mouse only) */
- useEffect(()=>{
-  const el=root.current;if(!el)return;
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||!window.matchMedia('(hover:hover) and (pointer:fine)').matches)return;
-  let tx=0,ty=0,cx=0,cy=0,raf=0;
-  const tick=()=>{cx+=(tx-cx)*.08;cy+=(ty-cy)*.08;el.style.setProperty('--tx',cx.toFixed(3));el.style.setProperty('--ty',cy.toFixed(3));raf=(Math.abs(tx-cx)>.005||Math.abs(ty-cy)>.005)?requestAnimationFrame(tick):0};
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(tick)};
-  const move=(e:PointerEvent)=>{const r=el.getBoundingClientRect();tx=Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width-.5)*2));ty=Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height-.5)*2));kick()};
-  const leave=()=>{tx=0;ty=0;kick()};
-  el.addEventListener('pointermove',move,{passive:true});el.addEventListener('pointerleave',leave);
-  return()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerleave',leave);cancelAnimationFrame(raf)};
- },[]);
-
  return <div ref={root} className="hx" role="img" aria-label={`MMRI оношилгооны таван чиглэл: ${AREAS.join(', ')}. Таван чиглэлийн үр дүн нэг тайланд нэгдэнэ`}>
   <div className="hx__stackwrap" aria-hidden="true">
-   <div className="hx__stack">
-    <i className="hx__slab is-1"/><i className="hx__slab is-2"/><i className="hx__slab is-3"><b/><b/><b/></i>
-    <i className="hx__shadow"/>
+   <div className="hx__fan">
+    {[0,1,2,3].map(n=><i key={n} className={`hx__slab is-${n}`}>{n===3&&<><b/><b/><b/><b/></>}</i>)}
    </div>
   </div>
   <div ref={slot} className="hx__slot" aria-hidden="true">
@@ -72,9 +58,8 @@ export default function HeroCrystal(){
      </defs>
      {[1,.75,.5,.25].map((k,i)=><polygon key={k} points={ring(k)} className={i===0?'is-outer':'is-ring'}/>)}
      {KEYS.map((_,i)=>{const [x,y]=vertex(i,R);return <line key={i} x1={CX} y1={CY} x2={x.toFixed(1)} y2={y.toFixed(1)}/>})}
-     <polygon className="is-shape" points={ring(.62)}/>
-     <g className="hx__sweep"><path d={`M${CX} ${CY}L${CX} ${CY-R-2}A${R+2} ${R+2} 0 0 1 ${(CX+(R+2)*Math.sin(.9)).toFixed(1)} ${(CY-(R+2)*Math.cos(.9)).toFixed(1)}Z`} fill="url(#hx-sweep)"/></g>
-     {KEYS.map((k,i)=>{const [x,y]=vertex(i,R);return <circle key={k} cx={x.toFixed(1)} cy={y.toFixed(1)} r="3.1" style={{fill:`var(--mmri-domain-${k})`}}/>})}
+     <polygon className="hx__halo" points={ring(1.06)}/><polygon className="hx__perim" points={ring(1)} pathLength="100"/>
+     {KEYS.map((k,i)=>{const [x,y]=vertex(i,R);return <circle key={k} className="hx__pt" cx={x.toFixed(1)} cy={y.toFixed(1)} r="3.1" style={{fill:`var(--mmri-domain-${k})`}}/>})}
      <circle cx={CX} cy={CY} r="2.4" className="is-core"/>
     </svg>
     {KEYS.map((k,i)=>{const [x,y]=vertex(i,R+10.5);return <span key={k} className="hx__lab" style={{left:`${x}%`,top:`${y}%`}}>{SHORT[i]}</span>})}

@@ -6,7 +6,6 @@ import { usePrismPage } from '../design/prismPage';
 import HeroCrystal from '../components/HeroCrystal';
 import { session } from '../api/client';
 import { AboutGuide,ReportGuide,HowToGuide } from './HomeGuides';
-import { RimSheen } from '../components/RimSheen';
 import { setDomainTheme } from '../design/domainTheme';
 
 type GuideId='about'|'report'|'howto';
@@ -88,7 +87,6 @@ export default function Landing(){
 
   {guide&&createPortal(<div id="mmri-guide2-dialog" className={`mmri-guide2${closing?' is-closing':''}`} role="dialog" aria-modal="true" aria-labelledby="mmri-guide2-title" onMouseDown={e=>{if(e.target===e.currentTarget)requestClose.current()}}>
    <div ref={guidePanelRef} className="mmri-guide2__panel" data-guide={guide.id}>
-    <RimSheen/>
     <button type="button" className="mmri-guide2__close" aria-label="Гарын авлагыг хаах" onClick={()=>requestClose.current()}><Icon name="close" size={25}/></button>
     <div className="mmri-guide2__scroll" tabIndex={0} role="region" aria-labelledby="mmri-guide2-title"><header className="mmri-guide2__header"><h2 ref={guideTitleRef} tabIndex={-1} id="mmri-guide2-title">{guide.title}</h2><p>{guide.intro}</p></header>
     <div className="mmri-guide2__body"><GuideBody id={guide.id}/></div></div>
