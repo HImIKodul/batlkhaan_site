@@ -223,7 +223,7 @@ body.mmri-prism-page [tabindex="-1"]:focus{outline:none}
    ============================================================================ */
 /* ---- ENVIRONMENT: crystalline acrylic. Key light upper-left. Lit facets (cyan-white) against deep sapphire shaded facets; each seam is a bevel
    (bright edge + dark groove + soft cyan glow); intense glints only at selected intersections; magenta/violet only at the periphery. ---- */
-html:has(body.mmri-prism-page){background:linear-gradient(140deg,#031055 0%,#0734B8 18%,#1560F5 38%,#27A0FF 52%,#1456E6 66%,#0A2BA8 82%,#1A0F78 100%) fixed}
+html:has(body.mmri-prism-page){background:linear-gradient(140deg,#031055 0%,#0734B8 18%,#1560F5 38%,#27A0FF 52%,#1456E6 66%,#0A2BA8 82%,#1A0F78 100%)}
 html:has(body.mmri-prism-page)::before{display:block;z-index:-3;background:
  radial-gradient(40% 36% at 12% 6%,rgba(200,248,255,.78),rgba(80,200,255,.32) 46%,transparent 74%),
  radial-gradient(32% 28% at 62% -2%,rgba(90,215,255,.55),transparent 72%),
