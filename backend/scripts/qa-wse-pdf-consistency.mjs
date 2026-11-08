@@ -7,7 +7,11 @@ const creds=Object.fromEntries(fs.readFileSync(process.env.CREDS||'/home/kirby/D
 let fail=0;const rec=(n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+n+(d?' | '+d:''))};
 const j=async(p,tok)=>{const r=await fetch(B+p,{headers:{origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{})}});return {s:r.status,d:await r.json().catch(()=>null)}};
 const login=await fetch(B+'/auth/login',{method:'POST',headers:{origin:ORIGIN,'content-type':'application/json'},body:JSON.stringify({email:creds.email,password:creds.password})}).then(r=>r.json());const tok=login.data.accessToken;
-const psql=q=>execFileSync('/home/kirby/Downloads/MMRI_FUNCTIONAL_REPAIR/harness/psql.sh',[(process.env.PGDATABASE||'mmri_ws_e').slice(-1),'-At','-c',q],{encoding:'utf8'}).trim();
+const PGDB=process.env.PGDATABASE||'mmri_ws_e';
+if(!/^mmri_(ws_[a-h]|fresh_checkout_\d+)$/.test(PGDB))throw new Error(`refusing database ${PGDB}: only scrubbed clones (mmri_ws_a..h) or fresh-checkout databases are allowed`);
+const psql=q=>/^mmri_ws_[a-h]$/.test(PGDB)
+ ?execFileSync('/home/kirby/Downloads/MMRI_FUNCTIONAL_REPAIR/harness/psql.sh',[PGDB.slice(-1),'-At','-c',q],{encoding:'utf8'}).trim()
+ :execFileSync('docker',['exec','-i','mmri-v3-local-postgres-1','psql','-U','mmri','-At','-d',PGDB,'-c',q],{encoding:'utf8'}).trim();
 const rows=psql(`select id||'|'||"domainCode"||'|'||"completedAt" from assessments where status='COMPLETED' order by "domainCode","completedAt"`).split('\n').map(x=>x.split('|'));
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'wse-'));const byDomain={};
 for(const [id,dom] of rows){
