@@ -1,0 +1,48 @@
+{
+  "version": "MMRI-STEP7-FIVE-DOMAIN-RUNTIME-v1.0.0",
+  "created": "2026-10-10",
+  "marketing": "PRESERVED_3.0.0_QBANK_3.1.0",
+  "canonicalContentSHA256": "34337d26022965045515d57030ba1f1d2b01a1df5642c77a87d2890a12acac25",
+  "domains": {
+    "people": {
+      "mri": "HRMRI",
+      "methodologyVersion": "4.1.0",
+      "file": "MMRI_HRMRI_Methodology_4.1.0_BUSINESSMRI_V2.json",
+      "sha256": "a395964a7a7900c384e0f64ae6b5aa38a4a05c2ab0631429b588b08dd64cb44a",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5
+    },
+    "finance": {
+      "mri": "FINMRI",
+      "methodologyVersion": "4.2.0",
+      "file": "MMRI_FINMRI_Methodology_4.2.0_BUSINESSMRI_V2.json",
+      "sha256": "ba6705fc1d53582bf60704585fc860b54a416bea530775e9ee62f830b8b550a8",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5
+    },
+    "it": {
+      "mri": "ISMRI",
+      "methodologyVersion": "4.3.0",
+      "file": "MMRI_ISMRI_Methodology_4.3.0_BUSINESSMRI_V2.json",
+      "sha256": "d72219b0ac35ac590f4e54c3d56805432b03e9b5536a2e20d6146096552e6976",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5
+    },
+    "operations": {
+      "mri": "OPMRI",
+      "methodologyVersion": "4.4.0",
+      "file": "MMRI_OPMRI_Methodology_4.4.0_BUSINESSMRI_V2.json",
+      "sha256": "587f6c38896716b4f135c1847692362b54b65c94457d4e53567c80fd935f9de4",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5
+    }
+  }
+}

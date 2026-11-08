@@ -1,0 +1,86 @@
+{
+  "status": "PASS",
+  "checks": 16,
+  "results": [
+    {
+      "name": "P1 selected purpose preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 recommendation candidate exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 recommendation uses diagnostic outcome priority",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2 selected purpose preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 recommendation candidate exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 recommendation uses diagnostic outcome priority",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3 selected purpose preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 recommendation candidate exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 recommendation uses diagnostic outcome priority",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4 selected purpose preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 recommendation candidate exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 recommendation uses diagnostic outcome priority",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5 selected purpose preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 recommendation candidate exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 recommendation uses diagnostic outcome priority",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "no selected outcome uses mean deterministic priority",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    }
+  ]
+}

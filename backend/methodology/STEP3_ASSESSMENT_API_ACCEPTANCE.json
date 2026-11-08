@@ -1,0 +1,158 @@
+{
+  "status": "FAIL",
+  "checks": 30,
+  "passed": 24,
+  "failed": 6,
+  "details": [
+    {
+      "id": "route POST /api/v1/assessments/:assessmentId/start",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "route POST /api/v1/assessments/:assessmentId/resume",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "route GET /api/v1/assessments/:assessmentId/next-question",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "route POST /api/v1/assessments/:assessmentId/answers",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "route GET /api/v1/assessments/:assessmentId/status",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "route POST /api/v1/assessments/:assessmentId/complete",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "status query service",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "status current question",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "status lifecycle flags",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "resume idempotent",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "resume preserves open question",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "next question requires IN_PROGRESS",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "answer issued-question guard",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "answer ordering guard",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "one open question invariant",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "persistent completion method",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "completion terminal idempotency",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "completion does not force",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "completion persists status",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "completion audit",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "complete route sanitized",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "contract exposes completion",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "OpenAPI status path",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "OpenAPI lifecycle schema",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "backend client status",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "frontend client status",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "frontend lifecycle type",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "pause audit",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "resume audit",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "no answer score leakage",
+      "status": "PASS",
+      "note": ""
+    }
+  ]
+}

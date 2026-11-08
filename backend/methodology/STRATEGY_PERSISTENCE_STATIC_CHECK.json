@@ -1,0 +1,173 @@
+{
+  "status": "PASS",
+  "total": 33,
+  "passed": 33,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "schema model StrategyRun",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema model RootFindingRecord",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema model RecommendationRecord",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema model ActionPlanRecord",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema model ActionPlanMilestoneRecord",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema model ReportSnapshot",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema enum RecommendationType",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema enum PriorityBand",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema enum PlanMilestoneStatus",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema enum ReportGenerationState",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema relation strategyRun        StrategyRun?",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema relation reportSnapshots    ReportSnapshot[]",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema relation rootFindings       RootFindingRecord[]",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "schema relation recommendations    RecommendationRecord[]",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method generateStrategy(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method getDiagnosis(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method getRecommendations(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method getActionPlan(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method updateMilestone(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method freezeReportPayload(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method generateReport(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "service method validateAiDraft(",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "strategy frozen by snapshot hash",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "report payload hash frozen",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "terminal gate",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "strategy audit event",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "report validation audit event",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "API route /strategy/generate",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "API route /diagnosis",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "API route /recommendations",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "API route /action-plan",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "API route /report-payload",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "API route /report\"",
+      "status": "PASS",
+      "detail": ""
+    }
+  ]
+}

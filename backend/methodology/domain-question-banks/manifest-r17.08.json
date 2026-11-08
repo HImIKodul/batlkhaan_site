@@ -1,0 +1,26 @@
+{
+  "release": "MMRI-R17.08-REPAIRED-DOMAIN-BANKS",
+  "date": "2026-09-27",
+  "domains": {
+    "it": {
+      "file": "it-1.5-repaired.json",
+      "count": 3072
+    },
+    "finance": {
+      "file": "finance-2.8.0-repaired.json",
+      "count": 12288
+    },
+    "people": {
+      "file": "people-18.4-repaired.json",
+      "count": 3072
+    },
+    "operations": {
+      "file": "operations-1.4-repaired.json",
+      "count": 3072
+    }
+  },
+  "marketing": {
+    "file": "MMRI_v3.0.0_QBANK_v3.1.0_CELL_REACHABILITY_STEP05.json",
+    "count": 12288
+  }
+}

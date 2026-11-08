@@ -1,0 +1,1996 @@
+{
+  "status": "PASS",
+  "checks": 395,
+  "weightValidation": {
+    "moduleWeightTotal": 100,
+    "capabilityWeightTotal": 100,
+    "scoredCellWeightTotal": 99.99999999999999,
+    "moduleCapabilityTotals": {
+      "Стратеги ба удирдлага": 19.999999999999996,
+      "Зах зээл ба хэрэглэгчийн ойлголт": 15,
+      "Өрсөлдөөн ба байршуулалт": 10,
+      "Брэнд ба харилцаа": 10,
+      "Бүтээгдэхүүн, үнэ ба үйлчилгээ": 15,
+      "Борлуулалт, суваг ба харилцагч": 15,
+      "Дижитал маркетинг": 5,
+      "Өгөгдөл, технологи ба өөрчлөлт": 10.000000000000002
+    }
+  },
+  "results": [
+    {
+      "name": "eight marketing modules",
+      "pass": true,
+      "detail": "8"
+    },
+    {
+      "name": "64 weighted capabilities",
+      "pass": true,
+      "detail": "64"
+    },
+    {
+      "name": "48 diagnostic cell templates",
+      "pass": true,
+      "detail": "48"
+    },
+    {
+      "name": "module weights total 100",
+      "pass": true,
+      "detail": "actual=100 expected=100"
+    },
+    {
+      "name": "capability weights total 100",
+      "pass": true,
+      "detail": "actual=100 expected=100"
+    },
+    {
+      "name": "scored cell weights total 100",
+      "pass": true,
+      "detail": "actual=99.99999999999999 expected=100"
+    },
+    {
+      "name": "module M01 weight",
+      "pass": true,
+      "detail": "actual=20 expected=20"
+    },
+    {
+      "name": "module M02 weight",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "module M03 weight",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "module M04 weight",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "module M05 weight",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "module M06 weight",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "module M07 weight",
+      "pass": true,
+      "detail": "actual=5 expected=5"
+    },
+    {
+      "name": "module M08 weight",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "capability weights reconcile to M01",
+      "pass": true,
+      "detail": "actual=19.999999999999996 expected=20"
+    },
+    {
+      "name": "capability weights reconcile to M02",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "capability weights reconcile to M03",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "capability weights reconcile to M04",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "capability weights reconcile to M05",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "capability weights reconcile to M06",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "capability weights reconcile to M07",
+      "pass": true,
+      "detail": "actual=5 expected=5"
+    },
+    {
+      "name": "capability weights reconcile to M08",
+      "pass": true,
+      "detail": "actual=10.000000000000002 expected=10"
+    },
+    {
+      "name": "64 capability aggregates",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "8 module aggregates",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "five business outcomes remain separate from modules",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "v13 hierarchical aggregation marker",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "all eight modules applicable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "all eight modules complete",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS01 partial score",
+      "pass": true,
+      "detail": "actual=0 expected=0"
+    },
+    {
+      "name": "MS01 official score",
+      "pass": true,
+      "detail": "actual=0 expected=0"
+    },
+    {
+      "name": "MS01 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS01 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS01 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS02 partial score",
+      "pass": true,
+      "detail": "actual=13 expected=13"
+    },
+    {
+      "name": "MS02 official score",
+      "pass": true,
+      "detail": "actual=13 expected=13"
+    },
+    {
+      "name": "MS02 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS02 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS02 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS03 partial score",
+      "pass": true,
+      "detail": "actual=26 expected=26"
+    },
+    {
+      "name": "MS03 official score",
+      "pass": true,
+      "detail": "actual=26 expected=26"
+    },
+    {
+      "name": "MS03 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS03 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS03 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS04 partial score",
+      "pass": true,
+      "detail": "actual=39 expected=39"
+    },
+    {
+      "name": "MS04 official score",
+      "pass": true,
+      "detail": "actual=39 expected=39"
+    },
+    {
+      "name": "MS04 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS04 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS04 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS05 partial score",
+      "pass": true,
+      "detail": "actual=52 expected=52"
+    },
+    {
+      "name": "MS05 official score",
+      "pass": true,
+      "detail": "actual=52 expected=52"
+    },
+    {
+      "name": "MS05 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS05 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS05 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS06 partial score",
+      "pass": true,
+      "detail": "actual=65 expected=65"
+    },
+    {
+      "name": "MS06 official score",
+      "pass": true,
+      "detail": "actual=65 expected=65"
+    },
+    {
+      "name": "MS06 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS06 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS06 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS07 partial score",
+      "pass": true,
+      "detail": "actual=78 expected=78"
+    },
+    {
+      "name": "MS07 official score",
+      "pass": true,
+      "detail": "actual=78 expected=78"
+    },
+    {
+      "name": "MS07 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS07 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS07 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS08 partial score",
+      "pass": true,
+      "detail": "actual=91 expected=91"
+    },
+    {
+      "name": "MS08 official score",
+      "pass": true,
+      "detail": "actual=91 expected=91"
+    },
+    {
+      "name": "MS08 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS08 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS08 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS09 partial score",
+      "pass": true,
+      "detail": "actual=3 expected=3"
+    },
+    {
+      "name": "MS09 official score",
+      "pass": true,
+      "detail": "actual=3 expected=3"
+    },
+    {
+      "name": "MS09 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS09 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS09 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS10 partial score",
+      "pass": true,
+      "detail": "actual=16 expected=16"
+    },
+    {
+      "name": "MS10 official score",
+      "pass": true,
+      "detail": "actual=16 expected=16"
+    },
+    {
+      "name": "MS10 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS10 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS10 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS11 partial score",
+      "pass": true,
+      "detail": "actual=29 expected=29"
+    },
+    {
+      "name": "MS11 official score",
+      "pass": true,
+      "detail": "actual=29 expected=29"
+    },
+    {
+      "name": "MS11 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS11 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS11 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS12 partial score",
+      "pass": true,
+      "detail": "actual=42 expected=42"
+    },
+    {
+      "name": "MS12 official score",
+      "pass": true,
+      "detail": "actual=42 expected=42"
+    },
+    {
+      "name": "MS12 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS12 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS12 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS13 partial score",
+      "pass": true,
+      "detail": "actual=55 expected=55"
+    },
+    {
+      "name": "MS13 official score",
+      "pass": true,
+      "detail": "actual=55 expected=55"
+    },
+    {
+      "name": "MS13 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS13 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS13 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS14 partial score",
+      "pass": true,
+      "detail": "actual=68 expected=68"
+    },
+    {
+      "name": "MS14 official score",
+      "pass": true,
+      "detail": "actual=68 expected=68"
+    },
+    {
+      "name": "MS14 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS14 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS14 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS15 partial score",
+      "pass": true,
+      "detail": "actual=81 expected=81"
+    },
+    {
+      "name": "MS15 official score",
+      "pass": true,
+      "detail": "actual=81 expected=81"
+    },
+    {
+      "name": "MS15 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS15 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS15 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS16 partial score",
+      "pass": true,
+      "detail": "actual=94 expected=94"
+    },
+    {
+      "name": "MS16 official score",
+      "pass": true,
+      "detail": "actual=94 expected=94"
+    },
+    {
+      "name": "MS16 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS16 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS16 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS17 partial score",
+      "pass": true,
+      "detail": "actual=6 expected=6"
+    },
+    {
+      "name": "MS17 official score",
+      "pass": true,
+      "detail": "actual=6 expected=6"
+    },
+    {
+      "name": "MS17 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS17 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS17 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS18 partial score",
+      "pass": true,
+      "detail": "actual=19 expected=19"
+    },
+    {
+      "name": "MS18 official score",
+      "pass": true,
+      "detail": "actual=19 expected=19"
+    },
+    {
+      "name": "MS18 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS18 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS18 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS19 partial score",
+      "pass": true,
+      "detail": "actual=32 expected=32"
+    },
+    {
+      "name": "MS19 official score",
+      "pass": true,
+      "detail": "actual=32 expected=32"
+    },
+    {
+      "name": "MS19 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS19 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS19 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS20 partial score",
+      "pass": true,
+      "detail": "actual=45 expected=45"
+    },
+    {
+      "name": "MS20 official score",
+      "pass": true,
+      "detail": "actual=45 expected=45"
+    },
+    {
+      "name": "MS20 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS20 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS20 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS21 partial score",
+      "pass": true,
+      "detail": "actual=58 expected=58"
+    },
+    {
+      "name": "MS21 official score",
+      "pass": true,
+      "detail": "actual=58 expected=58"
+    },
+    {
+      "name": "MS21 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS21 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS21 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS22 partial score",
+      "pass": true,
+      "detail": "actual=71 expected=71"
+    },
+    {
+      "name": "MS22 official score",
+      "pass": true,
+      "detail": "actual=71 expected=71"
+    },
+    {
+      "name": "MS22 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS22 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS22 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS23 partial score",
+      "pass": true,
+      "detail": "actual=84 expected=84"
+    },
+    {
+      "name": "MS23 official score",
+      "pass": true,
+      "detail": "actual=84 expected=84"
+    },
+    {
+      "name": "MS23 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS23 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS23 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS24 partial score",
+      "pass": true,
+      "detail": "actual=97 expected=97"
+    },
+    {
+      "name": "MS24 official score",
+      "pass": true,
+      "detail": "actual=97 expected=97"
+    },
+    {
+      "name": "MS24 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS24 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS24 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS25 partial score",
+      "pass": true,
+      "detail": "actual=9 expected=9"
+    },
+    {
+      "name": "MS25 official score",
+      "pass": true,
+      "detail": "actual=9 expected=9"
+    },
+    {
+      "name": "MS25 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS25 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS25 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS26 partial score",
+      "pass": true,
+      "detail": "actual=22 expected=22"
+    },
+    {
+      "name": "MS26 official score",
+      "pass": true,
+      "detail": "actual=22 expected=22"
+    },
+    {
+      "name": "MS26 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS26 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS26 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS27 partial score",
+      "pass": true,
+      "detail": "actual=35 expected=35"
+    },
+    {
+      "name": "MS27 official score",
+      "pass": true,
+      "detail": "actual=35 expected=35"
+    },
+    {
+      "name": "MS27 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS27 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS27 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS28 partial score",
+      "pass": true,
+      "detail": "actual=48 expected=48"
+    },
+    {
+      "name": "MS28 official score",
+      "pass": true,
+      "detail": "actual=48 expected=48"
+    },
+    {
+      "name": "MS28 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS28 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS28 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS29 partial score",
+      "pass": true,
+      "detail": "actual=61 expected=61"
+    },
+    {
+      "name": "MS29 official score",
+      "pass": true,
+      "detail": "actual=61 expected=61"
+    },
+    {
+      "name": "MS29 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS29 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS29 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS30 partial score",
+      "pass": true,
+      "detail": "actual=74 expected=74"
+    },
+    {
+      "name": "MS30 official score",
+      "pass": true,
+      "detail": "actual=74 expected=74"
+    },
+    {
+      "name": "MS30 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS30 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS30 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS31 partial score",
+      "pass": true,
+      "detail": "actual=87 expected=87"
+    },
+    {
+      "name": "MS31 official score",
+      "pass": true,
+      "detail": "actual=87 expected=87"
+    },
+    {
+      "name": "MS31 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS31 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS31 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS32 partial score",
+      "pass": true,
+      "detail": "actual=100 expected=100"
+    },
+    {
+      "name": "MS32 official score",
+      "pass": true,
+      "detail": "actual=100 expected=100"
+    },
+    {
+      "name": "MS32 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS32 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS32 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS33 partial score",
+      "pass": true,
+      "detail": "actual=12 expected=12"
+    },
+    {
+      "name": "MS33 official score",
+      "pass": true,
+      "detail": "actual=12 expected=12"
+    },
+    {
+      "name": "MS33 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS33 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS33 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS34 partial score",
+      "pass": true,
+      "detail": "actual=25 expected=25"
+    },
+    {
+      "name": "MS34 official score",
+      "pass": true,
+      "detail": "actual=25 expected=25"
+    },
+    {
+      "name": "MS34 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS34 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS34 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS35 partial score",
+      "pass": true,
+      "detail": "actual=38 expected=38"
+    },
+    {
+      "name": "MS35 official score",
+      "pass": true,
+      "detail": "actual=38 expected=38"
+    },
+    {
+      "name": "MS35 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS35 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS35 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS36 partial score",
+      "pass": true,
+      "detail": "actual=51 expected=51"
+    },
+    {
+      "name": "MS36 official score",
+      "pass": true,
+      "detail": "actual=51 expected=51"
+    },
+    {
+      "name": "MS36 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS36 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS36 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS37 partial score",
+      "pass": true,
+      "detail": "actual=64 expected=64"
+    },
+    {
+      "name": "MS37 official score",
+      "pass": true,
+      "detail": "actual=64 expected=64"
+    },
+    {
+      "name": "MS37 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS37 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS37 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS38 partial score",
+      "pass": true,
+      "detail": "actual=77 expected=77"
+    },
+    {
+      "name": "MS38 official score",
+      "pass": true,
+      "detail": "actual=77 expected=77"
+    },
+    {
+      "name": "MS38 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS38 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS38 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS39 partial score",
+      "pass": true,
+      "detail": "actual=90 expected=90"
+    },
+    {
+      "name": "MS39 official score",
+      "pass": true,
+      "detail": "actual=90 expected=90"
+    },
+    {
+      "name": "MS39 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS39 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS39 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS40 partial score",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "MS40 official score",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "MS40 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS40 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS40 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS41 partial score",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "MS41 official score",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "MS41 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS41 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS41 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS42 partial score",
+      "pass": true,
+      "detail": "actual=28 expected=28"
+    },
+    {
+      "name": "MS42 official score",
+      "pass": true,
+      "detail": "actual=28 expected=28"
+    },
+    {
+      "name": "MS42 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS42 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS42 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS43 partial score",
+      "pass": true,
+      "detail": "actual=41 expected=41"
+    },
+    {
+      "name": "MS43 official score",
+      "pass": true,
+      "detail": "actual=41 expected=41"
+    },
+    {
+      "name": "MS43 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS43 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS43 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS44 partial score",
+      "pass": true,
+      "detail": "actual=54 expected=54"
+    },
+    {
+      "name": "MS44 official score",
+      "pass": true,
+      "detail": "actual=54 expected=54"
+    },
+    {
+      "name": "MS44 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS44 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS44 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS45 partial score",
+      "pass": true,
+      "detail": "actual=67 expected=67"
+    },
+    {
+      "name": "MS45 official score",
+      "pass": true,
+      "detail": "actual=67 expected=67"
+    },
+    {
+      "name": "MS45 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS45 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS45 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS46 partial score",
+      "pass": true,
+      "detail": "actual=80 expected=80"
+    },
+    {
+      "name": "MS46 official score",
+      "pass": true,
+      "detail": "actual=80 expected=80"
+    },
+    {
+      "name": "MS46 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS46 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS46 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS47 partial score",
+      "pass": true,
+      "detail": "actual=93 expected=93"
+    },
+    {
+      "name": "MS47 official score",
+      "pass": true,
+      "detail": "actual=93 expected=93"
+    },
+    {
+      "name": "MS47 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS47 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS47 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS48 partial score",
+      "pass": true,
+      "detail": "actual=5 expected=5"
+    },
+    {
+      "name": "MS48 official score",
+      "pass": true,
+      "detail": "actual=5 expected=5"
+    },
+    {
+      "name": "MS48 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS48 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS48 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS49 partial score",
+      "pass": true,
+      "detail": "actual=18 expected=18"
+    },
+    {
+      "name": "MS49 official score",
+      "pass": true,
+      "detail": "actual=18 expected=18"
+    },
+    {
+      "name": "MS49 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS49 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS49 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS50 partial score",
+      "pass": true,
+      "detail": "actual=31 expected=31"
+    },
+    {
+      "name": "MS50 official score",
+      "pass": true,
+      "detail": "actual=31 expected=31"
+    },
+    {
+      "name": "MS50 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS50 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS50 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS51 partial score",
+      "pass": true,
+      "detail": "actual=44 expected=44"
+    },
+    {
+      "name": "MS51 official score",
+      "pass": true,
+      "detail": "actual=44 expected=44"
+    },
+    {
+      "name": "MS51 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS51 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS51 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS52 partial score",
+      "pass": true,
+      "detail": "actual=57 expected=57"
+    },
+    {
+      "name": "MS52 official score",
+      "pass": true,
+      "detail": "actual=57 expected=57"
+    },
+    {
+      "name": "MS52 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS52 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS52 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS53 partial score",
+      "pass": true,
+      "detail": "actual=70 expected=70"
+    },
+    {
+      "name": "MS53 official score",
+      "pass": true,
+      "detail": "actual=70 expected=70"
+    },
+    {
+      "name": "MS53 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS53 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS53 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS54 partial score",
+      "pass": true,
+      "detail": "actual=83 expected=83"
+    },
+    {
+      "name": "MS54 official score",
+      "pass": true,
+      "detail": "actual=83 expected=83"
+    },
+    {
+      "name": "MS54 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS54 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS54 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS55 partial score",
+      "pass": true,
+      "detail": "actual=96 expected=96"
+    },
+    {
+      "name": "MS55 official score",
+      "pass": true,
+      "detail": "actual=96 expected=96"
+    },
+    {
+      "name": "MS55 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS55 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS55 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS56 partial score",
+      "pass": true,
+      "detail": "actual=8 expected=8"
+    },
+    {
+      "name": "MS56 official score",
+      "pass": true,
+      "detail": "actual=8 expected=8"
+    },
+    {
+      "name": "MS56 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS56 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS56 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS57 partial score",
+      "pass": true,
+      "detail": "actual=21 expected=21"
+    },
+    {
+      "name": "MS57 official score",
+      "pass": true,
+      "detail": "actual=21 expected=21"
+    },
+    {
+      "name": "MS57 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS57 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS57 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS58 partial score",
+      "pass": true,
+      "detail": "actual=34 expected=34"
+    },
+    {
+      "name": "MS58 official score",
+      "pass": true,
+      "detail": "actual=34 expected=34"
+    },
+    {
+      "name": "MS58 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS58 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS58 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS59 partial score",
+      "pass": true,
+      "detail": "actual=47 expected=47"
+    },
+    {
+      "name": "MS59 official score",
+      "pass": true,
+      "detail": "actual=47 expected=47"
+    },
+    {
+      "name": "MS59 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS59 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS59 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS60 partial score",
+      "pass": true,
+      "detail": "actual=60 expected=60"
+    },
+    {
+      "name": "MS60 official score",
+      "pass": true,
+      "detail": "actual=60 expected=60"
+    },
+    {
+      "name": "MS60 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS60 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS60 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS61 partial score",
+      "pass": true,
+      "detail": "actual=73 expected=73"
+    },
+    {
+      "name": "MS61 official score",
+      "pass": true,
+      "detail": "actual=73 expected=73"
+    },
+    {
+      "name": "MS61 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS61 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS61 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS62 partial score",
+      "pass": true,
+      "detail": "actual=86 expected=86"
+    },
+    {
+      "name": "MS62 official score",
+      "pass": true,
+      "detail": "actual=86 expected=86"
+    },
+    {
+      "name": "MS62 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS62 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS62 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS63 partial score",
+      "pass": true,
+      "detail": "actual=99 expected=99"
+    },
+    {
+      "name": "MS63 official score",
+      "pass": true,
+      "detail": "actual=99 expected=99"
+    },
+    {
+      "name": "MS63 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS63 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS63 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "MS64 partial score",
+      "pass": true,
+      "detail": "actual=11 expected=11"
+    },
+    {
+      "name": "MS64 official score",
+      "pass": true,
+      "detail": "actual=11 expected=11"
+    },
+    {
+      "name": "MS64 confidence",
+      "pass": true,
+      "detail": "actual=0.9000000000000001 expected=0.9"
+    },
+    {
+      "name": "MS64 coverage",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "MS64 base importance weight preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "M01 weighted module score",
+      "pass": true,
+      "detail": "actual=39.195000000000014 expected=39.195000000000014"
+    },
+    {
+      "name": "M01 official module score",
+      "pass": true,
+      "detail": "actual=39.195000000000014 expected=39.195000000000014"
+    },
+    {
+      "name": "M01 base module weight preserved",
+      "pass": true,
+      "detail": "actual=20 expected=20"
+    },
+    {
+      "name": "M01 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=39.19500000000001 expected=39.195000000000014"
+    },
+    {
+      "name": "M02 weighted module score",
+      "pass": true,
+      "detail": "actual=47.980000000000004 expected=47.980000000000004"
+    },
+    {
+      "name": "M02 official module score",
+      "pass": true,
+      "detail": "actual=47.980000000000004 expected=47.980000000000004"
+    },
+    {
+      "name": "M02 base module weight preserved",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "M02 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=47.98 expected=47.980000000000004"
+    },
+    {
+      "name": "M03 weighted module score",
+      "pass": true,
+      "detail": "actual=44.089999999999996 expected=44.089999999999996"
+    },
+    {
+      "name": "M03 official module score",
+      "pass": true,
+      "detail": "actual=44.089999999999996 expected=44.089999999999996"
+    },
+    {
+      "name": "M03 base module weight preserved",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "M03 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=44.09 expected=44.089999999999996"
+    },
+    {
+      "name": "M04 weighted module score",
+      "pass": true,
+      "detail": "actual=53.459999999999994 expected=53.459999999999994"
+    },
+    {
+      "name": "M04 official module score",
+      "pass": true,
+      "detail": "actual=53.459999999999994 expected=53.459999999999994"
+    },
+    {
+      "name": "M04 base module weight preserved",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "M04 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=53.459999999999994 expected=53.459999999999994"
+    },
+    {
+      "name": "M05 weighted module score",
+      "pass": true,
+      "detail": "actual=45.61333333333334 expected=45.61333333333334"
+    },
+    {
+      "name": "M05 official module score",
+      "pass": true,
+      "detail": "actual=45.61333333333334 expected=45.61333333333334"
+    },
+    {
+      "name": "M05 base module weight preserved",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "M05 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=45.61333333333334 expected=45.61333333333334"
+    },
+    {
+      "name": "M06 weighted module score",
+      "pass": true,
+      "detail": "actual=48.75333333333333 expected=48.75333333333333"
+    },
+    {
+      "name": "M06 official module score",
+      "pass": true,
+      "detail": "actual=48.75333333333333 expected=48.75333333333333"
+    },
+    {
+      "name": "M06 base module weight preserved",
+      "pass": true,
+      "detail": "actual=15 expected=15"
+    },
+    {
+      "name": "M06 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=48.75333333333334 expected=48.75333333333333"
+    },
+    {
+      "name": "M07 weighted module score",
+      "pass": true,
+      "detail": "actual=49.660000000000004 expected=49.660000000000004"
+    },
+    {
+      "name": "M07 official module score",
+      "pass": true,
+      "detail": "actual=49.660000000000004 expected=49.660000000000004"
+    },
+    {
+      "name": "M07 base module weight preserved",
+      "pass": true,
+      "detail": "actual=5 expected=5"
+    },
+    {
+      "name": "M07 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=49.660000000000004 expected=49.660000000000004"
+    },
+    {
+      "name": "M08 weighted module score",
+      "pass": true,
+      "detail": "actual=56.36999999999998 expected=56.36999999999998"
+    },
+    {
+      "name": "M08 official module score",
+      "pass": true,
+      "detail": "actual=56.36999999999998 expected=56.36999999999998"
+    },
+    {
+      "name": "M08 base module weight preserved",
+      "pass": true,
+      "detail": "actual=10 expected=10"
+    },
+    {
+      "name": "M08 capability contributions sum to module score",
+      "pass": true,
+      "detail": "actual=56.36999999999999 expected=56.36999999999998"
+    },
+    {
+      "name": "overall equals all 64 capability weights when fully applicable",
+      "pass": true,
+      "detail": "actual=47.066 expected=47.065999999999995"
+    },
+    {
+      "name": "official overall weighted score",
+      "pass": true,
+      "detail": "actual=47.066 expected=47.065999999999995"
+    },
+    {
+      "name": "module contributions sum to overall score",
+      "pass": true,
+      "detail": "actual=47.066 expected=47.065999999999995"
+    },
+    {
+      "name": "unanswered cells are not scored as zero",
+      "pass": true,
+      "detail": "actual=100 expected=100"
+    },
+    {
+      "name": "missing cells reduce coverage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "incomplete capability has no official score",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "incomplete capability withholds module official score",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "incomplete module withholds overall official score",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "N/A capability weight redistributes inside module",
+      "pass": true,
+      "detail": "actual=46.66071428571429 expected=46.66071428571429"
+    },
+    {
+      "name": "module retains its 20% top-level weight",
+      "pass": true,
+      "detail": "actual=20 expected=20"
+    },
+    {
+      "name": "overall follows module hierarchy after capability N/A",
+      "pass": true,
+      "detail": "actual=48.55914285714286 expected=48.55914285714286"
+    },
+    {
+      "name": "hierarchy differs from old global N/A redistribution",
+      "pass": true,
+      "detail": "hierarchical=48.55914285714286 old=48.621900826446286"
+    },
+    {
+      "name": "whole N/A module removed from overall denominator",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "remaining module weights renormalize only when whole module N/A",
+      "pass": true,
+      "detail": "actual=46.03222222222223 expected=46.03222222222223"
+    },
+    {
+      "name": "effective module weights total 100 after whole module N/A",
+      "pass": true,
+      "detail": "actual=99.99999999999999 expected=100"
+    }
+  ]
+}

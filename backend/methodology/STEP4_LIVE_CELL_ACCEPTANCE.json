@@ -1,0 +1,223 @@
+{
+  "status": "FAIL",
+  "checks": 43,
+  "passed": 36,
+  "failed": 7,
+  "details": [
+    {
+      "id": "file src/engine/adaptive-cell-state.ts",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "file prisma/migrations/20260909040000_step4_live_cell_state/migration.sql",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "file scripts/step4-live-cell-engine-smoke.mjs",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma CellConfidenceState enum",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma cell field confidenceState",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma cell field evidenceCount",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma cell field scoreDispersion",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma cell field lockReason",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma cell field lockedAt",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Prisma cell field calculationVersion",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "migration creates confidence enum",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "migration persists lock state",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "migration indexes confidence state",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "v13 calculator only activates on complete policy",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "legacy calculator remains available",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "full v13 matrix calculator",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "robust median scoring",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "indirect cap uses policy",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "primary confidence floor uses policy",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "lock threshold uses policy",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "conflict threshold uses policy",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "Q2 consistency lock",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "Q3 2-of-3 cluster lock",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "Q4 3-of-4 cluster lock",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "unresolved Q4 does not falsely lock",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "D01 no maturity confidence",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "DNK/UNKNOWN state",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "N/A non-scoring state",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "INFER_ONLY direct evidence fail-visible",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "CellSnapshot confidence state fields",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "submit recalculates runtime snapshot",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "submit persists full live matrix",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "full matrix loops categories and cells",
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "id": "matrix uses createMany for first materialization",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "matrix updates only changed state",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "lock transition audit",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "unlock transition audit",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "all category aggregates persisted",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "calculation version stamped",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "smoke asserts 3072 cells",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "smoke asserts .75",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "smoke asserts .90",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "smoke asserts .55 cap",
+      "status": "PASS",
+      "note": ""
+    }
+  ]
+}

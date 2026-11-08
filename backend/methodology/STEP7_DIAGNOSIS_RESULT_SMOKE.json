@@ -1,0 +1,158 @@
+{
+  "suite": "MMRI Step 7 canonical diagnosis result",
+  "total": 30,
+  "passed": 30,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "schema version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "result hash populated",
+      "pass": true,
+      "detail": "964787c8972cdb7d00a4080a7220f644945a32367ba90599e38a1bbb69c5967f"
+    },
+    {
+      "name": "assessment identity",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "methodology hash carried",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "runtime snapshot hash carried",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "incomplete FULL result is partial terminal",
+      "pass": true,
+      "detail": "PARTIAL_TERMINAL"
+    },
+    {
+      "name": "exactly 8 modules",
+      "pass": true,
+      "detail": "8"
+    },
+    {
+      "name": "exactly 64 capabilities",
+      "pass": true,
+      "detail": "64"
+    },
+    {
+      "name": "exactly 3072 cells summarized",
+      "pass": true,
+      "detail": "3072"
+    },
+    {
+      "name": "five business outcomes",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "five business priority objects",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "weak cell count available",
+      "pass": true,
+      "detail": "940"
+    },
+    {
+      "name": "weak display bounded to 20",
+      "pass": true,
+      "detail": "20"
+    },
+    {
+      "name": "weak cells below threshold",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review-required surfaced",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "contradiction surfaced",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "N/A surfaced separately",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "unknown surfaced separately",
+      "pass": true,
+      "detail": "65"
+    },
+    {
+      "name": "root causes selected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validated strengths are evidence-qualified; others are flagged relative-rank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "strength display bounded",
+      "pass": true,
+      "detail": "17"
+    },
+    {
+      "name": "compat categories alias",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "compat purposes alias",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "compat outcome alias",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "open contradictions alias",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "causal lift forbidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ROI prediction forbidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "aggregation lineage retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "outcome version retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "AI generation cannot alter source hash",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

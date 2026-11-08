@@ -1,0 +1,265 @@
+{
+  "suite": "MMRI Step 7 canonical diagnosis result acceptance",
+  "version": "3.20.0",
+  "total": 64,
+  "passed": 63,
+  "failed": 1,
+  "checks": [
+    {
+      "name": "diagnosis types source exists",
+      "pass": true
+    },
+    {
+      "name": "diagnosis builder source exists",
+      "pass": true
+    },
+    {
+      "name": "diagnosis index exists",
+      "pass": true
+    },
+    {
+      "name": "schema version locked",
+      "pass": true
+    },
+    {
+      "name": "result hash field present",
+      "pass": true
+    },
+    {
+      "name": "assessment identity present",
+      "pass": true
+    },
+    {
+      "name": "company identity present",
+      "pass": true
+    },
+    {
+      "name": "methodology version present",
+      "pass": true
+    },
+    {
+      "name": "methodology bundle hash present",
+      "pass": true
+    },
+    {
+      "name": "runtime snapshot hash present",
+      "pass": true
+    },
+    {
+      "name": "result status typed",
+      "pass": true
+    },
+    {
+      "name": "metric type typed",
+      "pass": true
+    },
+    {
+      "name": "8-module structure supported",
+      "pass": true
+    },
+    {
+      "name": "64-capability structure supported",
+      "pass": true
+    },
+    {
+      "name": "cell evidence summary supported",
+      "pass": true
+    },
+    {
+      "name": "weak cell structure supported",
+      "pass": true
+    },
+    {
+      "name": "strength structure supported",
+      "pass": true
+    },
+    {
+      "name": "root causes exposed",
+      "pass": true
+    },
+    {
+      "name": "business outcomes exposed",
+      "pass": true
+    },
+    {
+      "name": "business outcome priorities exposed",
+      "pass": true
+    },
+    {
+      "name": "quality section exposed",
+      "pass": true
+    },
+    {
+      "name": "trace section exposed",
+      "pass": true
+    },
+    {
+      "name": "compat categories alias typed",
+      "pass": true
+    },
+    {
+      "name": "compat purposes alias typed",
+      "pass": true
+    },
+    {
+      "name": "compat outcome alias typed",
+      "pass": true
+    },
+    {
+      "name": "open contradictions alias typed",
+      "pass": true
+    },
+    {
+      "name": "weakness threshold comes from root cause",
+      "pass": true
+    },
+    {
+      "name": "weak cells capped at 20",
+      "pass": true
+    },
+    {
+      "name": "strengths use report minimum score",
+      "pass": true
+    },
+    {
+      "name": "strengths use report minimum confidence",
+      "pass": true
+    },
+    {
+      "name": "strengths use report minimum coverage",
+      "pass": true
+    },
+    {
+      "name": "N/A excluded from weak cells",
+      "pass": true
+    },
+    {
+      "name": "unknown cells counted separately",
+      "pass": true
+    },
+    {
+      "name": "not-applicable cells counted separately",
+      "pass": true
+    },
+    {
+      "name": "locked cells counted",
+      "pass": true
+    },
+    {
+      "name": "validated cells counted",
+      "pass": true
+    },
+    {
+      "name": "estimated cells counted",
+      "pass": true
+    },
+    {
+      "name": "review-required cells counted",
+      "pass": true
+    },
+    {
+      "name": "hard contradictions surfaced",
+      "pass": true
+    },
+    {
+      "name": "five fixed outcomes built",
+      "pass": true
+    },
+    {
+      "name": "causal lift disabled",
+      "pass": true
+    },
+    {
+      "name": "ROI prediction disabled",
+      "pass": true
+    },
+    {
+      "name": "aggregation lineage retained",
+      "pass": true
+    },
+    {
+      "name": "outcome priority version retained",
+      "pass": true
+    },
+    {
+      "name": "AI generation version retained",
+      "pass": true
+    },
+    {
+      "name": "diagnosis snapshot Prisma model",
+      "pass": true
+    },
+    {
+      "name": "one diagnosis per assessment",
+      "pass": true
+    },
+    {
+      "name": "diagnosis result hash unique",
+      "pass": true
+    },
+    {
+      "name": "diagnosis snapshot JSON persisted",
+      "pass": true
+    },
+    {
+      "name": "assessment relation added",
+      "pass": true
+    },
+    {
+      "name": "migration creates diagnosis table",
+      "pass": true
+    },
+    {
+      "name": "migration unique assessment index",
+      "pass": true
+    },
+    {
+      "name": "report stores diagnosis hash",
+      "pass": true
+    },
+    {
+      "name": "report migration adds diagnosis hash",
+      "pass": true
+    },
+    {
+      "name": "service freezes diagnosis result",
+      "pass": true
+    },
+    {
+      "name": "service verifies frozen snapshot hash",
+      "pass": false
+    },
+    {
+      "name": "service verifies methodology bundle hash",
+      "pass": true
+    },
+    {
+      "name": "service hashes canonical diagnosis",
+      "pass": true
+    },
+    {
+      "name": "service persists diagnosis snapshot",
+      "pass": true
+    },
+    {
+      "name": "service audits diagnosis freeze",
+      "pass": true
+    },
+    {
+      "name": "query results delegate to canonical service",
+      "pass": true
+    },
+    {
+      "name": "report payload bound to diagnosis hash",
+      "pass": true
+    },
+    {
+      "name": "report freeze rejects different diagnosis hash",
+      "pass": true
+    },
+    {
+      "name": "frontend migration type exposes canonical schema",
+      "pass": true
+    }
+  ]
+}

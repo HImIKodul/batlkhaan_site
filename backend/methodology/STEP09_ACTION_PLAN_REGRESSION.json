@@ -1,0 +1,234 @@
+{
+  "suite": "MMRI Step 9/15 365-day action-plan regression",
+  "version": "1.0",
+  "total": 45,
+  "passed": 45,
+  "failed": 0,
+  "results": [
+    {
+      "name": "contract version",
+      "status": "PASS",
+      "detail": "MMRI-ACTION-PLAN-1.0"
+    },
+    {
+      "name": "365 day window",
+      "status": "PASS",
+      "detail": "365"
+    },
+    {
+      "name": "five exact horizons",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "remeasurement H2/H3/H4",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 0 is H0",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 14 is H0",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 15 is H1",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 30 is H1",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 31 is H2",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 91 is H3",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "horizon day 181 is H4",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "execution hard cap <=5",
+      "status": "PASS",
+      "detail": "[\"E1\",\"E2\",\"E3\",\"E4\",\"E5\",\"V1\",\"V2\"]"
+    },
+    {
+      "name": "evidence hard cap <=2",
+      "status": "PASS",
+      "detail": "[\"E1\",\"E2\",\"E3\",\"E4\",\"E5\",\"V1\",\"V2\"]"
+    },
+    {
+      "name": "capacity level 1 active required work never exceeds 1",
+      "status": "PASS",
+      "detail": "{\"H0\":1,\"H1\":1,\"H2\":1,\"H3\":1,\"H4\":1}"
+    },
+    {
+      "name": "capacity plan keeps urgent evidence actions",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "same-finding evidence starts before execution",
+      "status": "PASS",
+      "detail": "H0 -> H1"
+    },
+    {
+      "name": "category prerequisite does not start after dependent",
+      "status": "PASS",
+      "detail": "H2 / H2"
+    },
+    {
+      "name": "dependency uses merged affected scopes",
+      "status": "PASS",
+      "detail": "H2 / H2"
+    },
+    {
+      "name": "execution milestone includes source action text",
+      "status": "PASS",
+      "detail": "Тухайн чадавхад нэг эцсийн хариуцагч болон шатлан шийдвэрлэлт эрхийг албан ёсоор тогтоох. Тухайн ажлын хариуцагч, хамрах хүрээ, суурь түвшин, саад болон эхний шийдвэрийг баталгаажуулах."
+    },
+    {
+      "name": "different interventions have different milestone details",
+      "status": "PASS",
+      "detail": "Тухайн чадавхад нэг эцсийн хариуцагч болон шатлан шийдвэрлэлт эрхийг албан ёсоор тогтоох. Тухайн ажлын хариуцагч, хамрах хүрээ, суурь түвшин, саад болон эхний шийдвэрийг баталгаажуулах. || дэмжигч удирдлагын хянан хэлэлцүүлгийг тогтмолжуулж шийдвэр, нөөц, саад бүрийг арга хэмжээний бүртгэлтэй хаах. Тухайн ажлын хариуцагч, хамрах хүрээ, суурь түвшин, саад болон эхний шийдвэрийг баталгаажуулах."
+    },
+    {
+      "name": "milestone KPI trace preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "milestone owner trace preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "milestone source trace includes milestone id",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "monitor milestones excluded from plan progress",
+      "status": "PASS",
+      "detail": "1"
+    },
+    {
+      "name": "skipped critical milestone is reported",
+      "status": "PASS",
+      "detail": "[\"MS-TXT1-1\"]"
+    },
+    {
+      "name": "skipped critical milestone degrades health",
+      "status": "PASS",
+      "detail": "AT_RISK"
+    },
+    {
+      "name": "unfinished earlier critical milestone becomes overdue",
+      "status": "PASS",
+      "detail": "[\"MS-TXT1-1\"]"
+    },
+    {
+      "name": "all 47 interventions generate five phase rows",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "name": "all 47 intervention plans are action/KPI/deliverable specific",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "name": "capacity 1 active required <= contract",
+      "status": "PASS",
+      "detail": "1/1"
+    },
+    {
+      "name": "capacity 1 high-effort active <= contract",
+      "status": "PASS",
+      "detail": "1/1"
+    },
+    {
+      "name": "capacity 2 active required <= contract",
+      "status": "PASS",
+      "detail": "2/2"
+    },
+    {
+      "name": "capacity 2 high-effort active <= contract",
+      "status": "PASS",
+      "detail": "1/1"
+    },
+    {
+      "name": "capacity 3 active required <= contract",
+      "status": "PASS",
+      "detail": "3/3"
+    },
+    {
+      "name": "capacity 3 high-effort active <= contract",
+      "status": "PASS",
+      "detail": "2/2"
+    },
+    {
+      "name": "capacity 4 active required <= contract",
+      "status": "PASS",
+      "detail": "5/5"
+    },
+    {
+      "name": "capacity 4 high-effort active <= contract",
+      "status": "PASS",
+      "detail": "3/3"
+    },
+    {
+      "name": "capacity 5 active required <= contract",
+      "status": "PASS",
+      "detail": "7/8"
+    },
+    {
+      "name": "capacity 5 high-effort active <= contract",
+      "status": "PASS",
+      "detail": "5/5"
+    },
+    {
+      "name": "milestone ids unique",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "every non-deferred milestone has valid horizon",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "every milestone has deliverable",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "every milestone has KPI",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "every milestone has owner",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all included recommendation IDs represented",
+      "status": "PASS",
+      "detail": "[\"E1\",\"E2\",\"E3\",\"E4\",\"E5\",\"V1\",\"V2\"]"
+    }
+  ]
+}

@@ -98,7 +98,8 @@ backend/methodology/businessmri-v2.1-runtime-bundles/MMRI_*.json
 backend/methodology/businessmri-v2.2-runtime-bundles/MMRI_*.json
 backend/methodology/domain-question-banks*/*.json
 !backend/methodology/domain-question-banks*/manifest-*.json
-backend/integration/final_61440/*.csv
-backend/integration/step6/*.csv
+!backend/methodology/domain-question-banks*/businessmri-aggregation-*.json
+backend/integration/final_61440/MMRI_FINAL_61440_QUESTION_BANK.csv
+backend/integration/step6/MMRI_STEP6_OF_7_QUESTION_ID_RECONCILIATION.csv
 # Contains the owner personal e-mail address: kept on disk, not committed
 RECENT_CHANGE_SUMMARY.txt
