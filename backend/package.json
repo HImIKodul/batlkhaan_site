@@ -15,6 +15,7 @@
     "engine:contract-regression": "npm run engine:typecheck && node scripts/engine-contract-regression.mjs",
     "engine:verify": "npm run engine:typecheck && node scripts/engine-core-smoke.mjs && node scripts/engine-contract-regression.mjs",
     "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.production.json",
     "test": "vitest run",
     "api:dev": "tsx src/api/server.ts",
     "api:static-check": "node scripts/api-static-check.mjs",
