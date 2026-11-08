@@ -35,7 +35,7 @@ function ReauthModal({onDone,onCancel}:{onDone:(ok:boolean)=>void;onCancel:()=>v
 function Login({onLoggedIn}:{onLoggedIn:()=>void}){
  const [email,setEmail]=useState('');const [pw,setPw]=useState('');const [code,setCode]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);
  const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{const r=await adminApi.login(email.trim(),pw,code.replace(/\s/g,''));adminSession.token=r.token;setPw('');setCode('');onLoggedIn()}catch(x){setErr((x as AdminApiError).status===429?'Хэт олон буруу оролдлого. Түр хүлээгээд дахин оролдоно уу.':'Нэвтрэх мэдээлэл буруу байна.')}finally{setBusy(false)}};
- return <main className="adm-login"><form className="adm-login__card" onSubmit={submit}><div className="adm-login__brand">BUSINESSMMRI.MN</div><h1 data-route-heading tabIndex={-1}>Удирдлагын төв</h1><p>Зөвхөн эрх бүхий администраторт.</p>
+ return <main className="adm-login"><form className="adm-login__card" onSubmit={submit}><div className="adm-login__brand">BUSINESSMRI.MN</div><h1 data-route-heading tabIndex={-1}>Удирдлагын төв</h1><p>Зөвхөн эрх бүхий администраторт.</p>
   <label>Имэйл<input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
   <label>Нууц үг<input type="password" autoComplete="current-password" value={pw} onChange={e=>setPw(e.target.value)} required/></label>
   <label>MFA код<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" placeholder="000000" value={code} onChange={e=>setCode(e.target.value)} required/></label>

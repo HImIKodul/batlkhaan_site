@@ -46,7 +46,7 @@ shell_css=(F/'components/shell.css').read_text(encoding='utf-8')
 
 hero='Бизнесийнхээ хүчтэй, сул талыг мэдэж, дараагийн 12 сард юу хийхээ тодорхой болго.'
 sub='Аль чиглэл хүчтэй, аль нь сул байгааг тодорхойлж, дараагийн 12 сард яг юу хийхээ харуулсан төлөвлөгөөтэй тайлан авна.'
-labels=['BusinessMMRI.mn гэж юу вэ?','Оношилгооны тайлангаар юу харах вэ?','Хэрхэн оношилгоо хийлгэх вэ?']
+labels=['BusinessMRI.mn гэж юу вэ?','Оношилгооны тайлангаар юу харах вэ?','Хэрхэн оношилгоо хийлгэх вэ?']
 check('homepage hero copy (2026-10-30 brief)','Бизнесийнхээ бодит дүр зургийг хар.' in landing and 'Дараагийн 12 сарынхаа зөв алхмыг тодорхойл.' in landing)
 check('homepage has a single hero heading',sub not in landing and landing.count('<h1')==1)
 check('three exact guide labels (result + payment guides merged)',all(x in landing for x in labels) and 'Оношилгооны үр дүн юу вэ?' not in landing and landing.count("{id:'")==3 and "'result'" not in landing)

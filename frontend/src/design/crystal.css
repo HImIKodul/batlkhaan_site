@@ -64,7 +64,7 @@ body.mmri-prism-page .mmri-home2__stage{gap:clamp(24px,4vh,42px)}
 body.mmri-prism-page .mmri-home2__copy h1{letter-spacing:-.035em;line-height:1.1;color:#061631}
 body.mmri-prism-page .mmri-home2__copy h1 em{font-weight:500;line-height:1.45;letter-spacing:-.015em}
 /* Guide slabs: the same glass as the sheet (shared overlay + frost field + rim + floor shadow), strongly tinted per guide by --g1/--g2/--gg. The control never moves. */
-body.mmri-prism-page .mmri-home2__guide{--g1:#c4dbff;--g2:#6f97ee;--gg:#8db3ff;position:relative;isolation:isolate;color:#0a2358;border:1px solid #ffffffd9;backdrop-filter:none;-webkit-backdrop-filter:none;
+body.mmri-prism-page .mmri-home2__guide{--g1:#a9c4ff;--g2:#5a7cea;--gg:#7f9fff;position:relative;isolation:isolate;color:#0a2358;border:1px solid #ffffffd9;backdrop-filter:none;-webkit-backdrop-filter:none;
  background:linear-gradient(180deg,rgba(255,255,255,.26) 0,rgba(255,255,255,.04) 44%,transparent 46%),radial-gradient(90% 130% at 10% 0,color-mix(in srgb,var(--g1) 92%,#fff),transparent 62%),linear-gradient(155deg,var(--g1),color-mix(in srgb,var(--g1) 45%,var(--g2)) 40%,var(--g2)),var(--gl-frost);
  box-shadow:inset 0 2px 0 #ffffffe6,inset 0 0 0 1px color-mix(in srgb,var(--g1) 45%,#fff),inset 0 -16px 26px -12px color-mix(in srgb,var(--g1) 75%,#fff),0 0 40px 2px color-mix(in srgb,var(--gg) 70%,transparent),1px 2px 0 color-mix(in srgb,var(--g1) 60%,#fff),3px 5px 0 var(--g2),7px 16px 20px -8px #0a2a8a99,0 36px 44px -22px color-mix(in srgb,var(--gg) 80%,transparent)}
 body.mmri-prism-page .mmri-home2__guide::before{content:"";position:absolute;inset:1px;z-index:-1;pointer-events:none;border-radius:inherit;background:linear-gradient(112deg,#fff3,transparent 19% 75%,#ffffff2e 76%,transparent 77%)}
@@ -97,7 +97,11 @@ body.mmri-prism-page .mmri-questionnaire__top .mmri-save-status--saved{color:#bf
 body.mmri-prism-page .mmri-questionnaire__top .mmri-save-status--error{color:#ffe1e6}
 body.mmri-prism-page .mmri-radio-group .mmri-radio-card{border-radius:18px;box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 color-mix(in srgb,var(--ac) 35%,transparent),0 3px 6px -3px #001b3c80}
 body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected{box-shadow:inset 0 1px 0 #fff,0 0 0 2px var(--ac),0 0 0 4px #dbffffb3,0 5px 9px -3px #00233380}
-body.mmri-prism-page .mmri-guide2__panel{background:radial-gradient(70% 45% at 6% 0,#ffffffb0,transparent 62%),linear-gradient(135deg,#bdd5fff7,#9bbffff3 46%,#aaa6f5f0);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:var(--cr-polish),2px 4px 0 #c9dcff,4px 7px 0 #6d92e0,var(--cr-contact),18px 35px 50px -12px #0a1f6a99}
+body.mmri-prism-page .mmri-guide2__panel{
+ /* chromatic periwinkle-sapphire glass that stays coloured with every backdrop effect off: directional white reflections, cobalt depth at the bottom/right, thick bright edge, floating shadow */
+ background:linear-gradient(118deg,rgba(255,255,255,.62) 0 6%,rgba(255,255,255,.14) 7% 20%,transparent 21% 58%,rgba(255,255,255,.2) 59% 61%,transparent 62%),radial-gradient(75% 50% at 0 0,rgba(255,255,255,.5),transparent 62%),radial-gradient(60% 55% at 100% 100%,rgba(70,64,214,.55),transparent 72%),linear-gradient(150deg,#b9ccff 0%,#8fa9ff 34%,#7592f6 68%,#7d7cee 100%);
+ backdrop-filter:none;-webkit-backdrop-filter:none;
+ box-shadow:inset 0 2px 0 #fff,inset 2px 0 0 rgba(255,255,255,.55),inset 0 0 0 1px rgba(214,226,255,.65),inset -2px -3px 0 rgba(58,78,210,.55),inset 0 -36px 56px -34px rgba(48,60,200,.6),2px 3px 0 #dbe6ff,4px 6px 0 #6f8cf0,6px 9px 0 #3f58cf,0 4px 8px rgba(8,20,110,.3),0 36px 56px -22px rgba(10,24,130,.75)}
 body.mmri-prism-page .mmri-guide2__panel::before{opacity:.65;padding:1.5px}
 body.mmri-prism-page .mmri-guide2__panel::after{background:linear-gradient(118deg,#d8f9ff20,transparent 27% 80%,#b79cff15);pointer-events:none}
 body.mmri-prism-page .account-payment-history>section>article{background:linear-gradient(110deg,#dff7ffba,#91c6e6a6);box-shadow:var(--cr-polish),var(--cr-contact)}
@@ -206,10 +210,19 @@ html[data-domain="marketing"] .mmri-shell-aurora i[data-d="marketing"],html[data
    (the sheet behind it is a baked opaque image, so the blur only costs raster time and changes nothing visible). */
 body.mmri-prism-page .mmri-shell-main *,body.mmri-prism-page .mmri-shell-main *::before,body.mmri-prism-page .mmri-shell-main *::after{backdrop-filter:none;-webkit-backdrop-filter:none}
 
-@property --rim-dom{syntax:"<color>";inherits:false;initial-value:#5BE3FF}
-body.mmri-prism-page .mmri-shell::after{--rim-dom:var(--dom-t);transition:--rim-dom 2.2s cubic-bezier(.22,1,.36,1);background:linear-gradient(135deg,#fff 0,color-mix(in srgb,var(--rim-dom) 80%,#fff) 18%,rgba(255,255,255,.12) 44%,color-mix(in srgb,var(--rim-dom) 70%,#6a4cff) 70%,color-mix(in srgb,var(--rim-dom) 40%,#fff) 88%,#fff 100%)}
-/* Sheet thickness + glow now follow the category colour (they were fixed cyan/violet, which left a blue halo around every category scene) and the 90-120px blurs are gone. */
-body.mmri-prism-page .mmri-shell::before{--rim-dom:var(--dom-t);transition:--rim-dom 2.2s cubic-bezier(.22,1,.36,1);
- box-shadow:inset 0 2px 0 rgba(255,255,255,.98),inset 2px 0 0 rgba(255,255,255,.55),inset -2px 0 0 color-mix(in srgb,var(--rim-dom) 65%,#fff),inset 0 -3px 0 color-mix(in srgb,var(--rim-dom) 60%,#000),inset 0 -2px 0 color-mix(in srgb,var(--rim-dom) 22%,#fff),inset 0 -26px 40px -22px color-mix(in srgb,var(--rim-dom) 70%,transparent),
- 1px 1px 0 color-mix(in srgb,var(--rim-dom) 12%,#fff),2px 2px 0 color-mix(in srgb,var(--rim-dom) 35%,#fff),3px 3px 0 color-mix(in srgb,var(--rim-dom) 62%,#fff),4px 4px 0 var(--rim-dom),5px 5px 0 color-mix(in srgb,var(--rim-dom) 80%,#000),6px 6px 0 color-mix(in srgb,var(--rim-dom) 62%,#000),7px 7px 0 color-mix(in srgb,var(--rim-dom) 48%,#000),
- 0 2px 3px rgba(3,10,70,.35),0 24px 36px -14px color-mix(in srgb,var(--rim-dom) 45%,#020a40),0 0 0 1px color-mix(in srgb,var(--rim-dom) 55%,#fff),0 0 36px 4px color-mix(in srgb,var(--rim-dom) 60%,transparent)}
+/* Sheet thickness, glow and edge follow the category colour WITHOUT animating any shadow or gradient: six static rim layers (neutral + five categories) cross-fade by opacity only
+   (animating box-shadow / a registered colour on the page-tall sheet cost 50 ms per frame on a real GPU; opacity costs nothing). */
+body.mmri-prism-page .mmri-shell::before{box-shadow:none}
+body.mmri-prism-page .mmri-shell::after{display:none}
+.mmri-shell-rims{position:absolute;z-index:-1;inset:22px clamp(14px,3vw,48px) 22px;border-radius:40px;pointer-events:none}
+.mmri-shell-rims i{--rc:#5BE3FF;position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity 2.2s cubic-bezier(.22,1,.36,1);
+ box-shadow:inset 0 2px 0 rgba(255,255,255,.98),inset 2px 0 0 rgba(255,255,255,.55),inset -2px 0 0 color-mix(in srgb,var(--rc) 65%,#fff),inset 0 -3px 0 color-mix(in srgb,var(--rc) 60%,#000),inset 0 -2px 0 color-mix(in srgb,var(--rc) 22%,#fff),inset 0 -26px 40px -22px color-mix(in srgb,var(--rc) 70%,transparent),
+ 1px 1px 0 color-mix(in srgb,var(--rc) 12%,#fff),2px 2px 0 color-mix(in srgb,var(--rc) 35%,#fff),3px 3px 0 color-mix(in srgb,var(--rc) 62%,#fff),4px 4px 0 var(--rc),5px 5px 0 color-mix(in srgb,var(--rc) 80%,#000),6px 6px 0 color-mix(in srgb,var(--rc) 62%,#000),7px 7px 0 color-mix(in srgb,var(--rc) 48%,#000),
+ 0 2px 3px rgba(3,10,70,.35),0 24px 36px -14px color-mix(in srgb,var(--rc) 45%,#020a40),0 0 0 1px color-mix(in srgb,var(--rc) 55%,#fff),0 0 36px 4px color-mix(in srgb,var(--rc) 60%,transparent)}
+.mmri-shell-rims i::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,#fff 0,color-mix(in srgb,var(--rc) 80%,#fff) 18%,rgba(255,255,255,.12) 44%,color-mix(in srgb,var(--rc) 70%,#6a4cff) 70%,color-mix(in srgb,var(--rc) 40%,#fff) 88%,#fff 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.mmri-shell-rims i[data-d="neutral"]{opacity:1}
+.mmri-shell-rims i[data-d="marketing"]{--rc:var(--mmri-domain-marketing)}.mmri-shell-rims i[data-d="it"]{--rc:var(--mmri-domain-it)}.mmri-shell-rims i[data-d="finance"]{--rc:var(--mmri-domain-finance)}.mmri-shell-rims i[data-d="people"]{--rc:var(--mmri-domain-people)}.mmri-shell-rims i[data-d="operations"]{--rc:var(--mmri-domain-operations)}
+html[data-domain] .mmri-shell-rims i[data-d="neutral"]{opacity:0}
+html[data-domain="marketing"] .mmri-shell-rims i[data-d="marketing"],html[data-domain="it"] .mmri-shell-rims i[data-d="it"],html[data-domain="finance"] .mmri-shell-rims i[data-d="finance"],html[data-domain="people"] .mmri-shell-rims i[data-d="people"],html[data-domain="operations"] .mmri-shell-rims i[data-d="operations"]{opacity:1}
+@media (max-width:767px){.mmri-shell-rims{inset:8px 6px 8px;border-radius:28px}}
+@media (prefers-reduced-motion:reduce){.mmri-shell-rims i{transition-duration:.01ms}}

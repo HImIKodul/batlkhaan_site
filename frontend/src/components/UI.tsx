@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { RimSheen } from './RimSheen';
 import { createPortal } from 'react-dom';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -259,7 +258,6 @@ export function RadioGroup({ name, value, onValueChange, onDeselect, options, la
             {option.prefix != null && <span className="mmri-radio-card__prefix" aria-hidden="true">{option.prefix}</span>}
             <span className="mmri-radio-card__copy"><strong>{option.label}</strong>{option.description && <small>{option.description}</small>}</span>
             <span className="mmri-radio-card__mark" aria-hidden="true" />
-            {checked&&!option.disabled&&<RimSheen className="mmri-radio-card__shine"/>}
           </label>
         );
       })}

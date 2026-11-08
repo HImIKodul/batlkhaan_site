@@ -5,7 +5,7 @@ import { type BusinessAreaId } from '../data/businessEvaluation';
 
 const areaOrder:BusinessAreaId[]=['marketing','it','finance','people','operations'];
 
-/* ---------- Guide 1: BusinessMMRI.mn гэж юу вэ? ---------- */
+/* ---------- Guide 1: BusinessMRI.mn гэж юу вэ? ---------- */
 /* 320 = 5 domains x 64 capabilities and 61,440 = 5 x 12,288 questions are the validated frozen-bank counts; 192-280 is the adaptive
    QUICK range enforced by the backend (soft minimum 192, hard maximum 280). */
 const metrics:{value:string;label:string}[]=[
@@ -217,7 +217,7 @@ export function HowToGuide(){
   return()=>document.removeEventListener('keydown',onKey);
  },[]);
  const total=walkSteps.length;
- const compact=useMedia(pagedQuery);const [view,setView]=useState<'text'|'shot'>('text');
+ const compact=useMedia(pagedQuery);
  return <div className="mmri-guide2__howto" data-compact={compact||undefined}>
   <section className="mmri-guide2__walk" aria-roledescription="Алхам алхмаар заавар" aria-label="Оношилгоо хийлгэх алхмууд">
    <ol className="mmri-guide2__track" data-walk-nav aria-label="Алхмууд">
@@ -236,19 +236,16 @@ export function HowToGuide(){
       <button type="button" className="mmri-guide2__nav-btn is-primary" onClick={()=>go(index+1)} disabled={index===last}>Дараах<Icon name="arrow" size={18}/></button>
      </div>
     </div>
-    {compact&&!step.noShot&&<div className="mmri-guide2__views" role="tablist" aria-label="Алхмын агуулга">
-     <button type="button" role="tab" aria-selected={view==='text'} className={`mmri-guide2__view${view==='text'?' is-active':''}`} onClick={()=>setView('text')}>Тайлбар</button>
-     <button type="button" role="tab" aria-selected={view==='shot'} className={`mmri-guide2__view${view==='shot'?' is-active':''}`} onClick={()=>setView('shot')}>Дэлгэцийн зураг</button>
-    </div>}
+    
     <div className="mmri-guide2__walk-body" key={index}>
-     {(!compact||view==='text'||step.noShot)&&<div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>}
-     {!step.noShot&&(!compact||view==='shot')&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
-      {!compact&&<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>}
+     <div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>
+     {!step.noShot&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
+      {!compact&&<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>}
       <div className="mmri-guide2__phone"><img src={shotSrc(step.shot,'m')} alt={`${step.alt} (гар утасны харагдац)`} width={390} height={844} decoding="async"/></div>
      </figure>}
     </div>
    </div>
-   {(!compact||view==='text'||step.noShot)&&<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
+   {index===last&&<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
     <p>Төлбөр нь зөвхөн сонгосон чиглэлийн оношилгоонд хамаарна. Өөр чиглэл сонгох эсвэл дахин оношилгоо хийх бүрд 300,000 төгрөгийн төлбөр төлж, шинэ тайлан үүсэхийг анхаарна уу.</p></aside>}
   </section>
  </div>;

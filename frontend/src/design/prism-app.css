@@ -330,7 +330,7 @@ body.mmri-prism-page .mmri-guide2__panel::before{padding:2.5px;background:linear
 body.mmri-prism-page .mmri-guide2__panel::after{background:linear-gradient(112deg,rgba(255,255,255,0) 18%,rgba(255,255,255,.2) 28%,rgba(255,255,255,0) 40%),linear-gradient(180deg,rgba(255,255,255,.16),transparent 16%)}
 /* inner cards: lighter than the modal, real glass depth (top light, soft base shade, contact shadow); no luminous outline on every card */
 body.mmri-prism-page .mmri-guide2__card::before{display:none}
-body.mmri-prism-page .mmri-guide2__card,body.mmri-prism-page .mmri-guide2__notice{border:1px solid rgba(255,255,255,.92);background:radial-gradient(90% 60% at 10% 0,rgba(255,255,255,.7),transparent 70%),linear-gradient(165deg,rgba(255,255,255,.95),rgba(224,237,255,.88));
+body.mmri-prism-page .mmri-guide2__card,body.mmri-prism-page .mmri-guide2__notice{border:1px solid rgba(255,255,255,.92);background:radial-gradient(90% 60% at 10% 0,rgba(255,255,255,.65),transparent 70%),linear-gradient(165deg,rgba(255,255,255,.9),rgba(206,220,255,.84));
  box-shadow:inset 0 2px 0 #fff,inset 0 -3px 6px -2px rgba(110,130,230,.4),0 2px 3px rgba(8,8,70,.3),0 18px 28px -14px rgba(6,8,80,.65)}
 body.mmri-prism-page .mmri-guide2__counter em{color:#1d3b80}
 body.mmri-prism-page .mmri-guide2__header :is(h2,p,strong,b){color:#08205a}

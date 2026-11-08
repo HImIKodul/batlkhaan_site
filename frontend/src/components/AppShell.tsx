@@ -224,10 +224,10 @@ export function ShellHeader({route}:{route:RouteName}){
  return <header className={`mmri-shell-header ${loggedIn?'is-authenticated':'is-public'}`} ref={headerRef}>
   <div className="mmri-shell-inner">
    <span className="mmri-shell-glint" aria-hidden="true"><i/></span>
-   <a className="mmri-brand" href="#/" onClick={closeMenus} aria-label="BUSINESSMMRI.MN - Нүүр">
+   <a className="mmri-brand" href="#/" onClick={closeMenus} aria-label="BUSINESSMRI.MN - Нүүр">
     <span className="mmri-brand-mark" aria-hidden="true"><Icon name="logo" size={22}/></span>
     <span className="mmri-brand-copy">
-     <strong>BUSINESSMMRI.MN</strong>
+     <strong>BUSINESSMRI.MN</strong>
     </span>
    </a>
 
@@ -301,11 +301,12 @@ export function AppShell({route,children}:{route:RouteName;children:React.ReactN
 
  return <div className={`app-shell mmri-shell ${loggedIn?'is-authenticated':'is-public'} ${domainId?'has-domain-theme':''}`} data-mmri-domain={domainId||undefined} data-route={route}>
   <span className="mmri-shell-aurora" aria-hidden="true">{DOMAIN_IDS.map(d=><i key={d} data-d={d}/>)}</span>
+  <span className="mmri-shell-rims" aria-hidden="true">{['neutral',...DOMAIN_IDS].map(d=><i key={d} data-d={d}/>)}</span>
   <a className="mmri-skip-link" href="#main-content">Үндсэн агуулга руу шилжих</a>
   <ShellHeader route={route}/>
   {!online&&<div className="mmri-offline-banner" role="status"><Icon name="offline" size={18}/><div><b>Сүлжээний холболт тасарсан</b><span>Баталгаажаагүй өөрчлөлтийг хадгалагдсан гэж үзэхгүй.</span></div></div>}
   <main id="main-content" className="mmri-shell-main" tabIndex={-1}>{children}</main>
-  <footer className="mmri-legal-footer" aria-label="Хууль зүйн холбоосууд"><span>© BusinessMMRI.mn</span><nav aria-label="Хууль зүй"><a href="#/privacy">Нууцлалын бодлого</a><a href="#/terms">Үйлчилгээний нөхцөл</a></nav><small>Хуулийн хяналт хүлээгдэж буй төсөл</small></footer>
+  <footer className="mmri-legal-footer" aria-label="Хууль зүйн холбоосууд"><span>© BusinessMRI.mn</span><nav aria-label="Хууль зүй"><a href="#/privacy">Нууцлалын бодлого</a><a href="#/terms">Үйлчилгээний нөхцөл</a></nav><small>Хуулийн хяналт хүлээгдэж буй төсөл</small></footer>
   {loggedIn&&<nav className="mmri-bottom-nav" aria-label="Мобайл үндсэн цэс">
    {primaryNav.map(([target,label])=>{
     const active=mainActive(route,target);

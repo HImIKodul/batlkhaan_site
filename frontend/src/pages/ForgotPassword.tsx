@@ -12,7 +12,7 @@ export default function ForgotPassword(){
  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
  const submit=async()=>{if(!emailOk){setError('Зөв имэйл хаяг оруулна уу.');return}setError('');setBusy(true);try{await api.requestPasswordReset(email.trim());setSent(true)}catch(e:any){setError(e?.status===429?'Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу.':'Хүсэлт илгээж чадсангүй. Дахин оролдоно уу.')}finally{setBusy(false)}};
  return <div className="auth">
-  <a className="auth__brand" href={routeHref('home')} aria-label="BUSINESSMMRI.MN - Нүүр">BUSINESSMMRI.MN</a>
+  <a className="auth__brand" href={routeHref('home')} aria-label="BUSINESSMRI.MN - Нүүр">BUSINESSMRI.MN</a>
   <PageContainer className="auth__layout auth__layout--single">
    <Card className="auth__card mmri-glass mmri-glass--strong" tone="focal">
     <h1 className="auth__card-title" tabIndex={-1} data-route-heading>Нууц үг сэргээх</h1>

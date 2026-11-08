@@ -1,7 +1,6 @@
 import React,{useEffect,useLayoutEffect,useRef} from 'react';
 import { Megaphone,Cpu,Landmark,UsersRound,Factory } from 'lucide-react';
 import { Icon } from './Icon';
-import { RimSheen } from './RimSheen';
 import { setDomainTheme } from '../design/domainTheme';
 
 /**
@@ -18,10 +17,7 @@ const AREAS=[
  {id:'people',Icon:UsersRound,label:'Хүний нөөц'},
  {id:'operations',Icon:Factory,label:'Үйлдвэрлэл ба үйл ажиллагаа'},
 ] as const;
-const CX=50,CY=52,R=35;
-const vertex=(i:number,r:number)=>{const a=i*72*Math.PI/180;return [CX+r*Math.sin(a),CY-r*Math.cos(a)] as const};
-const ring=(k:number)=>Array.from({length:5},(_,i)=>vertex(i,R*k).map(n=>n.toFixed(1)).join(',')).join(' ');
-const MAX_TILT=7;
+const MAX_TILT=9;
 
 function holeMask(w:number,h:number,x:number,y:number,ww:number,wh:number,r:number){
  const d=`M0 0H${w}V${h}H0Z M${x+r} ${y}H${x+ww-r}A${r} ${r} 0 0 1 ${x+ww} ${y+r}V${y+wh-r}A${r} ${r} 0 0 1 ${x+ww-r} ${y+wh}H${x+r}A${r} ${r} 0 0 1 ${x} ${y+wh-r}V${y+r}A${r} ${r} 0 0 1 ${x+r} ${y}Z`;
@@ -51,46 +47,40 @@ export default function HeroCrystal(){
   return()=>{ro.disconnect();window.removeEventListener('resize',apply);shell.classList.remove('has-hx-hole');shell.style.removeProperty('--hx-hole')};
  },[]);
 
- /* pointer tilt + nearest-vertex highlight (mouse only, rAF-damped, capped). The hot vertex also eases the page atmosphere to that area's colour. */
+ /* pointer tilt (mouse only, rAF-damped, capped) + face hover: the face under the pointer sets the page's category atmosphere */
+ const label=useRef<HTMLSpanElement>(null);
  useEffect(()=>{
   const el=root.current;if(!el)return;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||!window.matchMedia('(hover:hover) and (pointer:fine)').matches)return;
   let tx=0,ty=0,cx=0,cy=0,raf=0,hot=-1;
   const tick=()=>{cx+=(tx-cx)*.1;cy+=(ty-cy)*.1;el.style.setProperty('--tx',cx.toFixed(2));el.style.setProperty('--ty',cy.toFixed(2));raf=(Math.abs(tx-cx)>.01||Math.abs(ty-cy)>.01)?requestAnimationFrame(tick):0};
   const kick=()=>{if(!raf)raf=requestAnimationFrame(tick)};
-  const setHot=(i:number)=>{if(i===hot)return;hot=i;if(i<0){el.removeAttribute('data-hot');setDomainTheme(null)}else{el.dataset.hot=String(i);setDomainTheme(AREAS[i].id)}};
+  const setHot=(i:number)=>{if(i===hot)return;hot=i;if(i<0){el.removeAttribute('data-hot');setDomainTheme(null);if(label.current)label.current.textContent=''}else{el.dataset.hot=String(i);setDomainTheme(AREAS[i].id);if(label.current)label.current.textContent=AREAS[i].label}};
   const move=(e:PointerEvent)=>{
    const r=el.getBoundingClientRect();
    tx=Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width-.5)*2))*MAX_TILT;ty=Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height-.5)*2))*MAX_TILT;kick();
-   const w=slot.current?.getBoundingClientRect();if(!w)return;
-   let best=-1,bd=Infinity;
-   AREAS.forEach((_,i)=>{const [vx,vy]=vertex(i,R);const d=Math.hypot(e.clientX-(w.left+vx/100*w.width),e.clientY-(w.top+vy/100*w.height));if(d<bd){bd=d;best=i}});
-   setHot(bd<w.width*.2?best:-1);
+   const f=(e.target as Element|null)?.closest<HTMLElement>('.hx__face');setHot(f?Number(f.dataset.i):-1);
   };
   const leave=()=>{tx=0;ty=0;kick();setHot(-1)};
   el.addEventListener('pointermove',move,{passive:true});el.addEventListener('pointerleave',leave);
   return()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerleave',leave);cancelAnimationFrame(raf);setDomainTheme(null)};
  },[]);
 
- return <div ref={root} className="hx" role="img" aria-label={`MMRI оношилгооны таван чиглэл: ${AREAS.map(a=>a.label).join(', ')}`}>
+ return <div ref={root} className="hx" role="img" aria-label={`MMRI оношилгооны таван чиглэл (${AREAS.map(a=>a.label).join(', ')}) нэг тайланд нэгдэнэ`}>
   <div className="hx__plates" aria-hidden="true">
-   {[3,2,1].map(n=><div key={n} className={`hx__plate is-${n}`}><RimSheen/><b/><b/><b/></div>)}
+   {[3,2,1].map(n=><div key={n} className={`hx__plate is-${n}`}><b/><b/><b/></div>)}
   </div>
   <div ref={slot} className="hx__slot" aria-hidden="true">
    <div className="hx__window">
-    <RimSheen/>
-    <span className="hx__shine"/>
-    <svg className="hx__pent" viewBox="0 0 100 100" focusable="false">
-     <defs><linearGradient id="hx-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#9ff3ff"/><stop offset=".55" stopColor="#4f9dff"/><stop offset="1" stopColor="#a780ff"/></linearGradient></defs>
-     <polygon className="is-depth2" points={ring(1)} transform="translate(0 3.6)"/>
-     <polygon className="is-depth1" points={ring(1)} transform="translate(0 1.8)"/>
-     {[1,.72,.44].map((k,i)=><polygon key={k} points={ring(k)} className={i===0?'is-outer':''}/>)}
-     {AREAS.map((_,i)=>{const [x,y]=vertex(i,R);return <line key={i} x1={CX} y1={CY} x2={x.toFixed(1)} y2={y.toFixed(1)}/>})}
-    </svg>
-    <div className="hx__nodes">
-     {AREAS.map((a,i)=>{const [x,y]=vertex(i,R);const I=a.Icon;return <i key={a.id} className="hx__node" style={{left:`${x}%`,top:`${y}%`,'--c':`var(--mmri-domain-${a.id})`,'--bob':`${5+i*1.3}s`} as React.CSSProperties}><I size="100%" strokeWidth={1.9}/><em>{a.label}</em></i>})}
+    <div className="hx__scene">
+     <div className="hx__floor"/>
+     <div className="hx__prism">
+      <i className="hx__cap is-bottom"/>
+      {AREAS.map((a,i)=>{const I=a.Icon;return <div key={a.id} className="hx__face" data-i={i} style={{'--i':i,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}><span className="hx__face-icon"><I size="100%" strokeWidth={1.9}/></span></div>})}
+      <i className="hx__cap is-top"><Icon name="logo" size={30}/></i>
+     </div>
     </div>
-    <span className="hx__core"><Icon name="logo" size={30}/></span>
+    <span ref={label} className="hx__label"/>
    </div>
   </div>
  </div>;

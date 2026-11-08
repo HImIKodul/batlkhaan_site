@@ -16,7 +16,7 @@ export default function ResetPassword(){
   try{await api.confirmPasswordReset(token,password);setDone(true);window.history.replaceState(null,'',window.location.pathname+'#/reset-password')}
   catch(e:any){setError(e instanceof ApiError&&e.code==='WEAK_PASSWORD'?'Нууц үг 10-аас 128 тэмдэгт байх ёстой.':e?.status===429?'Хэт олон оролдлого. Түр хүлээгээд дахин оролдоно уу.':'Нууц үг сэргээх холбоос хүчингүй эсвэл хугацаа нь дууссан байна. Шинэ холбоос авна уу.')}finally{setBusy(false)}};
  return <div className="auth">
-  <a className="auth__brand" href={routeHref('home')} aria-label="BUSINESSMMRI.MN - Нүүр">BUSINESSMMRI.MN</a>
+  <a className="auth__brand" href={routeHref('home')} aria-label="BUSINESSMRI.MN - Нүүр">BUSINESSMRI.MN</a>
   <PageContainer className="auth__layout auth__layout--single">
    <Card className="auth__card mmri-glass mmri-glass--strong" tone="focal">
     <h1 className="auth__card-title" tabIndex={-1} data-route-heading>Шинэ нууц үг тогтоох</h1>
