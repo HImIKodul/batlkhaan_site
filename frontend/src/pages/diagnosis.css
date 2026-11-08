@@ -22,6 +22,7 @@ html body .mmri-shell-main:has(.diagnosis-square-page){margin-inline:clamp(10px,
 .diagnosis-square__meta b{font-variant-numeric:tabular-nums;font-weight:700}
 /* CTA on the colour surface: quiet translucent control (secondary level), clearer edge on hover. */
 .diagnosis-square .mmri-button{align-self:end;margin-top:0;min-height:44px;padding-inline:10px;white-space:nowrap;font-size:clamp(11.5px,1.1vw,14px);font-weight:650;letter-spacing:.04em}
+body.mmri-prism-page .diagnosis-square.cat-tile .mmri-button--primary{--btn-a:#22B9FF;--btn-b:#007BFA;--btn-c:#0052D2}/* reference 03: every card action stays vivid sapphire whichever domain themes the page */
 .diagnosis-pay-button b{letter-spacing:.04em}
 
 /* Selected domain: backdrop is already the domain environment; the sheet is see-through glass. */
