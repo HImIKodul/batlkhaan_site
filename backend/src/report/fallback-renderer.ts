@@ -61,7 +61,9 @@ function conclusionText(payload:FrozenReportPayload):{text:string;sources:string
   let text=compose();
   /* last resort for extreme input: drop trailing sentences (never the first) until the limit holds; trace binding lives in claim metadata, not in the text */
   if(wc(text)>160){const sentences=text.split(/(?<=[.!?])\s+/);while(sentences.length>1&&wc(sentences.join(" "))>160)sentences.pop();text=sentences.join(" ")}
-  const sources=unique([`assessment:${payload.assessmentId}`,...(action?.sourceTraceIds||[]),...strengths.flatMap(x=>x.sourceTraceIds),...weaknesses.flatMap(x=>x.sourceTraceIds),...roots.flatMap(x=>x.sourceTraceIds)]).slice(0,12);
+  const sources=unique([`assessment:${payload.assessmentId}`,...(action?.sourceTraceIds||[]),...strengths.flatMap(x=>x.sourceTraceIds),...weaknesses.flatMap(x=>x.sourceTraceIds),...roots.flatMap(x=>x.sourceTraceIds)]);
+  /* No cap: every capability the text names must have its trace ids bound (validator V02 blocks a named number that is not grounded). A previous slice(0,12) silently dropped
+     the later weaknesses whenever the action did not overlap them, which blocked report generation for such data. */
   /* The validator (V28) rejects avoidable English management terms in the executive conclusion. Capability, action and KPI names come from frozen methodology
      data and may contain them, so the conclusion falls back to neutral wording (no names, no action title, no KPI) instead of failing the whole report. */
   const foreign=/\b(?:KPI|dashboard|workflow|review|performance|benchmark|ROI|CRM|ERP|OKR|SLA)\b/i;
