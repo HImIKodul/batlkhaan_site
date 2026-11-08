@@ -7,6 +7,7 @@ import HeroCrystal from '../components/HeroCrystal';
 import { session } from '../api/client';
 import { AboutGuide,ReportGuide,HowToGuide } from './HomeGuides';
 import { RimSheen } from '../components/RimSheen';
+import { setDomainTheme } from '../design/domainTheme';
 
 type GuideId='about'|'report'|'howto';
 type Guide={id:GuideId;title:string;short:string;intro:React.ReactNode};
@@ -64,6 +65,8 @@ export default function Landing(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){setOpen(null);return}
   setClosing(true);window.setTimeout(()=>{setOpen(null);setClosing(false)},240);
  };
+ /* an open guide moves the page atmosphere quietly to its own tint (never on hover) */
+ useEffect(()=>{setDomainTheme(open?({about:'it',report:'people',howto:'operations'} as const)[open]:null);return()=>setDomainTheme(null)},[open]);
  const guide=guides.find(g=>g.id===open);
  const startDiagnosis=()=>go(loggedIn?'analysis':'login');
  return <AppShell route="home"><div className="mmri-home2">
@@ -71,7 +74,7 @@ export default function Landing(){
    <section className="mmri-home2__hero" aria-labelledby="mmri-home2-title">
     <div className="mmri-home2__copy">
      <h1 id="mmri-home2-title" data-route-heading tabIndex={-1}><span>Бизнесийнхээ бодит дүр зургийг хар.</span> <em>Дараагийн 12 сарынхаа зөв алхмыг тодорхойл.</em></h1>
-     <button type="button" className="mmri-home2__start" data-sheen onClick={startDiagnosis}><span>ОНОШИЛГОО ЭХЛҮҮЛЭХ</span><i className="mmri-home2__start-chip"><Icon name="arrow" size={18}/></i></button>
+     <button type="button" className="mmri-home2__start" data-sheen onClick={startDiagnosis}><span className="mmri-shell-glint mmri-btn-glint" aria-hidden="true"><i/></span><span>ОНОШИЛГОО ЭХЛҮҮЛЭХ</span><i className="mmri-home2__start-chip"><Icon name="arrow" size={18}/></i></button>
     </div>
     <div className="mmri-home2__art"><HeroCrystal/></div>
    </section>

@@ -94,7 +94,7 @@ body.mmri-prism-page .mmri-account-trigger{border-radius:999px}
 body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu){color:var(--wp-ink);border:1px solid var(--wp-silver);background:var(--wp-spec) top/100% 40% no-repeat,var(--hg-l1);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--wp-bevel),0 30px 60px -24px rgba(20,40,80,.4)}
 body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu) :is(strong,h2,h3,a,button,small,p,span){color:inherit}
 body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu) small{color:var(--wp-ink3)}
-body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu) :is(a,button):hover{background:rgba(11,15,20,.05)}
+body.mmri-prism-page .mmri-account-menu :is(a,button):hover{background:rgba(11,15,20,.05)}
 
 /* ---- sign-in / registration ---- */
 body.mmri-prism-page .auth{background:transparent}
@@ -241,3 +241,22 @@ body.mmri-prism-page .mmri-notification-empty strong{font-size:16px;font-weight:
 body.mmri-prism-page .mmri-notification-empty p{max-width:30ch;margin:0;font-size:13px;line-height:1.5;color:#1d3b80}
 @media (max-width:767px){body.mmri-prism-page .mmri-notification-panel{border-radius:24px}body.mmri-prism-page .mmri-notification-panel>header{border-radius:23px 23px 0 0}body.mmri-prism-page .mmri-notification-item{flex-wrap:wrap}body.mmri-prism-page .mmri-notification-item>a{flex:1 1 100%;padding-bottom:6px}body.mmri-prism-page .mmri-notification-item__actions{flex:1 1 100%;flex-direction:row;align-items:center;justify-content:flex-end;padding:0 12px 12px}}
 
+
+/* ===== Notifications (final): same periwinkle glass family as the guide dialogs; hover only lifts the edge of the row under the pointer ===== */
+html:root body.mmri-prism-page .mmri-notification-panel{background:linear-gradient(118deg,rgba(255,255,255,.55) 0 6%,rgba(255,255,255,.12) 7% 20%,transparent 21%),radial-gradient(70% 40% at 0 0,rgba(255,255,255,.5),transparent 62%),linear-gradient(160deg,#c3d3ff,#9db6ff 55%,#aaa3f6);-webkit-backdrop-filter:none;backdrop-filter:none;
+ box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px rgba(214,226,255,.7),inset 0 -24px 40px -28px rgba(58,70,214,.5),0 3px 6px rgba(10,30,120,.2),0 24px 40px -18px rgba(14,30,140,.6)}
+html:root body.mmri-prism-page .mmri-notification-panel>header{background:linear-gradient(130deg,rgba(255,255,255,.55),rgba(255,255,255,.18));border-bottom:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1.5px 0 #fff;overflow:visible}
+html:root body.mmri-prism-page .mmri-notification-panel>header::after{display:none}
+html:root body.mmri-prism-page .mmri-notification-panel>header strong{color:#08205a}
+html:root body.mmri-prism-page .mmri-notification-panel>header small{color:#1d3b80}
+html:root body.mmri-prism-page .mmri-notification-badge{color:#08205a;background:linear-gradient(150deg,#fff,rgba(255,255,255,.55));box-shadow:inset 0 1.5px 0 #fff,0 6px 12px -6px rgba(20,40,150,.6)}
+html:root body.mmri-prism-page .mmri-notification-panel>header .mmri-notification-close{color:#08205a;background:rgba(255,255,255,.6);border-color:#fff}
+html:root body.mmri-prism-page .mmri-notification-panel>header .mmri-notification-close:hover{background:#fff;box-shadow:0 0 0 2px rgba(80,110,240,.5)}
+html:root body.mmri-prism-page .mmri-notification-tools button{background:rgba(255,255,255,.6);color:#08205a}
+html:root body.mmri-prism-page .mmri-notification-tools button:hover:not(:disabled){background:#fff;box-shadow:0 0 0 2px rgba(80,110,240,.45)}
+html:root body.mmri-prism-page .mmri-notification-item{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(240,245,255,.66));transition:box-shadow .18s ease,background-color .18s ease}
+html:root body.mmri-prism-page .mmri-notification-item:hover{background:linear-gradient(180deg,#fff,rgba(246,249,255,.9));box-shadow:inset 0 1.5px 0 #fff,0 0 0 2px rgba(86,116,240,.65),0 10px 16px -10px rgba(20,40,160,.55)}
+html:root body.mmri-prism-page .mmri-notification-item:not(:hover):not(:focus-within){box-shadow:inset 0 1.5px 0 #fff,0 8px 14px -10px rgba(20,50,170,.5)}
+html:root body.mmri-prism-page .mmri-notification-item>a:hover,html:root body.mmri-prism-page .mmri-notification-item__actions button:hover{background:transparent}
+html:root body.mmri-prism-page .mmri-notification-item__actions button:hover{background:#fff;box-shadow:0 0 0 2px rgba(86,116,240,.5)}
+html:root body.mmri-prism-page .mmri-notification-panel :is(a,button):focus-visible{outline:3px solid #08205a;outline-offset:2px}

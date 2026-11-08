@@ -221,8 +221,7 @@ html body .mmri-notification-panel,html body .mmri-account-menu{color:#fff;backg
 @keyframes mmri-rim{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.mmri-rim i{animation:none;transform:rotate(-35deg)}}
 html body .mmri-shell.has-hx-hole::before{-webkit-mask:var(--hx-hole) 0 0/100% 100% no-repeat;mask:var(--hx-hole) 0 0/100% 100% no-repeat}
-html.is-hidden .crystal-stage__light,html.is-hidden .mmri-shell-aurora::before,html.is-hidden .mmri-rim i,html.is-hidden .hx__plate,html.is-hidden .mmri-guide2__route .is-pulse,html.is-hidden .mmri-shell-glint i{animation-play-state:paused}
+html.is-hidden .crystal-stage__light,html.is-hidden .mmri-shell-aurora b,html.is-hidden .mmri-rim i,html.is-hidden .hx__plate,html.is-hidden .mmri-guide2__route .is-pulse,html.is-hidden .mmri-shell-glint i{animation-play-state:paused}
 /* Long, scroll-heavy content pages keep the ambient light STATIC: two large animating layers behind many blurred glass panels made the report scroll at
    ~200 ms/frame in the headless profile (25 ms with the drift off). Short pages (home, diagnosis hub, sign-in) keep the living background. */
 .crystal-stage:is([data-route=report],[data-route=results],[data-route=assessment],[data-route=priorities],[data-route=settings],[data-route=billing],[data-route=profile]) .crystal-stage__light{animation:none;will-change:auto}
-.mmri-shell:is([data-route=report],[data-route=results],[data-route=assessment],[data-route=priorities],[data-route=settings],[data-route=billing],[data-route=profile]) .mmri-shell-aurora::before{animation:none;will-change:auto}

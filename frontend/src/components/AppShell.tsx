@@ -264,7 +264,7 @@ export function ShellHeader({route}:{route:RouteName}){
       </div>}
      </div></>:<>
       <a className="mmri-shell-login" href="#/login" onClick={closeMenus}>Нэвтрэх</a>
-      <a className="mmri-shell-primary" href="#/login" onClick={closeMenus}>Оношилгоо эхлүүлэх</a>
+      <a className="mmri-shell-primary" href="#/login" onClick={closeMenus}><span className="mmri-shell-glint mmri-btn-glint" aria-hidden="true"><i/></span>Оношилгоо эхлүүлэх</a>
       <button type="button" ref={publicMenuButtonRef} className="mmri-public-menu-trigger" onClick={()=>setMobileOpen((value:boolean)=>!value)} aria-label="Үндсэн цэс" aria-controls="mmri-public-mobile-menu" aria-expanded={mobileOpen}><Icon name={mobileOpen?'close':'menu'} size={20}/></button>
      </>}
    </div>
@@ -300,7 +300,7 @@ export function AppShell({route,children}:{route:RouteName;children:React.ReactN
  if(route==='login')return <>{children}</>;
 
  return <div className={`app-shell mmri-shell ${loggedIn?'is-authenticated':'is-public'} ${domainId?'has-domain-theme':''}`} data-mmri-domain={domainId||undefined} data-route={route}>
-  <span className="mmri-shell-aurora" aria-hidden="true">{DOMAIN_IDS.map(d=><i key={d} data-d={d}/>)}</span>
+  <span className="mmri-shell-aurora" aria-hidden="true"><b/><b/><b/>{DOMAIN_IDS.map(d=><i key={d} data-d={d}/>)}</span>
   <span className="mmri-shell-rims" aria-hidden="true">{['neutral',...DOMAIN_IDS].map(d=><i key={d} data-d={d}/>)}</span>
   <a className="mmri-skip-link" href="#main-content">Үндсэн агуулга руу шилжих</a>
   <ShellHeader route={route}/>

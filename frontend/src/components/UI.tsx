@@ -258,6 +258,7 @@ export function RadioGroup({ name, value, onValueChange, onDeselect, options, la
             {option.prefix != null && <span className="mmri-radio-card__prefix" aria-hidden="true">{option.prefix}</span>}
             <span className="mmri-radio-card__copy"><strong>{option.label}</strong>{option.description && <small>{option.description}</small>}</span>
             <span className="mmri-radio-card__mark" aria-hidden="true" />
+            {checked&&!option.disabled&&<span className="mmri-shell-glint mmri-radio-card__glint" aria-hidden="true"><i/></span>}
           </label>
         );
       })}

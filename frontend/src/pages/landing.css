@@ -373,44 +373,40 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
 }
 
 
-/* ---- Hero (components/HeroCrystal.tsx, reference 02): report plates on the left, and in the clear window a real 3D pentagonal crystal whose five faces are the five domains.
-   CSS 3D only (transform-style:preserve-3d); the turn is one compositor transform, pointer tilt is a CSS variable updated in rAF. Units are cqw of .hx. ---- */
-.hx{--tx:0;--ty:0;position:relative;width:min(100%,clamp(340px,calc((100dvh - 300px)*1.7),780px));aspect-ratio:1.7;margin-inline:auto;container-type:inline-size;pointer-events:auto;color:var(--wp-ink)}
-.hx__plates{position:absolute;left:0;top:0;width:52%;height:100%;transform:translate(calc(var(--tx)*-1.6px),calc(var(--ty)*-1.2px))}
-.hx__plate{position:absolute;width:27cqw;height:38cqw;border-radius:3.4cqw;isolation:isolate;
- background:linear-gradient(135deg,rgba(255,255,255,.62),rgba(150,214,255,.4) 38%,rgba(138,126,255,.46) 72%,rgba(255,140,214,.5));
- box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.5),inset 0 -1.2cqw 2cqw -1cqw rgba(110,170,255,.55),.35cqw .5cqw 0 #cfe9ff,.8cqw 1.1cqw 0 #7fb0ff,1.4cqw 1.8cqw 0 #4a74e8,1.8cqw 3cqw 2.4cqw -1cqw rgba(8,34,150,.5);
- animation:hx-float 11s ease-in-out infinite}
-.hx__plate::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(112deg,rgba(255,255,255,.8) 0 14%,rgba(255,255,255,.1) 15% 30%,transparent 31% 62%,rgba(255,255,255,.28) 63% 66%,transparent 67%),radial-gradient(40% 30% at 90% 94%,rgba(255,120,210,.5),transparent 70%),radial-gradient(34% 26% at 8% 8%,rgba(130,240,255,.6),transparent 70%)}
-.hx__plate b{position:absolute;left:12%;height:1.1cqw;border-radius:9px;background:rgba(255,255,255,.6);box-shadow:inset 0 1px 0 #fff}
-.hx__plate b:nth-of-type(1){top:70%;width:62%}.hx__plate b:nth-of-type(2){top:78%;width:46%}.hx__plate b:nth-of-type(3){top:86%;width:54%;opacity:.7}
-.hx__plate.is-3{left:19cqw;top:2cqw;transform:rotateZ(7deg) rotateY(-14deg);animation-duration:19s;animation-delay:-6s}
-.hx__plate.is-2{left:10cqw;top:9cqw;transform:rotateZ(3deg) rotateY(-14deg);animation-duration:15s;animation-delay:-3s}
-.hx__plate.is-1{left:0;top:16cqw;transform:rotateZ(-2deg) rotateY(-14deg)}
-@keyframes hx-float{50%{translate:0 -.55cqw}}
+/* ---- Hero (components/HeroCrystal.tsx, reference 02): isometric glass stack (A) + radar of the five areas in a clear window (B). Units are cqw of .hx. All motion is transform-only and slow. ---- */
+.hx{--tx:0;--ty:0;position:relative;width:min(100%,clamp(340px,calc((100dvh - 300px)*1.7),780px));aspect-ratio:1.7;margin-inline:auto;container-type:inline-size;color:var(--wp-ink)}
+.hx__stackwrap{position:absolute;left:0;top:0;width:52%;height:100%;display:grid;place-items:center;perspective:140cqw;transform:translate(calc(var(--tx)*-2.5px),calc(var(--ty)*-2px))}
+.hx__stack{position:relative;width:32cqw;height:32cqw;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-34deg);animation:hx-hover 9s ease-in-out infinite}
+@keyframes hx-hover{50%{transform:rotateX(58deg) rotateZ(-31deg) translateZ(1.6cqw)}}
+.hx__slab{position:absolute;inset:0;display:block;border-radius:2.6cqw;transform-style:preserve-3d;
+ background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(150,214,255,.45) 40%,rgba(138,126,255,.5) 75%,rgba(255,150,220,.55));
+ box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.85),inset .5cqw .5cqw 1.4cqw rgba(255,255,255,.5),.5cqw .5cqw 0 #9cc0ff,1cqw 1cqw 0 #5f86ee,1.5cqw 1.5cqw 0 #3a58cf}
+.hx__slab::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(112deg,rgba(255,255,255,.75) 0 12%,rgba(255,255,255,.1) 13% 28%,transparent 29%)}
+.hx__slab.is-1{transform:translateZ(0);background:linear-gradient(135deg,rgba(120,150,255,.8),rgba(80,110,235,.7))}
+.hx__slab.is-2{transform:translateZ(7.5cqw);background:linear-gradient(135deg,rgba(214,190,255,.78),rgba(150,120,250,.62))}
+.hx__slab.is-3{transform:translateZ(15cqw)}
+.hx__slab b{position:absolute;left:12%;height:1.2cqw;border-radius:9px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff}
+.hx__slab b:nth-of-type(1){top:22%;width:55%}.hx__slab b:nth-of-type(2){top:34%;width:40%}.hx__slab b:nth-of-type(3){top:46%;width:48%;opacity:.75}
+.hx__shadow{position:absolute;inset:6%;border-radius:2.6cqw;background:rgba(2,12,90,.5);transform:translateZ(-2cqw);filter:blur(1.8cqw)}
 .hx__slot{position:absolute;right:0;top:50%;translate:0 -50%;width:46cqw;aspect-ratio:1}
 .hx__window{position:absolute;inset:0;border-radius:5.5cqw;isolation:isolate;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(8,28,120,.14) 46%,rgba(190,235,255,.1));
  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 0 0 1px rgba(255,255,255,.35),inset 0 0 3cqw -1cqw rgba(160,225,255,.55),0 2.4cqw 3cqw -2cqw rgba(4,30,150,.55)}
-.hx__scene{position:absolute;inset:0;perspective:90cqw;perspective-origin:50% 40%}
-.hx__floor{position:absolute;left:50%;top:80%;width:34cqw;height:8cqw;translate:-50% 0;border-radius:50%;background:radial-gradient(closest-side,rgba(2,12,90,.55),transparent);}
-/* the crystal: pentagon radius R=14.5cqw -> side 17cqw, apothem 11.7cqw, height 27cqw */
-.hx__prism{--R:14.5cqw;--a:11.7cqw;--h:27cqw;position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;transform:translateY(-2cqw) rotateX(calc(-16deg + var(--ty)*-1deg)) rotateY(calc(var(--tx)*2deg));animation:hx-spin 34s linear infinite}
-@keyframes hx-spin{to{transform:translateY(-2cqw) rotateX(calc(-16deg + var(--ty)*-1deg)) rotateY(calc(var(--tx)*2deg + 360deg))}}
-.hx__face{position:absolute;left:-8.5cqw;top:calc(var(--h)/-2);width:17cqw;height:var(--h);border-radius:.8cqw;transform:rotateY(calc(var(--i)*72deg)) translateZ(var(--a));backface-visibility:visible;
- background:linear-gradient(100deg,rgba(255,255,255,.55) 0 7%,rgba(255,255,255,.12) 8% 24%,transparent 25%),linear-gradient(180deg,color-mix(in srgb,var(--c) 70%,#fff),color-mix(in srgb,var(--c) 85%,rgba(255,255,255,.2)) 55%,color-mix(in srgb,var(--c) 90%,#06102a));
- opacity:.9;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.85),inset 0 -2cqw 2.4cqw -1.4cqw rgba(255,255,255,.35)}
-.hx__face-icon{position:absolute;left:50%;top:9%;width:7.4cqw;height:7.4cqw;translate:-50% 0;color:#fff;filter:drop-shadow(0 .3cqw .4cqw rgba(0,20,90,.45))}
-.hx__face-icon svg{display:block;width:100%;height:100%}
-.hx__cap{position:absolute;left:-13.8cqw;top:-14.46cqw;width:27.6cqw;height:26.2cqw;display:grid;place-items:center;clip-path:polygon(50% 0,100% 38%,81% 100%,19% 100%,0 38%);transform-origin:50% 55.2%}
-.hx__cap.is-top{transform:rotateX(90deg) translateZ(calc(var(--h)/2));background:radial-gradient(circle at 50% 45%,#fff,rgba(190,236,255,.85) 45%,rgba(130,190,255,.7));box-shadow:inset 0 0 0 1px #fff;color:#0a2f8f}
-.hx__cap.is-bottom{transform:rotateX(90deg) translateZ(calc(var(--h)/-2));background:rgba(20,40,160,.5)}
-.hx__cap svg{width:34%;height:34%;rotate:-0deg}
-.hx__label{position:absolute;left:50%;bottom:5%;translate:-50% 0;min-height:1.4em;padding:2px 12px;border-radius:99px;font-size:clamp(11px,1.9cqw,14px);font-weight:650;color:#0a2358;background:rgba(255,255,255,.94);box-shadow:0 4px 10px -4px rgba(5,25,120,.6);white-space:nowrap}
-.hx__label:empty{display:none}
-@media (max-width:1000px){.hx{width:min(100%,560px);aspect-ratio:1.5}.hx__plates{width:48%}.hx__slot{width:50cqw}}
-@media (max-width:560px){.hx{width:100%;aspect-ratio:1.35}.hx__slot{width:52cqw}.hx__plate{width:28cqw;height:40cqw}}
-@media (prefers-reduced-motion:reduce){.hx__plate{animation:none}.hx__prism{animation:none;transform:translateY(-2cqw) rotateX(-16deg) rotateY(-24deg)}.hx__plates{transform:none}}
-
+.hx__radar{position:absolute;inset:7%;width:86%;height:86%;overflow:visible;transform:translate(calc(var(--tx)*1.4px),calc(var(--ty)*1.4px))}
+.hx__radar polygon{fill:none;stroke:rgba(235,248,255,.85);stroke-width:.5}
+.hx__radar polygon.is-outer{stroke-width:1.3;fill:rgba(20,70,190,.22);filter:none}
+.hx__radar polygon.is-ring{stroke-opacity:.6}
+.hx__radar polygon.is-shape{fill:url(#hx-fill);stroke:#e8fbff;stroke-width:.9;transform-origin:50px 52px;animation:hx-breathe 8s ease-in-out infinite}
+@keyframes hx-breathe{50%{transform:scale(1.045)}}
+.hx__radar line{stroke:rgba(235,248,255,.75);stroke-width:.4}
+.hx__radar circle{stroke:#fff;stroke-width:1}
+.hx__radar circle.is-core{fill:#fff;stroke:none}
+.hx__sweep{transform-origin:50px 52px;animation:hx-sweep 12s linear infinite}
+@keyframes hx-sweep{to{transform:rotate(360deg)}}
+.hx__lab{position:absolute;translate:-50% -50%;padding:1px 7px;border-radius:99px;font-size:clamp(9.5px,1.55cqw,12.5px);font-weight:650;white-space:nowrap;color:#0a2358;background:rgba(255,255,255,.88);box-shadow:0 3px 8px -4px rgba(5,25,120,.55);transform:translate(calc(var(--tx)*1.4px),calc(var(--ty)*1.4px))}
+.hx__logo{position:absolute;left:50%;top:52%;translate:-50% -50%;display:grid;place-items:center;width:7cqw;aspect-ratio:1;border-radius:50%;color:#0a2f8f;background:radial-gradient(circle at 34% 24%,#fff,#d9f3ff 55%,#8fcbff);box-shadow:0 0 0 .4cqw rgba(255,255,255,.5),0 0 2.4cqw rgba(110,220,255,.9)}
+@media (max-width:1000px){.hx{width:min(100%,560px);aspect-ratio:1.5}.hx__stackwrap{width:48%}.hx__slot{width:50cqw}}
+@media (max-width:560px){.hx{width:100%;aspect-ratio:1.35}.hx__slot{width:52cqw}.hx__lab{display:none}.hx__logo{width:9cqw}}
+@media (prefers-reduced-motion:reduce){.hx__stack{animation:none}.hx__radar polygon.is-shape,.hx__sweep{animation:none}.hx__stackwrap,.hx__radar,.hx__lab{transform:none}}
 /* Guide 1: the three steps all sit on the right (route + stations on the left edge of that column); the five facts stack on the left (desktop). */
 .mmri-guide2__about:not([data-paged]){display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(20px,3vw,44px);align-items:center}
 .mmri-guide2__about:not([data-paged]) .mmri-guide2__metrics{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:auto}
@@ -431,10 +427,21 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
 .mmri-home2__guide .mmri-shell-glint{z-index:1}
 .mmri-home2__guide .mmri-shell-glint i{width:22%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.85) 50%,transparent);animation-duration:calc(8s + var(--gi,0)*2.3s);animation-delay:calc(var(--gi,0)*1.7s)}
 /* Everything behind an open guide is switched OFF (the dialog covers it). A merely paused animation keeps its compositor layer and cost; with `animation:none` the layers are cached as static (measured: dialog 190 -> ~25 ms/frame). */
-body.mmri-modal-open .crystal-stage__light,body.mmri-modal-open .mmri-shell-aurora::before,body.mmri-modal-open .mmri-shell-glint i,body.mmri-modal-open .hx__plate,body.mmri-modal-open .hx__prism{animation:none!important;will-change:auto!important}
+body.mmri-modal-open .crystal-stage__light,body.mmri-modal-open .mmri-shell-aurora b,body.mmri-modal-open .mmri-shell-glint i,body.mmri-modal-open .hx__plate,body.mmri-modal-open .hx__stack,body.mmri-modal-open .hx__sweep,body.mmri-modal-open .hx__radar polygon.is-shape{animation:none!important;will-change:auto!important}
 /* dialog rim: two travelling lights (white-cyan and periwinkle-violet) around a thicker, layered edge */
 .mmri-guide2__panel>.mmri-rim{--rim-w:3px;--rim-t:11s;--rim-steps:176;z-index:6}
 .mmri-guide2__panel>.mmri-rim i{background:conic-gradient(from 0deg,transparent 0 18%,rgba(255,255,255,.95) 28%,#9fd6ff 34%,transparent 44%,transparent 66%,rgba(255,255,255,.85) 76%,#c4b4ff 83%,transparent 93%)}
 
 /* Guide rim light: the rotating conic layer is a square just large enough to cover the panel (viewport diagonal), not 2.4x the panel in each direction (3.5 M px instead of 8.5 M px). */
 .mmri-guide2__panel>.mmri-rim i{inset:auto;left:50%;top:50%;width:hypot(100vw,100vh);aspect-ratio:1;translate:-50% -50%}
+
+/* Guide 1: the three steps arrive one after another from the right, the route draws itself, and each station sends out a soft ring (transform/opacity only). */
+.mmri-guide2__stage{animation:g1-in .7s cubic-bezier(.22,1,.36,1) both}
+.mmri-guide2__stage:nth-of-type(1){animation-delay:.2s}.mmri-guide2__stage:nth-of-type(2){animation-delay:.55s}.mmri-guide2__stage:nth-of-type(3){animation-delay:.9s}
+@keyframes g1-in{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+.mmri-guide2__route .is-line,.mmri-guide2__route .is-halo{stroke-dasharray:100;stroke-dashoffset:100;animation:g1-draw 1.5s .2s ease-out forwards}
+@keyframes g1-draw{to{stroke-dashoffset:0}}
+.mmri-guide2__node::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--acc);opacity:0;pointer-events:none;animation:g1-ring 3.6s ease-out infinite}
+.mmri-guide2__stage:nth-of-type(2) .mmri-guide2__node::after{animation-delay:1.2s}.mmri-guide2__stage:nth-of-type(3) .mmri-guide2__node::after{animation-delay:2.4s}
+@keyframes g1-ring{0%{transform:scale(.9);opacity:.7}70%,100%{transform:scale(1.7);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mmri-guide2__stage,.mmri-guide2__route .is-line,.mmri-guide2__route .is-halo,.mmri-guide2__node::after{animation:none;stroke-dashoffset:0;opacity:1}.mmri-guide2__node::after{display:none}}
