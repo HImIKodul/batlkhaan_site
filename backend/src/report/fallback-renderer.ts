@@ -25,6 +25,8 @@ function sentence(value:string):string{
   if(!v)return "";
   return /[.!?…]$/.test(v)?v:`${v}.`;
 }
+/** Sentence start for text that follows a full stop: action wording is stored lower-case ("шийдвэр гаргах эрхийн хүснэгт гаргаж ..."), so capitalise the first letter when it opens a new sentence. */
+function sentenceCap(value:string):string{const v=sentence(value);return v?v[0].toLocaleUpperCase("mn-MN")+v.slice(1):v}
 function countWords(value:string):number{return value.trim()?value.trim().split(/\s+/).length:0;}
 function classificationText(value:string):string{
   if(value==="PRIMARY_ROOT_CAUSE")return "оношилгоонд суурь шалтгааны түвшинд анхаарах хэсэг";
@@ -52,7 +54,7 @@ function conclusionText(payload:FrozenReportPayload):{text:string;sources:string
   const relativeStrengthNames=strengths.filter((x:any)=>x.basis==="RELATIVE_RANK").map(x=>x.nameMn).filter(Boolean);
   if(strengthNames.length){const a=[validatedStrengthNames.length?`${joinMn(validatedStrengthNames)} нь одоогийн тогтвортой суурь болж байна.`:"",relativeStrengthNames.length?`${joinMn(relativeStrengthNames)} нь бусад чадавхаас харьцангуй өндөр оноотой боловч батлагдсан давуу тал биш.`:""].filter(Boolean).join(" ");parts.push({full:`${a} Эдгээрийн ажиллаж буй хяналт, дадлыг сул хэсгийн өөрчлөлтөд түшиц болгон ашиглана.`,short:a})}
   if(weaknessNames.length){const a=`${joinMn(weaknessNames)} нь эхэлж анхаарах чадавхууд байна.`;parts.push({full:`${a} Эдгээрийг нотолгоо, хариуцлага, хэмжилттэй нь хамт сайжруулах шаардлагатай.`,short:a})}
-  if(action){const a=`Эхний удирдлагын алхам нь “${action.titleMn}”. ${sentence(action.actionMn)} Ахиц нь “${String(action.kpiMn||"холбогдох хэмжүүр").replace(/[.!?…]+$/,'')}” хэмжүүрийн өөрчлөлтөөр баталгаажна.`;parts.push({full:a,short:`Эхний удирдлагын алхам нь “${action.titleMn}”. ${sentence(action.actionMn)}`})}
+  if(action){const a=`Эхний удирдлагын алхам нь “${action.titleMn}”. ${sentenceCap(action.actionMn)} Ахиц нь “${String(action.kpiMn||"холбогдох хэмжүүр").replace(/[.!?…]+$/,'')}” хэмжүүрийн өөрчлөлтөөр баталгаажна.`;parts.push({full:a,short:`Эхний удирдлагын алхам нь “${action.titleMn}”. ${sentenceCap(action.actionMn)}`})}
   parts.push({full:`${payload.remeasurement.labelMn} хийхдээ нийт онооноос гадна дээрх сул чадавхууд тогтвортой сайжирсан эсэх, төлөвлөсөн гарц бодитоор бүрдсэн эсэхийг өмнөх тайлантай харьцуулна.`,short:`${payload.remeasurement.labelMn} хийхдээ өмнөх тайлантай харьцуулна.`});
   const useShort=new Set<number>();const order=[2,1,parts.length-1,parts.length-2];
   const compose=()=>parts.map((x,i)=>useShort.has(i)?x.short:x.full).join(" ");
