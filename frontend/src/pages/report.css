@@ -51,6 +51,7 @@
 .report-score-meta strong{color:color-mix(in srgb,var(--report-accent) 78%,#0B0F14);font-weight:800}
 .report-score-meta span{font-variant-numeric:tabular-nums}
 .report-balance-v3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.report-finding-column.is-empty{align-self:start}
 .report-finding-column>header{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--mmri-color-border)}
 .report-finding-column>header h3{margin:0;font-size:17px;font-weight:800;color:var(--mmri-color-text-strong)}
 .report-finding-column.is-positive li>b{color:#1F7A55}.report-finding-column.is-negative li>b{color:#B42318}
