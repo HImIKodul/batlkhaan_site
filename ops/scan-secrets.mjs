@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 const root=process.cwd();const hits=[];const skipDirs=new Set(['.git','node_modules','backups','report-storage']);
 const binaryExt=new Set(['.png','.jpg','.jpeg','.gif','.webp','.pdf','.zip','.gz','.tgz','.woff','.woff2','.ttf','.ico']);
 function walk(dir){for(const ent of fs.readdirSync(dir,{withFileTypes:true})){if(skipDirs.has(ent.name))continue;const p=path.join(dir,ent.name);if(ent.isDirectory())walk(p);else scan(p);}}
@@ -16,4 +17,7 @@ function scan(file){if(binaryExt.has(path.extname(file).toLowerCase()))return;le
     }
   }
 }
-walk(root);console.log(JSON.stringify({status:hits.length?'FAIL':'PASS',hits},null,2));if(hits.length)process.exit(1);
+// Default: scan only what Git would push (tracked + untracked-but-not-ignored). `--all` also walks ignored local files (.env, logs).
+if(process.argv.includes('--all'))walk(root);
+else{const out=execFileSync('git',['ls-files','-z','--cached','--others','--exclude-standard'],{cwd:root,maxBuffer:64*1024*1024}).toString('utf8');for(const rel of out.split('\0')){if(rel&&fs.existsSync(path.join(root,rel)))scan(path.join(root,rel));}}
+console.log(JSON.stringify({status:hits.length?'FAIL':'PASS',hits},null,2));if(hits.length)process.exit(1);
