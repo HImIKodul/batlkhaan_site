@@ -197,40 +197,47 @@ html body.mmri-prism-page :is(.mmri-input,.mmri-textarea,.mmri-select)[aria-inva
 }
 
 /* ===== Notification center (bell panel): a floating pearl-glass sheet, unread items grouped first ===== */
-body.mmri-prism-page .mmri-notification-panel{width:min(400px,calc(100vw - 24px));max-height:min(72dvh,640px);padding:0 0 8px;border-radius:26px;border:1px solid rgba(255,255,255,.85);
- background:radial-gradient(90% 40% at 0 0,rgba(255,255,255,.95),transparent 70%),linear-gradient(160deg,rgba(176,206,255,.62),rgba(128,160,250,.34) 55%,rgba(168,150,250,.3)),var(--hg-l1);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
- box-shadow:inset 0 1.5px 0 #fff,inset -1px -1px 0 rgba(120,140,170,.3),0 2px 4px rgba(10,25,50,.1),0 24px 48px -16px rgba(20,40,80,.4),0 60px 90px -40px rgba(20,40,80,.4)}
-body.mmri-prism-page .mmri-notification-panel>header{position:relative;overflow:hidden;padding:16px 14px 12px 20px;border-bottom:1px solid rgba(190,205,222,.5)}
-body.mmri-prism-page .mmri-notification-panel>header strong{font-size:17px;font-weight:650;letter-spacing:-.01em}
-body.mmri-prism-page .mmri-notification-tools{padding:8px 14px;gap:4px 8px;border-bottom:1px solid rgba(190,205,222,.4)}
-body.mmri-prism-page .mmri-notification-tools button{color:var(--wp-ink2);font-size:12.5px;font-weight:650;border-radius:999px;padding:0 12px;transition:background-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
-body.mmri-prism-page .mmri-notification-tools button:hover:not(:disabled){color:var(--wp-ink);background:rgba(173,209,238,.3);box-shadow:inset 0 0 0 1px rgba(127,166,255,.3)}
-body.mmri-prism-page .mmri-notification-group h3{margin:0;padding:14px 22px 6px;font-size:11px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--wp-ink3)}
-body.mmri-prism-page .mmri-notification-item{position:relative;margin:2px 8px;border:0;border-radius:18px;transition:background-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
-body.mmri-prism-page .mmri-notification-item:hover,body.mmri-prism-page .mmri-notification-item:focus-within{background:rgba(173,209,238,.2);box-shadow:inset 0 0 0 1px rgba(127,166,255,.28)}
-body.mmri-prism-page .mmri-notification-item.is-unread{background:linear-gradient(90deg,rgba(127,166,255,.16),rgba(127,166,255,.04) 75%);box-shadow:none}
-body.mmri-prism-page .mmri-notification-item.is-unread:hover,body.mmri-prism-page .mmri-notification-item.is-unread:focus-within{background:linear-gradient(90deg,rgba(127,166,255,.24),rgba(173,209,238,.12) 75%);box-shadow:inset 0 0 0 1px rgba(127,166,255,.34)}
-body.mmri-prism-page .mmri-notification-item.is-read>a{opacity:.72}
-body.mmri-prism-page .mmri-notification-item>a{align-items:flex-start;gap:12px;padding:12px 6px 12px 12px}
-body.mmri-prism-page .mmri-notification-icon{width:38px;height:38px;border-radius:12px;color:var(--wp-ink);border:1px solid rgba(255,255,255,.95);background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#E6EEF8);box-shadow:inset 0 -2px 4px rgba(120,150,200,.25),0 6px 12px -8px rgba(40,70,120,.5)}
-body.mmri-prism-page .mmri-notification-icon.is-payment{background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#FBEFC8);box-shadow:inset 0 -2px 4px rgba(226,176,60,.4),0 6px 12px -8px rgba(226,176,60,.7)}
-body.mmri-prism-page .mmri-notification-icon.is-report{background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#D4F1E5);box-shadow:inset 0 -2px 4px rgba(47,166,122,.35),0 6px 12px -8px rgba(47,166,122,.7)}
-body.mmri-prism-page .mmri-notification-item strong{font-size:14.5px;font-weight:650;line-height:1.3}
+/* Panel: deep sapphire title band over an ice-blue glass body; static highlights only (one small header glint is the sole motion). */
+body.mmri-prism-page .mmri-notification-panel{width:min(410px,calc(100vw - 24px));max-height:min(74dvh,660px);padding:0 0 10px;border-radius:28px;border:1px solid rgba(255,255,255,.9);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;
+ background:radial-gradient(90% 30% at 0 0,rgba(255,255,255,.9),transparent 70%),linear-gradient(170deg,rgba(214,232,255,.92),rgba(170,200,255,.86) 55%,rgba(186,176,252,.84));-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);
+ box-shadow:inset 0 1.5px 0 #fff,inset 0 0 0 1px rgba(150,190,255,.4),0 3px 6px rgba(10,30,120,.18),0 26px 50px -18px rgba(10,36,150,.7),0 0 40px -10px rgba(110,160,255,.6)}
+body.mmri-prism-page .mmri-notification-panel>header{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;overflow:hidden;padding:16px 14px 14px 16px;border-radius:27px 27px 0 0;border-bottom:1px solid rgba(255,255,255,.5);
+ background:radial-gradient(70% 140% at 0 -40%,rgba(255,255,255,.45),transparent 60%),linear-gradient(120deg,#3a74f0,#1f49c8 60%,#3a35b8);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),0 8px 16px -10px rgba(10,30,140,.7)}
+body.mmri-prism-page .mmri-notification-panel>header>div{flex:1;min-width:0}
+body.mmri-prism-page .mmri-notification-panel>header strong{display:block;font-size:18px;font-weight:700;letter-spacing:-.015em;color:#fff}
+body.mmri-prism-page .mmri-notification-panel>header small{display:block;margin-top:1px;font-size:12.5px;font-weight:500;color:#dbe8ff}
+body.mmri-prism-page .mmri-notification-panel>header::after{content:"";position:absolute;inset:0 auto 0 0;width:40%;pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,255,255,.35) 50%,transparent);transform:translateX(-130%);animation:mmri-note-sweep 10s ease-in-out 1s infinite}
+@keyframes mmri-note-sweep{0%,60%{transform:translateX(-130%)}100%{transform:translateX(330%)}}
+@media (prefers-reduced-motion:reduce){body.mmri-prism-page .mmri-notification-panel>header::after{display:none}}
+body.mmri-prism-page .mmri-notification-badge{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:14px;color:#fff;background:linear-gradient(150deg,rgba(255,255,255,.38),rgba(255,255,255,.12));box-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),0 0 0 1px rgba(255,255,255,.4),0 6px 12px -6px rgba(5,20,110,.7)}
+body.mmri-prism-page .mmri-notification-panel>header .mmri-notification-close{width:38px;height:38px;margin:0;color:#fff;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.16)}
+body.mmri-prism-page .mmri-notification-panel>header .mmri-notification-close:hover{background:rgba(255,255,255,.3)}
+body.mmri-prism-page .mmri-notification-tools{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px 4px}
+body.mmri-prism-page .mmri-notification-tools button{min-height:34px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:650;color:#0a2358;border:1px solid rgba(255,255,255,.85);background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,.4));box-shadow:inset 0 1.5px 0 #fff,0 3px 6px -3px rgba(20,50,170,.45)}
+body.mmri-prism-page .mmri-notification-tools button:hover:not(:disabled){background:#fff;box-shadow:inset 0 1.5px 0 #fff,0 0 12px rgba(120,170,255,.7)}
+body.mmri-prism-page .mmri-notification-group h3{margin:0;padding:14px 20px 6px;font-size:11px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:#1d3b80}
+body.mmri-prism-page .mmri-notification-item{position:relative;margin:6px 10px;border:1px solid rgba(255,255,255,.75);border-radius:20px;overflow:hidden;
+ background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(236,244,255,.5));box-shadow:inset 0 1.5px 0 #fff,0 8px 14px -10px rgba(20,50,170,.55)}
+body.mmri-prism-page .mmri-notification-item:hover,body.mmri-prism-page .mmri-notification-item:focus-within{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(240,247,255,.7));box-shadow:inset 0 1.5px 0 #fff,0 0 0 1.5px rgba(110,160,255,.7),0 10px 16px -10px rgba(20,50,170,.6)}
+body.mmri-prism-page .mmri-notification-item.is-unread::before{content:"";position:absolute;left:0;top:14%;bottom:14%;width:4px;border-radius:0 4px 4px 0;background:linear-gradient(180deg,#5fe3ff,#3b7bff);box-shadow:0 0 10px rgba(80,170,255,.9)}
+body.mmri-prism-page .mmri-notification-item.is-read>a{opacity:.78}
+body.mmri-prism-page .mmri-notification-item>a{align-items:flex-start;gap:12px;padding:14px 6px 12px 16px}
+body.mmri-prism-page .mmri-notification-icon{width:42px;height:42px;border-radius:14px;color:#fff;border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),inset 0 -6px 10px -4px rgba(0,30,110,.35),0 6px 12px -6px rgba(10,40,160,.6)}
+body.mmri-prism-page .mmri-notification-icon.is-payment{background:linear-gradient(150deg,#3fe0a8,#0f9c78)}
+body.mmri-prism-page .mmri-notification-icon.is-report{background:linear-gradient(150deg,#52c8ff,#3b6cf0 70%,#7a5cf0)}
+body.mmri-prism-page .mmri-notification-kind{display:inline-block;margin-bottom:3px;padding:1px 8px;border-radius:999px;font-size:10.5px;font-style:normal;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:#14367c;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(120,160,240,.45)}
+body.mmri-prism-page .mmri-notification-item strong{display:block;font-size:14.5px;font-weight:650;line-height:1.3;color:#08205a}
 body.mmri-prism-page .mmri-notification-item.is-read strong{font-weight:600}
-body.mmri-prism-page .mmri-notification-panel .mmri-notification-item p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:3px 0 4px;font-size:13px;line-height:1.45;color:var(--wp-ink2)}
-body.mmri-prism-page .mmri-notification-item small{font-size:11.5px;color:var(--wp-ink3);font-variant-numeric:tabular-nums}
-body.mmri-prism-page .mmri-notification-dot{width:8px;height:8px;background:#4F86F0;box-shadow:0 0 0 3px rgba(79,134,240,.2)}
-body.mmri-prism-page .mmri-notification-item__actions{flex-direction:row;align-items:center;gap:2px;padding:6px 8px 6px 0;opacity:0;transition:opacity var(--wp-dur) ease}
-body.mmri-prism-page .mmri-notification-item:hover .mmri-notification-item__actions,body.mmri-prism-page .mmri-notification-item:focus-within .mmri-notification-item__actions{opacity:1}
-body.mmri-prism-page .mmri-notification-item__actions button{color:var(--wp-ink2);border-radius:999px;font-size:12px}
-body.mmri-prism-page .mmri-notification-item__actions button:hover{color:var(--wp-ink);background:rgba(173,209,238,.35)}
-body.mmri-prism-page .mmri-notification-empty{display:grid;justify-items:center;gap:6px;padding:34px 28px 30px;text-align:center}
-body.mmri-prism-page .mmri-notification-empty>span{display:grid;place-items:center;width:48px;height:48px;margin-bottom:4px;border-radius:16px;color:var(--wp-ink2);border:1px solid rgba(255,255,255,.95);background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#E6EEF8);box-shadow:inset 0 -2px 4px rgba(120,150,200,.25),0 8px 16px -10px rgba(40,70,120,.5)}
-body.mmri-prism-page .mmri-notification-empty strong{font-size:15px;font-weight:650}
-body.mmri-prism-page .mmri-notification-empty p{max-width:30ch;font-size:13px;line-height:1.5;color:var(--wp-ink3)}
-@media (hover:none){body.mmri-prism-page .mmri-notification-item__actions{opacity:1}}
+body.mmri-prism-page .mmri-notification-panel .mmri-notification-item p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:3px 0 6px;font-size:13px;line-height:1.45;color:#1a3566}
+body.mmri-prism-page .mmri-notification-item small{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#2c4a86;font-variant-numeric:tabular-nums}
+body.mmri-prism-page .mmri-notification-dot{display:inline-block;width:9px;height:9px;margin-left:7px;border-radius:50%;vertical-align:1px;background:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.25),0 0 8px rgba(47,107,255,.8)}
+body.mmri-prism-page .mmri-notification-item__actions{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;padding:10px 8px 10px 0}
+body.mmri-prism-page .mmri-notification-item__actions button{min-width:44px;min-height:36px;padding:0 8px;border-radius:12px;font-size:12px;font-weight:650;color:#0a2358;border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.55)}
+body.mmri-prism-page .mmri-notification-item__actions button:hover{background:#fff;box-shadow:0 0 10px rgba(120,170,255,.7)}
+body.mmri-prism-page .mmri-notification-empty{display:grid;justify-items:center;gap:6px;margin:14px 14px 6px;padding:34px 24px 30px;text-align:center;border-radius:22px;border:1px solid rgba(255,255,255,.75);background:radial-gradient(70% 60% at 50% 0,rgba(255,255,255,.8),rgba(255,255,255,.3));box-shadow:inset 0 1.5px 0 #fff}
+body.mmri-prism-page .mmri-notification-empty>span{position:relative;display:grid;place-items:center;width:62px;height:62px;margin-bottom:10px;border-radius:50%;color:#fff;background:radial-gradient(circle at 32% 24%,#8fd0ff,#3b78f0 60%,#2a3fc0);box-shadow:inset 0 2px 0 rgba(255,255,255,.7),0 0 0 8px rgba(255,255,255,.45),0 0 0 17px rgba(255,255,255,.22),0 12px 22px -8px rgba(20,60,200,.7)}
+body.mmri-prism-page .mmri-notification-empty>span i{display:none}
+body.mmri-prism-page .mmri-notification-empty strong{font-size:16px;font-weight:700;color:#08205a}
+body.mmri-prism-page .mmri-notification-empty p{max-width:30ch;margin:0;font-size:13px;line-height:1.5;color:#1d3b80}
+@media (max-width:767px){body.mmri-prism-page .mmri-notification-panel{border-radius:24px}body.mmri-prism-page .mmri-notification-panel>header{border-radius:23px 23px 0 0}body.mmri-prism-page .mmri-notification-item{flex-wrap:wrap}body.mmri-prism-page .mmri-notification-item>a{flex:1 1 100%;padding-bottom:6px}body.mmri-prism-page .mmri-notification-item__actions{flex:1 1 100%;flex-direction:row;align-items:center;justify-content:flex-end;padding:0 12px 12px}}
 
-/* Notification header: one slow reflection crosses the header (transform only; static when motion is reduced). */
-body.mmri-prism-page .mmri-notification-panel>header::after{content:"";position:absolute;inset:0 auto 0 0;width:45%;pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,255,255,.55) 50%,transparent);transform:translateX(-120%);animation:mmri-note-sweep 9s ease-in-out 1s infinite}
-@keyframes mmri-note-sweep{0%,55%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
-@media (prefers-reduced-motion:reduce){body.mmri-prism-page .mmri-notification-panel>header::after{animation:none;display:none}}

@@ -787,3 +787,9 @@ Safari/WebKit and real touch devices untested. Non-marketing QA scores are posit
 - Report ring cyan-green-blue; finding columns white-outlined; notification panel tinted + header sweep; profile tiles periwinkle.
 - VERIFY_UI_POLISH.sh: two hero checks rewritten for HeroCrystal (old expectations were for the removed component). 123/123.
 - Evidence: ~/Downloads/BUSINESSMRI_FINAL_DESIGN_EVIDENCE/
+
+## 2026-11-08 (26) REMAINING DESIGN ITEMS
+- Header: floating ice-to-sapphire rail (crystal.css `.mmri-shell-inner`), static specular edge, one small transform-only glint (static on long pages), active-nav light bar; same routes/mobile behaviour.
+- Notifications: restructured markup (sapphire title band with bell badge, kind tags, clock chips, actions, ring-illustrated empty state, mobile stacked actions); old scattered notification CSS in prism.css replaced by one block.
+- Report: static glass rims + reflections on strengths/weaknesses and score ring; real-wheel scroll still 19 ms avg / p95 16.8.
+- Questionnaire: measured label contrast on 390px was 3.0-3.7:1 (desktop >=5.5); added a localized dark label scrim -> worst 5.51:1 (12 labels, 360/390/1440, it+finance). Hero tilt verified (<=4 deg, resets, slot geometry stable, hole follows resize).
