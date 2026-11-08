@@ -74,11 +74,15 @@ const RED_SOFT=[255,243,241];
 
 /* Visual only: how much of the tone colour the answer card fill may carry. The fill mixes the tone with vivid blue, and white text on it must stay >= 4.8:1,
    so saturated tones (green, red, orange) get a stronger share than the yellow midpoint. Never used for scoring or ordering. */
-const CARD_DEEP=[18,64,192];
+/* Each card's dark end is a shade of its OWN hue (plus a little sapphire), so a green answer stays green instead of fading to blue. The shade is darkened only as far as the label needs: the card also carries a white gloss (about 14 percent white where the label sits) and a specular streak, so the check blends 16 percent white into the fill and demands 5.3:1; measured in Chrome on real pixels this keeps every label above 4.5:1. */
 const lin=(v:number)=>{const c=v/255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};
 const lum=(c:number[])=>.2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);
-/* The card also carries a white gloss (about 14 percent white where the label sits) and a specular streak, so the check blends 16 percent white into the fill and demands 5.2:1: measured in Chrome on real pixels this keeps every label above 4.5:1. */
-function cardMix(color:number[]){for(let p=80;p>=30;p-=2){const m=color.map((v,i)=>v*p/100+CARD_DEEP[i]*(1-p/100));if(1.05/(lum(m.map(v=>v*.84+255*.16))+.05)>=5.2)return p}return 30}
+const cardDeep=(c:number[],s:number)=>c.map((v,i)=>Math.round(v*s+[0,10,60][i]*.2));
+const labelOk=(m:number[])=>1.05/(lum(m.map(v=>v*.84+255*.16))+.05)>=5.3;
+function cardShade(color:number[]){
+ for(const s of [.62,.5,.4,.3,.22,.14]){const d=cardDeep(color,s);
+  for(let p=90;p>=40;p-=2){if(labelOk(color.map((v,i)=>v*p/100+d[i]*(1-p/100))))return {mix:p,deep:d}}}
+ return {mix:40,deep:cardDeep(color,.1)}}
 export function answerToneAtQuality(quality:number){
  const q=clamp01(quality);
  let color:number[];
@@ -92,12 +96,12 @@ export function answerToneAtQuality(quality:number){
   color=mix(RED,YELLOW,local);
   soft=mix(RED_SOFT,YELLOW_SOFT,local);
  }
- return {color:`rgb(${color.join(' ')})`,soft:`rgb(${soft.join(' ')})`,mix:cardMix(color)};
+ return {color:`rgb(${color.join(' ')})`,soft:`rgb(${soft.join(' ')})`,...(()=>{const c=cardShade(color);return {mix:c.mix,deep:`rgb(${c.deep.join(' ')})`}})()};
 }
 
 function answerStyleFromQuality(quality:number):React.CSSProperties{
- const {color,soft,mix}=answerToneAtQuality(quality);
- return {'--answer-color':color,'--answer-soft':soft,'--answer-mix':mix} as React.CSSProperties;
+ const {color,soft,mix,deep}=answerToneAtQuality(quality);
+ return {'--answer-color':color,'--answer-soft':soft,'--answer-mix':mix,'--answer-deep':deep} as React.CSSProperties;
 }
 
 export function scoredAnswerStyle(score:number,min:number,max:number):React.CSSProperties{
