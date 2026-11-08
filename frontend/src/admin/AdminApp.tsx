@@ -6,6 +6,7 @@ import './admin.css';
 
 const AdminReports=lazy(()=>import('./AdminReports'));
 const AdminData=lazy(()=>import('./AdminData'));
+const AdminAccounts=lazy(()=>import('./AdminAccounts'));
 
 export const isAdminHash=(h:string)=>/^#\/admin(\/|$|\?)/.test(h);
 const parse=(hash:string)=>{const [path,query='']=hash.replace(/^#\/admin\/?/,'').split('?');const parts=path.split('/').filter(Boolean);return {section:parts[0]||'',id:parts[1]||'',query:new URLSearchParams(query)}};
@@ -39,7 +40,7 @@ function Login({onLoggedIn}:{onLoggedIn:()=>void}){
   {err&&<div className="adm-error" role="alert">{err}</div>}<button type="submit" className="adm-btn adm-btn--primary adm-btn--wide" disabled={busy||!email||!pw||code.replace(/\s/g,'').length!==6}>{busy?'Нэвтэрч байна':'Нэвтрэх'}</button></form></main>
 }
 
-const NAV:[string,string,string][]=[['','Хяналтын самбар','reports.read|payments.read|notifications.read'],['reports','Тайлангийн хяналт','reports.read'],['companies','Байгууллагууд','companies.read'],['payments','Төлбөрийн хяналт','payments.read'],['support','Тусламж','support.manage'],['notifications','Мэдэгдэл','notifications.read'],['settings','Тохиргоо','admins.manage']];
+const NAV:[string,string,string][]=[['','Хяналтын самбар','reports.read|payments.read|notifications.read'],['reports','Тайлангийн хяналт','reports.read'],['users','Хэрэглэгчид','accounts.manage'],['companies','Байгууллагууд','companies.read'],['payments','Төлбөрийн хяналт','payments.read'],['support','Тусламж','support.manage'],['notifications','Мэдэгдэл','notifications.read'],['settings','Тохиргоо','admins.manage']];
 
 function Dashboard({me}:{me:AdminMe}){
  const {loading,error,data,reload}=useAsync(()=>adminApi.get('/dashboard'),[]);
@@ -102,6 +103,7 @@ export default function AdminApp(){
  const active=route.section;
  let body:React.ReactNode;
  if(active==='')body=<Dashboard me={me}/>;else if(active==='reports'&&can('reports.read'))body=<Suspense fallback={<Loading/>}><AdminReports id={route.id} query={route.query} me={me}/></Suspense>;
+ else if(active==='users'&&can('accounts.manage'))body=<Suspense fallback={<Loading/>}><AdminAccounts id={route.id} query={route.query} me={me}/></Suspense>;
  else if(['companies','payments','support'].includes(active))body=<Suspense fallback={<Loading/>}><AdminData section={active} id={route.id} query={route.query} me={me}/></Suspense>;
  else if(active==='notifications')body=<Notifications/>;else if(active==='settings'&&can('admins.manage'))body=<Settings me={me}/>;else body=<Page title="Хандах эрхгүй"><Empty text="Энэ хэсэгт хандах эрх танд байхгүй байна."/></Page>;
  return <div className="adm-shell">
