@@ -1,0 +1,17 @@
+===== GIT STATUS =====
+
+===== RECENT COMMITS =====
+66cb770 checkpoint: final visual direction (atmosphere, radar, guide tiles, blurred modals, PDF button states, domain-colour PDF)
+3c27483 checkpoint: final QA fixes (overlays, mobile notifications, focus rings, body background conflicts)
+12e9944 checkpoint: final report/pdf pass (button, roadmap layout, download guard, filename)
+dfad661 checkpoint: global glass consistency pass, remove old override CSS layers
+78b7ef4 checkpoint: billing, profile, settings glass redesign
+37c184a checkpoint: glass tokens, shared form controls, login redesign
+85aa260 docs: record premium liquid-glass design direction
+5b12eea checkpoint: final results report consistency validation
+580f3d7 checkpoint: results report data consistency
+fa6993b checkpoint: results and report redesign pass 1
+36d9ff7 checkpoint: homepage and diagnosis redesign pass 1
+
+===== CURRENT BRANCH =====
+master

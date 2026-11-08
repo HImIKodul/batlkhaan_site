@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "methodologyVersion": "3.0.4",
+  "questionBankVersion": "3.1.4",
+  "questionsExercised": 16,
+  "uniqueSelected": 16,
+  "inferOnlySelected": 0,
+  "firstQuestions": [
+    "MMRI-C01-D16-Q1",
+    "MMRI-C01-D41-Q1",
+    "MMRI-C01-D02-Q1",
+    "MMRI-C01-D41-Q2",
+    "MMRI-C01-D02-Q2",
+    "MMRI-C01-D16-Q2",
+    "MMRI-C01-D22-Q1",
+    "MMRI-C01-D34-Q1",
+    "MMRI-C01-D04-Q1",
+    "MMRI-C01-D29-Q1",
+    "MMRI-C01-D10-Q1",
+    "MMRI-C01-D47-Q1",
+    "MMRI-C01-D04-Q2",
+    "MMRI-C01-D47-Q2",
+    "MMRI-C01-D34-Q2",
+    "MMRI-C01-D29-Q2"
+  ]
+}

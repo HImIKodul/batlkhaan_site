@@ -46,24 +46,29 @@ shell_css=(F/'components/shell.css').read_text(encoding='utf-8')
 
 hero='Бизнесийнхээ хүчтэй, сул талыг мэдэж, дараагийн 12 сард юу хийхээ тодорхой болго.'
 sub='Аль чиглэл хүчтэй, аль нь сул байгааг тодорхойлж, дараагийн 12 сард яг юу хийхээ харуулсан төлөвлөгөөтэй тайлан авна.'
-labels=['BusinessMMRI.mn гэж юу вэ?','Оношилгоо яаж хийлгэх вэ?','Оношилгооны үр дүн юу вэ?','Төлбөр хэрхэн төлөх вэ мөн хэрхэн бүртгүүлэх вэ?']
+labels=['BusinessMMRI.mn гэж юу вэ?','Оношилгооны тайлангаар юу харах вэ?','Хэрхэн оношилгоо хийлгэх вэ?']
 check('homepage hero copy (2026-10-30 brief)','Бизнесийнхээ бодит дүр зургийг хар.' in landing and 'Дараагийн 12 сарынхаа зөв алхмыг тодорхойл.' in landing)
 check('homepage has a single hero heading',sub not in landing and landing.count('<h1')==1)
-check('four exact guide labels',all(x in landing for x in labels))
+check('three exact guide labels (result + payment guides merged)',all(x in landing for x in labels) and 'Оношилгооны үр дүн юу вэ?' not in landing and landing.count("{id:'")==3 and "'result'" not in landing)
 check('homepage radar removed (component, stylesheet and usage)',not (F/'components/BusinessRadar.tsx').exists() and not (F/'components/radar.css').exists() and 'BusinessRadar' not in landing)
-check('homepage shows five category tiles with one shared component','mmri-cat-tile cat-tile' in landing and landing.count('tileOrder')>=2)
-check('homepage guides are horizontal blue-glass slabs (icon left, title right)','grid-template-columns:auto minmax(0,1fr)' in (F/'pages/landing.css').read_text(encoding='utf-8') and 'height:clamp(52px,7.6dvh,64px)' in (F/'pages/landing.css').read_text(encoding='utf-8') and 'mmri-home2__guide glass-clear' in (F/'pages/Landing.tsx').read_text(encoding='utf-8'))
-check('category tiles are colour-only (no glyph), score on surface','<Glyph' not in landing and 'cat-tile__value' in landing)
-# Step 7/10 — one canonical design system across CSS + TS consumers.
+check('homepage has no category button row (the five domains are not repeated on the homepage; they live on the Diagnosis page)','className={`mmri-domain' not in landing and 'className="mmri-domain"' not in landing and 'mmri-home2__domains' not in landing and 'OpalGlass' not in landing)
+check('homepage guides are three equal glass controls (number, title, arrow)','grid-template-columns:repeat(3,minmax(0,1fr))' in (F/'pages/landing.css').read_text(encoding='utf-8') and 'grid-template-columns:auto minmax(0,1fr) auto' in (F/'pages/landing.css').read_text(encoding='utf-8') and 'mmri-home2__guide is-' in (F/'pages/Landing.tsx').read_text(encoding='utf-8'))
+landing_css=(F/'pages/landing.css').read_text(encoding='utf-8')
+check('homepage hero is ONE glass figure: the old ring/arcs/domain-icon graphic (MmriCore) is gone, diagnosis stays reachable from the hero button','ReportGlassPreview' in landing and 'MmriCore' not in landing and not (F/'components/MmriCore.tsx').exists() and 'mmri-core' not in landing_css and landing.count('<ReportGlassPreview')==1 and 'startDiagnosis' in landing and '<Glyph' not in landing)
+rgp=(F/'components/ReportGlassPreview.tsx').read_text(encoding='utf-8')
+import re as _re
+check('hero report preview is decorative and data-free (no score/api/random, three labelled deliverables, no digits in visible copy except the 12-month label)','api.' not in rgp and 'Math.random' not in rgp and 'score' not in rgp.lower() and '12 сарын төлөвлөгөө' in rgp and 'Бизнесийн оношилгооны тайлан' in rgp and '5 давуу тал' in rgp and '5 сул тал' in rgp and not _re.search(r'>\s*\d+(\.\d+)?\s*<',rgp))
+# Step 7/10 - one canonical design system across CSS + TS consumers.
 check('TS tokens mirror blue-white brand',"brand: '#1B63D8'" in tokens_ts and "canvas: '#F2F7FE'" in tokens_ts and '#5B5CE6' not in tokens_ts)
 check('TS geometry mirrors CSS token scale','radius: { small: 8, control: 12, surface: 18, focal: 24' in tokens_ts and 'controlHeight: { compact: 36, default: 46, touch: 48 }' in tokens_ts)
-check('five domain colors are canonical CSS tokens',all(x in tokens_css for x in ['--mmri-domain-marketing: #DC2626','--mmri-domain-it: #0284C7','--mmri-domain-finance: #F59E0B','--mmri-domain-people: #7C3AED','--mmri-domain-operations: #10B981']))
-check('five domain colors are canonical TS tokens','domainVisualTokens' in tokens_ts and all(x in tokens_ts for x in ["marketing: { accent: '#DC2626'","it: { accent: '#0284C7'","finance: { accent: '#F59E0B'","people: { accent: '#7C3AED'","operations: { accent: '#10B981'"]))
+check('five domain colors are canonical CSS tokens',all(x in tokens_css for x in ['--mmri-domain-marketing: #00E5A0','--mmri-domain-it: #00CFFF','--mmri-domain-finance: #FFAA23','--mmri-domain-people: #9250FF','--mmri-domain-operations: #FF36B5']))
+check('five domain colors are canonical TS tokens','domainVisualTokens' in tokens_ts and all(x in tokens_ts for x in ["marketing: { accent: '#00E5A0'","it: { accent: '#00CFFF'","finance: { accent: '#FFAA23'","people: { accent: '#9250FF'","operations: { accent: '#FF36B5'"]))
 check('report/radar palette consumes canonical TS domain tokens','domainVisualTokens' in report_palette and '#FF3D8D' not in report_palette and '#00A6FF' not in report_palette)
 check('Results consumes canonical CSS domain tokens',all(x in resultscss for x in ['var(--mmri-domain-marketing)','var(--mmri-domain-it)','var(--mmri-domain-finance)','var(--mmri-domain-people)','var(--mmri-domain-operations)']))
 check('shared buttons use one control material',buttons_css.count('.mmri-button--primary{')==1 and 'border-radius:var(--radius-button)' in buttons_css)
 check('shared form controls use glass material/focus ring','var(--mmri-glass-control-blur)' in forms_css and 'var(--mmri-focus-ring)' in forms_css and 'rgba(10,16,100,.34)' in forms_css)
 check('shell controls use shared material tokens',all(x in shell_css for x in ['var(--mmri-glass-control-blur)','var(--mmri-glass-control-shadow)','border-radius:var(--mmri-radius-control)']))
+check('diagnosis page is a flex column: profile-gate/error banner owns a row with a gap and its height comes out of the cards','display:flex;flex-direction:column;gap:14px' in diagnosiscss and ':has(>.mmri-support-alert) .diagnosis-square{height:clamp(' in diagnosiscss)
 check('diagnosis status is one simple pill','diagnosis-status-icon' in diagnosiscss and 'diagnosis-status-icon' in diagnosis and 'status-track' not in diagnosiscss)
 check('secondary domain icon geometry is tokenized','--mmri-domain-icon-size-large: 72px' in tokens_css and 'width:var(--mmri-domain-icon-size-large)' in (F/'pages/billing.css').read_text(encoding='utf-8'))
 check('shared controls do not duplicate primary button rules',buttons_css.count('.mmri-button--primary{')==1 and buttons_css.count('.mmri-button--secondary{')==1)
@@ -88,7 +93,7 @@ check('no source backup files',not any(F.rglob('*.bak')))
 check('unused home.css removed',not (F/'pages/home.css').exists())
 check('legacy stylesheet bounded',len(legacy.encode())<145_000,str(len(legacy.encode())))
 css_imports=[x for x in main.splitlines() if x.startswith('import ') and '.css' in x]
-check('CSS import count controlled',len(css_imports)<=21,str(len(css_imports)))
+check('CSS import count controlled',len(css_imports)<=22,str(len(css_imports)))
 # Preference layer intentionally stays last.
 check('preferences are last CSS layer',css_imports and 'preferences.css' in css_imports[-1],css_imports[-1] if css_imports else '')
 check('settings stores no display preferences (text size removed; no theme/density)','mmriFontSize' not in settings and 'mmriTheme' not in settings and 'mmriDensity' not in settings)
@@ -113,11 +118,11 @@ check('report roadmap completion is report-specific','m.reportId||m.assessmentId
 check('report score is centered circle without /100','report-score-stage' in report and '/100' not in report and '.report-score{display:grid;place-items:center' in reportcss)
 check('report header carries no extra status ornament','report-active-status' not in report and 'report-v3__top' in report)
 check('report PDF button stays stationary','.report-top-download' in reportcss and 'width:176px' in reportcss)
-check('report domain tabs have no thin outline','.report-domain-switcher>button.is-active{border-color:#fff' in reportcss)
+check('active report domain tab uses the ink border (was white on the dark theme) and has a keyboard focus ring','.report-domain-switcher>button:focus-visible{outline:3px solid var(--wp-ink)' in reportcss and '.report-domain-switcher>button.is-active{border-color:var(--wp-ink)' in reportcss)
 check('report critical score comparison has no arrow','report-purpose-arrow' not in report and 'Одоогийн оноо ${p.weakScore}. Зорилтот оноо ${p.projectedScore}.' in report)
 check('report roadmap is tap-to-complete native button','<button type="button" className={`report-roadmap-card' in report and 'aria-pressed={done}' in report and 'is-complete' in reportcss)
-check('report paper is a calm content surface (3px/120%)','backdrop-filter:blur(3px) saturate(120%)' in reportcss and '.report-three-page{--report-accent-light' in reportcss and 'var(--page-glass-bg)' in reportcss)
-check('report category colour is rim/reflection only, never a sheet fill','var(--glass-category-rim)' in reportcss and 'var(--glass-category-reflection)' in reportcss and 'color-mix(in srgb,var(--report-accent) 20%,rgba(14,18,80' not in reportcss and 'mmri-area-tint-legacy' not in reportcss)
+check('report paper is a solid white reading surface (no blur behind text)','.report-three-page{--report-accent-light' in reportcss and 'background:var(--wp-spec) top/100% 14% no-repeat,#fff' in reportcss and 'backdrop-filter' not in reportcss.split('.report-three-page{--report-accent-light',1)[1].split('}',1)[0])
+check('report category colour is never a sheet fill','color-mix(in srgb,var(--report-accent) 20%,rgba(14,18,80' not in reportcss and 'mmri-area-tint-legacy' not in reportcss)
 check('report locked payment shows price','ТӨЛБӨР ТӨЛӨХ · 300,000₮' in report)
 check('report domain icons use accessible ink token',"'--domain-ink':p.ink" in report and '.report-domain-switcher__icon{flex:none' in reportcss)
 check('PDF browser fallback isolated from screen', '.report-print-only{display:none}' in reportcss and 'body.mmri-print-report .report-screen-only' in reportcss and 'body.mmri-print-report .report-print-only{display:block!important' in reportcss)
@@ -137,7 +142,7 @@ else:
     fail.append(('PDF renderer present',str(renderer)))
 
 
-# Step 6/10 — account, billing and priorities hardening.
+# Step 6/10 - account, billing and priorities hardening.
 login=(F/'pages/Login.tsx').read_text(encoding='utf-8')
 billing=(F/'pages/Billing.tsx').read_text(encoding='utf-8')
 profile=(F/'pages/Profile.tsx').read_text(encoding='utf-8')
@@ -162,7 +167,7 @@ check('priorities avoid score arrows','→' not in priorities and 'Одоо / з
 check('priorities use five-domain neutral fallback',"??'Чиглэл'" in priorities and 'маркетингийн чиглэл' not in priorities.lower())
 check('priorities remove strategy-domain residue','Стратеги ба удирдлага' not in priorities and 'стратеги хариуцсан менежер' not in priorities)
 
-# Step 8/10 — responsive + accessibility final pass.
+# Step 8/10 - responsive + accessibility final pass.
 landingcss=(F/'pages/landing.css').read_text(encoding='utf-8')
 billingcss=(F/'pages/billing.css').read_text(encoding='utf-8')
 supportcss=(F/'pages/support.css').read_text(encoding='utf-8')
@@ -176,7 +181,7 @@ check('forced-colors mode has explicit focus and glass fallback','@media (forced
 check('shell has skip link and route focus target','mmri-skip-link' in shell_css and 'id="main-content"' in (F/'components/AppShell.tsx').read_text(encoding='utf-8') and 'data-route-heading' in app)
 check('mobile shell uses safe bottom clearance','padding-bottom:var(--mmri-mobile-bottom-clearance)' in shell_css and 'min-height:var(--mmri-bottom-nav-height)' in shell_css)
 check('mobile report domain/date controls remain horizontally reachable','scroll-snap-type:x proximity' in reportcss and 'overscroll-behavior-inline:contain' in reportcss and 'min-height:56px' in reportcss)
-check('guide modal respects safe areas and contained scrolling','env(safe-area-inset-top)' in landingcss and 'overscroll-behavior:contain' in landingcss and 'max-height:calc(100dvh' in landingcss)
+check('guide modal respects safe areas and contained scrolling','env(safe-area-inset-bottom)' in landingcss and 'overscroll-behavior:contain' in landingcss and 'height:100%' in landingcss)
 check('billing modal respects safe areas and coarse-pointer targets','env(safe-area-inset-top)' in billingcss and '@media (pointer:coarse)' in billingcss and 'width:48px;height:48px' in billingcss)
 check('support stepper collapses to reachable mobile scroller','scroll-snap-type:x proximity' in supportcss and 'flex:0 0 min(78vw,280px)' in supportcss and '.mmri-support-account-grid{grid-template-columns:1fr}' in supportcss)
 
@@ -219,7 +224,7 @@ for line in css_imports:
         check('CSS structure '+p.name,ok,f"depth={depth}")
 
 print(f'UI POLISH GATE: {len(passed)}/{len(passed)+len(fail)} PASS')
-for n,d in passed: print('PASS',n+(f' — {d}' if d else ''))
-for n,d in fail: print('FAIL',n+(f' — {d}' if d else ''))
+for n,d in passed: print('PASS',n+(f' - {d}' if d else ''))
+for n,d in fail: print('FAIL',n+(f' - {d}' if d else ''))
 if fail: sys.exit(1)
 PY

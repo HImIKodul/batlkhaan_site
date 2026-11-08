@@ -1,0 +1,932 @@
+{
+  "status": "PASS",
+  "checksPassed": 27,
+  "checksTotal": 27,
+  "failed": [],
+  "results": [
+    {
+      "id": "weak",
+      "label": "Weak",
+      "mode": "QUICK",
+      "relevantCount": 1,
+      "target": 0,
+      "terminalState": "QUICK_LIMIT_REACHED",
+      "stopReason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 90,
+      "totalQuestions": 280,
+      "overall": {
+        "partialScore": 0,
+        "officialScore": 0,
+        "confidence": 0.6502802233230772,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1
+      },
+      "quality": {
+        "knownMaturityCells": 46,
+        "totalMaturityCells": 2944,
+        "weakCells": 46,
+        "strongCells": 0,
+        "reviewRequiredCells": 0,
+        "hardContradictionCells": 0,
+        "dnkAnswers": 0,
+        "naAnswers": 0,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": 0,
+            "officialScore": 0,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": 0,
+            "officialScore": 0,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": 0,
+            "officialScore": 0,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": 0,
+            "officialScore": 0,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": 0,
+            "officialScore": 0,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": 0,
+            "officialScore": 0,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "mid",
+      "label": "Mid",
+      "mode": "QUICK",
+      "relevantCount": 1,
+      "target": 50,
+      "terminalState": "QUICK_LIMIT_REACHED",
+      "stopReason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 90,
+      "totalQuestions": 280,
+      "overall": {
+        "partialScore": 48.29059692307693,
+        "officialScore": 48.29059692307693,
+        "confidence": 0.6502802233230772,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1
+      },
+      "quality": {
+        "knownMaturityCells": 46,
+        "totalMaturityCells": 2944,
+        "weakCells": 46,
+        "strongCells": 0,
+        "reviewRequiredCells": 0,
+        "hardContradictionCells": 0,
+        "dnkAnswers": 0,
+        "naAnswers": 0,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": 48.29059692307693,
+            "officialScore": 48.29059692307693,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": 48.29059692307693,
+            "officialScore": 48.29059692307693,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": 48.29059692307693,
+            "officialScore": 48.29059692307693,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": 48.29059692307693,
+            "officialScore": 48.29059692307693,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": 48.29059692307693,
+            "officialScore": 48.29059692307693,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": 48.29059692307693,
+            "officialScore": 48.29059692307693,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "strong",
+      "label": "Strong",
+      "mode": "QUICK",
+      "relevantCount": 1,
+      "target": 100,
+      "terminalState": "QUICK_LIMIT_REACHED",
+      "stopReason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 90,
+      "totalQuestions": 280,
+      "overall": {
+        "partialScore": 100,
+        "officialScore": 100,
+        "confidence": 0.6502802233230772,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1
+      },
+      "quality": {
+        "knownMaturityCells": 46,
+        "totalMaturityCells": 2944,
+        "weakCells": 0,
+        "strongCells": 46,
+        "reviewRequiredCells": 0,
+        "hardContradictionCells": 0,
+        "dnkAnswers": 0,
+        "naAnswers": 0,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": 100,
+            "officialScore": 100,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": 100,
+            "officialScore": 100,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": 100,
+            "officialScore": 100,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": 100,
+            "officialScore": 100,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": 100,
+            "officialScore": 100,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": 100,
+            "officialScore": 100,
+            "confidence": 0.6502802233230772,
+            "coverage": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "na_heavy",
+      "label": "NA heavy",
+      "mode": "QUICK",
+      "relevantCount": 1,
+      "target": 70,
+      "terminalState": "QUICK_LIMIT_REACHED",
+      "stopReason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 90,
+      "totalQuestions": 280,
+      "overall": {
+        "partialScore": 73.43777437106918,
+        "officialScore": 73.43777437106918,
+        "confidence": 0.6006359113312371,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1
+      },
+      "quality": {
+        "knownMaturityCells": 45,
+        "totalMaturityCells": 2943,
+        "weakCells": 0,
+        "strongCells": 0,
+        "reviewRequiredCells": 5,
+        "hardContradictionCells": 5,
+        "dnkAnswers": 0,
+        "naAnswers": 14,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": 73.43777437106918,
+            "officialScore": 73.43777437106918,
+            "confidence": 0.6006359113312371,
+            "coverage": 1
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": 73.43777437106918,
+            "officialScore": 73.43777437106918,
+            "confidence": 0.6006359113312371,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": 73.43777437106918,
+            "officialScore": 73.43777437106918,
+            "confidence": 0.6006359113312371,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": 73.43777437106918,
+            "officialScore": 73.43777437106918,
+            "confidence": 0.6006359113312371,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": 73.43777437106918,
+            "officialScore": 73.43777437106918,
+            "confidence": 0.6006359113312371,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": 73.43777437106918,
+            "officialScore": 73.43777437106918,
+            "confidence": 0.6006359113312371,
+            "coverage": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "all_dnk",
+      "label": "All DNK",
+      "mode": "FULL",
+      "relevantCount": 1,
+      "target": 70,
+      "terminalState": "FULL_EVIDENCE_INCOMPLETE",
+      "stopReason": "EVIDENCE_EXHAUSTED_WITH_NULL_VALUES:46",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 184,
+      "totalQuestions": 374,
+      "overall": {
+        "partialScore": null,
+        "officialScore": null,
+        "confidence": null,
+        "coverage": 0,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 0
+      },
+      "quality": {
+        "knownMaturityCells": 0,
+        "totalMaturityCells": 2944,
+        "weakCells": 0,
+        "strongCells": 0,
+        "reviewRequiredCells": 0,
+        "hardContradictionCells": 0,
+        "dnkAnswers": 184,
+        "naAnswers": 0,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": 0
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": 0
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": 0
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": 0
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": 0
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "contradictory",
+      "label": "Contradictory",
+      "mode": "FULL",
+      "relevantCount": 1,
+      "target": 90,
+      "terminalState": "FULL_COMPLETE_WITH_REVIEW",
+      "stopReason": "EVIDENCE_EXHAUSTED_WITH_REVIEW:32",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 171,
+      "totalQuestions": 361,
+      "overall": {
+        "partialScore": 81.53205128205127,
+        "officialScore": 81.53205128205127,
+        "confidence": 0.6880726988049232,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1
+      },
+      "quality": {
+        "knownMaturityCells": 46,
+        "totalMaturityCells": 2944,
+        "weakCells": 0,
+        "strongCells": 14,
+        "reviewRequiredCells": 32,
+        "hardContradictionCells": 32,
+        "dnkAnswers": 0,
+        "naAnswers": 0,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": 81.53205128205127,
+            "officialScore": 81.53205128205127,
+            "confidence": 0.6880726988049232,
+            "coverage": 1
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": 81.53205128205128,
+            "officialScore": 81.53205128205128,
+            "confidence": 0.6880726988049232,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": 81.53205128205128,
+            "officialScore": 81.53205128205128,
+            "confidence": 0.6880726988049232,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": 81.53205128205128,
+            "officialScore": 81.53205128205128,
+            "confidence": 0.6880726988049232,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": 81.53205128205128,
+            "officialScore": 81.53205128205128,
+            "confidence": 0.6880726988049232,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": 81.53205128205128,
+            "officialScore": 81.53205128205128,
+            "confidence": 0.6880726988049232,
+            "coverage": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "low_authority",
+      "label": "Low authority",
+      "mode": "FULL",
+      "relevantCount": 1,
+      "target": 90,
+      "terminalState": "FULL_COMPLETE_WITH_REVIEW",
+      "stopReason": "EVIDENCE_EXHAUSTED_WITH_REVIEW:45",
+      "routingQuestions": 190,
+      "diagnosticQuestions": 184,
+      "totalQuestions": 374,
+      "overall": {
+        "partialScore": 99.27564102564105,
+        "officialScore": 99.27564102564105,
+        "confidence": 0.7377550211156192,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1
+      },
+      "quality": {
+        "knownMaturityCells": 46,
+        "totalMaturityCells": 2944,
+        "weakCells": 0,
+        "strongCells": 46,
+        "reviewRequiredCells": 45,
+        "hardContradictionCells": 0,
+        "dnkAnswers": 0,
+        "naAnswers": 0,
+        "inferOnlyAsked": 0,
+        "duplicateQuestions": 0,
+        "roles": [
+          "R02"
+        ]
+      },
+      "snapshotSummary": {
+        "modules": [
+          {
+            "moduleId": "Стратеги ба удирдлага",
+            "partialScore": 99.27564102564105,
+            "officialScore": 99.27564102564105,
+            "confidence": 0.7377550211156192,
+            "coverage": 1
+          },
+          {
+            "moduleId": "Зах зээл ба хэрэглэгчийн ойлголт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өрсөлдөөн ба байршуулалт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Брэнд ба харилцаа",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Бүтээгдэхүүн, үнэ ба үйлчилгээ",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Борлуулалт, суваг ба харилцагч",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Дижитал маркетинг",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          },
+          {
+            "moduleId": "Өгөгдөл, технологи ба өөрчлөлт",
+            "partialScore": null,
+            "officialScore": null,
+            "confidence": null,
+            "coverage": null
+          }
+        ],
+        "purposes": [
+          {
+            "purposeId": "P1",
+            "partialScore": 99.27564102564104,
+            "officialScore": 99.27564102564104,
+            "confidence": 0.7377550211156192,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P2",
+            "partialScore": 99.27564102564104,
+            "officialScore": 99.27564102564104,
+            "confidence": 0.7377550211156192,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P3",
+            "partialScore": 99.27564102564104,
+            "officialScore": 99.27564102564104,
+            "confidence": 0.7377550211156192,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P4",
+            "partialScore": 99.27564102564104,
+            "officialScore": 99.27564102564104,
+            "confidence": 0.7377550211156192,
+            "coverage": 1
+          },
+          {
+            "purposeId": "P5",
+            "partialScore": 99.27564102564104,
+            "officialScore": 99.27564102564104,
+            "confidence": 0.7377550211156192,
+            "coverage": 1
+          }
+        ]
+      }
+    }
+  ]
+}

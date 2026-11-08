@@ -1,0 +1,72 @@
+{
+  "version": "MMRI-STEP6OF6-FIVE-DOMAIN-ACCEPTED-v1.0.0",
+  "created": "2026-10-23",
+  "step5AcceptedMasterSHA256": "4897b0218d51abf0d5aab28a13521b83f98ad5fd859a368aceaaff817abdd75d",
+  "status": "FINAL_SOURCE_INTEGRATED",
+  "domains": {
+    "marketing": {
+      "methodologyVersion": "3.0.3",
+      "questionBankVersion": "3.1.3",
+      "file": "MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json",
+      "sha256": "4ec42fb9fb7fd0d55c482bf5bbea379fb4cd3e9e97fd1921d405bbb432734c79",
+      "questions": 12288,
+      "engineKind": "MARKETING_V3"
+    },
+    "people": {
+      "mri": "HRMRI",
+      "methodologyVersion": "4.1.4",
+      "questionBankVersion": "BUSINESSMRI-v2.4-HRMRI",
+      "file": "MMRI_HRMRI_Methodology_4.1.4_BUSINESSMRI_V2.json",
+      "sha256": "0c3a5ece809f38ee0e07711f1d460353b58a3a3794b0b4060213761b21300fff",
+      "canonicalBank": "people-businessmri-v2.4-accepted.json",
+      "canonicalBankSha256": "da4d167ad251ac6e09bf7f46b2017b55384e1de45f5b586e2c1ee9282f6009d2",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    },
+    "finance": {
+      "mri": "FINMRI",
+      "methodologyVersion": "4.2.4",
+      "questionBankVersion": "BUSINESSMRI-v2.4-FINMRI",
+      "file": "MMRI_FINMRI_Methodology_4.2.4_BUSINESSMRI_V2.json",
+      "sha256": "270e4cf2edc757a339cede7889ab36cddb10a3d0d54ded03d9e2e7001312cdf8",
+      "canonicalBank": "finance-businessmri-v2.4-accepted.json",
+      "canonicalBankSha256": "638ff5f210dff380806a398885faa679f3edf90490975146d33181b154ca7241",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    },
+    "it": {
+      "mri": "ISMRI",
+      "methodologyVersion": "4.3.4",
+      "questionBankVersion": "BUSINESSMRI-v2.4-ISMRI",
+      "file": "MMRI_ISMRI_Methodology_4.3.4_BUSINESSMRI_V2.json",
+      "sha256": "30d9667a0a9aa979791b64dc709c14194300055af06c23b543849de901303b09",
+      "canonicalBank": "it-businessmri-v2.4-accepted.json",
+      "canonicalBankSha256": "3748b77969818ba7ebbd943891e8c4eefd7b5b23d90da50457a56329cda32840",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    },
+    "operations": {
+      "mri": "OPMRI",
+      "methodologyVersion": "4.4.4",
+      "questionBankVersion": "BUSINESSMRI-v2.4-OPMRI",
+      "file": "MMRI_OPMRI_Methodology_4.4.4_BUSINESSMRI_V2.json",
+      "sha256": "40790d319a8fd110a20212b11002bbfc04409ab7dc9fcaada00cab81e1582335",
+      "canonicalBank": "operations-businessmri-v2.4-accepted.json",
+      "canonicalBankSha256": "8b8a3b145d4942bca6fe31598333cbca6f6ed444a06b4ef946efed3edcf192bf",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    }
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "suite": "MMRI Backend Step 15/20 full synthetic E2E",
+  "status": "PASS",
+  "passed": 86,
+  "total": 86,
+  "failed": [],
+  "summaries": [
+    {
+      "domain": "marketing",
+      "answers": 2316,
+      "score": 46,
+      "strengths": [
+        "MS01",
+        "MS02",
+        "MS03",
+        "MS04",
+        "MS05"
+      ],
+      "weaknesses": [
+        "MS07",
+        "MS08",
+        "MS09",
+        "MS10",
+        "MS11"
+      ],
+      "criticalActions": 5,
+      "milestones": 27,
+      "payloadHash": "c692bdb816f5fe168083a0b23a5c9bab5983dd177d2f37fb4b339f4231b8f8fb",
+      "pdfHash": "a3b32cea03ba7f1bc2b32b68dc7094dd577afb235a86a99cb68da9682bc3dccb",
+      "pdfBytes": 46347
+    },
+    {
+      "domain": "it",
+      "answers": 1106,
+      "score": 50,
+      "strengths": [
+        "ISMRI-C01",
+        "ISMRI-C02",
+        "ISMRI-C03",
+        "ISMRI-C04",
+        "ISMRI-C05"
+      ],
+      "weaknesses": [
+        "ISMRI-C07",
+        "ISMRI-C08",
+        "ISMRI-C09",
+        "ISMRI-C10",
+        "ISMRI-C11"
+      ],
+      "criticalActions": 5,
+      "milestones": 7,
+      "payloadHash": "87524afe6ba0d4bfbbb6f7c494147fe7afa79c51c339656256bbac3447b9e967",
+      "pdfHash": "efe77cbc1424f1cf4d354af9f3ab97d7301ae4e3539f940c24c04473783c4086",
+      "pdfBytes": 45260
+    },
+    {
+      "domain": "finance",
+      "answers": 1088,
+      "score": 50,
+      "strengths": [
+        "FINMRI-C01",
+        "FINMRI-C02",
+        "FINMRI-C03",
+        "FINMRI-C04",
+        "FINMRI-C05"
+      ],
+      "weaknesses": [
+        "FINMRI-C07",
+        "FINMRI-C08",
+        "FINMRI-C09",
+        "FINMRI-C10",
+        "FINMRI-C11"
+      ],
+      "criticalActions": 5,
+      "milestones": 7,
+      "payloadHash": "00b70ada124076d50a22d252724ec5c1fbdec5fad418cc0983898d7d5434c352",
+      "pdfHash": "87afd740eac9ba4f2d8f1bc1fd78f16b7ed419f9a394121311790053c23f8a01",
+      "pdfBytes": 45267
+    },
+    {
+      "domain": "people",
+      "answers": 1082,
+      "score": 50,
+      "strengths": [
+        "HRMRI-C01",
+        "HRMRI-C02",
+        "HRMRI-C03",
+        "HRMRI-C04",
+        "HRMRI-C05"
+      ],
+      "weaknesses": [
+        "HRMRI-C07",
+        "HRMRI-C08",
+        "HRMRI-C09",
+        "HRMRI-C10",
+        "HRMRI-C11"
+      ],
+      "criticalActions": 5,
+      "milestones": 7,
+      "payloadHash": "4c4564dcd895d2f1810a2fbcba71e253ddf0dfeb1a3ba9d3efd3532f0c12600c",
+      "pdfHash": "dc484c4e83386b8a0cb0593bce9a5be160d9c6bd7d333e26d4d043209db92cf0",
+      "pdfBytes": 45351
+    },
+    {
+      "domain": "operations",
+      "answers": 1108,
+      "score": 50,
+      "strengths": [
+        "OPMRI-C01",
+        "OPMRI-C02",
+        "OPMRI-C03",
+        "OPMRI-C04",
+        "OPMRI-C05"
+      ],
+      "weaknesses": [
+        "OPMRI-C07",
+        "OPMRI-C08",
+        "OPMRI-C09",
+        "OPMRI-C10",
+        "OPMRI-C11"
+      ],
+      "criticalActions": 5,
+      "milestones": 7,
+      "payloadHash": "28b4f737d738f463a3ec25c898602e8f63fe3b557f196a8776910deb6170cd39",
+      "pdfHash": "a6baf7f58e179f33caa0f4414ef2eab2c957dbf3a8fbf6a6beda65e205ff7b7e",
+      "pdfBytes": 45276
+    }
+  ]
+}

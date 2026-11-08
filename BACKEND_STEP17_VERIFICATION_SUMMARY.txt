@@ -1,0 +1,17 @@
+MMRI backend completion — Step 17/20 production security
+Date: 2026-10-25
+
+PASS backend-step17-production-security-static: 27/27
+PASS backend-step17-production-security-regression: 16/16
+PASS Step 13 security/RBAC static: 54/54
+PASS Step 13 dependency-free security runtime: 38/38
+PASS production security acceptance: 29/29
+PASS API static: 75 routes
+PASS Step 16 recovery static: 25/25
+PASS Step 16 recovery runtime: 24/24
+PASS Step 15 five-domain synthetic E2E: 86/86
+PASS secret scan: 0 findings
+PASS all backend Step 2..17 static gates
+PASS changed TypeScript transpilation/syntax
+
+CONNECTED HOLD (intentional): actual PostgreSQL runtime-role privilege verification and real persistent-volume permission check require the later connected DigitalOcean/PostgreSQL environment. The verifier is included as backend/src/verify-backend-production-security.ts.

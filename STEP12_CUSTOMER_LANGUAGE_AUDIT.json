@@ -1,0 +1,7 @@
+{
+  "schema": "mmri.step12.customer_language.audit.v1",
+  "status": "PASS",
+  "hitCount": 0,
+  "scope": "Actual customer-visible recommendation, 365-day action-plan and report section text.",
+  "hits": []
+}

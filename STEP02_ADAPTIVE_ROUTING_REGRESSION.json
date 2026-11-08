@@ -1,0 +1,408 @@
+{
+  "schema": "mmri.step02_of15.adaptive_routing.regression.v1",
+  "status": "PASS",
+  "checksPassed": 40,
+  "checksTotal": 40,
+  "failures": [],
+  "scenarios": {
+    "noApplicable": {
+      "state": "NO_APPLICABLE_SCOPE",
+      "reason": "ALL_CAPABILITIES_NOT_APPLICABLE",
+      "overall": {
+        "partialScore": null,
+        "officialScore": null,
+        "confidence": null,
+        "coverage": null,
+        "applicableCategoryCount": 0,
+        "completeCategoryCount": 0,
+        "applicableModuleCount": 0,
+        "completeModuleCount": 0,
+        "aggregationVersion": "HIERARCHICAL_V13"
+      }
+    },
+    "allDnk": {
+      "state": "FULL_EVIDENCE_INCOMPLETE",
+      "reason": "FULL_APPLICABILITY_EVIDENCE_EXHAUSTED:64",
+      "routingAnswers": 256
+    },
+    "quick1": {
+      "state": "QUICK_LIMIT_REACHED",
+      "reason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "diagnosticQuestions": 90,
+      "overall": {
+        "partialScore": 100,
+        "officialScore": 100,
+        "confidence": 0.6502802233230772,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1,
+        "applicableModuleCount": 1,
+        "completeModuleCount": 1,
+        "aggregationVersion": "HIERARCHICAL_V13"
+      },
+      "d42": [
+        1
+      ],
+      "d44": [
+        1,
+        2
+      ],
+      "critical": {
+        "C02": [
+          1,
+          2
+        ],
+        "C16": [
+          1,
+          2
+        ],
+        "C41": [
+          1,
+          2
+        ]
+      }
+    },
+    "full1": {
+      "state": "FULL_COMPLETE",
+      "reason": "ALL_APPLICABLE_EVIDENCE_PATHS_RESOLVED",
+      "diagnosticQuestions": 140,
+      "overall": {
+        "partialScore": 100,
+        "officialScore": 100,
+        "confidence": 0.82142380085056,
+        "coverage": 1,
+        "applicableCategoryCount": 1,
+        "completeCategoryCount": 1,
+        "applicableModuleCount": 1,
+        "completeModuleCount": 1,
+        "aggregationVersion": "HIERARCHICAL_V13"
+      },
+      "d42": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "d44": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "critical": {
+        "C02": [
+          1,
+          2,
+          3
+        ],
+        "C16": [
+          1,
+          2,
+          3
+        ],
+        "C41": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "lowAuthority": {
+      "state": "QUICK_LIMIT_REACHED",
+      "reason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "diagnosticQuestions": 90,
+      "critical": {
+        "C02": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "C16": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "C41": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "quick12": {
+      "state": "QUICK_LIMIT_REACHED",
+      "reason": "ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280",
+      "diagnosticQuestions": 112,
+      "overall": {
+        "coverage": 0.8801435897435899,
+        "applicableCategoryCount": 12
+      },
+      "inferOnlySelected": 0
+    }
+  },
+  "checks": [
+    {
+      "name": "reference_budget_1",
+      "pass": true,
+      "detail": 92
+    },
+    {
+      "name": "reference_budget_12",
+      "pass": true,
+      "detail": 180
+    },
+    {
+      "name": "reference_budget_20",
+      "pass": true,
+      "detail": 244
+    },
+    {
+      "name": "reference_budget_25",
+      "pass": true,
+      "detail": 280
+    },
+    {
+      "name": "reference_budget_30",
+      "pass": true,
+      "detail": 314
+    },
+    {
+      "name": "reference_budget_64",
+      "pass": true,
+      "detail": 518
+    },
+    {
+      "name": "soft_cap_1",
+      "pass": true,
+      "detail": 112
+    },
+    {
+      "name": "soft_cap_12",
+      "pass": true,
+      "detail": 216
+    },
+    {
+      "name": "soft_cap_25",
+      "pass": true,
+      "detail": 355
+    },
+    {
+      "name": "first_question_exists",
+      "pass": true,
+      "detail": "MMRI-C01-D16-Q1"
+    },
+    {
+      "name": "one_outstanding_question_guard",
+      "pass": true,
+      "detail": "AWAITING_CURRENT_QUESTION"
+    },
+    {
+      "name": "all_not_applicable_terminal",
+      "pass": true,
+      "detail": "NO_APPLICABLE_SCOPE"
+    },
+    {
+      "name": "all_not_applicable_denominator_zero",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "all_dnk_256_paths",
+      "pass": true,
+      "detail": 256
+    },
+    {
+      "name": "all_dnk_not_false_complete",
+      "pass": true,
+      "detail": "FULL_EVIDENCE_INCOMPLETE"
+    },
+    {
+      "name": "quick_1_total_cap_terminal",
+      "pass": true,
+      "detail": "QUICK_LIMIT_REACHED"
+    },
+    {
+      "name": "full_1_complete",
+      "pass": true,
+      "detail": "FULL_COMPLETE"
+    },
+    {
+      "name": "quick_full_distinct",
+      "pass": true,
+      "detail": "90->140"
+    },
+    {
+      "name": "quick_1_total_answers_280",
+      "pass": true,
+      "detail": "280 total / 90 diagnostic"
+    },
+    {
+      "name": "full_1_burden_140",
+      "pass": true,
+      "detail": 140
+    },
+    {
+      "name": "quick_no_duplicates",
+      "pass": true,
+      "detail": 90
+    },
+    {
+      "name": "full_no_duplicates",
+      "pass": true,
+      "detail": 140
+    },
+    {
+      "name": "quick_no_infer_only",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "full_no_infer_only",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "quick_d42_one_context_path",
+      "pass": true,
+      "detail": [
+        1
+      ]
+    },
+    {
+      "name": "full_d42_four_context_paths",
+      "pass": true,
+      "detail": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "full_d44_q4_context_collected",
+      "pass": true,
+      "detail": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "quick_critical_two_direct",
+      "pass": true,
+      "detail": {
+        "C02": [
+          1,
+          2
+        ],
+        "C16": [
+          1,
+          2
+        ],
+        "C41": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "full_critical_third_path",
+      "pass": true,
+      "detail": {
+        "C02": [
+          1,
+          2,
+          3
+        ],
+        "C16": [
+          1,
+          2,
+          3
+        ],
+        "C41": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "name": "full_coverage_one",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "full_official_score_available",
+      "pass": true,
+      "detail": 100
+    },
+    {
+      "name": "full_applicable_categories_one",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "low_authority_critical_escalation",
+      "pass": true,
+      "detail": {
+        "C02": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "C16": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "C41": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "low_authority_bounded",
+      "pass": true,
+      "detail": "90/112"
+    },
+    {
+      "name": "low_authority_no_infer_only",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "quick_12_total_cap_terminal",
+      "pass": true,
+      "detail": "QUICK_LIMIT_REACHED:ADAPTIVE_V13_QUICK_HARD_MAXIMUM:280"
+    },
+    {
+      "name": "quick_12_total_answers_280",
+      "pass": true,
+      "detail": "280 total / 112 diagnostic"
+    },
+    {
+      "name": "quick_12_no_duplicates",
+      "pass": true,
+      "detail": 112
+    },
+    {
+      "name": "quick_12_no_infer_only",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "quick_12_applicable_categories_12",
+      "pass": true,
+      "detail": 12
+    }
+  ]
+}
