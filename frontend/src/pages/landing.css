@@ -211,6 +211,30 @@ body.mmri-prism-page .mmri-guide2__close{position:absolute;top:22px;right:22px;z
 
 body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-guide2__table-wrap):focus-visible{outline:var(--ix-ring);outline-offset:var(--ix-ring-offset)}
 
+/* Desktop: the five-area report guide must fit the popup without scrolling; size scales with viewport height. */
+@media (min-width:1100px){
+ .mmri-guide2:has(.mmri-guide2__panel[data-guide=report]){--gm:clamp(8px,1.5vh,24px)}
+ .mmri-guide2__panel[data-guide=report] .mmri-guide2__scroll{padding:clamp(10px,1.8vh,26px) 34px clamp(8px,1.4vh,22px)}
+ .mmri-guide2__panel[data-guide=report] .mmri-guide2__header{margin-bottom:clamp(6px,1.2vh,12px)}
+ .mmri-guide2__panel[data-guide=report] .mmri-guide2__header h2{font-size:clamp(22px,3.3vh,34px);margin-bottom:4px}
+ .mmri-guide2__panel[data-guide=report] .mmri-guide2__header h2::after{margin-top:5px;height:3px}
+ .mmri-guide2__panel[data-guide=report] .mmri-guide2__header p{font-size:clamp(13.5px,1.9vh,16px);line-height:1.4}
+ .mmri-guide2__report{gap:clamp(6px,1.2vh,12px)}
+ .mmri-guide2__example{padding:clamp(4px,.7vh,7px) 14px;font-size:clamp(11px,1.45vh,13px);line-height:1.35}
+ .mmri-guide2__table{min-width:0;line-height:1.35}
+ .mmri-guide2__table thead th{padding:clamp(6px,1vh,14px) 12px;font-size:clamp(12.5px,1.7vh,14.5px)}
+ .mmri-guide2__table th[scope=row]{width:96px;padding:clamp(6px,1.1vh,12px) 12px;font-size:clamp(12px,1.6vh,13.5px)}
+ .mmri-guide2__table thead th:first-child{width:96px}
+ .mmri-guide2__table td{padding:clamp(4px,.8vh,12px) 12px}
+ .mmri-guide2__table th[scope=row]{padding-block:clamp(4px,.8vh,12px)}
+ .mmri-guide2__table :is(td,li){font-size:clamp(10.5px,1.4vh,12.5px);line-height:1.3}
+ .mmri-guide2__table ol{gap:clamp(2px,.45vh,9px)}
+ .mmri-guide2__table ol li{grid-template-columns:clamp(15px,2vh,20px) minmax(0,1fr)}
+ .mmri-guide2__table ol li::before{width:clamp(15px,2vh,20px);height:clamp(15px,2vh,20px);line-height:clamp(15px,2vh,20px);font-size:clamp(9px,1.2vh,11px)}
+ .mmri-guide2__plan{gap:clamp(3px,.6vh,6px)}
+ .mmri-guide2__plan b{font-size:clamp(10.5px,1.4vh,12px)}
+ .mmri-guide2__pdf-note{padding:clamp(3px,.6vh,10px) 16px;font-size:clamp(12px,1.6vh,14px)}
+}
 @media (max-height:800px){.mmri-guide2__scroll{padding:24px 38px 26px}.mmri-guide2__panel[data-guide=howto] .mmri-guide2__scroll{padding-block:18px 18px}.mmri-guide2__header{margin-bottom:14px}.mmri-guide2__about{gap:18px}.mmri-guide2__metric{min-height:100px}.mmri-guide2__stage-card{min-height:70px;padding:12px 24px}}
 @media (max-width:1100px){
  .mmri-guide2__scroll{padding:28px 28px 30px}

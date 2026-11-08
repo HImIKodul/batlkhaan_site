@@ -31,21 +31,20 @@
 .mmri-questionnaire__question-head h1{max-width:28em;margin:0;letter-spacing:-.022em;color:var(--mmri-color-text-strong);outline:0;overflow-wrap:anywhere;font-size:clamp(24px,3vw,32px);line-height:1.3;font-weight:600}
 .mmri-questionnaire__eyebrow{line-height:1.45;color:var(--mmri-color-text-muted);font-size:14px}
 
-/* ANSWER CARD CONTRACT (single owner; prism.css/holo.css carry no answer-card rules).
-   Every card gets --ac: its semantic tone from --answer-color (green best -> yellow -> red worst, set per option by data/answerTone.ts) or neutral gray for
-   unknown / not applicable / unscored choices (.is-neutral-tone, dashed). The tint covers the card, border and mark; text stays dark ink (>= 4.5:1 on every tint).
-   Strength: rest 40%, hover 52%, selected 66% plus a solid ring, a filled mark and bold text, so colour is never the only state signal.
-   The body.mmri-prism-page prefix is needed only to out-rank the generic prism choice-card rule for onboarding cards. */
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card{--ac:var(--answer-color,#8A94A8);min-height:64px;border:1.5px solid color-mix(in srgb,var(--ac) 62%,#fff);background:linear-gradient(100deg,color-mix(in srgb,var(--ac) 40%,#fff),color-mix(in srgb,var(--ac) 22%,#fff) 78%);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 1px 2px rgba(20,30,50,.06)}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-neutral-tone{--ac:#8A94A8;border-style:dashed;background:linear-gradient(100deg,color-mix(in srgb,var(--ac) 22%,#fff),color-mix(in srgb,var(--ac) 10%,#fff) 78%)}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card::before{width:6px;background:var(--ac);opacity:1}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card .mmri-radio-card__prefix{background:color-mix(in srgb,var(--ac) 16%,#fff);color:var(--mmri-color-text-strong)}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card .mmri-radio-card__mark{border:2px solid var(--ac);background:#fff;box-shadow:none}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card .mmri-radio-card__copy strong{color:var(--mmri-color-text-strong);font-weight:500}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card:hover{border-color:color-mix(in srgb,var(--ac) 88%,#fff);background:linear-gradient(100deg,color-mix(in srgb,var(--ac) 52%,#fff),color-mix(in srgb,var(--ac) 30%,#fff) 78%);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 10px 22px -14px color-mix(in srgb,var(--ac) 70%,rgba(20,40,80,.5))}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected{border-color:var(--ac);background:linear-gradient(100deg,color-mix(in srgb,var(--ac) 66%,#fff),color-mix(in srgb,var(--ac) 44%,#fff) 82%);box-shadow:0 0 0 2px var(--ac),0 12px 24px -14px color-mix(in srgb,var(--ac) 75%,rgba(20,40,80,.5))}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected .mmri-radio-card__mark{border-color:var(--ac);background:var(--ac);box-shadow:inset 0 0 0 4px #fff}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected .mmri-radio-card__copy strong{font-weight:700}
+/* ANSWER CARD CONTRACT (single owner; scoped to the questionnaire so onboarding/profile choice cards keep the generic prism card).
+   Reference look: saturated translucent tinted glass on the dark question panel, white text, bright rim, luminous glow when selected.
+   Every card gets --ac: its semantic tone from --answer-color (green best -> yellow -> red worst, set per option by data/answerTone.ts) or neutral slate for
+   unknown / not applicable / unscored choices (.is-neutral-tone, dashed). The fill mixes --ac with deep navy (56% -> 46% tone) so white text is >= 4.5:1 on all
+   five scale tones (worst case: the yellow midpoint, about 4.9:1). Selected adds a solid white ring, a filled mark and bold text, so colour is never the only state signal. */
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card{--ac:var(--answer-color,#8A94A8);--ac-deep:#0b1f66;min-height:64px;color:#fff;border:1.5px solid color-mix(in srgb,var(--ac) 55%,#fff);background-image:linear-gradient(180deg,rgba(255,255,255,.26) 0,rgba(255,255,255,0) 55%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 56%,var(--ac-deep)),color-mix(in srgb,var(--ac) 46%,var(--ac-deep)) 82%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -8px 14px -10px rgba(255,255,255,.35),0 8px 18px -12px rgba(2,10,50,.7)}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card.is-neutral-tone{--ac:#8A94A8;border-style:dashed;background-image:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,0) 55%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 38%,var(--ac-deep)),color-mix(in srgb,var(--ac) 30%,var(--ac-deep)) 82%)}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card .mmri-radio-card__prefix{background:rgba(255,255,255,.2);color:#fff}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card .mmri-radio-card__mark{border:2px solid #fff;background:rgba(255,255,255,.18);box-shadow:none}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card .mmri-radio-card__copy strong{color:#fff;font-weight:600;text-shadow:0 1px 2px rgba(2,10,50,.45)}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card:hover{border-color:color-mix(in srgb,var(--ac) 30%,#fff);background-image:linear-gradient(180deg,rgba(255,255,255,.34) 0,rgba(255,255,255,0) 55%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 62%,var(--ac-deep)),color-mix(in srgb,var(--ac) 50%,var(--ac-deep)) 82%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.65),0 0 20px -4px color-mix(in srgb,var(--ac) 70%,transparent),0 10px 22px -12px rgba(2,10,50,.7)}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card.is-selected{border-color:#fff;background-image:linear-gradient(180deg,rgba(255,255,255,.34) 0,rgba(255,255,255,0) 55%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 64%,var(--ac-deep)),color-mix(in srgb,var(--ac) 52%,var(--ac-deep)) 82%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 2px #fff,0 0 30px 2px color-mix(in srgb,var(--ac) 80%,transparent)}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card.is-selected .mmri-radio-card__mark{border-color:#fff;background:#fff;box-shadow:inset 0 0 0 4px var(--ac)}
+body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-card.is-selected .mmri-radio-card__copy strong{font-weight:750}
 body.mmri-prism-page .mmri-radio-group .mmri-radio-card:has(input:focus-visible){outline:3px solid #0B0F14;outline-offset:3px}
 
 /* Controls: Back (neutral text) < Save (glass) < Continue (primary, largest). */
