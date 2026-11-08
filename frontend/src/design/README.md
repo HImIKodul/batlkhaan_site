@@ -4,14 +4,14 @@
 
 Use the canonical token families instead of introducing page-local visual systems:
 
-- `--mmri-color-*` — green/white foundation and semantic states
-- `--mmri-type-*` — typography scale
-- `--mmri-space-*` — spacing rhythm
-- `--mmri-radius-*` — geometry
-- `--mmri-glass-*` — glass surfaces, blur and depth
-- `--mmri-control-*` — shared control dimensions
-- `--mmri-domain-*` — the five business-domain colors and accessible ink variants
-- `--mmri-layout-*` / `--mmri-page-gutter` — shared page composition
+- `--mmri-color-*` - green/white foundation and semantic states
+- `--mmri-type-*` - typography scale
+- `--mmri-space-*` - spacing rhythm
+- `--mmri-radius-*` - geometry
+- `--mmri-glass-*` - glass surfaces, blur and depth
+- `--mmri-control-*` - shared control dimensions
+- `--mmri-domain-*` - the five business-domain colors and accessible ink variants
+- `--mmri-layout-*` / `--mmri-page-gutter` - shared page composition
 
 Five domain colors are product semantics, not decoration. TS code must consume `domainVisualTokens` from `tokens.ts`; CSS must consume the matching `--mmri-domain-*` variables.
 

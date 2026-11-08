@@ -61,7 +61,7 @@
   --popup-bg:linear-gradient(150deg,rgba(255,255,255,.2),rgba(8,24,48,.56) 55%,rgba(8,24,48,.46));
   --popup-border:var(--border-strong);
   --popup-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),inset 0 -1px 0 var(--border-refract),0 6px 12px rgba(8,22,42,.3),0 34px 64px -18px rgba(8,22,42,.62);
-  transition:--env-deep .7s ease,--env-main .7s ease,--env-hi .7s ease,--domain-primary .7s ease,--domain-secondary .7s ease;
+  /* No transition on these inherited registered tokens: animating them on <html> restyles the whole document every frame. Smooth domain blending is owned by design/crystal.css (DOMAIN THEME). */
 }
 
 /* Category: the WHOLE environment takes the family (deep base, main fields, highlight light). Same geometry. */
@@ -74,11 +74,14 @@ html[data-env="operations"]{--env-deep:color-mix(in srgb,var(--mmri-domain-opera
 /* Guide mode: ONE cobalt environment shared by all four guides (not per-guide colours). */
 html[data-env="guide"]{--env-deep:#0A2A8C;--env-main:#2D6AE6;--env-hi:#8DC1FF;--env-shade:0%;--seam-tint:30%;--domain-primary:#1650DC;--domain-secondary:#5FB0FF;--domain-deep:#0A2E9E}
 
+/* White Prism: the homepage and its guide popups sit on plain white; no category colour, no cobalt. */
+html[data-env="prism"]{background:#fff;--env-deep:#fff;--env-main:#fff;--env-hi:#fff}
 /* ENVIRONMENT (layer 1): one category colour, one directional light from the upper-left, one shadow region at the lower-right.
    No tiles, blobs or multi-hue gradients. Geometry never changes between categories - only --env-* does. */
 html{background:linear-gradient(165deg,color-mix(in srgb,var(--env-hi) 34%,var(--env-main)) 0%,var(--env-main) 42%,var(--env-deep) 100%);background-attachment:fixed;min-height:100%;scroll-behavior:smooth;overscroll-behavior-y:none}
 html::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(72% 58% at 10% 0%,rgba(255,255,255,.26),transparent 70%),radial-gradient(80% 70% at 100% 100%,rgba(3,10,26,.46),transparent 66%)}
 html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(4,14,34,.5) 0,rgba(4,14,34,.2) 56px,transparent 130px)}
+html[data-env="prism"]::before,html[data-env="prism"]::after{display:none}
 @media print{html::before,html::after{display:none}}
 
 /* CONTENT (layer 2): quiet, readable. Dense areas never get strong glass. */
@@ -106,43 +109,34 @@ html body .mmri-shell-main::before{content:"";position:absolute;z-index:-1;inset
   border:1px solid rgba(255,255,255,.3);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 4px rgba(4,12,30,.5),0 18px 28px -8px rgba(4,12,30,.5),0 44px 70px -22px rgba(4,12,30,.5)}
 html body .mmri-shell-main::after{display:none}
+/* Homepage composes its own cards on the bare environment: no surrounding plane. */
+html body .mmri-shell-main:has(.mmri-home2)::before{background:none;border-color:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html body .mmri-shell-main:not(:has(.mmri-home2,.diagnosis-square-page))::before{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02) 40%),rgba(8,18,36,.78)}
 /* Report: quiet readable plane that still carries the category colour through it. */
 html body .mmri-shell-main:has(.report-v3)::before{background:linear-gradient(180deg,color-mix(in srgb,var(--domain-primary) 34%,transparent),color-mix(in srgb,var(--domain-deep) 46%,transparent)),rgba(8,18,36,.56)}
 @media (max-width:767px){html body .mmri-shell-main{margin:10px 8px 14px}html body .mmri-shell-main::before{border-radius:var(--radius-card)}}
 
-/* .cat-tile: category = a plain colour surface. Name bottom-left, score as the main object. No footer band, no gloss, no bevel.
-   Hover/focus only clarify the edge and deepen the shadow; geometry never changes. */
-.cat-tile{--tile-ink:#fff;position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;padding:0;margin:0;font:inherit;text-align:left;color:var(--tile-ink);cursor:pointer;
-  border-radius:var(--radius-card);border:1px solid rgba(255,255,255,.28);
-  background:linear-gradient(158deg,color-mix(in srgb,var(--domain-secondary) 62%,var(--domain-primary)) 0%,var(--domain-primary) 52%,color-mix(in srgb,var(--domain-deep) 62%,var(--domain-primary)) 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.42),var(--elevation-2);transition:box-shadow var(--motion-fast) ease,border-color var(--motion-fast) ease,background var(--motion-normal) ease}
-.cat-tile::before{content:"";position:absolute;z-index:0;inset:0 0 auto 0;height:42%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0))}
-.cat-tile[data-area=finance]{--tile-ink:#2B1A00}.cat-tile[data-area=operations]{--tile-ink:#022B1F}
+/* .cat-tile (Diagnosis cards): pearl glass card; the domain colour lives in ONE glossy panel (the score) and nowhere else.
+   Stationary geometry: hover/focus only deepen the shadow and brighten the edge. */
+.cat-tile{--tile-ink:#0B0F14;position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;padding:10px;margin:0;font:inherit;text-align:left;color:var(--wp-ink,#0B0F14);cursor:pointer;
+  border-radius:28px;border:1px solid color-mix(in srgb,var(--wp-silver,#D9DFE8) 65%,transparent);
+  background:radial-gradient(120% 50% at 50% 0,color-mix(in srgb,var(--area-accent,#7FA6FF) 9%,transparent),transparent 70%),var(--wp-spec) top/100% 38% no-repeat,var(--wp-glass);
+  box-shadow:var(--wp-bevel),var(--wp-shadow-1),0 26px 40px -30px rgba(40,70,110,.35);transition:box-shadow var(--wp-dur) var(--wp-ease),border-color var(--wp-dur) ease}
+.cat-tile::before{content:"";position:absolute;z-index:2;left:22px;right:22px;top:0;height:3px;border-radius:0 0 4px 4px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--area-accent,#7FA6FF),transparent);opacity:.7;transition:opacity var(--wp-dur) ease}
 .cat-tile__value{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:grid;place-content:center;justify-items:center;gap:2px;padding:12px;color:var(--tile-ink);border:0;background:none;font:inherit}
-.cat-tile__value b{font-size:clamp(38px,min(5.6dvh,4.6vw),60px);line-height:1;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-.cat-tile__value small{font-size:12px;line-height:1.2;font-weight:500;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
-/* No score yet: plain family colour, enriched only by a soft upper-left light and a faint lower bloom (static). */
-.cat-tile:has(.cat-tile__value.is-empty){background:radial-gradient(70% 55% at 80% 95%,color-mix(in srgb,var(--domain-secondary) 45%,transparent),transparent 70%),radial-gradient(60% 45% at 18% 10%,rgba(255,255,255,.26),transparent 72%),linear-gradient(158deg,color-mix(in srgb,var(--domain-secondary) 62%,var(--domain-primary)) 0%,var(--domain-primary) 52%,color-mix(in srgb,var(--domain-deep) 62%,var(--domain-primary)) 100%)}
-.cat-tile__label{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:flex-start;flex:none;padding:0 16px 14px;background:none;border:0;font-weight:600;font-size:14px;line-height:1.28;text-align:left}
-.cat-tile:hover,.cat-tile:focus-visible{border-color:rgba(255,255,255,.62);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),var(--elevation-3)}
-.cat-tile:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.cat-tile:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),var(--elevation-1)}
+.cat-tile__value:not(.is-empty)::before{content:"";position:absolute;left:50%;top:50%;width:var(--dial,120px);height:var(--dial,120px);translate:-50% -50%;border-radius:50%;pointer-events:none;background:conic-gradient(var(--area-accent) calc(var(--v,0)*1%),rgba(16,37,75,.24) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 12px),#000 calc(100% - 11px));mask:radial-gradient(farthest-side,transparent calc(100% - 12px),#000 calc(100% - 11px))}
+.cat-tile__value:not(.is-empty)::after{content:"";position:absolute;left:50%;top:50%;width:calc(var(--dial,120px) - 28px);height:calc(var(--dial,120px) - 28px);translate:-50% -50%;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 35% 25%,#fff,rgba(255,255,255,.55) 70%);box-shadow:inset 0 1px 0 #fff,inset 0 -6px 10px -8px color-mix(in srgb,var(--area-accent) 55%,transparent),0 6px 14px -8px rgba(20,40,80,.3)}
+.cat-tile__value>*{position:relative;z-index:1}
+.cat-tile__value b{font-size:clamp(38px,min(6.4dvh,4.2vw),62px);line-height:1;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.cat-tile__value small{font-size:13px;line-height:1.2;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+/* No score yet: a faceted glass diamond, the same mark the hero crystal and guide popups use. */
+.cat-tile__value.is-empty::after{content:"";width:clamp(34px,7vh,58px);aspect-ratio:1;rotate:45deg;border-radius:24%;border:1px solid rgba(255,255,255,.85);background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,.1) 60%,rgba(255,255,255,.35));box-shadow:inset 0 1px 0 #fff,0 10px 18px -10px rgba(0,0,0,.35)}
+.cat-tile__label{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:flex-start;flex:none;padding:0 10px 8px;background:none;border:0;font-weight:620;font-size:14px;line-height:1.28;text-align:left}
+.cat-tile:hover,.cat-tile:focus-within{border-color:color-mix(in srgb,var(--area-accent,#7FA6FF) 45%,var(--wp-silver2,#C4CCD8));box-shadow:var(--wp-bevel),0 0 0 1px color-mix(in srgb,var(--area-accent,#7FA6FF) 22%,transparent),0 30px 46px -26px color-mix(in srgb,var(--area-accent,#7FA6FF) 55%,rgba(30,60,110,.45))}
+.cat-tile:hover::before,.cat-tile:focus-within::before{opacity:1}
+.cat-tile:focus-visible{outline:var(--ix-ring,3px solid #0B0F14);outline-offset:3px}
+.cat-tile:active{box-shadow:var(--wp-bevel),var(--wp-shadow-1)}
 .cat-tile.is-selected{border-color:#fff}
-
-/* Guide buttons: wide, thin, precise. One blue glass material (functional layer): hairline refractive edge, upper specular line,
-   subtle internal light. Hover changes edge/highlight/shadow only. */
-html body .glass-clear.mmri-home2__guide{border-radius:14px;overflow:hidden;
-  background:linear-gradient(180deg,rgba(130,180,255,.36),rgba(30,84,225,.4) 60%,rgba(18,56,180,.46));
-  border:1px solid rgba(180,215,255,.45);
-  -webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(8,28,110,.4),var(--elevation-2);
-  transition:box-shadow var(--motion-fast) ease,border-color var(--motion-fast) ease,background var(--motion-fast) ease}
-html body .glass-clear.mmri-home2__guide::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(80% 120% at 12% 0%,rgba(255,255,255,.2),transparent 60%)}
-html body .glass-clear.mmri-home2__guide::after{display:none}
-html body .glass-clear.mmri-home2__guide:hover{border-color:rgba(225,240,255,.8);background:linear-gradient(180deg,rgba(150,195,255,.46),rgba(40,96,235,.48) 60%,rgba(22,64,196,.54));box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -1px 0 rgba(8,28,110,.4),var(--elevation-3)}
-html body .glass-clear.mmri-home2__guide:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),var(--elevation-1)}
-html body .glass-clear.mmri-home2__guide[aria-expanded=true]{border-color:#fff}
 
 @media (min-width:768px){:root{--mmri-shell-height:64px}}
 
@@ -194,10 +188,10 @@ body .priority-register-head h1,
 body .priority-register-head p,
 body .priority-register-head span,
 body .priority-advisory-head span,
-body .priority-register-summary p{color:#fff}
+body .priority-register-summary p{color:var(--mmri-color-text-strong)}
 body :is(.page-heading,.diagnosis-square-head,.priority-advisory-head,.priority-register-head,.technical-settings>header,.account-payment-history>header,.company-detail-editor>header,.profile-onboarding>header) :is(h1,p,b,span){text-shadow:none}
 .diagnosis-square-head__title{text-shadow:none}
-body .auth__message h1 em{color:#DCEFFF}
+body .auth__message h1 em{color:var(--mmri-color-text-muted)}
 body .auth__proof li{background:linear-gradient(150deg,rgba(255,255,255,.18),rgba(255,255,255,.06));border-color:rgba(255,255,255,.4);outline:0}
 body .auth__proof b,
 body .auth__proof span{color:#fff}

@@ -1,4 +1,4 @@
-# MMRI shared component system — R16.07
+# MMRI shared component system - R16.07
 
 This directory now owns reusable interactive primitives. `components.css` is loaded after the transitional page stylesheet, and `UI.tsx` exposes the React API. New screens must use these primitives instead of adding another button/input/tab/menu/dialog implementation.
 

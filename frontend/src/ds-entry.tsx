@@ -1,5 +1,5 @@
 /**
- * @mmri/ui — design-system entry. Re-exports MMRI's reusable, router/API-free components so they can be
+ * @mmri/ui - design-system entry. Re-exports MMRI's reusable, router/API-free components so they can be
  * compiled to a library (ds-lib/dist) and imported into Claude Design. App pages are intentionally not exported.
  */
 import React from 'react';

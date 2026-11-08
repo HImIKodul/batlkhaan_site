@@ -1,0 +1,231 @@
+/* WHITE PRISM: the design system for the entry experience (home, sign-in, onboarding, guide popups).
+   Scope: body.mmri-prism-page (set by usePrismPage). The dark app pages are untouched.
+   Principles: white room, ink type; glass only on controls and key surfaces (never as a page-wide panel);
+   one glass recipe = bright top edge + faint specular band + cool bottom reflection + gradient edge light + neutral shadow;
+   one motion language = 2px lift, shadow deepens, edge light brightens, a soft highlight follows the pointer. */
+body.mmri-prism-page{
+ --mmri-shell-height:60px;
+ /* ===== HOLOGRAPHIC LIQUID GLASS tokens (one owner; prism-app.css and every page re-use these) =====
+    palette: pearl white, lavender-gray, ice blue, silver, cool cyan, subtle violet. Accents: cyan, sky, lavender, magenta, pink, mint, gold. */
+ --pm-pearl:#F8F8FE;--pm-mist:#EEF0F9;--pm-ice:#DDE8F7;--pm-reflect:#B4CCF2;--pm-ink:#162333;
+ --hg-cyan:#52D6F2;--hg-sky:#7FB2FF;--hg-lilac:#B5A2F5;--hg-magenta:#E96FD0;--hg-pink:#F7A6CF;--hg-mint:#7FE3C4;--hg-gold:#F0C86A;
+ --wp-ink:var(--pm-ink);--wp-ink2:#33435A;--wp-ink3:#566683;--wp-mist:var(--pm-mist);--wp-silver:#D2D8EC;--wp-silver2:#BFC7E0;--wp-ice:140,166,250;
+ /* material levels: L1 panels (soft, large), L2 interactive cards (brighter edge), L3 holographic (colour reflection, used sparingly) */
+ --hg-l1:linear-gradient(158deg,rgba(255,255,255,.74) 0%,rgba(238,241,252,.58) 48%,rgba(225,234,251,.5) 100%);
+ --hg-l2:linear-gradient(160deg,rgba(255,255,255,.88) 0%,rgba(244,246,253,.7) 55%,rgba(232,239,252,.62) 100%);
+ --hg-holo:linear-gradient(118deg,rgba(104,224,255,.55) 0%,rgba(150,170,255,.5) 30%,rgba(205,150,255,.48) 52%,rgba(255,150,215,.46) 74%,rgba(255,222,160,.4) 100%);
+ --hg-holo-soft:linear-gradient(118deg,rgba(104,224,255,.2),rgba(181,162,245,.2) 50%,rgba(247,166,207,.18));
+ --hg-rim:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(112,222,255,.7) 22%,rgba(255,255,255,.55) 45%,rgba(214,150,250,.62) 68%,rgba(255,168,214,.62) 84%,rgba(255,255,255,.95) 100%);
+ --hg-shadow-1:0 1px 2px rgba(44,54,110,.08),0 14px 30px -16px rgba(66,78,170,.32);
+ --hg-shadow-2:0 2px 4px rgba(44,54,110,.09),0 26px 48px -20px rgba(66,82,180,.42),0 8px 18px -10px rgba(90,110,220,.2);
+ --hg-shadow-3:0 2px 4px rgba(44,54,110,.1),0 30px 56px -22px rgba(76,90,200,.5),0 0 0 1px rgba(255,255,255,.55);
+ --hg-contact:0 1px 0 rgba(255,255,255,.7),0 1px 3px rgba(40,50,100,.16);
+ --hg-bevel:inset 0 1.5px 0 rgba(255,255,255,.98),inset 0 -1px 0 rgba(140,152,205,.38),inset 1px 0 0 rgba(255,255,255,.6),inset 0 -16px 22px -16px rgba(112,150,255,.3);
+ --wp-glass:var(--hg-l2);
+ --wp-spec:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,0));
+ --wp-edge:var(--hg-rim);
+ --wp-bevel:var(--hg-bevel);
+ --wp-shadow-1:var(--hg-shadow-1);
+ --wp-shadow-2:var(--hg-shadow-2);
+ --wp-r-sm:14px;--wp-r-md:22px;--wp-r-lg:30px;--hg-r-xl:36px;--wp-blur:18px;--wp-dur:.2s;--wp-ease:cubic-bezier(.2,.7,.2,1);
+ --wp-black:linear-gradient(180deg,#434D82 0,#272E5C 55%,#181D40 100%);
+ --ix-dur:var(--wp-dur);--ix-ease:var(--wp-ease);--ix-ring:3px solid var(--wp-ink);--ix-ring-offset:3px;--ix-hover-shadow:var(--wp-bevel),var(--wp-shadow-2);--ix-press-shadow:inset 0 2px 6px rgba(20,30,50,.2),inset 0 1px 0 rgba(255,255,255,.4);--ix-disabled:.42;--ix-selected:var(--wp-ink);--ix-success:#2FA67A;--ix-error:#C2412D;
+ color:var(--wp-ink);
+}
+/* beats glass.css's dark content-plane rule (`:not(:has(...))` raises its specificity) */
+html body.mmri-prism-page .mmri-shell-main:not(:has(.mmri-prism-none))::before,html body.mmri-prism-page .mmri-shell-main::before{background:none;border-color:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* ---- the one glass recipe (controls and key surfaces only) ---- */
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger){
+ position:relative;isolation:isolate;border:1px solid color-mix(in srgb,var(--wp-silver) 55%,transparent);color:var(--wp-ink);
+ background:var(--wp-spec) top/100% 50% no-repeat,var(--wp-glass);
+ box-shadow:var(--wp-bevel),var(--wp-shadow-1);-webkit-backdrop-filter:blur(var(--wp-blur)) saturate(150%);backdrop-filter:blur(var(--wp-blur)) saturate(150%);
+ transition:transform var(--wp-dur) var(--wp-ease),box-shadow var(--wp-dur) ease,border-color var(--wp-dur) ease,background-color var(--wp-dur) ease}
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger)::before{
+ content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;z-index:-1;opacity:.35;background:var(--wp-edge);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);transition:opacity var(--wp-dur) ease}
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger):hover:not(:disabled){
+ transform:none;border-color:var(--wp-silver2);box-shadow:var(--wp-bevel),var(--wp-shadow-2);background-color:transparent}
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger):hover:not(:disabled)::before{opacity:1}
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger):active:not(:disabled){transform:translateY(0);box-shadow:var(--wp-bevel),var(--wp-shadow-1)}
+body.mmri-prism-page :is(.mmri-home2__start,.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger,.mmri-primary-nav a,.mmri-radio-card):focus-visible{outline:3px solid var(--wp-ink);outline-offset:3px}
+/* pointer highlight shared by every [data-sheen] surface */
+body.mmri-prism-page [data-sheen]{position:relative;isolation:isolate}
+body.mmri-prism-page [data-sheen]::after{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;pointer-events:none;opacity:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),rgba(var(--wp-ice),.34),transparent 64%);transition:opacity .3s ease}
+body.mmri-prism-page [data-sheen]:hover::after{opacity:1}
+
+/* ---- primary action: black liquid glass (CTA on every prism page) ---- */
+body.mmri-prism-page .mmri-button--primary{color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:var(--wp-black);position:relative;overflow:hidden;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(var(--wp-ice),.14),0 1px 2px rgba(11,15,20,.4),0 16px 30px -14px rgba(11,15,20,.55);
+ transition:transform var(--wp-dur) var(--wp-ease),box-shadow var(--wp-dur) ease,filter var(--wp-dur) ease}
+body.mmri-prism-page .mmri-button--primary:hover:not(:disabled){transform:none;filter:brightness(1.12);background:var(--wp-black);border-color:rgba(255,255,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(var(--wp-ice),.3),0 1px 2px rgba(11,15,20,.4),0 24px 38px -14px rgba(11,15,20,.6)}
+body.mmri-prism-page .mmri-button--primary:active:not(:disabled){transform:translateY(0);background:var(--wp-black);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 6px 12px -8px rgba(11,15,20,.6)}
+body.mmri-prism-page .mmri-button--primary:disabled{opacity:.42}
+body.mmri-prism-page .mmri-button--secondary{border-radius:999px}
+body.mmri-prism-page .mmri-button--ghost{color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-button--ghost:hover:not(:disabled){background:rgba(11,15,20,.05);color:var(--wp-ink)}
+
+/* ---- header: ink on white, glass pill, readable icons ---- */
+body.mmri-prism-page .mmri-shell-header{z-index:60;padding-top:max(4px,env(safe-area-inset-top))}
+body.mmri-prism-page .mmri-shell-inner,body.mmri-prism-page .mmri-shell-actions{overflow:visible}
+body.mmri-prism-page :is(.mmri-brand,.mmri-shell-login,.mmri-account-trigger){color:var(--wp-ink)}
+body.mmri-prism-page .mmri-brand-mark{border-color:rgba(255,255,255,.2);background:linear-gradient(180deg,#2B3545,#0B0F14);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(11,15,20,.5)}
+/* segmented glass navigation: the active page is a raised pearl segment with a holographic under-light */
+body.mmri-prism-page .mmri-primary-nav{gap:2px;padding:4px;border:1px solid rgba(255,255,255,.75);background:var(--hg-l1);box-shadow:var(--hg-bevel),var(--hg-shadow-1);-webkit-backdrop-filter:blur(var(--wp-blur)) saturate(160%);backdrop-filter:blur(var(--wp-blur)) saturate(160%)}
+body.mmri-prism-page .mmri-primary-nav a{height:42px;color:var(--wp-ink2);transition:color var(--wp-dur) ease,background-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
+body.mmri-prism-page .mmri-primary-nav a:hover{background:rgba(255,255,255,.55);color:var(--wp-ink)}
+body.mmri-prism-page .mmri-primary-nav a::after{content:"";display:block;position:absolute;left:22px;right:22px;bottom:3px;height:3px;border-radius:3px;background:var(--hg-holo);opacity:0;transition:opacity var(--wp-dur) ease}
+body.mmri-prism-page .mmri-primary-nav a.is-active::after{opacity:1}
+body.mmri-prism-page .mmri-primary-nav a.is-active{color:var(--wp-ink);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(240,243,253,.86));box-shadow:inset 0 1.5px 0 #fff,inset 0 -1px 0 rgba(140,152,205,.3),0 1px 2px rgba(44,54,110,.12),0 10px 20px -10px rgba(76,92,200,.4)}
+body.mmri-prism-page .mmri-shell-login{transition:background-color var(--wp-dur) ease}
+body.mmri-prism-page .mmri-shell-login:hover{background:rgba(11,15,20,.05)}
+body.mmri-prism-page .mmri-shell-primary{height:44px;padding:0 20px;border-radius:999px;font-size:14.5px;letter-spacing:.01em}
+body.mmri-prism-page .mmri-shell-primary:hover{filter:none}
+/* notification bell + account + menu: glass circles with ink icons; the unread badge sits fully inside the header */
+body.mmri-prism-page :is(.mmri-notification-trigger,.mmri-public-menu-trigger){display:grid;place-items:center;flex:none;width:46px;height:46px;min-width:46px;border-radius:50%;border-color:var(--wp-silver2)}
+body.mmri-prism-page .mmri-notification-trigger svg,body.mmri-prism-page .mmri-public-menu-trigger svg{color:var(--wp-ink);stroke:currentColor}
+body.mmri-prism-page .mmri-notification-trigger svg{width:22px;height:22px;overflow:visible}
+body.mmri-prism-page .mmri-notifications{position:relative;z-index:2;flex:none}
+/* header geometry: never shorter than its 46px controls, so the bell and its badge are never clipped or crowded against the screen edge */
+body.mmri-prism-page .mmri-shell-inner{padding-inline:clamp(10px,2.4vw,24px);gap:12px}
+body.mmri-prism-page .mmri-shell-actions{gap:8px;margin-left:auto}
+body.mmri-prism-page .mmri-notification-trigger>span{top:-3px;right:-3px;z-index:3;border:2px solid #fff;background:var(--wp-ink);color:#fff;box-shadow:0 2px 6px rgba(11,15,20,.3)}
+body.mmri-prism-page .mmri-account-trigger{border-radius:999px}
+body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu){color:var(--wp-ink);border:1px solid var(--wp-silver);background:var(--wp-spec) top/100% 40% no-repeat,var(--hg-l1);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--wp-bevel),0 30px 60px -24px rgba(20,40,80,.4)}
+body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu) :is(strong,h2,h3,a,button,small,p,span){color:inherit}
+body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu) small{color:var(--wp-ink3)}
+body.mmri-prism-page :is(.mmri-notification-panel,.mmri-account-menu) :is(a,button):hover{background:rgba(11,15,20,.05)}
+
+/* ---- sign-in / registration ---- */
+body.mmri-prism-page .auth{background:transparent}
+body.mmri-prism-page .auth::before{display:none}
+body.mmri-prism-page .auth__brand{color:var(--wp-ink)}
+body.mmri-prism-page .auth__message h1{color:var(--wp-ink);text-shadow:none;font-weight:650}
+body.mmri-prism-page .auth__message h1 em{color:var(--wp-ink2);font-weight:450;font-size:.5em;line-height:1.35;letter-spacing:-.01em;margin-top:.5em;max-width:24em}
+body.mmri-prism-page .auth__proof li{border:1px solid var(--wp-silver);outline:0;border-radius:var(--wp-r-md);background:var(--wp-spec) top/100% 45% no-repeat,var(--wp-glass);box-shadow:var(--wp-bevel),var(--wp-shadow-1);transition:transform var(--wp-dur) var(--wp-ease),box-shadow var(--wp-dur) ease}
+body.mmri-prism-page .auth__proof li:hover{transform:none;box-shadow:var(--wp-bevel),var(--wp-shadow-2)}
+body.mmri-prism-page .auth__proof b{color:var(--wp-ink)}
+body.mmri-prism-page .auth__proof span,body.mmri-prism-page .auth__hint,body.mmri-prism-page .auth__demo{color:var(--wp-ink3)}
+body.mmri-prism-page .auth__card{color:var(--wp-ink);border:1px solid var(--wp-silver);border-radius:var(--wp-r-lg);background:var(--wp-spec) top/100% 30% no-repeat,var(--hg-l1);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);box-shadow:var(--wp-bevel),0 40px 70px -34px rgba(20,40,80,.4)}
+body.mmri-prism-page .auth__plan{border:1px solid var(--wp-silver);background:#fff;color:var(--wp-ink2)}
+body.mmri-prism-page .auth__plan b{color:var(--wp-ink)}
+
+/* ---- fields, tabs, cards, alerts ---- */
+body.mmri-prism-page .mmri-field__label{color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-field__message{color:var(--wp-ink3)}
+body.mmri-prism-page :is(.mmri-input,.mmri-textarea,.mmri-select){color:var(--wp-ink);border:1px solid var(--wp-silver);background:#fff;box-shadow:inset 0 1px 2px rgba(20,30,50,.06);-webkit-backdrop-filter:none;backdrop-filter:none;transition:border-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
+body.mmri-prism-page :is(.mmri-input,.mmri-textarea)::placeholder{color:#98A2B3}
+body.mmri-prism-page :is(.mmri-input,.mmri-textarea,.mmri-select):hover{border-color:var(--wp-silver2)}
+body.mmri-prism-page :is(.mmri-input,.mmri-textarea,.mmri-select):focus{outline:none;border-color:rgb(var(--wp-ice));box-shadow:0 0 0 4px rgba(var(--wp-ice),.22),inset 0 1px 2px rgba(20,30,50,.04)}
+body.mmri-prism-page .mmri-field--error :is(.mmri-input,.mmri-select){border-color:#D9534F}
+body.mmri-prism-page .mmri-tabs{border:1px solid var(--wp-silver);background:var(--wp-mist);box-shadow:inset 0 1px 2px rgba(20,30,50,.06)}
+body.mmri-prism-page .mmri-tabs>button{color:var(--wp-ink2);transition:background-color var(--wp-dur) ease,color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
+body.mmri-prism-page .mmri-tabs>button:hover:not(.is-active):not(:disabled){background:rgba(11,15,20,.05)}
+body.mmri-prism-page .mmri-tabs>button.is-active{color:var(--wp-ink);background:#fff;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,30,50,.12),0 6px 14px -8px rgba(20,40,80,.3)}
+body.mmri-prism-page .mmri-tabs>button:focus-visible{outline:3px solid var(--wp-ink)}
+body.mmri-prism-page :is(.lg,.content-surface,.mmri-surface){color:var(--wp-ink);border:1px solid var(--wp-silver);border-radius:var(--wp-r-lg);background:var(--wp-spec) top/100% 28% no-repeat,var(--hg-l1);box-shadow:var(--wp-bevel),var(--wp-shadow-1);-webkit-backdrop-filter:none;backdrop-filter:none}
+body.mmri-prism-page .mmri-support-alert{border:1px solid var(--wp-silver);background:#fff;color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-support-alert.is-error{border-color:#F0C4C0;background:#FFF3F2;color:#8A2C22}
+body.mmri-prism-page .mmri-badge{border:1px solid var(--wp-silver);background:#fff;color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-progress__track{background:#E6EBF2}
+body.mmri-prism-page .mmri-progress__fill{background:linear-gradient(90deg,#323C4D,#0B0F14)}
+
+/* ---- choice cards (onboarding questions) ---- */
+body.mmri-prism-page .mmri-radio-card{color:var(--wp-ink);border:1px solid var(--wp-silver);outline:0;background:#fff;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,30,50,.05);transition:transform var(--wp-dur) var(--wp-ease),box-shadow var(--wp-dur) ease,border-color var(--wp-dur) ease,background-color var(--wp-dur) ease}
+body.mmri-prism-page .mmri-radio-card:hover{transform:none;border-color:var(--wp-silver2);background:#fff;box-shadow:inset 0 1px 0 #fff,0 10px 22px -14px rgba(20,40,80,.35)}
+body.mmri-prism-page .mmri-radio-card__prefix{background:var(--wp-mist);color:var(--wp-ink2);box-shadow:none}
+/* Questionnaire answer cards (semantic green to red tones, neutral gray) are owned by pages/questionnaire.css: single contract, no override here. */
+body.mmri-prism-page .mmri-radio-card__copy small{color:var(--wp-ink3)}
+body.mmri-prism-page .mmri-radio-card__mark{border-color:var(--wp-silver2);background:#fff;box-shadow:none}
+/* choice menus (legal form, selects) */
+body.mmri-prism-page .mmri-choice-select__trigger{color:var(--wp-ink);border:1px solid var(--wp-silver);background:#fff;box-shadow:inset 0 1px 2px rgba(20,30,50,.06);-webkit-backdrop-filter:none;backdrop-filter:none}
+body.mmri-prism-page .mmri-choice-select__chevron{color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-choice-select__menu{border:1px solid var(--wp-silver);background:rgba(255,255,255,.97);box-shadow:var(--wp-bevel),0 30px 50px -22px rgba(20,40,80,.4)}
+body.mmri-prism-page .mmri-choice-select__menu button{color:var(--wp-ink)}
+body.mmri-prism-page .mmri-choice-select__menu button:hover,body.mmri-prism-page .mmri-choice-select__menu button:focus-visible{background:var(--wp-mist)}
+body.mmri-prism-page .mmri-choice-select__menu button.is-selected{background:#EEF2F8}
+body.mmri-prism-page .business-name-fields__empty{color:var(--wp-ink3)}
+
+/* ---- onboarding / company pages ---- */
+body.mmri-prism-page :is(.profile-onboarding,.company-detail-editor,.profile-login-required){color:var(--wp-ink)}
+body.mmri-prism-page :is(.profile-onboarding>header,.company-detail-editor>header) :is(h1,h2,p,b){color:var(--wp-ink)}
+body.mmri-prism-page :is(.profile-onboarding>header>span,.company-detail-editor>header>div>b){color:var(--wp-ink3)}
+body.mmri-prism-page :is(.profile-onboarding>header p,.company-detail-editor>header p){color:var(--wp-ink2)}
+body.mmri-prism-page .profile-question-card h2,body.mmri-prism-page :is(.profile-login-required h1){color:var(--wp-ink)}
+body.mmri-prism-page :is(.profile-question-progress,.profile-question-later,.company-detail-editor__name small){color:var(--wp-ink3)}
+body.mmri-prism-page .profile-question-jump button{color:var(--wp-ink2);border:1px solid var(--wp-silver);background:#fff;transition:border-color var(--wp-dur) ease,background-color var(--wp-dur) ease}
+body.mmri-prism-page .profile-question-jump button:hover{border-color:var(--wp-silver2);background:var(--wp-mist)}
+body.mmri-prism-page .profile-question-jump button.is-done{background:#E9F6EF;border-color:#BFE3CF;color:#1F6B49}
+body.mmri-prism-page .profile-question-jump button.is-current{border-color:var(--wp-ink);box-shadow:0 0 0 1px var(--wp-ink);color:var(--wp-ink)}
+body.mmri-prism-page .company-detail-editor__grid label>span,body.mmri-prism-page .company-detail-editor__number{color:var(--wp-ink2)}
+body.mmri-prism-page .company-detail-editor__bar>span{color:#1F6B49}
+body.mmri-prism-page .profile-avatar{color:#fff;background:linear-gradient(180deg,#2B3545,#0B0F14)}
+
+/* ---- mobile bottom navigation: light glass bar, ink labels ---- */
+body.mmri-prism-page .mmri-bottom-nav{border-top:1px solid var(--wp-silver);background:var(--wp-spec) top/100% 40% no-repeat,var(--hg-l1);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);box-shadow:0 -12px 30px -20px rgba(20,40,80,.35)}
+body.mmri-prism-page .mmri-bottom-nav a{color:var(--wp-ink3);transition:color var(--wp-dur) ease}
+body.mmri-prism-page .mmri-bottom-nav a:hover{color:var(--wp-ink)}
+body.mmri-prism-page .mmri-bottom-nav a.is-active{color:var(--wp-ink)}
+body.mmri-prism-page .mmri-bottom-nav a:focus-visible{outline:3px solid var(--wp-ink);outline-offset:-3px}
+/* glass highlight sweep on hover for every glass control (one diagonal light pass, no extra movement) */
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-button--secondary){background-image:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.75) 50%,transparent 60%),var(--wp-spec),var(--wp-glass);background-size:250% 100%,100% 50%,auto;background-position:160% 0,top,0 0;background-repeat:no-repeat}
+body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-button--secondary):hover:not(:disabled){background-position:-60% 0,top,0 0;transition:transform var(--wp-dur) var(--wp-ease),box-shadow var(--wp-dur) ease,border-color var(--wp-dur) ease,background-position .9s ease}
+
+@media (prefers-reduced-motion:reduce){
+ html body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-button,.mmri-radio-card,.auth__proof li,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger,.mmri-guide2__close){transition-duration:.01ms}
+ html body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-button,.mmri-radio-card,.auth__proof li,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger,.mmri-guide2__close):hover:not(:disabled){transform:none}
+}
+@media (prefers-reduced-transparency:reduce){
+ html body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger,.mmri-notification-panel,.mmri-account-menu,.auth__card,.mmri-guide2__panel,.lg,.content-surface,.mmri-surface){-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+
+/* ===== INTERACTION SYSTEM: one set of states for every control on every prism page =====
+   hover   = light, edge and shadow change; the control itself never moves or resizes (a moving target flickers at its edge)
+   focus   = one 3px ink ring (keyboard only) · pressed = inset shadow, no motion · disabled = faded, not-allowed, no hover
+   loading = aria-busy: progress cursor, ignores clicks (double-submit guard) · error/success = --ix-error / --ix-success edges
+   Tokens (--ix-*) are defined with the prism variables above; component CSS must use them instead of private timings/rings. */
+html body.mmri-prism-page :is(a[href],button,summary,input:not([type=hidden]),select,textarea,[role=button],[role=tab],[role=menuitem],[role=option],[tabindex]:not([tabindex="-1"])):not(.mmri-bottom-nav a):not(.priority-register-table>button):focus-visible{outline:var(--ix-ring);outline-offset:var(--ix-ring-offset)}
+html body.mmri-prism-page :is(.mmri-button,.mmri-icon-button,.mmri-home2__start,.mmri-home2__guide,.mmri-shell-primary,.mmri-notification-trigger,.mmri-account-trigger,.mmri-public-menu-trigger,.mmri-guide2__close,.mmri-guide2__nav-btn,.mmri-guide2__track-btn):active:not(:disabled){transform:none;box-shadow:var(--ix-press-shadow)}
+html body.mmri-prism-page :is(button,[role=button]):is(:disabled,[aria-disabled=true]){opacity:var(--ix-disabled);cursor:not-allowed;filter:none}
+html body.mmri-prism-page :is(button,a)[aria-busy=true]{cursor:progress;pointer-events:none}
+html body.mmri-prism-page :is(.mmri-input,.mmri-textarea,.mmri-select)[aria-invalid=true],html body.mmri-prism-page .mmri-field--error :is(.mmri-input,.mmri-textarea,.mmri-select){border-color:var(--ix-error)}
+/* Touch screens have no hover: never leave a tapped control in its hover look. */
+@media (hover:none){
+ html body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger):hover:not(:disabled){border-color:var(--wp-silver);box-shadow:var(--wp-bevel),var(--wp-shadow-1);background-position:160% 0,top,0 0}
+ html body.mmri-prism-page :is(.mmri-home2__guide,.mmri-shell-primary,.mmri-guide2__close,.mmri-button--secondary,.mmri-notification-trigger,.mmri-public-menu-trigger,.mmri-account-trigger):hover:not(:disabled)::before{opacity:.85}
+ html body.mmri-prism-page [data-sheen]::after{display:none}
+}
+
+/* ===== Notification center (bell panel): a floating pearl-glass sheet, unread items grouped first ===== */
+body.mmri-prism-page .mmri-notification-panel{width:min(400px,calc(100vw - 24px));max-height:min(72dvh,640px);padding:0 0 8px;border-radius:26px;border:1px solid rgba(255,255,255,.85);
+ background:radial-gradient(90% 40% at 0 0,rgba(255,255,255,.95),transparent 70%),var(--hg-l1);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
+ box-shadow:inset 0 1.5px 0 #fff,inset -1px -1px 0 rgba(120,140,170,.3),0 2px 4px rgba(10,25,50,.1),0 24px 48px -16px rgba(20,40,80,.4),0 60px 90px -40px rgba(20,40,80,.4)}
+body.mmri-prism-page .mmri-notification-panel>header{padding:16px 14px 12px 20px;border-bottom:1px solid rgba(190,205,222,.5)}
+body.mmri-prism-page .mmri-notification-panel>header strong{font-size:17px;font-weight:650;letter-spacing:-.01em}
+body.mmri-prism-page .mmri-notification-tools{padding:8px 14px;gap:4px 8px;border-bottom:1px solid rgba(190,205,222,.4)}
+body.mmri-prism-page .mmri-notification-tools button{color:var(--wp-ink2);font-size:12.5px;font-weight:650;border-radius:999px;padding:0 12px;transition:background-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
+body.mmri-prism-page .mmri-notification-tools button:hover:not(:disabled){color:var(--wp-ink);background:rgba(173,209,238,.3);box-shadow:inset 0 0 0 1px rgba(127,166,255,.3)}
+body.mmri-prism-page .mmri-notification-group h3{margin:0;padding:14px 22px 6px;font-size:11px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--wp-ink3)}
+body.mmri-prism-page .mmri-notification-item{position:relative;margin:2px 8px;border:0;border-radius:18px;transition:background-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
+body.mmri-prism-page .mmri-notification-item:hover,body.mmri-prism-page .mmri-notification-item:focus-within{background:rgba(173,209,238,.2);box-shadow:inset 0 0 0 1px rgba(127,166,255,.28)}
+body.mmri-prism-page .mmri-notification-item.is-unread{background:linear-gradient(90deg,rgba(127,166,255,.16),rgba(127,166,255,.04) 75%);box-shadow:none}
+body.mmri-prism-page .mmri-notification-item.is-unread:hover,body.mmri-prism-page .mmri-notification-item.is-unread:focus-within{background:linear-gradient(90deg,rgba(127,166,255,.24),rgba(173,209,238,.12) 75%);box-shadow:inset 0 0 0 1px rgba(127,166,255,.34)}
+body.mmri-prism-page .mmri-notification-item.is-read>a{opacity:.72}
+body.mmri-prism-page .mmri-notification-item>a{align-items:flex-start;gap:12px;padding:12px 6px 12px 12px}
+body.mmri-prism-page .mmri-notification-icon{width:38px;height:38px;border-radius:12px;color:var(--wp-ink);border:1px solid rgba(255,255,255,.95);background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#E6EEF8);box-shadow:inset 0 -2px 4px rgba(120,150,200,.25),0 6px 12px -8px rgba(40,70,120,.5)}
+body.mmri-prism-page .mmri-notification-icon.is-payment{background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#FBEFC8);box-shadow:inset 0 -2px 4px rgba(226,176,60,.4),0 6px 12px -8px rgba(226,176,60,.7)}
+body.mmri-prism-page .mmri-notification-icon.is-report{background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#D4F1E5);box-shadow:inset 0 -2px 4px rgba(47,166,122,.35),0 6px 12px -8px rgba(47,166,122,.7)}
+body.mmri-prism-page .mmri-notification-item strong{font-size:14.5px;font-weight:650;line-height:1.3}
+body.mmri-prism-page .mmri-notification-item.is-read strong{font-weight:600}
+body.mmri-prism-page .mmri-notification-panel .mmri-notification-item p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:3px 0 4px;font-size:13px;line-height:1.45;color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-notification-item small{font-size:11.5px;color:var(--wp-ink3);font-variant-numeric:tabular-nums}
+body.mmri-prism-page .mmri-notification-dot{width:8px;height:8px;background:#4F86F0;box-shadow:0 0 0 3px rgba(79,134,240,.2)}
+body.mmri-prism-page .mmri-notification-item__actions{flex-direction:row;align-items:center;gap:2px;padding:6px 8px 6px 0;opacity:0;transition:opacity var(--wp-dur) ease}
+body.mmri-prism-page .mmri-notification-item:hover .mmri-notification-item__actions,body.mmri-prism-page .mmri-notification-item:focus-within .mmri-notification-item__actions{opacity:1}
+body.mmri-prism-page .mmri-notification-item__actions button{color:var(--wp-ink2);border-radius:999px;font-size:12px}
+body.mmri-prism-page .mmri-notification-item__actions button:hover{color:var(--wp-ink);background:rgba(173,209,238,.35)}
+body.mmri-prism-page .mmri-notification-empty{display:grid;justify-items:center;gap:6px;padding:34px 28px 30px;text-align:center}
+body.mmri-prism-page .mmri-notification-empty>span{display:grid;place-items:center;width:48px;height:48px;margin-bottom:4px;border-radius:16px;color:var(--wp-ink2);border:1px solid rgba(255,255,255,.95);background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#fff,#E6EEF8);box-shadow:inset 0 -2px 4px rgba(120,150,200,.25),0 8px 16px -10px rgba(40,70,120,.5)}
+body.mmri-prism-page .mmri-notification-empty strong{font-size:15px;font-weight:650}
+body.mmri-prism-page .mmri-notification-empty p{max-width:30ch;font-size:13px;line-height:1.5;color:var(--wp-ink3)}
+@media (hover:none){body.mmri-prism-page .mmri-notification-item__actions{opacity:1}}

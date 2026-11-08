@@ -14,6 +14,8 @@ export interface RespondentRole { id:string; code:string; labelMn:string; scopeM
 export interface PublicQuestion { id:string; contextMn?:string|null; textMn:string; options:ProfileQuestionOption[]; }
 export interface RoutingPayload { state:string; stopReason?:string; nextQuestion:PublicQuestion|null; questionIssueId?:string|null; assessmentRevision:number; routingRevision:number; eventSequence:number; saveStatus?:'SAVED'|'SAVING'|'ERROR'|string; draft?:{questionIssueId:string;questionId:string;draft:{optionIndex?:number|null}|Record<string,unknown>;draftRevision:number;serverAckAt:string}|null; }
 export interface AssessmentSummary {
+  /** false while a mandatory review has not published: scores are withheld and no report-ready notice may be shown */
+  reportAvailable?:boolean; reviewStatus?:string|null;
   id:string; companyId:string; companyName?:string; domainCode:DomainCode; methodologyVersion:string; mode:AssessmentMode|null; status:AssessmentStatus; routingState?:string|null;
   answeredQuestions?:number; askedQuestions?:number; assessmentRevision:number; routingRevision:number; eventSequence:number; currentQuestionIssueId?:string|null;
   overall:{partialScore:number|null;officialScore:number|null;isOfficial:boolean;coverage:number|null};
@@ -64,14 +66,15 @@ export function displayScore(x:{officialScore?:number|null;partialScore?:number|
 }
 export function pct01(v:number|null|undefined):number|null{return v==null?null:Math.round(v*100);}
 export function isTerminal(status:string|undefined|null){return !!status&&['COMPLETED','COMPLETED_WITH_REVIEW','EXHAUSTED'].includes(status);}
-export function formatDate(value:string|null|undefined){if(!value)return '—';const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';const p=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}`}
+export function formatDate(value:string|null|undefined){if(!value)return '-';const d=new Date(value);if(Number.isNaN(d.getTime()))return '-';const p=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}`}
 
 
 export type BillingPlanCode='DIAGNOSTIC'|'RETAKE';
-export type BillingInvoiceStatus='CREATED'|'PENDING'|'PAID'|'CANCELLED'|'FAILED';
-export interface BillingCatalogPlan { code:BillingPlanCode;name:string;billingLabel:string;description:string;amountMnt:number|null;currency:'MNT'|string;available:boolean;provider:'QPAY'|'MOCK';testMode:boolean; }
+export type BillingProvider='QPAY'|'MOCK'|'MANUAL';
+export type BillingInvoiceStatus='CREATED'|'PENDING'|'PAID'|'CANCELLED'|'FAILED'|'REFUNDED';
+export interface BillingCatalogPlan { code:BillingPlanCode;name:string;billingLabel:string;description:string;amountMnt:number|null;currency:'MNT'|string;available:boolean;provider:BillingProvider;testMode:boolean;manualMode:boolean; }
 export interface BillingDeeplink { name?:string;description?:string;logo?:string;link:string; }
-export interface BillingHistoryItem { id:string;companyId:string;domainCode:DomainCode;planCode:BillingPlanCode;amountMnt:number;currency:string;provider:'QPAY'|'MOCK';status:BillingInvoiceStatus;senderInvoiceNo:string;paidAt?:string|null;createdAt:string;updatedAt:string;testMode:boolean; }
-export interface BillingInvoice extends BillingHistoryItem { qrText?:string|null;qrImage?:string|null;shortUrl?:string|null;deeplinks:BillingDeeplink[];callbackReceivedAt?:string|null; }
+export interface BillingHistoryItem { id:string;companyId:string;domainCode:DomainCode;planCode:BillingPlanCode;amountMnt:number;currency:string;provider:BillingProvider;status:BillingInvoiceStatus;senderInvoiceNo:string;paidAt?:string|null;refundedAt?:string|null;lastVerifiedAt?:string|null;createdAt:string;updatedAt:string;testMode:boolean;manualMode:boolean; }
+export interface BillingInvoice extends BillingHistoryItem { qrText?:string|null;qrImage?:string|null;shortUrl?:string|null;deeplinks:BillingDeeplink[];callbackReceivedAt?:string|null;refundReason?:string|null; }
 export interface CompanyEntitlement { id:string;domainCode:DomainCode;planCode:BillingPlanCode;status:'ACTIVE'|'CONSUMED'|'EXPIRED'|'REVOKED'|string;startsAt:string;endsAt?:string|null;assessmentLimit?:number|null;assessmentsUsed:number; }
 export interface BillingStatus { enforcement:boolean;entitlements:CompanyEntitlement[];invoices:BillingHistoryItem[];summary:{totalPaidMnt:number;paidCount:number;pendingCount:number}; }

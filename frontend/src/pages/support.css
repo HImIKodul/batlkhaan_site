@@ -1,5 +1,5 @@
 /* ============================================================================
-   MMRI R16.16 — supporting subsections
+   MMRI R16.16 - supporting subsections
    Company profile, account/settings, authentication and internal state gallery.
    ============================================================================ */
 .mmri-support-page{padding-top:var(--mmri-space-10);padding-bottom:var(--mmri-space-20)}
@@ -32,7 +32,7 @@
 .mmri-support-card-actions{display:flex;align-items:center;justify-content:space-between;gap:var(--mmri-space-3);padding:var(--mmri-space-4) var(--mmri-space-6);border-top:var(--mmri-border-width) solid var(--mmri-color-border);background:var(--mmri-glass-bg);-webkit-backdrop-filter:var(--mmri-glass-blur);backdrop-filter:var(--mmri-glass-blur);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow);border-color:var(--mmri-glass-border)}
 .mmri-support-card-actions.is-end{justify-content:flex-end}
 .mmri-support-alert{margin-top:var(--mmri-space-4);padding:var(--mmri-space-3) var(--mmri-space-4);border:var(--mmri-border-width) solid var(--mmri-color-border);border-radius:var(--mmri-radius-control);font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line)}
-.mmri-support-alert.is-error{border-color:#EF4444;background:rgba(48,8,14,.82);color:#FFD6DB;font-weight:600}
+.mmri-support-alert.is-error{border-color:#EF4444;background:#FFF3F2;color:#8A2C22;font-weight:600}
 .mmri-support-ready{position:relative}
 .mmri-support-ready-mark{width:var(--mmri-control-height-touch);height:var(--mmri-control-height-touch);display:grid;place-items:center;margin:var(--mmri-space-8) var(--mmri-space-8) 0;border-radius:var(--mmri-radius-control);background:var(--mmri-color-success-soft);color:var(--mmri-color-success)}
 
@@ -66,9 +66,9 @@
 .mmri-support-actions{display:grid}
 .mmri-support-actions>.mmri-support-section-head{border-bottom:var(--mmri-border-width) solid var(--mmri-color-border)}
 .mmri-support-action-link{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:var(--mmri-space-3);align-items:center;padding:var(--mmri-space-4) var(--mmri-space-6);border-bottom:var(--mmri-border-width) solid var(--mmri-color-border);color:var(--mmri-color-text-strong);text-decoration:none}
-.mmri-support-action-link:hover{background:rgba(255,255,255,.18)}
+.mmri-support-action-link:hover{background:rgba(244,247,252,.85)}
 .mmri-support-action-link:focus-visible{outline:2px solid var(--mmri-color-focus);outline-offset:-2px}
-.mmri-support-action-link>span{width:36px;height:36px;display:grid;place-items:center;border-radius:var(--mmri-radius-control);background:rgba(255,255,255,.10);color:var(--mmri-color-text-muted)}
+.mmri-support-action-link>span{width:36px;height:36px;display:grid;place-items:center;border-radius:var(--mmri-radius-control);background:rgba(244,247,252,.85);color:var(--mmri-color-text-muted)}
 .mmri-support-action-link strong,.mmri-support-action-link small{display:block}
 .mmri-support-action-link strong{font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line);font-weight:var(--mmri-weight-semibold)}
 .mmri-support-action-link small{margin-top:var(--mmri-space-1);font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);color:var(--mmri-color-text-muted)}
@@ -96,7 +96,7 @@
 .mmri-auth-card-head{margin-bottom:var(--mmri-space-4)}
 .mmri-auth-card-head h2{margin:var(--mmri-space-1) 0 0;font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-heading)}
 .mmri-auth-form{display:grid;gap:var(--mmri-space-4);margin-top:var(--mmri-space-6)}
-.mmri-auth-demo{display:flex;align-items:center;justify-content:space-between;gap:var(--mmri-space-3);padding:var(--mmri-space-3) var(--mmri-space-4);border:var(--mmri-border-width) solid var(--mmri-color-border);border-radius:var(--mmri-radius-control);background:rgba(255,255,255,.10)}
+.mmri-auth-demo{display:flex;align-items:center;justify-content:space-between;gap:var(--mmri-space-3);padding:var(--mmri-space-3) var(--mmri-space-4);border:var(--mmri-border-width) solid var(--mmri-color-border);border-radius:var(--mmri-radius-control);background:rgba(244,247,252,.85)}
 .mmri-auth-demo span,.mmri-auth-demo strong,.mmri-auth-demo small{display:block}.mmri-auth-demo span,.mmri-auth-demo small{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);color:var(--mmri-color-text-muted)}.mmri-auth-demo strong{font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line);font-weight:var(--mmri-weight-semibold)}
 .mmri-auth-footnote{margin:var(--mmri-space-6) 0 0;padding-top:var(--mmri-space-4);border-top:var(--mmri-border-width) solid var(--mmri-color-border);font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);color:var(--mmri-color-text-muted)}
 
@@ -126,7 +126,7 @@
 @media(prefers-reduced-motion:reduce){.mmri-support-action-link{scroll-behavior:auto}}
 
 
-/* Step 8/10 — long five-step support flows stay readable on narrow screens. */
+/* Step 8/10 - long five-step support flows stay readable on narrow screens. */
 @media (max-width:767px){
   .mmri-support-heading{display:grid;gap:var(--mmri-space-4)}
   .mmri-support-stepper{display:flex;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;border-radius:var(--mmri-radius-control)}

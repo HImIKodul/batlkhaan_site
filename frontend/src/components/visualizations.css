@@ -1,4 +1,4 @@
-/* R16.09 — shared analytical visualization language */
+/* R16.09 - shared analytical visualization language */
 .mmri-viz-empty{min-height:340px;display:grid;place-items:center;align-content:center;text-align:center;padding:var(--mmri-space-8);color:var(--mmri-color-text-muted);border-block:var(--mmri-border-width) solid var(--mmri-color-border)}
 .mmri-viz-empty strong{color:var(--mmri-color-text-strong);font-size:var(--mmri-type-body-large-size);line-height:var(--mmri-type-body-large-line);font-weight:var(--mmri-weight-semibold)}
 .mmri-viz-empty p{max-width:42ch;margin:var(--mmri-space-2) 0 0;font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line)}
@@ -7,7 +7,7 @@
 
 
 
-/* R16.14 — report comparison + historical trend */
+/* R16.14 - report comparison + historical trend */
 .mmri-viz-bars{display:grid;gap:var(--mmri-space-4);min-width:0}
 .mmri-viz-bars__head{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1fr);gap:var(--mmri-space-6);align-items:end;padding-bottom:var(--mmri-space-4);border-bottom:var(--mmri-border-width) solid var(--mmri-color-border)}
 .mmri-viz-bars__head>div{display:grid;gap:var(--mmri-space-1)}

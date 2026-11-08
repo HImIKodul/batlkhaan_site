@@ -126,7 +126,7 @@ export function SectionHeader({ eyebrow, title, description, action }: {eyebrow?
 }
 
 export function SaveStatus({ state = 'saved' }: {state?: 'saving' | 'saved' | 'error'}) {
-  const text = state === 'saving' ? 'Хадгалж байна…' : state === 'error' ? 'Хадгалж чадсангүй' : 'Хадгалагдсан';
+  const text = state === 'saving' ? 'Хадгалж байна' : state === 'error' ? 'Хадгалахад алдаа гарлаа' : 'Хадгалагдсан';
   return (
     <span className={`mmri-save-status mmri-save-status--${state}`} role="status" aria-live="polite">
       <span className="mmri-save-status__mark" aria-hidden="true">{state === 'saving' ? '' : state === 'error' ? '!' : '✓'}</span>

@@ -33,7 +33,7 @@ export function AnalyticalBars({items,referenceValue,title,description,maxItems=
     return <div className={`mmri-viz-bars__row ${value==null?'is-missing':''}`} key={item.id} role="listitem" title={`${item.label}: ${value==null?'үнэлгээ байхгүй':`${Math.round(value)}`}`}>
      <div className="mmri-viz-bars__label"><span>{String(index+1).padStart(2,'0')}</span><div><strong>{item.label}</strong>{item.context&&<small>{item.context}</small>}</div></div>
      <div className="mmri-viz-bars__plot" aria-hidden="true"><div className="mmri-viz-bars__track"><span className="mmri-viz-bars__fill" style={{width:`${value??0}%`}}/>{reference!=null&&<i className="mmri-viz-bars__reference" style={{left:`${reference}%`}}/>}</div></div>
-     <div className="mmri-viz-bars__value"><strong>{value==null?'—':Math.round(value)}</strong></div>
+     <div className="mmri-viz-bars__value"><strong>{value==null?'-':Math.round(value)}</strong></div>
     </div>;
    })}
   </div>

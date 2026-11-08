@@ -1,3 +1,4 @@
+import { GlassStage } from './components/GlassStage';
 import React, { useEffect, useState } from 'react';
 import { restoreSession } from './api/client';
 import { AppShell,PageContainer,type RouteName } from './components/AppShell';
@@ -13,10 +14,16 @@ const Settings=React.lazy(()=>import('./pages/Settings'));
 const Billing=React.lazy(()=>import('./pages/Billing'));
 const DiagnosisHub=React.lazy(()=>import('./pages/DiagnosisHub'));
 const States=React.lazy(()=>import('./pages/States'));
+const AdminApp=React.lazy(()=>import('./admin/AdminApp'));
+const ForgotPassword=React.lazy(()=>import('./pages/ForgotPassword'));
+const ResetPassword=React.lazy(()=>import('./pages/ResetPassword'));
+const Privacy=React.lazy(()=>import('./pages/Privacy'));
+const Terms=React.lazy(()=>import('./pages/Terms'));
 
 const routes:Record<RouteName,React.ComponentType>={
  home:Landing,login:Login,analysis:DiagnosisHub,profile:Profile,assessment:Results,results:Results,
- priorities:Priorities,report:Report,settings:Settings,billing:Billing,states:States
+ priorities:Priorities,report:Report,settings:Settings,billing:Billing,states:States,
+ forgot:ForgotPassword,reset:ResetPassword,privacy:Privacy,terms:Terms
 };
 
 const qaRouteEnabled=typeof window!=='undefined'&&['localhost','127.0.0.1','::1'].includes(window.location.hostname);
@@ -36,7 +43,8 @@ function getRoute():RouteName{
  }
  const aliases:Record<string,RouteName>={
   '':'home',home:'home',dashboard:'home',company:'profile',history:'report',account:'settings',diagnosis:'analysis',questions:'assessment',
-  assessment:'assessment',results:'results',priorities:'priorities',plan:'priorities',comparison:'report',settings:'settings',billing:'billing',report:'report',login:'login'
+  assessment:'assessment',results:'results',priorities:'priorities',plan:'priorities',comparison:'report',settings:'settings',billing:'billing',report:'report',login:'login',
+  'forgot-password':'forgot','reset-password':'reset',privacy:'privacy',terms:'terms'
  };
  const v=(aliases[path]??path) as RouteName;
  if(v==='states'&&!qaRouteEnabled)return 'home';
@@ -46,7 +54,7 @@ function getRoute():RouteName{
 function currentHash(){return window.location.hash||'#/'}
 
 const routeSkeletons:Record<RouteName,SkeletonVariant>={
- home:'dashboard',login:'form',billing:'payment',analysis:'dashboard',profile:'form',assessment:'questionnaire',results:'generic',priorities:'generic',report:'report',settings:'form',states:'generic'
+ home:'dashboard',login:'form',billing:'payment',analysis:'dashboard',profile:'form',assessment:'questionnaire',results:'generic',priorities:'generic',report:'report',settings:'form',states:'generic',forgot:'form',reset:'form',privacy:'generic',terms:'generic'
 };
 
 function RouteFallback({route}:{route:RouteName}){
@@ -54,7 +62,7 @@ function RouteFallback({route}:{route:RouteName}){
 }
 
 const routeLabels:Record<RouteName,string>={
- home:'Нүүр',login:'Нэвтрэх',billing:'Төлбөр ба эрх',analysis:'Оношилгоо',profile:'Байгууллагын мэдээлэл',assessment:'Оношилгооны асуулт',results:'Оношилгооны үр дүн',priorities:'Тэргүүлэх асуудал',report:'Тайлан',settings:'Миний бүртгэл',states:'Туршилтын төлөвүүд'
+ home:'Нүүр',login:'Нэвтрэх',billing:'Төлбөр ба эрх',analysis:'Оношилгоо',profile:'Байгууллагын мэдээлэл',assessment:'Оношилгооны асуулт',results:'Оношилгооны үр дүн',priorities:'Тэргүүлэх асуудал',report:'Тайлан',settings:'Миний бүртгэл',states:'Туршилтын төлөвүүд',forgot:'Нууц үг сэргээх',reset:'Шинэ нууц үг тогтоох',privacy:'Нууцлалын бодлого',terms:'Үйлчилгээний нөхцөл'
 };
 
 function locationLabel(route:RouteName,hash:string){
@@ -96,8 +104,9 @@ export default function App(){
   const timer=window.setTimeout(focus,0);
   return()=>window.clearTimeout(timer);
  },[route,locationKey,sessionReady]);
+ if(/^#\/admin(\/|$|\?)/.test(locationKey))return <React.Suspense fallback={<main className="route-stage mmri-route-loading"/>}><AdminApp/></React.Suspense>;
  if(!sessionReady)return <main className="route-stage mmri-route-loading"><div className="mmri-boot-skeleton-shell"><SkeletonScreen variant="dashboard" label="Системийн мэдээллийг ачаалж байна."/></div></main>;
  const Page=routes[route];
  const label=locationLabel(route,locationKey);
- return <><div className="mmri-visually-hidden" role="status" aria-live="polite" aria-atomic="true">{label} хуудас нээгдлээ</div><RouteErrorBoundary route={route} locationKey={locationKey}><React.Suspense fallback={<RouteFallback route={route}/>}><div className="route-stage" key={`${route}-${locationKey}`}><Page/></div></React.Suspense></RouteErrorBoundary></>
+ return <><GlassStage route={route}/><div className="mmri-visually-hidden" role="status" aria-live="polite" aria-atomic="true">{label} хуудас нээгдлээ</div><RouteErrorBoundary route={route} locationKey={locationKey}><React.Suspense fallback={<RouteFallback route={route}/>}><div className="route-stage" key={`${route}-${locationKey}`}><Page/></div></React.Suspense></RouteErrorBoundary></>
 }

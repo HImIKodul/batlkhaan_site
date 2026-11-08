@@ -12,7 +12,7 @@ export function Reveal({children,className='',as='div'}:{children:React.ReactNod
 }
 
 export function AnimatedNumber({value,decimals=0,className=''}:{value:number|null|undefined;duration?:number;decimals?:number;className?:string}){
-  if(value==null)return <span className={className}>—</span>;
+  if(value==null)return <span className={className}>-</span>;
   return <span className={className}>{value.toFixed(decimals)}</span>;
 }
 

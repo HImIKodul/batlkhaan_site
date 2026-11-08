@@ -2844,7 +2844,7 @@ export const canonicalCapabilities:Record<BusinessAreaId,CanonicalCapability[]>=
 function normalize(value:string){
   return value
     .toLocaleLowerCase('mn-MN')
-    .replace(/[·:–—-]+/g,' ')
+    .replace(/[·:–-]+/g,' ')
     .replace(/\s+/g,' ')
     .trim();
 }
@@ -2865,7 +2865,7 @@ export function resolveCanonicalCapability(area:BusinessAreaId,id?:string|null,n
 }
 
 export function canonicalCapabilityName(area:BusinessAreaId,id?:string|null,name?:string|null):string{
-  return resolveCanonicalCapability(area,id,name)?.name||name?.trim()||id?.trim()||'—';
+  return resolveCanonicalCapability(area,id,name)?.name||name?.trim()||id?.trim()||'-';
 }
 
 function marketingDefinition(name:string):string{

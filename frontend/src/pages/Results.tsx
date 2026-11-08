@@ -9,19 +9,19 @@ import { api,resolveBoundAssessmentId,session } from '../api/client';
 import type { AssessmentProgress,AssessmentSummary,CategoryResult,DiagnosisStrength,DiagnosisWeakCell,ModuleResult,OutcomePriorityResult,PurposeResult,ResultsPayload,RootFinding } from '../api/types';
 import { displayScore,isTerminal,pct01 } from '../api/types';
 import { demoModules } from '../data/demo';
-import { mnText } from '../content/mongolian';
+import { mnText, rootClassMn } from '../content/mongolian';
 import { basicInfoQuestions } from '../data/basicInfoQuestions';
 import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
 import { isTestBusiness,REPORT_AREA_KEY,TEST_ANSWERS_PREFIX,TEST_AREA_KEY,TEST_PROGRESS_PREFIX,testQuestionSets } from '../data/experience';
 import type { TestQuestion } from '../data/domainQuestionSamples';
-import { isNeutralAnswer,scoredAnswerStyle,positionalAnswerStyle } from '../data/answerTone';
+import { isNeutralAnswer,buildDemoAnswerLayout,answerToneAtQuality } from '../data/answerTone';
 
 const CANONICAL_SCHEMA='MMRI-DIAGNOSIS-RESULT-1.0' as const;
-const fmt=(n:number|null|undefined)=>n==null?'—':String(Math.round(n));
-const pct=(n:number|null|undefined)=>n==null?'—':`${Math.round(n*100)}%`;
+const fmt=(n:number|null|undefined)=>n==null?'-':String(Math.round(n));
+const pct=(n:number|null|undefined)=>n==null?'-':`${Math.round(n*100)}%`;
 const clamp=(n:number|null|undefined)=>Math.max(0,Math.min(100,n??0));
 const band=(n:number|null)=>n==null?'Үнэлгээ бүрдээгүй':n>=80?'Төлөвшсөн':n>=65?'Тогтвортой':n>=50?'Хөгжүүлэх':'Сайжруулах шаардлагатай';
-const reliabilityLabel=(n:number|null)=>n==null?'—':n>=80?'Өндөр':n>=65?'Хангалттай':n>=50?'Хязгаарлагдмал':'Нэмэлт мэдээлэл шаардлагатай';
+const reliabilityLabel=(n:number|null)=>n==null?'-':n>=80?'Өндөр':n>=65?'Хангалттай':n>=50?'Хязгаарлагдмал':'Нэмэлт мэдээлэл шаардлагатай';
 const metricLabel=(d:ResultsPayload|null)=>d?.metricType==='OFFICIAL_OVERALL_SCORE'?'Албан ёсны үнэлгээ':d?.metricType==='REVIEW_REQUIRED_SCORE'?'Нягтлах шаардлагатай урьдчилсан үнэлгээ':d?.metricType==='QUICK_ESTIMATE'?'Урьдчилсан үнэлгээ':'Хэсэгчилсэн үнэлгээ';
 const isProvisionalResult=(d:ResultsPayload|null)=>d?.metricType!=='OFFICIAL_OVERALL_SCORE';
 const rankCapabilities=(items:CategoryResult[])=>items.filter(c=>displayScore(c)!==null&&!c.confirmedNotApplicable).sort((a,b)=>(displayScore(b)??0)-(displayScore(a)??0));
@@ -29,16 +29,16 @@ const capabilitiesOf=(d:ResultsPayload|null)=>d?.capabilities??d?.categories??[]
 const outcomesOf=(d:ResultsPayload|null)=>d?.businessOutcomes??d?.purposes??[];
 const prioritiesOf=(d:ResultsPayload|null)=>d?.businessOutcomePriorities??d?.outcomePriorities??[];
 const scoreStatement=(n:number|null)=>n==null?'Оношилгооны үнэлгээ бүрдээгүй байна.':n>=80?'Тухайн чиглэлийн удирдлагын тогтолцоо өндөр төлөвшилтэй байна. Дараагийн анхаарал нь тогтвортой ахиц, нарийвчилсан сайжруулалт байна.':n>=65?'Тухайн чиглэлийн суурь тогтолцоо ажиллаж байгаа боловч хэд хэдэн сул чадавх нийт гүйцэтгэлийг хязгаарлаж байна.':n>=50?'Тухайн чиглэлийн тогтолцоо хэсэгчлэн ажиллаж байгаа бөгөөд удирдлага, хэмжилт, хэрэгжилтийн жигд байдлыг бэхжүүлэх шаардлагатай байна.':'Тухайн чиглэлийн суурь тогтолцоонд олон сул хэсэг байгаа тул хамгийн өндөр ач холбогдолтой асуудлуудыг дарааллаар бэхжүүлэх шаардлагатай байна.';
-const rootCauseLabel=(value:string)=>({PRIMARY_ROOT_CAUSE:'Гол суурь шалтгаан',CONTRIBUTING_CAUSE:'Нөлөөлөх шалтгаан',POSSIBLE_CAUSE:'Болзошгүй шалтгаан',WEAKNESS_ONLY:'Сул хэсэг',LIKELY_SYMPTOM:'Илрэл байж болзошгүй',ISOLATED_WEAKNESS:'Тусгаарлагдсан сул хэсэг',EVIDENCE_GAP:'Нотолгоо дутуу'} as Record<string,string>)[value]??'Нягтлах шаардлагатай';
+const rootCauseLabel=(value:string)=>rootClassMn(value);
 
 function ResultHeader({overall,coverage,confidence,statusText,answered,contradictions,result}:{overall:number|null;coverage:number|null;confidence:number|null;statusText:string;answered?:number;contradictions?:number;result:ResultsPayload|null}){
  return <section className="result-document-head">
   <div className="result-score-block"><span>{metricLabel(result)}</span><div><strong>{fmt(overall)}</strong></div><p>{result?.overall.band||band(overall)}</p></div>
   <dl className="result-meta">
-   <div><dt>Мэдээллийн хамралт</dt><dd>{coverage==null?'—':`${coverage}%`}</dd></div>
+   <div><dt>Мэдээллийн хамралт</dt><dd>{coverage==null?'-':`${coverage}%`}</dd></div>
    <div><dt>Үнэлгээний найдвартай байдал</dt><dd>{reliabilityLabel(confidence)}</dd></div>
    <div><dt>Оношилгооны төлөв</dt><dd>{statusText}</dd></div>
-   <div><dt>Бүртгэгдсэн хариулт</dt><dd>{answered??'—'}</dd></div>
+   <div><dt>Бүртгэгдсэн хариулт</dt><dd>{answered??'-'}</dd></div>
   </dl>
   {contradictions? <p className="result-review-note"><strong>{contradictions}</strong> зөрүүтэй нотолгоо нягтруулах шаардлагатай.</p>:null}
  </section>
@@ -53,8 +53,8 @@ function ExecutiveSummary({overall,data}:{overall:number|null;data:ResultsPayloa
   <div className="result-section-label">Удирдлагын дүгнэлт</div>
   <h2>{provisional?`Урьдчилсан тайлбар: ${scoreStatement(overall)}`:scoreStatement(overall)}</h2>
   <div className="result-summary-facts">
-   <p><span>{label(strongest,'Баталгаажсан давуу тал','Хамгийн өндөр оноотой чадавх (урьдчилсан)')}</span><strong>{strongest?.capabilityNameMn??'—'}</strong><small>{strongest?fmt(strongest.score):'—'}</small></p>
-   <p><span>{label(weakest,'Баталгаажсан сул тал','Хамгийн бага оноотой чадавх (урьдчилсан)')}</span><strong>{weakest?.capabilityNameMn??'—'}</strong><small>{weakest?fmt(weakest.score):'—'}</small></p>
+   <p><span>{label(strongest,'Баталгаажсан давуу тал','Хамгийн өндөр оноотой чадавх (урьдчилсан)')}</span><strong>{strongest?.capabilityNameMn??'-'}</strong><small>{strongest?fmt(strongest.score):'-'}</small></p>
+   <p><span>{label(weakest,'Баталгаажсан сул тал','Хамгийн бага оноотой чадавх (урьдчилсан)')}</span><strong>{weakest?.capabilityNameMn??'-'}</strong><small>{weakest?fmt(weakest.score):'-'}</small></p>
   </div>
  </section>
 }
@@ -91,7 +91,7 @@ function OutcomeView({outcomes,priorities,provisional}:{outcomes:PurposeResult[]
   <div className="result-outcome-table">
    <div className="result-outcome-head"><span>Үр дүн</span><span>Оноо</span><span>Хамралт</span><span>Тэргүүлэх дэд чиглэл</span></div>
    {outcomes.map(o=>{const p=byId.get(o.id);const top=p?.topCategories?.[0];const s=displayScore(o);return <div className="result-outcome-row" key={o.id}>
-    <strong>{o.nameMn}</strong><span>{fmt(s)}</span><span>{pct(o.coverage)}</span><span>{top?.nameMn??'—'}</span>
+    <strong>{o.nameMn}</strong><span>{fmt(s)}</span><span>{pct(o.coverage)}</span><span>{top?.nameMn??'-'}</span>
    </div>})}
   </div>
  </section>
@@ -106,7 +106,7 @@ function ModuleComparison({modules,overall,selected,onSelect,areaName}:{modules:
     <span className="result-module-name"><small>{String(i+1).padStart(2,'0')}</small><strong>{m.nameMn}</strong></span>
     <span className="result-module-track" aria-hidden="true"><i style={{width:`${clamp(score)}%`}}/></span>
     <strong className="result-module-score">{fmt(score)}</strong>
-    <span className={`result-module-delta ${delta!=null&&delta<0?'negative':delta!=null&&delta>0?'positive':''}`}>{delta==null?'—':delta===0?'0':`${delta>0?'+':''}${delta}`}</span>
+    <span className={`result-module-delta ${delta!=null&&delta<0?'negative':delta!=null&&delta>0?'positive':''}`}>{delta==null?'-':delta===0?'0':`${delta>0?'+':''}${delta}`}</span>
    </button>})}
   </div>
  </section>
@@ -157,7 +157,7 @@ function TerminalResults({assessment,progress,data,selected,setSelected}:{assess
   <OutcomeView outcomes={outcomes} priorities={priorities} provisional={provisional}/>
   {data.modules?.length?<ModuleComparison modules={data.modules} overall={overall} selected={selected} onSelect={setSelected} areaName={area.name}/>:<p className="result-empty">Бүрэлдэхүүний үнэлгээ бүрдээгүй байна.</p>}
   {module?<ModuleDetail module={module} capabilities={moduleCapabilities} data={data}/>:null}
-  <section className="result-decision"><div><div className="result-section-label">Дараагийн шийдвэр</div><h2>Оношилгооны үр дүнг хэрэгжүүлэх дараалал болгоно.</h2><p>Тэргүүлэх асуудлын хэсэг нь энэ үр дүнд тулгуурлан зөвлөмж болон 365 хоногийн төлөвлөгөө рүү шилжинэ.</p></div><Button onClick={()=>go('priorities')}>Тэргүүлэх асуудал руу</Button></section>
+  <section className="result-decision"><div><div className="result-section-label">Дараагийн шийдвэр</div><h2>Оношилгооны үр дүнг хэрэгжүүлэх дараалал болгоно.</h2><p>Тэргүүлэх асуудлын хэсэг нь энэ үр дүнд тулгуурлан зөвлөмж болон 12 сарын төлөвлөгөө рүү шилжинэ.</p></div><Button onClick={()=>go('priorities')}>Тэргүүлэх асуудал руу</Button></section>
  </>;
 }
 
@@ -177,17 +177,6 @@ function DemoResults(){
 
 function displaySentence(value:string){const t=value.trim();return t?t[0].toLocaleUpperCase('mn-MN')+t.slice(1):t}
 
-function demoOptionTone(q:TestQuestion,index:number):{className:string;style?:React.CSSProperties}{
- const label=q.options[index]||'';const state=q.states?.[index];if(isNeutralAnswer(label,state))return {className:'is-neutral'};
- const active=q.options.map((x,i)=>({i,label:x,state:q.states?.[i]})).filter(x=>!isNeutralAnswer(x.label,x.state));
- if(q.scores&&typeof q.scores[index]==='number'){
-  const vals=active.map(x=>q.scores?.[x.i]).filter((v):v is number=>typeof v==='number');
-  if(vals.length)return {className:'has-score-tone',style:scoredAnswerStyle(Number(q.scores[index]),Math.min(...vals),Math.max(...vals))};
- }
- const pos=active.findIndex(x=>x.i===index);const bestFirst=q.answerDirection!=='WORST_TO_BEST';
- return {className:'has-score-tone',style:positionalAnswerStyle(Math.max(0,pos),active.length,bestFirst)};
-}
-
 function TestQuestionnaire({areaId}:{areaId:BusinessAreaId}){
  const area=businessAreaById(areaId);const questions=testQuestionSets[areaId];const answerKey=`${TEST_ANSWERS_PREFIX}${areaId}`;
  let initialAnswers:(number|null)[]=[];try{const parsed=JSON.parse(sessionStorage.getItem(answerKey)||'[]');initialAnswers=Array.isArray(parsed)?parsed:[]}catch{initialAnswers=[]}
@@ -206,11 +195,8 @@ function TestQuestionnaire({areaId}:{areaId:BusinessAreaId}){
   <header><button type="button" onClick={back}><Icon name="back" size={18}/> Буцах</button><span>{area.name}</span><strong>{sessionProgress}%</strong></header>
   <div className="experience-test-progress"><i style={{width:`${sessionProgress}%`}}/></div><div className="experience-test-progress-copy"><b>Асуулт {displayedQuestion} / {expectedTotal}</b><span>{basicInfoQuestions.length} суурь асуулт болон таван чиглэлийн 64 төлөөлөх асуултыг нийлүүлбэл бүрэн жишээ урсгал нийт {systemPlannedTotal} асуулттай.</span></div><div className="experience-question-form-simulator"><span>Энэ чиглэлд хэрэглэгчид харагдах асуултын төрлүүдийн жишээ</span><div>{formTargets.map(x=><button type="button" key={`${x.label}-${x.index}`} className={x.index===index?'is-active':''} onClick={()=>jumpTo(x.index)}>{x.label}</button>)}</div></div>
   <section><span>ЖИШЭЭ · {q.topic}</span><h1 data-route-heading tabIndex={-1}>{displaySentence(q.text)}</h1><div className="experience-test-options">{(()=>{
-   const rows=q.options.map((option,i)=>({option,i,neutral:isNeutralAnswer(option,q.states?.[i]),score:q.scores?.[i]}));
-   const scored=rows.filter(x=>!x.neutral);const neutral=rows.filter(x=>x.neutral);
-   if(scored.every(x=>typeof x.score==='number'))scored.sort((a,b)=>Number(b.score)-Number(a.score));
-   else if(q.answerDirection==='WORST_TO_BEST')scored.reverse();
-   return [...scored,...neutral].map((row,displayIndex)=>{const tone=demoOptionTone(q,row.i);return <button type="button" key={`${q.id}-${row.i}`} aria-pressed={choice===row.i} className={`${choice===row.i?'is-selected ':''}${tone.className}`} style={tone.style} onClick={()=>saveChoice(row.i)}><b>{String.fromCharCode(65+displayIndex)}</b><span>{displaySentence(row.option)}</span><i/></button>})
+   const layout=buildDemoAnswerLayout(q);
+   return [...layout.main,...layout.special].map((row,displayIndex)=>{const i=row.option.optionIndex;const t=row.quality===null?null:answerToneAtQuality(row.quality);return <button type="button" key={`${q.id}-${i}`} aria-pressed={choice===i} className={`${choice===i?'is-selected ':''}${t?'has-score-tone':'is-neutral'}`} style={t?({'--answer-color':t.color,'--answer-soft':t.soft} as React.CSSProperties):undefined} onClick={()=>saveChoice(i)}><b>{String.fromCharCode(65+displayIndex)}</b><span>{displaySentence(row.option.labelMn)}</span><i/></button>})
   })()}</div><Button fullWidth disabled={choice==null} onClick={next}>{index===questions.length-1?'Дуусгах':'Дараагийн асуулт'} <Icon name="arrow" size={17}/></Button></section>
   <small>Жишээ горим · чиглэл бүрийн 64 чадавхаас бодит төлөөлөх асуулт ашиглана. Дээрх товчлууруудаар тухайн сан доторх үндсэн, нөхцөлт, нягтлах болон баримтаар шалгах хэлбэрүүд рүү шууд шилжиж туршина.</small>
  </PageContainer></AppShell>;
@@ -236,7 +222,7 @@ export default function Results(){
    setData(result);
   }else setData(null);
  };
- const load=async()=>{if(!loggedIn||testMode)return;setLoading(true);setError('');try{const id=await resolveAssessmentId();if(!id){setAssessment(null);setData(null);go('analysis');return}await refreshSnapshot(id)}catch(e:any){if(e?.status===404){session.assessmentId=null;go('analysis');return}setError(e?.message||'Оношилгооны мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
+ const load=async()=>{if(!loggedIn||testMode)return;setLoading(true);setError('');try{const id=await resolveAssessmentId();if(!id){setAssessment(null);setData(null);go('analysis');return}await refreshSnapshot(id)}catch(e:any){if(e?.status===404){session.assessmentId=null;go('analysis');return}setError(e?.code==='REPORT_PENDING_REVIEW'?`Тайлан хянагдаж байна. ${e.message}`:(e?.message||'Оношилгооны мэдээллийг ачаалж чадсангүй.'))}finally{setLoading(false)}};
  const refreshQuiet=async()=>{const id=session.assessmentId;if(!id)return;try{await refreshSnapshot(id)}catch{/* question surface owns answer errors */}};
  useEffect(()=>{if(!testMode)void load()},[testMode]);
  useEffect(()=>{if(data&&selected>=data.modules.length)setSelected(0)},[data,selected]);
@@ -256,7 +242,7 @@ export default function Results(){
   <AssessmentInline onCompleted={load} onAnswerAccepted={refreshQuiet}/>
   <details className="mmri-questionnaire-snapshot">
    <summary>Одоогийн урьдчилсан мэдээлэл</summary>
-   <div className="mmri-questionnaire-snapshot__metrics"><span><small>Урьдчилсан үнэлгээ</small><strong>{fmt(overall)}</strong></span><span><small>Мэдээллийн хамралт</small><strong>{coverage==null?'—':`${coverage}%`}</strong></span><span><small>Төлөв</small><strong>{statusText}</strong></span></div>
+   <div className="mmri-questionnaire-snapshot__metrics"><span><small>Урьдчилсан үнэлгээ</small><strong>{fmt(overall)}</strong></span><span><small>Мэдээллийн хамралт</small><strong>{coverage==null?'-':`${coverage}%`}</strong></span><span><small>Төлөв</small><strong>{statusText}</strong></span></div>
    <p>Эдгээр үзүүлэлт оношилгоо үргэлжлэх явцад өөрчлөгдөж болно. Эцсийн тайлан шаардлагатай нотолгоо бүрдсэний дараа үүснэ.</p>
   </details>
   {error&&<div className="mmri-questionnaire__error" role="alert">{error}</div>}

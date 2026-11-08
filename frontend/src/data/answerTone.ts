@@ -3,6 +3,32 @@ import type React from 'react';
 const neutralPattern=/мэдэхгүй|хамаарахгүй|мэдээлэх боломжгүй|мэдээлэл алга|хариулах мэдээлэл алга|шалгаагүй|тодорхойгүй/i;
 const neutralStates=new Set(['DNK','N_A','N_A_CLAIM','UNAVAILABLE','UNKNOWN','NOT_APPLICABLE','NEUTRAL']);
 
+type OptionLike={optionIndex:number;labelMn:string;state?:string|null;score?:number|null};
+const alwaysNeutralStates=new Set(['DNK','N_A','N_A_CLAIM','UNKNOWN','NOT_APPLICABLE','NEUTRAL']);
+export type OptionRole='graded'|'affirmative'|'neutral-main'|'special';
+/**
+ * Structural classification of one question's options (verified against all 17 option structures of the 61,440 live questions).
+ *  - DNK / N/A / unknown states are always "special" (neutral gray, listed under the "cannot answer" heading).
+ *  - UNAVAILABLE is the import state of options that carry no numeric score. When there are two or more of them and no other graded state exists
+ *    (about 28,000 evidence/record questions) they are an ordered graded scale, listed best first, and are coloured by position.
+ *    A lone UNAVAILABLE option next to only DNK / N/A choices is the affirmative applicability answer ("Тийм, хамаарна", 4,096 live questions): it is the one substantive answer and shows the best (green) tone; the "no, does not apply" and "unknown" alternatives stay neutral gray. An UNAVAILABLE option that sits next to other graded states (benchmark "no data") is a neutral special choice.
+ *  - Label wording is only a fallback for options whose state is not informative; it is NOT used for UNAVAILABLE scales, otherwise a real answer such as
+ *    "Not tested" would be mistaken for "unknown".
+ */
+export function classifyOptions(options:OptionLike[]):Map<number,OptionRole>{
+ const st=(o:OptionLike)=>String(o.state||'').toUpperCase();
+ const unav=options.filter(o=>st(o)==='UNAVAILABLE');
+ const otherGraded=options.some(o=>{const x=st(o);return x!=='UNAVAILABLE'&&!alwaysNeutralStates.has(x)&&!neutralPattern.test(o.labelMn||'')});
+ const unavailableIsScale=unav.length>=2&&!otherGraded;
+ const out=new Map<number,OptionRole>();
+ for(const o of options){
+  const x=st(o);
+  if(alwaysNeutralStates.has(x))out.set(o.optionIndex,'special');
+  else if(x==='UNAVAILABLE')out.set(o.optionIndex,unavailableIsScale?'graded':unav.length===1&&!otherGraded?'affirmative':'special');
+  else out.set(o.optionIndex,neutralPattern.test(o.labelMn||'')?'special':'graded');
+ }
+ return out;
+}
 export function isNeutralAnswer(label:string,state?:string|null){
  return neutralPattern.test(label||'')||neutralStates.has(String(state||'').toUpperCase());
 }
@@ -80,4 +106,43 @@ export function positionalAnswerStyle(index:number,count:number,bestFirst=true):
  const safeIndex=Math.max(0,Math.min(safeCount-1,Math.floor(Number.isFinite(index)?index:0)));
  const quality=safeCount<=1?.5:(bestFirst?1-safeIndex/(safeCount-1):safeIndex/(safeCount-1));
  return answerStyleFromQuality(quality);
+}
+
+export type LayoutOption<T extends OptionLike>={option:T;role:'graded'|'affirmative'|'neutral-main'|'special';quality:number|null};
+/** Direction in which the options of a question are listed when neither scores nor state semantics determine the order (never guessed). */
+export type ListedOrder='BEST_FIRST'|'WORST_FIRST';
+/**
+ * The single source of truth for how a question's answers are ordered and coloured (questionnaire AND demo; tested against the live question banks).
+ * main    : graded options best first, each with its quality 0..1 (score-normalised when scores exist, otherwise semantic state rank, otherwise listed position),
+ *           plus the lone affirmative applicability answer (quality 1 = green), plus options of unknown order (no colour).
+ * special : DNK / N/A / unknown, always neutral gray.
+ * Order is derived only from (1) numeric scores, (2) known semantic states, (3) an all-UNAVAILABLE scale (listed best first), (4) an explicit `listedOrder`.
+ * When none applies the options are NOT reordered and NOT given a quality colour (neutral), instead of guessing a direction.
+ */
+export function buildAnswerLayout<T extends OptionLike>(options:T[],listedOrder?:ListedOrder):{main:LayoutOption<T>[];special:LayoutOption<T>[]}{
+ const roles=classifyOptions(options);
+ const special=options.filter(o=>roles.get(o.optionIndex)==='special').map(option=>({option,role:'special' as const,quality:null}));
+ const rest=options.filter(o=>roles.get(o.optionIndex)!=='special');
+ const affirmative:LayoutOption<T>[]=rest.filter(o=>roles.get(o.optionIndex)==='affirmative').map(option=>({option,role:'affirmative' as const,quality:1}));
+ const neutralMain:LayoutOption<T>[]=[];
+ let rows=rest.filter(o=>roles.get(o.optionIndex)==='graded');
+ if(rows.length>1){
+  if(rows.every(o=>typeof o.score==='number'))rows=[...rows].sort((a,b)=>Number(b.score)-Number(a.score));
+  else{const ranked=rows.map(o=>semanticAnswerRank(o.state));
+   if(ranked.every(v=>typeof v==='number'))rows=[...rows].sort((a,b)=>Number(semanticAnswerRank(b.state))-Number(semanticAnswerRank(a.state)));
+   else if(rows.every(o=>String(o.state||'').toUpperCase()==='UNAVAILABLE')||listedOrder==='BEST_FIRST')rows=[...rows];   // ordered scale: listed best first
+   else if(listedOrder==='WORST_FIRST')rows=[...rows].reverse();
+   else{neutralMain.unshift(...rows.map(option=>({option,role:'neutral-main' as const,quality:null})));rows=[]}}          // unknown direction: keep listed order, no quality colour
+ }
+ const scored=rows.filter(o=>typeof o.score==='number').map(o=>Number(o.score));const min=scored.length?Math.min(...scored):0,max=scored.length?Math.max(...scored):0;
+ const graded=rows.map((option,i)=>({option,role:'graded' as const,quality:typeof option.score==='number'?(max>min?(Number(option.score)-min)/(max-min):.5):rows.length<=1?.5:1-i/(rows.length-1)}));
+ return {main:[...affirmative,...graded,...neutralMain],special};
+}
+
+/** Demo (test-business) questions: same layout contract as the live questionnaire. `answerDirection` only decides the listed order when scores/states cannot. */
+export type DemoQuestionLike={options:string[];states?:string[]|null;scores?:(number|null)[]|null;answerDirection?:string|null};
+export function buildDemoAnswerLayout(q:DemoQuestionLike){
+ const options=q.options.map((labelMn,optionIndex)=>({optionIndex,labelMn,state:q.states?.[optionIndex]??null,score:typeof q.scores?.[optionIndex]==='number'?Number(q.scores[optionIndex]):null}));
+ const dir=String(q.answerDirection||'').toUpperCase();
+ return buildAnswerLayout(options,dir==='WORST_TO_BEST'?'WORST_FIRST':dir==='BEST_TO_WORST'||dir==='SCORE_HIGH_BEST'?'BEST_FIRST':undefined);
 }

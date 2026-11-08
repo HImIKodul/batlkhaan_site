@@ -5,7 +5,7 @@
    belong here.
    ============================================================================ */
 
-/* Step 8/10 — system accessibility preferences must work even before a user
+/* Step 8/10 - system accessibility preferences must work even before a user
    explicitly changes MMRI settings. */
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto!important}

@@ -1,13 +1,26 @@
+/* IBM Plex Sans (SIL OFL, assets/fonts/IBM-Plex-OFL-LICENSE.txt), self-hosted: latin + cyrillic + cyrillic-ext cover every Mongolian Cyrillic letter incl. Ө ө Ү ү (verified per weight). Fallback: Noto Sans. */
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:400;src:url(../assets/fonts/ibm-plex-sans-cyrillic-ext-400-normal.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:400;src:url(../assets/fonts/ibm-plex-sans-cyrillic-400-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:400;src:url(../assets/fonts/ibm-plex-sans-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:500;src:url(../assets/fonts/ibm-plex-sans-cyrillic-ext-500-normal.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:500;src:url(../assets/fonts/ibm-plex-sans-cyrillic-500-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:500;src:url(../assets/fonts/ibm-plex-sans-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:600;src:url(../assets/fonts/ibm-plex-sans-cyrillic-ext-600-normal.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:600;src:url(../assets/fonts/ibm-plex-sans-cyrillic-600-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:600;src:url(../assets/fonts/ibm-plex-sans-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:700;src:url(../assets/fonts/ibm-plex-sans-cyrillic-ext-700-normal.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:700;src:url(../assets/fonts/ibm-plex-sans-cyrillic-700-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-display:swap;font-weight:700;src:url(../assets/fonts/ibm-plex-sans-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 /* ============================================================================
-   MMRI Design Tokens v2.0 — R17.01 / Report-first redesign
+   MMRI Design Tokens v2.0 - R17.01 / Report-first redesign
    Direction: Blue Glass System
    This is the authoritative visual foundation for color, typography, spacing,
    geometry, elevation, layout and shared control dimensions.
    ============================================================================ */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Color — foundation */
+  /* Color - foundation */
   --mmri-color-canvas: #F2F7FE;
   --mmri-color-surface: rgba(255,255,255,.10);
   --mmri-color-surface-subtle: rgba(255,255,255,.07);
@@ -19,7 +32,7 @@
   --mmri-color-border: rgba(255,255,255,.24);
   --mmri-color-border-strong: rgba(255,255,255,.38);
 
-  /* Color — brand */
+  /* Color - brand */
   --mmri-color-brand: #1B63D8;
   --mmri-color-accent: #D2E2FF;
   --mmri-color-brand-hover: #1553BD;
@@ -29,7 +42,7 @@
   --mmri-color-on-brand: #FFFFFF;
   --mmri-color-overlay-scrim: rgba(8,12,70,.45);
 
-  /* Color — semantic */
+  /* Color - semantic */
   --mmri-color-success: #4ADE9B;
   --mmri-color-success-soft: rgba(74,222,155,.18);
   --mmri-color-warning: #FFC857;
@@ -40,13 +53,13 @@
   --mmri-color-info: #8FB4FF;
   --mmri-color-info-soft: rgba(143,180,255,.18);
 
-  /* Color — data */
+  /* Color - data */
   --mmri-color-chart-grid: rgba(255,255,255,.2);
   --mmri-color-chart-comparison: rgba(255,255,255,.55);
   --mmri-color-chart-future: rgba(255,255,255,.3);
 
   /* Typography */
-  --mmri-font-family: "Aptos", "Segoe UI Variable", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+  --mmri-font-family: "IBM Plex Sans", "Noto Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --mmri-font-feature-numeric: "tnum" 1, "lnum" 1;
   --mmri-type-display-public-size: 60px;
   --mmri-type-display-public-line: 64px;
@@ -67,7 +80,7 @@
   --mmri-weight-regular: 400;
   --mmri-weight-medium: 500;
   --mmri-weight-semibold: 600;
-  --mmri-weight-display: 650;
+  --mmri-weight-display: 600;
   --mmri-tracking-display: -0.035em;
   --mmri-tracking-heading: -0.018em;
   --mmri-tracking-compact: 0em;
@@ -76,7 +89,7 @@
   --mmri-measure-reading: 68ch;
   --mmri-measure-report: 74ch;
 
-  /* Spacing — 4px base, 8px-oriented rhythm */
+  /* Spacing - 4px base, 8px-oriented rhythm */
   --mmri-space-1: 4px;
   --mmri-space-2: 8px;
   --mmri-space-3: 12px;
@@ -108,7 +121,7 @@
   --mmri-control-radio-mark-size: 18px;
   --mmri-control-radio-prefix-size: 32px;
 
-  /* Motion — restrained functional feedback */
+  /* Motion - restrained functional feedback */
   --mmri-motion-instant: 0ms;
   --mmri-motion-press: 80ms;
   --mmri-motion-feedback: 120ms;
@@ -137,7 +150,7 @@
   --mmri-shadow-dialog: 0 28px 76px rgba(8,22,42,.5);
 
 
-  /* Glass — light translucent material (green+white). Use via .mmri-glass* utilities in components/glass.css */
+  /* Glass - light translucent material (green+white). Use via .mmri-glass* utilities in components/glass.css */
   --mmri-glass-bg: rgba(255,255,255,.10);
   --mmri-glass-bg-strong: rgba(255,255,255,.16);
   --mmri-glass-bg-overlay: rgba(12,32,58,.62);
@@ -159,32 +172,32 @@
   --mmri-status-square-size: 48px;
   --mmri-domain-icon-size-large: 72px;
 
-  /* Five-domain visual semantics — strong category colors with accessible ink. */
-  --mmri-domain-marketing: #DC2626;
-  --mmri-domain-marketing-2: #EF4444;
-  --mmri-domain-marketing-deep: #991B1B;
-  --mmri-domain-marketing-ink: #991B1B;
-  --mmri-domain-marketing-soft: rgba(220,38,38,.10);
-  --mmri-domain-it: #0284C7;
-  --mmri-domain-it-2: #38BDF8;
-  --mmri-domain-it-deep: #075985;
-  --mmri-domain-it-ink: #075985;
-  --mmri-domain-it-soft: rgba(2,132,199,.10);
-  --mmri-domain-finance: #F59E0B;
-  --mmri-domain-finance-2: #FBBF24;
-  --mmri-domain-finance-deep: #B45309;
-  --mmri-domain-finance-ink: #B45309;
-  --mmri-domain-finance-soft: rgba(245,158,11,.10);
-  --mmri-domain-people: #7C3AED;
-  --mmri-domain-people-2: #A855F7;
-  --mmri-domain-people-deep: #5B21B6;
-  --mmri-domain-people-ink: #5B21B6;
-  --mmri-domain-people-soft: rgba(124,58,237,.10);
-  --mmri-domain-operations: #10B981;
-  --mmri-domain-operations-2: #34D399;
-  --mmri-domain-operations-deep: #047857;
-  --mmri-domain-operations-ink: #047857;
-  --mmri-domain-operations-soft: rgba(16,185,129,.10);
+  /* Five-domain visual semantics - strong category colors with accessible ink. */
+  --mmri-domain-marketing: #00E5A0;
+  --mmri-domain-marketing-2: #B4FFEB;
+  --mmri-domain-marketing-deep: #087960;
+  --mmri-domain-marketing-ink: #075F4C;
+  --mmri-domain-marketing-soft: rgba(0,229,160,.12);
+  --mmri-domain-it: #00CFFF;
+  --mmri-domain-it-2: #C7F0FB;
+  --mmri-domain-it-deep: #1B93B6;
+  --mmri-domain-it-ink: #0F6E8C;
+  --mmri-domain-it-soft: rgba(0,207,255,.12);
+  --mmri-domain-finance: #FFAA23;
+  --mmri-domain-finance-2: #FFE7AA;
+  --mmri-domain-finance-deep: #B56A0E;
+  --mmri-domain-finance-ink: #80500A;
+  --mmri-domain-finance-soft: rgba(255,170,35,.12);
+  --mmri-domain-people: #9250FF;
+  --mmri-domain-people-2: #DECFF7;
+  --mmri-domain-people-deep: #6A3FB8;
+  --mmri-domain-people-ink: #5B33A6;
+  --mmri-domain-people-soft: rgba(146,80,255,.12);
+  --mmri-domain-operations: #FF36B5;
+  --mmri-domain-operations-2: #FFD0F1;
+  --mmri-domain-operations-deep: #A91C8B;
+  --mmri-domain-operations-ink: #841E70;
+  --mmri-domain-operations-soft: rgba(255,54,181,.12);
 
   --mmri-canvas-wash: radial-gradient(900px 640px at -6% -10%,rgba(96,165,255,.42),transparent 64%),radial-gradient(760px 540px at 104% 2%,rgba(150,205,255,.40),transparent 62%),radial-gradient(640px 480px at 74% 58%,rgba(120,170,255,.16),transparent 64%),radial-gradient(720px 520px at 6% 74%,rgba(170,215,255,.26),transparent 66%),radial-gradient(840px 560px at 26% 112%,rgba(90,150,240,.26),transparent 64%),linear-gradient(150deg,#F4F9FF 0%,#E9F3FF 44%,#DDEBFC 100%);
 

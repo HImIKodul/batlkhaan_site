@@ -20,10 +20,17 @@ function requestId(){return globalThis.crypto?.randomUUID?.()??`req-${Date.now()
 const KNOWN_ERRORS:[RegExp,string][]=[
  [/invalid email or password/i,'Имэйл эсвэл нууц үг буруу байна.'],
  [/already exists/i,'Энэ имэйлээр бүртгэл аль хэдийн үүссэн байна.'],
+ [/must retain at least one OWNER/i,'Байгууллагад дор хаяж нэг эзэмшигч үлдэх ёстой тул сүүлчийн эзэмшигчийг хасах боломжгүй.'],
+ [/Only an owner may/i,'Энэ үйлдлийг зөвхөн байгууллагын эзэмшигч хийж чадна.'],
+ [/User account not found/i,'Энэ имэйлээр бүртгэлтэй идэвхтэй хэрэглэгч олдсонгүй. Эхлээд системд бүртгүүлсэн байх ёстой.'],
+ [/Member not found/i,'Гишүүн олдсонгүй.'],
+ [/Insufficient permission/i,'Танд энэ үйлдлийг хийх эрх байхгүй.'],
  [/another active writer|writer lease/i,'Энэ оношилгоо өөр цонх эсвэл төхөөрөмж дээр нээлттэй байна. 2 минут орчим хүлээгээд дахин оролдоно уу.']
 ];
 function knownErrorMn(message:string){return KNOWN_ERRORS.find(([re])=>re.test(message))?.[1]}
-export class ApiError extends Error{status:number;code?:string;details?:unknown;requestId?:string;constructor(status:number,message:string,body?:any){const fallback='Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.';super(knownErrorMn(message)??mnText(message,fallback));this.name='ApiError';this.status=status;this.code=body?.error?.code;this.details=body?.error?.details;this.requestId=body?.error?.requestId;}}
+/** A server message is shown to a customer only if it reads like a sentence. Anything that looks like code, a stack trace, a path or a database/ORM error is replaced by the generic text (root cause of the code-like text once seen under the answer options: a raw internal error string containing Cyrillic passed the old "contains Cyrillic" test). */
+export function customerSafeMessage(message:unknown):string|null{const m=String(message??'').trim();if(!m||m.length>280)return null;if(/[\n\r`{}<>]|=>|\b(await|const|let|function|return|undefined|null|invocation|prisma|ConnectorError|stack|node_modules)\b|\/home\/|\bat\s+\S+\s*\(|Error:|\$\{|\[object/i.test(m))return null;return m}
+export class ApiError extends Error{status:number;code?:string;details?:unknown;requestId?:string;constructor(status:number,message:string,body?:any){const fallback='Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.';super(knownErrorMn(message)??mnText(customerSafeMessage(message)??'',fallback));this.name='ApiError';this.status=status;this.code=body?.error?.code;this.details=body?.error?.details;this.requestId=body?.error?.requestId;}}
 export const session={
  get accessToken(){return memoryAccessToken},set accessToken(v:string|null){memoryAccessToken=v},
  get userId(){return localStorage.getItem(K.user)},set userId(v:string|null){v?localStorage.setItem(K.user,v):localStorage.removeItem(K.user)},
@@ -33,11 +40,17 @@ export const session={
  clear(preservePurchaseIntent=false){memoryAccessToken=null;clearPrivateBrowserState(preservePurchaseIntent);Object.values(K).forEach(k=>localStorage.removeItem(k));}
 };
 type RequestOptions=RequestInit&{retryAuth?:boolean};
-async function parseBody(r:Response){if(r.status===204)return null;const t=await r.text();if(!t)return null;try{return JSON.parse(t)}catch{return t}}
+async function parseBody(r:Response){if(r.status===204)return null;const t=await r.text();if(!t)return null;try{return JSON.parse(t,noEmDash)}catch{return t}}
+/* Display rule: no em dash anywhere in the UI. Server text (recommendation titles, report copy) is normalised on arrival; stored data and PDFs are untouched. */
+function noEmDash(_key:string,value:unknown){return typeof value==='string'?value.replace(/\s*\u2014\s*/g,' - '):value}
 let refreshInFlight:Promise<boolean>|null=null;
 /** Single-flight: concurrent callers (StrictMode double effects, parallel 401 retries) share ONE refresh request. The backend rotates the refresh token, so a second concurrent call would be rejected as a replay and end the session. */
 function refreshAccessToken(){if(!refreshInFlight)refreshInFlight=refreshAccessTokenOnce().finally(()=>{refreshInFlight=null});return refreshInFlight}
-async function refreshAccessTokenOnce(){try{const r=await fetch(`${API_BASE}/auth/refresh`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'}});if(!r.ok){session.clear();return false}const b=await parseBody(r);const data=b?.data??b;const nextUserId=typeof data?.user?.id==='string'?data.user.id:null;if(nextUserId&&session.userId&&session.userId!==nextUserId)session.clear();if(nextUserId)session.userId=nextUserId;session.accessToken=data?.accessToken??null;return !!session.accessToken}catch{session.clear();return false}}
+/** Cross-tab: serialise refreshes through the Web Locks API so a second tab sends the cookie the first tab already rotated (MMRI-16). The backend additionally tolerates a short reuse window. */
+function refreshAccessTokenOnce():Promise<boolean>{const locks=typeof navigator!=='undefined'?(navigator as Navigator&{locks?:{request:<T>(name:string,cb:()=>Promise<T>)=>Promise<T>}}).locks:undefined;return locks?.request?locks.request('mmri-auth-refresh',refreshRequest):refreshRequest()}
+export const REFRESH_TIMEOUT_MS=15000;
+/** Only a definitive rejection (401/403) ends the session and clears local work. Network errors, timeouts, 429 and 5xx keep drafts and bindings and let the caller retry (MMRI-17). */
+async function refreshRequest(){const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),REFRESH_TIMEOUT_MS);try{const r=await fetch(`${API_BASE}/auth/refresh`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},signal:ctl.signal});if(!r.ok){if(r.status===401||r.status===403)session.clear();return false}const b=await parseBody(r);const data=b?.data??b;const nextUserId=typeof data?.user?.id==='string'?data.user.id:null;if(nextUserId&&session.userId&&session.userId!==nextUserId)session.clear();if(nextUserId)session.userId=nextUserId;session.accessToken=data?.accessToken??null;return !!session.accessToken}catch{return false}finally{clearTimeout(timer)}}
 export async function restoreSession(){if(session.accessToken)return true;return refreshAccessToken()}
 const sleepMs=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 /** Idempotent reads recover from the API rate limiter (429) instead of surfacing a dead screen; writes are never retried. */
@@ -50,6 +63,12 @@ async function requestBlob(path:string,fallbackFilename:string,retryAuth=true):P
 export const api={
  async register(body:{email:string;password:string;displayName?:string}){const x=await request<AuthResponse>('/auth/register',{method:'POST',body:JSON.stringify(body),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
  async login(body:{email:string;password:string}){const x=await request<AuthResponse>('/auth/login',{method:'POST',body:JSON.stringify(body),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
+ requestPasswordReset:(email:string)=>request<{accepted:boolean;message:string}>('/auth/password-reset/request',{method:'POST',body:JSON.stringify({email}),retryAuth:false}),
+ async confirmPasswordReset(token:string,password:string){const x=await request<{reset:boolean;message:string}>('/auth/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password}),retryAuth:false});session.clear();return x},
+ exportAccountData:()=>requestBlob('/account/export','mmri-account-export.json'),
+ exportCompanyData:(companyId:string)=>requestBlob(`/companies/${companyId}/export`,'mmri-company-export.json'),
+ async eraseCompanyData(companyId:string,confirmName:string,password:string){const x=await request<{erased:boolean;assessmentsRemoved:number;reportFilesRemoved:number;retained:string[]}>(`/companies/${companyId}/erase`,{method:'POST',body:JSON.stringify({confirmName,password}),retryAuth:false});if(session.companyId===companyId){session.assessmentId=null;session.companyId=null;session.companyName=null}return x},
+ async eraseAccountData(confirmEmail:string,password:string){const x=await request<{erased:boolean;retained:string[]}>('/account/erase',{method:'POST',body:JSON.stringify({confirmEmail,password}),retryAuth:false});session.clear();return x},
  me:()=>request<User>('/auth/me'),
  async logout(){
   const assessmentId=session.assessmentId;
@@ -80,9 +99,17 @@ export const api={
  getBillingStatus:(companyId:string)=>request<BillingStatus>(`/companies/${companyId}/billing/status`),
  createBillingInvoice:(companyId:string,planCode:BillingPlanCode,domainCode:string='marketing')=>request<BillingInvoice>(`/companies/${companyId}/billing/invoices`,{method:'POST',body:JSON.stringify({planCode,domainCode})}),
  getBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}`),
+ reconcileBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}/reconcile`,{method:'POST'}),
  mockPayBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}/mock-pay`,{method:'POST'}),
  cancelBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}`,{method:'DELETE'}),
  listAssessments:(companyId:string)=>request<AssessmentSummary[]>(`/companies/${companyId}/assessments`),
+ /* WS-D: paged invoice history (OWNER/ADMIN), member list/revoke, explicit active-company resolution (MMRI-23/24/08). */
+ listBillingInvoices:(companyId:string,offset=0,limit=50)=>request<{invoices:BillingStatus['invoices'];total:number;limit:number;offset:number;hasMore:boolean}>(`/companies/${companyId}/billing/invoices?offset=${offset}&limit=${limit}`),
+ listCompanyMembers:(companyId:string)=>request<Array<{userId:string;email:string;displayName:string|null;status:string;role:'OWNER'|'ADMIN'|'ASSESSOR'|'CONSULTANT'|'VIEWER';createdAt:string;isSelf:boolean}>>(`/companies/${companyId}/members`),
+ removeCompanyMember:(companyId:string,userId:string)=>request<null>(`/companies/${companyId}/members/${userId}`,{method:'DELETE'}),
+ /** The active company is an explicit persisted choice (session.companyId). One company: used. Several: the persisted one if still a member, otherwise NO silent pick (needsChoice). */
+ setActiveCompany(c:{id:string;name:string}){session.companyId=c.id;session.companyName=c.name;try{if(session.userId)localStorage.setItem(`mmri.activeCompany.${session.userId}`,c.id)}catch{/* best effort */}},
+ async resolveActiveCompany(){const companies=await request<Company[]>('/companies');let pref:string|null=null;try{pref=session.userId?localStorage.getItem(`mmri.activeCompany.${session.userId}`):null}catch{/* best effort */}const chosen=companies.find(x=>x.id===session.companyId)??(pref?companies.find(x=>x.id===pref):undefined)??(companies.length===1?companies[0]:undefined);if(chosen){if(session.companyId!==chosen.id)session.companyId=chosen.id;session.companyName=chosen.name;return {companies,company:chosen as Company|null,needsChoice:false}}if(session.companyId)session.companyId=null;return {companies,company:null as Company|null,needsChoice:companies.length>1}},
  addCompanyMember:(companyId:string,body:{email:string;role:'OWNER'|'ADMIN'|'ASSESSOR'|'CONSULTANT'|'VIEWER'})=>request(`/companies/${companyId}/members`,{method:'POST',body:JSON.stringify(body)}),
  getProfileQuestions:()=>request<ProfileQuestion[]>('/methodology/current/profile-questions'),
  getRespondentRoles:()=>request<RespondentRole[]>('/methodology/current/respondent-roles'),

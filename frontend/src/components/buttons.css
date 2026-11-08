@@ -1,4 +1,4 @@
-/* Shared MMRI buttons — one control geometry/material contract. */
+/* Shared MMRI buttons - one control geometry/material contract. */
 .mmri-button{
  display:inline-flex;align-items:center;justify-content:center;gap:var(--mmri-space-2);
  min-height:var(--mmri-control-height-default);padding:0 20px;

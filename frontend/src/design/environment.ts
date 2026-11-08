@@ -5,7 +5,7 @@ import { useEffect } from 'react';
  * --ambient-* / --domain-* tokens (see components/glass.css), so the page
  * background, glass tint, glow and accents change together.
  */
-export type AmbientEnvironment = 'about' | 'guide' | 'diagnosis' | 'result' | 'payment' | 'marketing' | 'it' | 'finance' | 'people' | 'operations';
+export type AmbientEnvironment = 'prism' | 'about' | 'guide' | 'diagnosis' | 'result' | 'payment' | 'marketing' | 'it' | 'finance' | 'people' | 'operations';
 
 export function useAmbientEnvironment(env: AmbientEnvironment | string | null | undefined) {
   useEffect(() => {

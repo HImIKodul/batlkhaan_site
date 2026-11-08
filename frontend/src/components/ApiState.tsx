@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './UI';
 import { Icon } from './Icon';
+import { LoadingFact } from './LoadingFact';
 
 type BaseStateProps={title?:string;description?:string;className?:string};
 
@@ -30,7 +31,7 @@ export function SkeletonScreen({label='Өгөгдлийг бэлтгэж бай�
  else if(variant==='form')body=<><SkeletonCard className="mmri-skeleton__form-card" aria-hidden="true"><SkeletonLine className="is-title"/>{Array.from({length:6},(_,i)=><div className="mmri-skeleton__field" key={i}><SkeletonLine className="is-small"/><span/></div>)}<div className="mmri-skeleton__actions"><span/><span/></div></SkeletonCard></>;
  else if(variant==='dashboard')body=<><div className="mmri-skeleton__tile-grid" aria-hidden="true">{Array.from({length:5},(_,i)=><SkeletonCard key={i} className="mmri-skeleton__tile"><span className="mmri-skeleton__icon"/><SkeletonLine className="is-medium"/><SkeletonLine className="is-small"/></SkeletonCard>)}</div><div className="mmri-skeleton__content-grid" aria-hidden="true"><SkeletonCard><SkeletonLine className="is-title"/><SkeletonLine className="is-wide"/><SkeletonLine className="is-medium"/></SkeletonCard><SkeletonCard><SkeletonLine className="is-title"/><SkeletonLine className="is-wide"/><SkeletonLine className="is-short"/></SkeletonCard></div></>;
  else body=<><div className="mmri-skeleton__tile-grid mmri-skeleton__tile-grid--three" aria-hidden="true">{Array.from({length:3},(_,i)=><SkeletonCard key={i} className="mmri-skeleton__tile"><span className="mmri-skeleton__icon"/><SkeletonLine className="is-medium"/><SkeletonLine className="is-small"/></SkeletonCard>)}</div><SkeletonCard className="mmri-skeleton__wide-card" aria-hidden="true"><SkeletonLine className="is-title"/><SkeletonLine className="is-wide"/><SkeletonLine className="is-medium"/><SkeletonLine className="is-short"/></SkeletonCard></>;
- return <section className={`mmri-skeleton mmri-skeleton--${variant} ${className}`.trim()} data-skeleton-variant={variant} role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span className="mmri-skeleton__sr">{accessible}</span>{variant!=='questionnaire'&&variant!=='report'?head:null}{body}</section>;
+ return <section className={`mmri-skeleton mmri-skeleton--${variant} ${className}`.trim()} data-skeleton-variant={variant} role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span className="mmri-skeleton__sr">{accessible}</span>{variant!=='questionnaire'&&variant!=='report'?head:null}{body}<LoadingFact/></section>;
 }
 
 export function LoadingState({label='Өгөгдлийг боловсруулж байна...',description='Шаардлагатай мэдээллийг бэлтгэж байна.',className='',variant='generic'}:{label?:string;description?:string;className?:string;variant?:SkeletonVariant}){

@@ -4,7 +4,7 @@ import { SkeletonScreen } from './ApiState';
 import { go } from './AppShell';
 import { api,session } from '../api/client';
 import type { AssessmentProgress,PublicQuestion,RoutingPayload } from '../api/types';
-import { isNeutralAnswer,scoredAnswerStyle,positionalAnswerStyle,semanticAnswerRank } from '../data/answerTone';
+import { buildAnswerLayout,answerToneAtQuality } from '../data/answerTone';
 
 const terminalRouting=new Set(['QUICK_COMPLETE','QUICK_LIMIT_REACHED','FULL_COMPLETE','FULL_COMPLETE_WITH_REVIEW','FULL_EVIDENCE_INCOMPLETE','NO_APPLICABLE_SCOPE','ADAPTIVE_V13_COMPLETE','ADAPTIVE_V13_LIMIT_REACHED']);
 function displaySentence(value:string){const t=value.trim();return t?t[0].toLocaleUpperCase('mn-MN')+t.slice(1):t}
@@ -27,14 +27,19 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  const [domainCode,setDomainCode]=useState<string>(()=>sessionStorage.getItem('business:reportArea')||'marketing');
  const [online,setOnline]=useState(()=>typeof navigator==='undefined'?true:navigator.onLine!==false);
  const draftTimer=useRef<number|null>(null);
+ /** Monotonic request counter: a save that finishes after a newer choice was made is ignored, so an older answer can never overwrite or mislabel a newer one. */
+ const draftSeq=useRef(0);
+ /** MMRI-04: advances on EVERY selection or clearing (not when a save starts). An acknowledgement only settles the UI/local record when no newer selection exists. */
+ const selectionGen=useRef(0);
+ const [showSaved,setShowSaved]=useState(false);
  const submitRequestRef=useRef<{questionIssueId:string;optionIndex:number;clientRequestId:string}|null>(null);
  const questionTitleRef=useRef<HTMLHeadingElement|null>(null);
  const localDraftKey=(assessmentId:string)=>`mmri.assessmentDraft.${assessmentId}`;
  const readLocalDraft=(assessmentId:string,questionIssueId:string|null|undefined,questionId:string)=>{
-  try{const raw=localStorage.getItem(localDraftKey(assessmentId));if(!raw)return null;const row=JSON.parse(raw);if(row?.questionIssueId!==questionIssueId||row?.questionId!==questionId||!Number.isInteger(row?.optionIndex)){localStorage.removeItem(localDraftKey(assessmentId));return null}return row as {optionIndex:number;updatedAt:string}}catch{return null}
+  try{const raw=localStorage.getItem(localDraftKey(assessmentId));if(!raw)return null;const row=JSON.parse(raw);if(row?.questionIssueId!==questionIssueId||row?.questionId!==questionId||!(Number.isInteger(row?.optionIndex)||row?.optionIndex===null)){localStorage.removeItem(localDraftKey(assessmentId));return null}return row as {optionIndex:number|null;updatedAt:string}}catch{return null}
  };
  const writeLocalDraft=(assessmentId:string,questionIssueId:string,questionId:string,optionIndex:number|null)=>{
-  try{if(optionIndex===null)localStorage.removeItem(localDraftKey(assessmentId));else localStorage.setItem(localDraftKey(assessmentId),JSON.stringify({questionIssueId,questionId,optionIndex,updatedAt:new Date().toISOString()}))}catch{/* local fallback is best-effort; server persistence remains authoritative */}
+  try{/* null is stored as an explicit "cleared" marker so an offline clearing survives a reload until the server acknowledges it */localStorage.setItem(localDraftKey(assessmentId),JSON.stringify({questionIssueId,questionId,optionIndex,updatedAt:new Date().toISOString()}))}catch{/* local fallback is best-effort; server persistence remains authoritative */}
  };
  const clearLocalDraft=(assessmentId:string)=>{try{localStorage.removeItem(localDraftKey(assessmentId))}catch{}};
  const submissionRequestId=(questionIssueId:string,optionIndex:number)=>{
@@ -49,7 +54,8 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
   if(r.nextQuestion){
    const assessmentId=session.assessmentId;
    const serverDraftAnswer=(r.draft?.draft as any)?.optionIndex;
-   const localDraft=assessmentId?readLocalDraft(assessmentId,r.questionIssueId,r.nextQuestion.id):null;
+   let localDraft=assessmentId?readLocalDraft(assessmentId,r.questionIssueId,r.nextQuestion.id):null;
+   if(assessmentId&&localDraft&&localDraft.optionIndex===null&&!Number.isInteger(serverDraftAnswer)){clearLocalDraft(assessmentId);localDraft=null}   // clearing already reflected on the server
    const serverAckAt=r.draft?.serverAckAt?Date.parse(r.draft.serverAckAt):0;
    const localUpdatedAt=localDraft?.updatedAt?Date.parse(localDraft.updatedAt):0;
    const useLocal=!!localDraft&&(!Number.isInteger(serverDraftAnswer)||localUpdatedAt>serverAckAt);
@@ -90,21 +96,34 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
   finally{setLoading(false)}
  };
 
- const saveDraftNow=async(value:number|null)=>{
+ const saveDraftNow=async(value:number|null,attempt=0,gen=selectionGen.current):Promise<boolean>=>{
   const id=session.assessmentId;
   if(!id||!question||!routingMeta?.questionIssueId||!online)return false;
+  const seq=++draftSeq.current;
   setDraftState('saving');setDraftError('');
   try{
    await api.saveDraft(id,{questionIssueId:routingMeta.questionIssueId,questionId:question.id,draft:value===null?{}:{optionIndex:value},expectedAssessmentRevision:routingMeta.assessmentRevision});
+   if(seq!==draftSeq.current)return true;           // a newer choice is already being saved; it decides the final state
+   if(gen!==selectionGen.current)return true;       // a newer choice exists but is not saved yet: keep its local record and its pending save
    clearLocalDraft(id);
    setDraftState('saved');
    return true;
   }catch(e:any){
-   setDraftState('error');
+   if(seq!==draftSeq.current||gen!==selectionGen.current)return false;
+   if(attempt<2&&navigator.onLine!==false){          // safe automatic retry (the server draft endpoint is idempotent for the same value)
+    await new Promise(r=>window.setTimeout(r,attempt===0?1000:3000));
+    if(seq!==draftSeq.current||gen!==selectionGen.current)return false;
+    return saveDraftNow(value,attempt+1,gen);
+   }
+   setDraftState('error');                           // the selection stays visible and is kept locally; it is NOT marked as saved
    setDraftError(e?.message||'Сонголтыг автоматаар хадгалж чадсангүй.');
    return false;
   }
  };
+ useEffect(()=>{
+  if(draftState!=='saved'){setShowSaved(false);return}
+  setShowSaved(true);const t=window.setTimeout(()=>setShowSaved(false),2200);return()=>window.clearTimeout(t);
+ },[draftState]);
 
  useEffect(()=>{void load()},[]);
  useEffect(()=>{
@@ -131,20 +150,9 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  },[answer,draftState,online,question?.id,routingMeta?.questionIssueId,routingMeta?.assessmentRevision]);
 
  const options=question?.options??[];
- const rawMain=useMemo(()=>options.filter(o=>!isNeutralAnswer(o.labelMn,o.state)),[options]);
- const main=useMemo(()=>{
-  const rows=[...rawMain];
-  if(rows.length<=1)return rows;
-  if(rows.every(o=>typeof o.score==='number'))return rows.sort((a,b)=>Number(b.score)-Number(a.score));
-  const ranked=rows.map(o=>semanticAnswerRank(o.state));
-  if(ranked.every(v=>typeof v==='number'))return rows.sort((a,b)=>Number(semanticAnswerRank(b.state))-Number(semanticAnswerRank(a.state)));
-  // Frozen Marketing options without numeric/state ranks are authored from weak to strong.
-  return rows.reverse();
- },[rawMain]);
- const special=useMemo(()=>options.filter(o=>!rawMain.includes(o)),[options,rawMain]);
- const scoredMain=useMemo(()=>main.filter(o=>typeof o.score==='number'),[main]);
- const scoreMin=useMemo(()=>scoredMain.length?Math.min(...scoredMain.map(o=>Number(o.score))):0,[scoredMain]);
- const scoreMax=useMemo(()=>scoredMain.length?Math.max(...scoredMain.map(o=>Number(o.score))):0,[scoredMain]);
+ const layout=useMemo(()=>buildAnswerLayout(options),[options]);
+ const main=layout.main.map(x=>x.option);
+ const special=layout.special.map(x=>x.option);
  const answered=progress?.answeredQuestions??0;
  const questionNo=answered+1;
  const questionUpper=progress?.quick?.hardMaximum??null;
@@ -157,6 +165,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
 
  const choose=(value:string|number)=>{
   const next=Number(value);
+  selectionGen.current++;
   setAnswer(next);
   if(session.assessmentId&&question&&routingMeta?.questionIssueId)writeLocalDraft(session.assessmentId,routingMeta.questionIssueId,question.id,next);
   setDraftState('dirty');
@@ -165,9 +174,11 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  const clearChoice=()=>{
   if(answer===null)return;
   if(draftTimer.current)window.clearTimeout(draftTimer.current);
+  selectionGen.current++;
   setAnswer(null);setDraftError('');setActionError('');
-  if(session.assessmentId)clearLocalDraft(session.assessmentId);
-  if(online)void saveDraftNow(null);else setDraftState('dirty');
+  if(session.assessmentId&&question&&routingMeta?.questionIssueId)writeLocalDraft(session.assessmentId,routingMeta.questionIssueId,question.id,null);
+  setDraftState('dirty');                          // the debounced effect (or the reconnect) sends the explicit empty draft; the marker is dropped on acknowledgement
+  if(online)void saveDraftNow(null);
  };
  const goBack=async()=>{
   if(!session.assessmentId||!routingMeta||busy||answered<=0||!online)return;
@@ -226,8 +237,8 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    <div className="mmri-questionnaire__top-row">
     <strong className="mmri-questionnaire__count">Асуулт {questionNo}<span> / {expectedTotal}</span></strong>
     <div className="mmri-questionnaire__session-actions">
-     {!online?<StatusBadge tone="warning">Интернетгүй</StatusBadge>:draftState==='saving'?<SaveStatus state="saving"/>:draftState==='saved'?<SaveStatus state="saved"/>:draftState==='error'?<SaveStatus state="error"/>:null}
-     <Button variant="ghost" size="compact" disabled={busy||!online} loading={pausing} onClick={()=>void pause()}>Хадгалаад гарах</Button>
+     {!online?<StatusBadge tone="warning">Интернетгүй</StatusBadge>:draftState==='saving'?<SaveStatus state="saving"/>:draftState==='saved'&&showSaved?<SaveStatus state="saved"/>:draftState==='error'?<SaveStatus state="error"/>:null}
+     <Button variant="ghost" size="compact" disabled={busy||!online} loading={pausing} onClick={()=>void pause()}>Түр гарах</Button>
     </div>
    </div>
    <ProgressBar value={sessionProgress} label={`Оношилгооны явц ${sessionProgress} хувь`}/>
@@ -244,12 +255,12 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    </div>
 
    <div className="mmri-questionnaire__answers">
-    <RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Хариултын үндсэн сонголтууд" className="is-ordered-scale" onDeselect={clearChoice} options={main.map((o,i)=>{const hasScore=typeof o.score==='number';return {value:o.optionIndex,label:displaySentence(o.labelMn),prefix:String.fromCharCode(65+i),className:'has-score-tone',style:hasScore?scoredAnswerStyle(Number(o.score),scoreMin,scoreMax):positionalAnswerStyle(i,main.length,true)}})}/>
-    {special.length>0&&<div className="mmri-questionnaire__special"><span>Тодорхой хариулах боломжгүй бол</span><RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Нэмэлт хариултын сонголтууд" onDeselect={clearChoice} options={special.map(o=>({value:o.optionIndex,label:displaySentence(o.labelMn),className:'is-neutral-tone'}))}/></div>}
+    <RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Хариултын үндсэн сонголтууд" className="is-ordered-scale" onDeselect={clearChoice} options={layout.main.map((x,i)=>{const o=x.option;const neutralMain=x.role==='neutral-main';const t=x.quality===null?null:answerToneAtQuality(x.quality);return {value:o.optionIndex,label:displaySentence(o.labelMn),className:neutralMain?'is-neutral-tone':'has-score-tone',style:t?({'--answer-color':t.color,'--answer-soft':t.soft} as React.CSSProperties):undefined}})}/>
+    {special.length>0&&<div className="mmri-questionnaire__special">{main.length>0&&<span>Хэрэв дээрх сонголтуудаас тодорхой хариулах боломжгүй бол доорхоос сонгоно уу:</span>}<RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Нэмэлт хариултын сонголтууд" onDeselect={clearChoice} options={special.map(o=>({value:o.optionIndex,label:displaySentence(o.labelMn),className:'is-neutral-tone'}))}/></div>}
    </div>
 
    <div className="mmri-questionnaire__save-line" role="status" aria-live="polite" aria-atomic="true">
-    {!online?<span>Сонголт серверт хадгалагдаагүй.</span>:draftState==='error'?<><span>{draftError}</span><button type="button" onClick={()=>void saveDraftNow(answer)}>Дахин хадгалах</button></>:draftState==='saving'?<span>Сонголтыг серверт хадгалж байна…</span>:draftState==='saved'?<span>Сонголт серверт хадгалагдсан.</span>:answer!==null?<span>Сонголтыг автоматаар хадгална.</span>:<span>Хариулт сонгоогүй байна.</span>}
+    {!online?<span>Интернет холболт алга. Сонголт энэ төхөөрөмж дээр хадгалагдаж, холболт сэргэмэгц автоматаар илгээгдэнэ.</span>:draftState==='error'?<><span>Хадгалахад алдаа гарлаа. Таны сонголт энэ хуудсан дээр хэвээр байна.</span><button type="button" className="mmri-questionnaire__retry" onClick={()=>void saveDraftNow(answer)}>Дахин оролдох</button></>:draftState==='saving'?<span>Хадгалж байна</span>:<span className="mmri-visually-hidden">{answer===null?'Хариулт сонгоогүй байна.':'Сонголт автоматаар хадгалагдана.'}</span>}
     <button type="button" className="mmri-questionnaire__clear" disabled={answer===null||busy} onClick={clearChoice}>Сонголтыг буцаах</button>
    </div>
 
@@ -257,7 +268,6 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
 
    <footer className="mmri-questionnaire__actions">
     <Button type="button" variant="ghost" className="is-back" disabled={busy||answered<=0||!online} loading={rewinding} onClick={()=>void goBack()}>‹ Буцах</Button>
-    <Button type="button" variant="secondary" disabled={answer===null||busy||!online} onClick={()=>void saveDraftNow(answer)}>Хадгалах</Button>
     <Button type="submit" size="touch" className="is-next" disabled={answer===null||busy||!online} loading={submitting}>Үргэлжлүүлэх ›</Button>
    </footer>
   </form>
