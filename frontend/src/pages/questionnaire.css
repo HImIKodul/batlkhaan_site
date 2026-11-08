@@ -64,3 +64,9 @@ body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-group .mmri-radio-car
  .mmri-questionnaire__actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mmri-questionnaire__actions .mmri-button{min-height:48px;width:100%}.mmri-questionnaire__actions .is-next{grid-column:1/-1;grid-row:1;margin-left:0;min-height:52px}
  .mmri-questionnaire-snapshot__metrics{grid-template-columns:1fr}
 }
+
+/* Selected answer: a bright light travels the card's perimeter (RimSheen, only on the checked card) and the marker carries a check, so the state never relies on colour or motion alone. */
+.mmri-radio-card__shine{--rim-w:3px;--rim-t:5.5s;--rim-c:#fff}
+.mmri-radio-card__shine i{background:conic-gradient(from 0deg,transparent 0 58%,rgba(255,255,255,.35) 72%,#fff 80%,rgba(255,255,255,.35) 88%,transparent 96%)}
+body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected .mmri-radio-card__mark::after{content:"";position:absolute;left:50%;top:46%;width:30%;height:52%;translate:-50% -50%;rotate:45deg;border:solid var(--ac-deep,#0b2a6b);border-width:0 2.5px 2.5px 0;border-radius:1px}
+body.mmri-prism-page .mmri-radio-group .mmri-radio-card__mark{position:relative}

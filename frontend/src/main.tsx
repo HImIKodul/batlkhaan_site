@@ -2,6 +2,7 @@ import { initGlassFromSession } from './design/glassTheme';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import '@fontsource-variable/inter';
 import './design/tokens.css';
 import './styles.css';
 import './components/components.css';
@@ -31,7 +32,13 @@ function applyStoredTechnicalPreferences(){
   root.style.colorScheme='light';
 }
 
+/* Decorative ambient motion pauses while the tab is hidden (CSS: components/glass.css `html.is-hidden`). */
+function pauseAmbientMotionWhenHidden(){
+  document.addEventListener('visibilitychange',()=>document.documentElement.classList.toggle('is-hidden',document.hidden));
+}
+
 applyStoredTechnicalPreferences();
+pauseAmbientMotionWhenHidden();
 initGlassFromSession();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

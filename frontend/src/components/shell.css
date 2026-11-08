@@ -148,8 +148,8 @@ html body .mmri-notification-trigger:hover,html body .mmri-account-trigger:hover
 }
 
 /* legal footer: quiet, under every page; leaves room for the mobile bottom bar */
-.mmri-legal-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 18px;padding:18px 16px calc(22px + var(--mmri-bottom-nav-height,0px));font-size:13px;color:var(--wp-ink3,#566683)}
+.mmri-legal-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 14px;padding:6px 16px calc(30px + var(--mmri-bottom-nav-height,0px));font-size:12px;line-height:1.4;color:var(--wp-ink3,#566683)}
 .mmri-legal-footer nav{display:flex;flex-wrap:wrap;gap:4px 16px}
-.mmri-legal-footer a{display:inline-flex;align-items:center;min-height:32px;color:var(--wp-ink2,#33435A);font-weight:600;text-underline-offset:3px}
-.mmri-legal-footer small{flex-basis:100%;text-align:center;opacity:.85}
-@media (min-width:768px){.mmri-legal-footer{padding-bottom:22px}}
+.mmri-legal-footer a{display:inline-flex;align-items:center;min-height:26px;color:var(--wp-ink2,#33435A);font-weight:500;text-underline-offset:3px}
+.mmri-legal-footer small{text-align:center}.mmri-legal-footer small::before{content:'·';margin-right:14px}@media (max-width:640px){.mmri-legal-footer small{flex-basis:100%}.mmri-legal-footer small::before{content:none}}
+@media (min-width:768px){.mmri-legal-footer{padding-bottom:30px}}

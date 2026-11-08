@@ -13,7 +13,7 @@
    (.mmri-shell-main), (3) content. Glass is transparent + reflective with minimal blur (3-6px); the whole
    environment (not the glass) takes the category family via --env-deep/main/hi. */
 :root{
-  --mmri-chrome:calc(var(--mmri-shell-height) + 100px);
+  --mmri-chrome:calc(var(--mmri-shell-height) + 120px);
   --env-deep:#0B2347;--env-main:#2B63AE;--env-hi:#7FB3EA;--env-shade:0%;
   --env-dark:#2E5073;--env-dark2:#284662;--env-white:#EEF6FF;
   --ambient-1:var(--env-main);
@@ -102,7 +102,7 @@ html[data-env="prism"]::before,html[data-env="prism"]::after{display:none}
 
 /* Page plane: one calm surface floating above the floor. Light, thin edge; the shadow beneath it is the main depth cue. Home/Diagnosis are
    airy (the category tiles sit directly on it); content pages use a denser quiet tint so text is always legible. */
-html body .mmri-shell-main{position:relative;z-index:0;margin:12px clamp(10px,5.5vw,92px) 80px;min-height:calc(100dvh - var(--mmri-chrome))}
+html body .mmri-shell-main{position:relative;z-index:0;margin:12px clamp(10px,5.5vw,92px) 10px;min-height:calc(100dvh - var(--mmri-chrome))}
 html body .mmri-shell-main::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:var(--radius-surface);pointer-events:none;
   background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.03) 38%),rgba(8,18,36,.32);
   -webkit-backdrop-filter:blur(6px) saturate(130%);backdrop-filter:blur(6px) saturate(130%);
@@ -212,3 +212,17 @@ html body .mmri-notification-panel,html body .mmri-account-menu{color:#fff;backg
 
 /* Smooth scrolling + calmer scroll chaining; reduced-motion users get instant scrolling (design/preferences.css). */
 
+
+/* Travelling rim light (components/RimSheen.tsx): a conic highlight rotating inside a 2px perimeter mask. Only a transform animates;
+   the panel's own edge/shadow stay static, so reduced-motion keeps a bright static rim. */
+.mmri-rim{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;overflow:hidden;padding:var(--rim-w,2px);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.mmri-rim i{position:absolute;inset:-70%;background:conic-gradient(from 0deg,transparent 0 62%,rgba(255,255,255,.95) 78%,var(--rim-c,#8ff0ff) 84%,transparent 94%);animation:mmri-rim var(--rim-t,16s) linear infinite;animation-delay:var(--rim-d,0s);will-change:transform}
+@keyframes mmri-rim{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.mmri-rim i{animation:none;transform:rotate(-35deg)}}
+html body .mmri-shell.has-hx-hole::before{-webkit-mask:var(--hx-hole) 0 0/100% 100% no-repeat;mask:var(--hx-hole) 0 0/100% 100% no-repeat}
+html.is-hidden :is(.crystal-stage__light,.mmri-shell-aurora::before,.mmri-rim i,.hx__plate,.mmri-guide2__route .is-pulse){animation-play-state:paused}
+/* Long, scroll-heavy content pages keep the ambient light STATIC: two large animating layers behind many blurred glass panels made the report scroll at
+   ~200 ms/frame in the headless profile (25 ms with the drift off). Short pages (home, diagnosis hub, sign-in) keep the living background. */
+.crystal-stage:is([data-route=report],[data-route=results],[data-route=assessment],[data-route=priorities],[data-route=settings],[data-route=billing],[data-route=profile]) .crystal-stage__light{animation:none;will-change:auto}
+.mmri-shell:is([data-route=report],[data-route=results],[data-route=assessment],[data-route=priorities],[data-route=settings],[data-route=billing],[data-route=profile]) .mmri-shell-aurora::before{animation:none;will-change:auto}

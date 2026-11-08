@@ -198,9 +198,9 @@ html body.mmri-prism-page :is(.mmri-input,.mmri-textarea,.mmri-select)[aria-inva
 
 /* ===== Notification center (bell panel): a floating pearl-glass sheet, unread items grouped first ===== */
 body.mmri-prism-page .mmri-notification-panel{width:min(400px,calc(100vw - 24px));max-height:min(72dvh,640px);padding:0 0 8px;border-radius:26px;border:1px solid rgba(255,255,255,.85);
- background:radial-gradient(90% 40% at 0 0,rgba(255,255,255,.95),transparent 70%),var(--hg-l1);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
+ background:radial-gradient(90% 40% at 0 0,rgba(255,255,255,.95),transparent 70%),linear-gradient(160deg,rgba(176,206,255,.62),rgba(128,160,250,.34) 55%,rgba(168,150,250,.3)),var(--hg-l1);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
  box-shadow:inset 0 1.5px 0 #fff,inset -1px -1px 0 rgba(120,140,170,.3),0 2px 4px rgba(10,25,50,.1),0 24px 48px -16px rgba(20,40,80,.4),0 60px 90px -40px rgba(20,40,80,.4)}
-body.mmri-prism-page .mmri-notification-panel>header{padding:16px 14px 12px 20px;border-bottom:1px solid rgba(190,205,222,.5)}
+body.mmri-prism-page .mmri-notification-panel>header{position:relative;overflow:hidden;padding:16px 14px 12px 20px;border-bottom:1px solid rgba(190,205,222,.5)}
 body.mmri-prism-page .mmri-notification-panel>header strong{font-size:17px;font-weight:650;letter-spacing:-.01em}
 body.mmri-prism-page .mmri-notification-tools{padding:8px 14px;gap:4px 8px;border-bottom:1px solid rgba(190,205,222,.4)}
 body.mmri-prism-page .mmri-notification-tools button{color:var(--wp-ink2);font-size:12.5px;font-weight:650;border-radius:999px;padding:0 12px;transition:background-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease}
@@ -229,3 +229,8 @@ body.mmri-prism-page .mmri-notification-empty>span{display:grid;place-items:cent
 body.mmri-prism-page .mmri-notification-empty strong{font-size:15px;font-weight:650}
 body.mmri-prism-page .mmri-notification-empty p{max-width:30ch;font-size:13px;line-height:1.5;color:var(--wp-ink3)}
 @media (hover:none){body.mmri-prism-page .mmri-notification-item__actions{opacity:1}}
+
+/* Notification header: one slow reflection crosses the header (transform only; static when motion is reduced). */
+body.mmri-prism-page .mmri-notification-panel>header::after{content:"";position:absolute;inset:0 auto 0 0;width:45%;pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,255,255,.55) 50%,transparent);transform:translateX(-120%);animation:mmri-note-sweep 9s ease-in-out 1s infinite}
+@keyframes mmri-note-sweep{0%,55%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){body.mmri-prism-page .mmri-notification-panel>header::after{animation:none;display:none}}

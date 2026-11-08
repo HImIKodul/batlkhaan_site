@@ -1,4 +1,5 @@
 import React,{useEffect,useState} from 'react';
+import { MapPinned,Wrench,Flag } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import { type BusinessAreaId } from '../data/businessEvaluation';
 
@@ -14,6 +15,7 @@ const metrics:{value:string;label:string}[]=[
  {value:'192–280',label:'сонгогдох асуулт'},
  {value:'12',label:'сарын хөгжлийн төлөвлөгөө'},
 ];
+const stageIcons=[MapPinned,Wrench,Flag];
 const stages:{title:string;text:string}[]=[
  {title:'Бид хаана байна вэ?',text:'Бизнесийн өнөөгийн чадавхыг оношилно.'},
  {title:'Юуг сайжруулах вэ?',text:'Асуудал, шалтгаан, боломжийг тодорхойлно.'},
@@ -29,10 +31,16 @@ export function AboutGuide(){
    {metrics.map(m=><li key={m.value} className="mmri-guide2__card mmri-guide2__metric"><strong>{m.value}</strong><span>{m.label}</span></li>)}
   </ul>}
   {showFlow&&<ol className="mmri-guide2__flow" aria-label="Гурван үе шат">
-   {stages.map((s,i)=><li key={s.title} className={`mmri-guide2__stage ${i%2?'is-left':'is-right'}`}>
+   <svg className="mmri-guide2__route" viewBox="0 0 120 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <defs><linearGradient id="mmri-route-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5f8bff"/><stop offset=".5" stopColor="#8a74e6"/><stop offset="1" stopColor="#c46ad6"/></linearGradient></defs>
+    <path className="is-halo" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
+    <path className="is-line" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
+    <path className="is-pulse" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
+   </svg>
+   {stages.map((s,i)=>{const SI=stageIcons[i];return <li key={s.title} className={`mmri-guide2__stage ${i%2?'is-left':'is-right'}`}>
     <span className="mmri-guide2__node" aria-hidden="true">{i+1}</span>
-    <div className="mmri-guide2__card mmri-guide2__stage-card"><strong>{s.title}</strong><p>{s.text}</p></div>
-   </li>)}
+    <div className="mmri-guide2__card mmri-guide2__stage-card"><i className="mmri-guide2__stage-icon" aria-hidden="true"><SI size={22} strokeWidth={1.9}/></i><div><strong>{s.title}</strong><p>{s.text}</p></div></div>
+   </li>})}
   </ol>}
   {paged&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
    <button type="button" className="mmri-guide2__nav-btn" disabled={page===0} onClick={()=>setPage(0)}><Icon name="back" size={18}/>Өмнөх</button>
@@ -157,7 +165,7 @@ export function ReportGuide(){
  return <div className="mmri-guide2__report">
   <p className="mmri-guide2__example" role="note"><span className="mmri-guide2__tag">ЖИШЭЭ</span>Доорх агуулга нь тайлангийн бүтцийг харуулсан жишээ тайлбар юм. Бодит байгууллагын оноо, оношилгооны дүн биш бөгөөд бодит үр дүн таны хариултаас хамаарна.</p>
   {compact?<ReportCompact/>:<ReportMatrix/>}
-  <p className="mmri-guide2__pdf-note"><Icon name="download" size={18}/>Дашрамд хэлэхэд, төрөл бүрийн үр дүн тусдаа PDF тайлан болж гарна.</p>
+  <p className="mmri-guide2__pdf-note"><Icon name="download" size={18}/>Оношилгооны чиглэл бүрийн үр дүнг тусдаа PDF тайлангаар авах боломжтой.</p>
  </div>;
 }
 
