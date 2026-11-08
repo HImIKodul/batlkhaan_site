@@ -1,0 +1,345 @@
+{
+  "schema": "mmri.step07_of15.results_diagnosis.static.v1",
+  "status": "FAIL",
+  "checksPassed": 41,
+  "checksTotal": 54,
+  "failures": [
+    {
+      "name": "backend version 3.25.0",
+      "pass": false,
+      "detail": "3.31.0"
+    },
+    {
+      "name": "frontend version 3.25.0",
+      "pass": false,
+      "detail": "3.81.4"
+    },
+    {
+      "name": "quick coverage-confidence warning exists",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "report warning review required",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "validator requires review terminology",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend results labels QUICK provisional",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend results separates validated/provisional weak cells",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend executive summary does not force provisional weak as validated",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend report labels review-required",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "results still show confidence separate from score",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "results still show ROI guardrail",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "results still show causal guardrail",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "result hash provenance still visible",
+      "pass": false,
+      "detail": ""
+    }
+  ],
+  "checks": [
+    {
+      "name": "backend version 3.25.0",
+      "pass": false,
+      "detail": "3.31.0"
+    },
+    {
+      "name": "frontend version 3.25.0",
+      "pass": false,
+      "detail": "3.81.4"
+    },
+    {
+      "name": "diagnosis has review-required metric",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnosis has review-required result status",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "completed-with-review not in official set",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review metric branch exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review score is non-official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "weak cells split validated/provisional",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validated weakness requires direct final",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validated weakness requires locked confidence state",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validated weakness requires >=0.8 confidence",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "contradicted cell cannot be validated weakness",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "strength excludes review-required categories",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "strength excludes unresolved categories",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "quality has review flag",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "quality has official-result flag",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "quality has quick-estimate flag",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review warning prevents final interpretation",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "quick coverage-confidence warning exists",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "quick warning no universal 280 claim",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "root causes marked hypothesis not causal",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "five outcomes preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ROI guardrail preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "causal lift guardrail preserved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report supports review-required metric",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report only clean completed is official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report review branch exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report review keeps numeric score",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report strength excludes review categories",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report strength excludes unresolved categories",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report warning review required",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "report quick limit no universal 280 claim",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validator blocks official wording for review",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validator requires review terminology",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "fallback labels review score",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "AI prompt forbids official review claims",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "assessment list official flag status-aware",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "assessment progress official flag status-aware",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend types include provisional weaknesses",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend types include quality official flag",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend results labels review-required",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend results labels QUICK provisional",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend results separates validated/provisional weak cells",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend executive summary does not force provisional weak as validated",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "frontend root causes have provisional wording",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend outcomes mark provisional direction",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend status explicit review required",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend report labels review-required",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "demo QUICK progress not official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "results still show confidence separate from score",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "results still show ROI guardrail",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "results still show causal guardrail",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "result hash provenance still visible",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "no evidence upload introduced",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

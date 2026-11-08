@@ -1,0 +1,139 @@
+{
+  "contractVersion": "MMRI-BACKEND-INTEGRATION-CONTRACT-v2.0.0-RUNTIME-RECONCILED",
+  "step": "6/7",
+  "date": "2026-10-10",
+  "status": "STEP6_COMPLETE_READY_FOR_STEP7_IMPLEMENTATION_NOT_PRODUCTION_ACTIVATION",
+  "canonicalContentSHA256": "34337d26022965045515d57030ba1f1d2b01a1df5642c77a87d2890a12acac25",
+  "systemZipSHA256": "018dd7499039f0a404212603c9a950f8d1eaa8882b15b81e1cc0d0a14f9fabdb",
+  "scope": {
+    "domains": [
+      "MARKETING",
+      "HRMRI",
+      "FINMRI",
+      "ISMRI",
+      "OPMRI"
+    ],
+    "questionsTotal": 61440,
+    "questionsPerDomain": 12288,
+    "categoriesPerDomain": 64,
+    "dimensionsPerCategory": 48,
+    "variantsPerDimension": 4
+  },
+  "domainRouteMap": {
+    "MARKETING": {
+      "frontendAreaId": "marketing",
+      "customerNameMn": "Маркетингийн менежмент",
+      "currentRuntime": "LIVE",
+      "runtimeMethodology": "3.0.0",
+      "currentQuestionBank": "3.1.0",
+      "architecture": "PRESERVE_EXISTING_MARKETING_BUNDLE"
+    },
+    "ISMRI": {
+      "frontendAreaId": "it",
+      "customerNameMn": "Мэдээллийн технологийн менежмент",
+      "currentRuntime": "LOCKED_NON_LIVE",
+      "runtimeMethodology": null,
+      "currentQuestionBank": null,
+      "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+    },
+    "FINMRI": {
+      "frontendAreaId": "finance",
+      "customerNameMn": "Санхүүгийн менежмент",
+      "currentRuntime": "LOCKED_NON_LIVE",
+      "runtimeMethodology": null,
+      "currentQuestionBank": null,
+      "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+    },
+    "HRMRI": {
+      "frontendAreaId": "people",
+      "customerNameMn": "Хүний нөөцийн менежмент",
+      "currentRuntime": "LOCKED_NON_LIVE",
+      "runtimeMethodology": null,
+      "currentQuestionBank": null,
+      "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+    },
+    "OPMRI": {
+      "frontendAreaId": "operations",
+      "customerNameMn": "Үйлдвэрлэл ба үйл ажиллагааны менежмент",
+      "currentRuntime": "LOCKED_NON_LIVE",
+      "runtimeMethodology": null,
+      "currentQuestionBank": null,
+      "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+    }
+  },
+  "immutableCanonicalFields": [
+    "DomainCode",
+    "CategoryID",
+    "CategoryOrdinal",
+    "DimensionID",
+    "QuestionID",
+    "Variant",
+    "VariantRole"
+  ],
+  "runtimeAuthoritativeFields": [
+    "optionCode",
+    "canonicalValue",
+    "runtimeState",
+    "scoringEnabled",
+    "scoringRole",
+    "evidencePath",
+    "applicabilityMode",
+    "cellWeight",
+    "capabilityWeight",
+    "goalWeight",
+    "normalizationProfile",
+    "dependencyRule",
+    "databasePrimaryKey",
+    "route/loader activation"
+  ],
+  "variantRoles": {
+    "Q1": {
+      "role": "A_CURRENT_STATE",
+      "numericScore": "MAY_SCORE_IF_POLICY_ENABLED"
+    },
+    "Q2": {
+      "role": "B_RECENT_OR_QUANTIFIED",
+      "numericScore": "MAY_SCORE_IF_POLICY_ENABLED"
+    },
+    "Q3": {
+      "role": "C_CORROBORATION",
+      "numericScore": "NO_ADDITIONAL_NUMERIC_SCORE"
+    },
+    "Q4": {
+      "role": "D_CONFLICT_RESOLUTION",
+      "numericScore": "NO_ADDITIONAL_NUMERIC_SCORE"
+    }
+  },
+  "runtimeArchitectureDecision": {
+    "marketing": "KEEP_EXISTING_3.0.0_QBANK_3.1.0_UNCHANGED",
+    "nonMarketing": "ONE_DOMAIN_SCOPED_METHODOLOGY_BUNDLE_PER_DOMAIN; DO_NOT MERGE ALL FIVE DOMAINS INTO ONE ASSESSMENT ROUTING SPACE",
+    "why": "Each diagnosis is separately paid, separately run and separately reported. The current Assessment engine binds one methodologyVersion per assessment, which naturally supports a domain-scoped methodology bundle.",
+    "requiredPersistenceBeforeActivation": [
+      "domainCode on BillingInvoice",
+      "domainCode on CompanyEntitlement",
+      "domainCode on Assessment or a deterministic immutable methodology->domain binding",
+      "domain-aware entitlement claim",
+      "domain-aware invoice creation",
+      "domain-aware assessment creation"
+    ],
+    "databaseMigrationExpected": "YES_BEFORE_STEP7_ACTIVATION",
+    "productionActivationInStep6": false
+  },
+  "mappingRules": [
+    "Marketing QuestionID has 12,288/12,288 exact runtime ID matches, but canonical wording/options are a different content version; do not overwrite the active Marketing bundle in place.",
+    "HRMRI/FINMRI/ISMRI/OPMRI canonical QuestionIDs have no exact ID match in the legacy repaired banks; do not map by row position, category ordinal or answer order.",
+    "Build new non-Marketing runtime bundles from canonical IDs and explicit runtime scoring/evidence policies.",
+    "Unknown, confidentiality refusal, no-eligible-case and factual N/A are non-zero states and must remain distinguishable.",
+    "Q3/Q4 are corroboration/conflict-resolution evidence paths and must not create a second maturity score.",
+    "Five strategic goals in each non-Marketing domain retain 20% baseline influence before valid N/A re-normalization within the owning goal."
+  ],
+  "step7RequiredImplementation": [
+    "Create domain-scoped DB migration and API/billing contract.",
+    "Generate four validated non-Marketing methodology bundles with explicit QuestionOption score/state and QuestionRuntimePolicy mappings.",
+    "Wire frontend area IDs to backend domainCode and entitlement domainCode.",
+    "Keep existing Marketing methodology selectable and unchanged.",
+    "Run synthetic strong/mid/weak/unknown/N/A tests per domain.",
+    "Run payment/unlock/retake, resume/back/undo, report gating/PDF, traceability and rollback tests for all five domains.",
+    "Only after every activation gate passes, promote the four new domain bundles and freeze final hashes."
+  ]
+}

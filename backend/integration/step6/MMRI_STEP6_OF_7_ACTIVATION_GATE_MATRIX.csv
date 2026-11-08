@@ -1,0 +1,26 @@
+﻿Gate,Check,Step6Status,Evidence / Step7 boundary
+G01,ZIP SHA-256 recorded,PASS,MMRI_FINAL_FROZEN_MASTER_v3.1.16_R17_21_4_STEP08_RESPONSIVE_GLOBAL_LINUX_2026-10-10.zip = 018dd7499039f0a404212603c9a950f8d1eaa8882b15b81e1cc0d0a14f9fabdb
+G02,Current Marketing runtime identified and preserved,PASS,Methodology 3.0.0 / QBANK 3.1.0 identified; active runtime files unchanged.
+G03,Five canonical domains resolved without Strategy leakage,PASS,"MARKETING, HRMRI, FINMRI, ISMRI, OPMRI mapped to frontend area IDs."
+G04,64 categories/domain,PASS,Canonical dataset: 64 each.
+G05,3072 cells/domain,PASS,64 × 48 structural cells each.
+G06,12288 questions/domain,PASS,"12,288 canonical rows each; 61,440 total."
+G07,61440 Question IDs matched or explicitly reconciled,PASS_RECONCILED,"All 61,440 rows classified; Marketing IDs 12,288 exact, other 49,152 require new runtime versions."
+G08,No duplicate canonical Question IDs,PASS,"61,440 unique canonical IDs."
+G09,Every display answer mapped to explicit runtime code/value/state,BLOCKED_STEP7,Current active Marketing has score/state; canonical non-Marketing runtime option mapping does not yet exist.
+G10,No answer-position scoring inference,PASS_CONTRACT,Step 6 explicitly prohibits positional scoring; Step 7 must preserve this.
+G11,Unknown != zero,PASS_MARKETING_BLOCKED_NONMARKETING,Marketing runtime explicit DNK state; non-Marketing mapping required in Step 7.
+G12,Factual N/A != zero and re-normalizes correctly,PASS_MARKETING_BLOCKED_NONMARKETING,Marketing supports N_A_CLAIM; non-Marketing policy bundle required.
+G13,Q3/Q4 create no additional maturity score,BLOCKED_STEP7,Canonical role contract fixed; runtime policies for new domains not yet generated.
+G14,Strong synthetic endpoint = 1,BLOCKED_STEP7,Requires four new runtime bundles.
+G15,Mid synthetic endpoint = 0.5,BLOCKED_STEP7,Requires four new runtime bundles.
+G16,Weak synthetic endpoint = 0,BLOCKED_STEP7,Requires four new runtime bundles.
+G17,Unknown-only does not become zero,BLOCKED_STEP7,Requires four new runtime bundles.
+G18,Five-goal aggregation retains 20%/goal,BLOCKED_STEP7,Architecture fixed; runtime policies/bundles still required.
+G19,Marketing engine/regression unchanged,PASS,All R17.21.4 Step08 pre-existing files are hash-preserved.
+G20,End-to-end provenance,PASS_MARKETING_BLOCKED_NONMARKETING,Current Marketing trace chain exists; new domains require bundle/runtime activation.
+G21,Payment/unlock/retake works for all five domains,BLOCKED_STEP7,Current BillingInvoice/CompanyEntitlement have no domainCode; live UI starts Marketing only.
+G22,Progress/resume/back/undo works,PASS_MARKETING_BLOCKED_NONMARKETING,Current assessment engine supports it; non-Marketing domain activation not yet wired.
+G23,Report gating and PDF generation pass,PASS_MARKETING_BLOCKED_NONMARKETING,Current Marketing path exists; domain-specific backend activation remains.
+G24,Default loader and rollback loader both pass,BLOCKED_STEP7,Expected BusinessMRI loader/rollback flag from draft is absent in authoritative ZIP.
+G25,Step 6 package hashes and Linux verifier pass,PASS,Verified by VERIFY_DATA_STEP6_BACKEND_INTEGRATION.sh and DATA_STEP6_SHA256SUMS.txt.

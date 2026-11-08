@@ -1,0 +1,326 @@
+{
+  "schema": "mmri.step07_of15.results_diagnosis.v1",
+  "status": "PASS",
+  "checksPassed": 57,
+  "checksTotal": 57,
+  "failures": [],
+  "scenarios": {
+    "quick": {
+      "metricType": "QUICK_ESTIMATE",
+      "resultStatus": "QUICK_ESTIMATE",
+      "score": 54.97833846153846,
+      "confidence": 0.28000000000000014,
+      "validatedWeak": 0,
+      "provisionalWeak": 2944
+    },
+    "official": {
+      "metricType": "OFFICIAL_OVERALL_SCORE",
+      "resultStatus": "OFFICIAL",
+      "score": 87.95451076923077,
+      "confidence": 0.9000000000000001,
+      "validatedWeak": 1,
+      "provisionalWeak": 0
+    },
+    "review": {
+      "metricType": "REVIEW_REQUIRED_SCORE",
+      "resultStatus": "REVIEW_REQUIRED",
+      "score": 87.87081846153848,
+      "confidence": 0.899686153846154,
+      "reviewRequired": 1,
+      "hardContradictions": 1
+    },
+    "partial": {
+      "metricType": "PARTIAL_TERMINAL",
+      "resultStatus": "PARTIAL_TERMINAL",
+      "score": 87.95451076923077,
+      "coverage": 0.9991958974358974
+    }
+  },
+  "checks": [
+    {
+      "name": "QUICK metric is estimate",
+      "pass": true,
+      "detail": "QUICK_ESTIMATE"
+    },
+    {
+      "name": "QUICK result status estimate",
+      "pass": true,
+      "detail": "QUICK_ESTIMATE"
+    },
+    {
+      "name": "QUICK overall never official",
+      "pass": true,
+      "detail": "false"
+    },
+    {
+      "name": "QUICK weak evidence stays provisional",
+      "pass": true,
+      "detail": "0/20"
+    },
+    {
+      "name": "QUICK warning explicitly non-official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "QUICK warning separates coverage and confidence",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "QUICK quality flag",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "QUICK report metric estimate",
+      "pass": true,
+      "detail": "QUICK_ESTIMATE"
+    },
+    {
+      "name": "QUICK fallback validates",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "clean FULL is official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "clean FULL overall official flag",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "clean FULL quality official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "clean FULL has validated weakness",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "clean FULL weak not provisional for locked cell",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "clean FULL five business outcomes",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "clean FULL outcome guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "clean FULL report official",
+      "pass": true,
+      "detail": "OFFICIAL_OVERALL_SCORE"
+    },
+    {
+      "name": "clean FULL fallback validates",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "review result not official metric",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED_SCORE"
+    },
+    {
+      "name": "review result status explicit",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "review overall isOfficial false",
+      "pass": true,
+      "detail": "false"
+    },
+    {
+      "name": "review keeps numeric score",
+      "pass": true,
+      "detail": "87.87081846153848"
+    },
+    {
+      "name": "review quality requires review",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review warning forbids official interpretation",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review hard contradiction surfaced",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "review conflicted weak is provisional",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review conflicted weak not validated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review category excluded from strengths",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review report metric explicit",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED_SCORE"
+    },
+    {
+      "name": "review report warning required",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review fallback validates",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "review fallback never calls official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "partial exhausted stays partial terminal",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "partial not official",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "partial incomplete coverage warning",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "partial report has no official metric",
+      "pass": true,
+      "detail": "NONE"
+    },
+    {
+      "name": "partial fallback validates",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "quick five outcomes",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "quick root causes are hypotheses not causal lift",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "quick score bounded",
+      "pass": true,
+      "detail": "54.97833846153846"
+    },
+    {
+      "name": "quick coverage bounded",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "quick confidence bounded",
+      "pass": true,
+      "detail": "0.28000000000000014"
+    },
+    {
+      "name": "official five outcomes",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "official root causes are hypotheses not causal lift",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "official score bounded",
+      "pass": true,
+      "detail": "87.95451076923077"
+    },
+    {
+      "name": "official coverage bounded",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "official confidence bounded",
+      "pass": true,
+      "detail": "0.9000000000000001"
+    },
+    {
+      "name": "review five outcomes",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "review root causes are hypotheses not causal lift",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "review score bounded",
+      "pass": true,
+      "detail": "87.87081846153848"
+    },
+    {
+      "name": "review coverage bounded",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "review confidence bounded",
+      "pass": true,
+      "detail": "0.899686153846154"
+    },
+    {
+      "name": "partial five outcomes",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "partial root causes are hypotheses not causal lift",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "partial score bounded",
+      "pass": true,
+      "detail": "87.95451076923077"
+    },
+    {
+      "name": "partial coverage bounded",
+      "pass": true,
+      "detail": "0.9991958974358974"
+    },
+    {
+      "name": "partial confidence bounded",
+      "pass": true,
+      "detail": "0.9000000000000001"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "step": "6/7",
+  "date": "2026-10-10",
+  "status": "STEP6_RECONCILED_NOT_ACTIVATED",
+  "authoritativeSystemZip": {
+    "name": "MMRI_FINAL_FROZEN_MASTER_v3.1.16_R17_21_4_STEP08_RESPONSIVE_GLOBAL_LINUX_2026-10-10.zip",
+    "sha256": "018dd7499039f0a404212603c9a950f8d1eaa8882b15b81e1cc0d0a14f9fabdb",
+    "backendVersion": "3.31.0",
+    "frontendVersion": "3.81.4"
+  },
+  "canonical": {
+    "contentSHA256": "34337d26022965045515d57030ba1f1d2b01a1df5642c77a87d2890a12acac25",
+    "rows": 61440,
+    "domains": {
+      "MARKETING": 12288,
+      "HRMRI": 12288,
+      "FINMRI": 12288,
+      "ISMRI": 12288,
+      "OPMRI": 12288
+    }
+  },
+  "currentMarketingRuntime": {
+    "methodologyVersion": "3.0.0",
+    "questionBankVersion": "3.1.0",
+    "bundlePath": "backend/methodology/MMRI_v3.0.0_QBANK_v3.1.0_CELL_REACHABILITY_STEP05.json",
+    "questions": 12288,
+    "categories": 64,
+    "cells": 3072,
+    "bundleSHA256": "2dab0a3b313d018bc57f28f798b92a31738e4b33e99f3e7adc5e9422fc8b9ed0",
+    "canonicalQuestionIdExactMatches": 12288,
+    "canonicalQuestionTextExactMatches": 0,
+    "canonicalAnswerSetExactMatches": 0
+  },
+  "legacyNonMarketingBanks": {
+    "ISMRI": {
+      "file": "it-1.5-repaired.json",
+      "path": "backend/methodology/domain-question-banks/it-1.5-repaired.json",
+      "count": 3072,
+      "sha256": "21d940ad58b7f97acd4284e0a284a2b4923d8a8e422a5c619df8b20009bdcdcb"
+    },
+    "FINMRI": {
+      "file": "finance-2.8.0-repaired.json",
+      "path": "backend/methodology/domain-question-banks/finance-2.8.0-repaired.json",
+      "count": 12288,
+      "sha256": "991b2519ce02f6eed47452d64729d2b94a180142e04f5f664d471fb46dbbf934"
+    },
+    "HRMRI": {
+      "file": "people-18.4-repaired.json",
+      "path": "backend/methodology/domain-question-banks/people-18.4-repaired.json",
+      "count": 3072,
+      "sha256": "9b1a5b7369bc4548e6812f437dd2616b19a3aad85555c63112043ec12da7ff92"
+    },
+    "OPMRI": {
+      "file": "operations-1.4-repaired.json",
+      "path": "backend/methodology/domain-question-banks/operations-1.4-repaired.json",
+      "count": 3072,
+      "sha256": "57ad23130f0d8c5e59b0196d11f0946f248a1df403e3e844d7bc9da6e3a701cf"
+    }
+  },
+  "legacyLoader": {
+    "path": "backend/src/diagnosis/domain-question-banks.ts",
+    "callSitesOutsideDefinition": [],
+    "wiredIntoLiveAssessmentRuntime": false
+  },
+  "liveFrontend": {
+    "nonMarketingLockedBySource": true,
+    "liveAssessmentCreationMarketingOnly": true
+  },
+  "apiAndPersistence": {
+    "singleGlobalMethodologyTarget": true,
+    "assessmentHasDomainCodeField": false,
+    "billingInvoiceHasDomainCodeField": false,
+    "companyEntitlementHasDomainCodeField": false,
+    "entitlementClaimIsDomainScoped": false
+  },
+  "reconciliationSummary": {
+    "MARKETING": {
+      "ID_MATCH_CONTENT_VERSION_CONFLICT": 12288
+    },
+    "HRMRI": {
+      "CANONICAL_NEW_VERSION_NOT_IN_LEGACY_RUNTIME": 12288
+    },
+    "FINMRI": {
+      "CANONICAL_NEW_VERSION_NOT_IN_LEGACY_RUNTIME": 12288
+    },
+    "ISMRI": {
+      "CANONICAL_NEW_VERSION_NOT_IN_LEGACY_RUNTIME": 12288
+    },
+    "OPMRI": {
+      "CANONICAL_NEW_VERSION_NOT_IN_LEGACY_RUNTIME": 12288
+    }
+  },
+  "correctedPriorAssumptions": {
+    "expectedBankDirectory": "NOT_PRESENT; actual legacy directory is backend/methodology/domain-question-banks",
+    "expectedScoringEngine": "NOT_PRESENT as src/businessmri/engine.ts; active engine is backend/src/engine/* plus methodology bundle policies",
+    "legacyRollbackFlag": "NOT_PRESENT in authoritative ZIP",
+    "databaseMigrationExpected": "YES_BEFORE_FIVE_DOMAIN_LIVE_ACTIVATION because paid entitlement and assessment ownership are not domain-scoped"
+  },
+  "step6Conclusion": "Backend integration contract is now reconciled against the real R17.21.4 Step08 system. No live activation was performed. Marketing remains unchanged. Step 7 must implement domain-scoped persistence/billing/API routing and generate validated runtime methodology bundles for HRMRI, FINMRI, ISMRI and OPMRI before activation."
+}
