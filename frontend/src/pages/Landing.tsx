@@ -78,7 +78,7 @@ export default function Landing(){
 
    <nav className="mmri-home2__guides" aria-label="BUSINESSMMRI гарын авлага">
     {guides.map((g,gi)=><button type="button" key={g.id} className={`mmri-home2__guide is-${g.id}`} data-sheen onClick={e=>{guideTriggerRef.current=e.currentTarget;setClosing(false);setOpen(g.id)}} aria-haspopup="dialog" aria-expanded={open===g.id} aria-controls={open===g.id?'mmri-guide2-dialog':undefined}>
-     <GuideTileNo n={gi+1}/><span className="mmri-home2__guide-title">{g.short}</span><i className="mmri-home2__guide-chip"><Icon name="arrow" size={17}/></i>
+     <span className="mmri-shell-glint" aria-hidden="true" style={{'--gi':gi} as React.CSSProperties}><i/></span><GuideTileNo n={gi+1}/><span className="mmri-home2__guide-title">{g.short}</span><i className="mmri-home2__guide-chip"><Icon name="arrow" size={17}/></i>
     </button>)}
    </nav>
   </main>

@@ -320,7 +320,7 @@ body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected{background-i
 body.mmri-prism-page .mmri-radio-group .mmri-radio-card:has(input:focus-visible){outline:3px solid #0A1B4D;outline-offset:4px;box-shadow:0 0 0 7px rgba(255,255,255,.85)}
 
 /* ---- GUIDE POPUPS: darker violet-blue floating glass (reference: violet overlay); inner cards stay light frosted for readable ink ---- */
-body.mmri-prism-page .mmri-guide2::before{background:radial-gradient(70% 60% at 30% 10%,rgba(210,226,255,.4),transparent 70%),radial-gradient(90% 80% at 50% 40%,rgba(150,180,255,.3),rgba(84,112,214,.55) 100%);-webkit-backdrop-filter:blur(14px) saturate(120%);backdrop-filter:blur(14px) saturate(120%)}
+body.mmri-prism-page .mmri-guide2::before{background:radial-gradient(70% 60% at 30% 10%,rgba(210,226,255,.4),transparent 70%),radial-gradient(90% 80% at 50% 40%,rgba(150,180,255,.58),rgba(84,112,214,.78) 100%)}
 body.mmri-prism-page .mmri-guide2::after{opacity:.4}
 body.mmri-prism-page .mmri-guide2__panel{color:#08205a;border-color:rgba(255,255,255,.85);
  background:radial-gradient(60% 30% at 6% 0,rgba(170,160,255,.2),transparent 62%),radial-gradient(46% 34% at 100% 0,rgba(80,225,255,.24),transparent 66%),radial-gradient(60% 46% at 100% 100%,rgba(62,180,255,.26),transparent 70%),radial-gradient(40% 34% at 0 100%,rgba(255,130,210,.16),transparent 70%),linear-gradient(155deg,rgba(70,50,196,.8),rgba(26,22,130,.84) 52%,rgba(10,34,150,.8));

@@ -793,3 +793,12 @@ Safari/WebKit and real touch devices untested. Non-marketing QA scores are posit
 - Notifications: restructured markup (sapphire title band with bell badge, kind tags, clock chips, actions, ring-illustrated empty state, mobile stacked actions); old scattered notification CSS in prism.css replaced by one block.
 - Report: static glass rims + reflections on strengths/weaknesses and score ring; real-wheel scroll still 19 ms avg / p95 16.8.
 - Questionnaire: measured label contrast on 390px was 3.0-3.7:1 (desktop >=5.5); added a localized dark label scrim -> worst 5.51:1 (12 labels, 360/390/1440, it+finance). Hero tilt verified (<=4 deg, resets, slot geometry stable, hole follows resize).
+
+## 2026-11-08 (27) FINAL TARGETED CORRECTION PASS
+- Whole-page category atmosphere: 5 full-area colour fields inside the sheet (`.mmri-shell-aurora i[data-d]`, AppShell) + full-bleed stage washes, 2.2 s opacity cross-fade; hero vertex hover sets the domain theme.
+- Hero 2.5D: extruded pentagon, parallax layers, bobbing vertices, nearest-vertex highlight + label, tilt +-7deg.
+- Guides: periwinkle liquid glass buttons with moving glint; guide 1 = facts left / 3 steps all right; guide 2 lighter glowing matrix; guide 3 = 4 essential screenshots (steps 2,4,7 text-only), screenshots adjacent, warning under last step; mobile head/tabs recoloured.
+- Answers: brighter panel + faces, stronger glow, label scrim >= 5.4:1 measured (12 labels, 360/390/1440).
+- Report: breathing rim on findings panels + slowly turning score ring light. Header band animation REMOVED (it cost 19 -> 52 ms/frame).
+- Mobile hub: tiles no longer stretched to viewport height; badge hidden <=700.
+- PERF: invalid `:is(...::pseudo)` selectors fixed (pause rules had never applied); stage light drift removed (hidden under opaque sheet); aurora translate-only + stepped (~10 fps); rim/plate/bob animations stepped; modal open = background animations OFF (not merely paused); guide overlay + panel backdrop-filters removed, bloom + route pulse static. Home idle 57 -> 24 ms, guide dialog 190 -> 51 ms (desktop software render), mobile 16.7 ms everywhere.

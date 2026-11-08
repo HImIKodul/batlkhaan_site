@@ -26,7 +26,7 @@ const pagedQuery='(max-width:820px),(max-height:780px)';
 export function AboutGuide(){
  const paged=useMedia(pagedQuery);const [page,setPage]=useState(0);
  const showMetrics=!paged||page===0,showFlow=!paged||page===1;
- return <div className="mmri-guide2__about">
+ return <div className="mmri-guide2__about" data-paged={paged||undefined}>
   {showMetrics&&<ul className="mmri-guide2__metrics" aria-label="Платформын үзүүлэлтүүд">
    {metrics.map(m=><li key={m.value} className="mmri-guide2__card mmri-guide2__metric"><strong>{m.value}</strong><span>{m.label}</span></li>)}
   </ul>}
@@ -37,7 +37,7 @@ export function AboutGuide(){
     <path className="is-line" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
     <path className="is-pulse" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
    </svg>
-   {stages.map((s,i)=>{const SI=stageIcons[i];return <li key={s.title} className={`mmri-guide2__stage ${i%2?'is-left':'is-right'}`}>
+   {stages.map((s,i)=>{const SI=stageIcons[i];return <li key={s.title} className="mmri-guide2__stage is-right">
     <span className="mmri-guide2__node" aria-hidden="true">{i+1}</span>
     <div className="mmri-guide2__card mmri-guide2__stage-card"><i className="mmri-guide2__stage-icon" aria-hidden="true"><SI size={22} strokeWidth={1.9}/></i><div><strong>{s.title}</strong><p>{s.text}</p></div></div>
    </li>})}
@@ -172,23 +172,23 @@ export function ReportGuide(){
 /* ---------- Guide 3: Хэрхэн оношилгоо хийлгэх вэ? ---------- */
 /* Screenshots are real captures of the running app (public/guide-shots, -d desktop 1440x900, -m mobile 390x844) taken with the
    sanitized local QA company: no e-mail, password, token or personal data is visible. */
-type WalkStep={title:string;text:string;shot:string;alt:string;note?:string;extra?:boolean};
+type WalkStep={title:string;text:string;shot:string;alt:string;note?:string;extra?:boolean;noShot?:boolean};
 const walkSteps:WalkStep[]=[
  {title:'Бүртгэл үүсгэх',shot:'1-register',alt:'Нэвтрэх хуудасны «Бүртгүүлэх» таб: нэр, имэйл, нууц үгийн талбарууд',
   text:'Нэвтрэх хуудсан дээрх «Бүртгүүлэх» табыг сонгоно. Нэр, имэйл хаяг болон дор хаяж 10 тэмдэгттэй нууц үгээ оруулаад «Бүртгэл үүсгэх» товчийг дарна.'},
- {title:'Байгууллагын мэдээллээ оруулах',shot:'2-company',alt:'Байгууллагын мэдээлэл хуудас: байгууллагын нэр, хэлбэр, 20 суурь асуулт',
+ {title:'Байгууллагын мэдээллээ оруулах',shot:'2-company',noShot:true,alt:'Байгууллагын мэдээлэл хуудас: байгууллагын нэр, хэлбэр, 20 суурь асуулт',
   text:'«Байгууллагын мэдээлэл» хэсэгт байгууллагын нэр, хэлбэрээ бичиж, 20 суурь асуултад хариулна. Бүгдийг бөглөсний дараа «20/20 · Бүрэн» гэж харагдана; төлбөр хийхээс өмнө энэ алхам дуусах ёстой.'},
  {title:'Оношилгооны чиглэл сонгох',shot:'3-domain',alt:'Оношилгоо хуудас: таван чиглэлийн карт',
   text:'Дээд цэсний «Оношилгоо» хэсгээс таван чиглэлийн аль нэгийг сонгоно: Мэдээллийн технологи, Маркетинг, Санхүү, Хүний нөөц, Үйлдвэрлэл ба үйл ажиллагаа. Чиглэл бүр тусдаа оношилгоо, тусдаа тайлантай.',
   note:'Зураг дээр оношилгоо хийгдсэн туршилтын байгууллага харагдаж байна. Шинэ хэрэглэгчид карт бүр дээр «ТӨЛӨХ · 300,000₮» товч гарна.'},
- {title:'Төлбөр төлөх',shot:'4-payment',alt:'Төлбөрийн хуудас: 300,000₮, «Төлбөрийн код үүсгэх» товч',
+ {title:'Төлбөр төлөх',shot:'4-payment',noShot:true,alt:'Төлбөрийн хуудас: 300,000₮, «Төлбөрийн код үүсгэх» товч',
   text:'«Төлбөрийн код үүсгэх» товчийг дарж гарсан QPay кодыг банкны аппаараа уншуулан 300,000₮ төлнө. Төлбөр орсон даруйд систем өөрөө шалгаж, оношилгооны эрхийг нээнэ.'},
  {title:'Асуултад хариулах',shot:'5-questions',alt:'Асуултын хуудас: хариултын сонголтууд, «Буцах» ба «Үргэлжлүүлэх» товчнууд',
   text:'Эрх нээгдсэний дараа «ЭХЛҮҮЛЭХ» товч идэвхжинэ. Асуулт бүрт нэг хариулт сонгоод «Үргэлжлүүлэх» товчийг дарна; өмнөх асуулт руу «Буцах», сонголтоо болиулахдаа «Сонголтыг буцаах» товчийг ашиглана. Нийт 192–280 асуулт бөгөөд явц автоматаар хадгалагдана.',
   note:'Зурагт аппын асуултын хэсгийн жишээ асуулт харагдаж байна.'},
  {title:'Үр дүн, тайлангаа харах',shot:'6-report',alt:'Тайлангийн хуудас: нийт үнэлгээ, давуу ба сул тал, PDF татах товч',
   text:'Асуулт дуусмагц «Тайлан» хэсэгт нийт үнэлгээ, давуу болон сул тал, тэргүүлэх ажлууд, 12 сарын төлөвлөгөө гарна. «PDF татах» товчоор тайлангаа татаж авна.'},
- {title:'Дахин оношилгоо хийх',shot:'7-retake',extra:true,alt:'Дахин оношилгооны төлбөрийн хуудас: «Өмнөх тайлан хэвээр үлдэнэ»',
+ {title:'Дахин оношилгоо хийх',shot:'7-retake',noShot:true,extra:true,alt:'Дахин оношилгооны төлбөрийн хуудас: «Өмнөх тайлан хэвээр үлдэнэ»',
   text:'Өөр чиглэл сонгох эсвэл тухайн чиглэлээ дахин оношлуулахдаа карт дээрх «Дахин оношилгоо · 300,000₮» эсвэл тайлангийн «+ Дахин оношилгоо» товчийг дарна. Шинээр төлбөр төлж, шинэ тайлан үүснэ; өмнөх тайлан хэвээр хадгалагдана.'},
 ];
 
@@ -199,7 +199,7 @@ export function HowToGuide(){
  const last=walkSteps.length-1;
  const step=walkSteps[index];
  const go=(i:number)=>setIndex(Math.max(0,Math.min(last,i)));
- useEffect(()=>{walkSteps.forEach(s=>{(['d','m'] as const).forEach(k=>{const img=new Image();img.src=shotSrc(s.shot,k)})})},[]);
+ useEffect(()=>{walkSteps.filter(s=>!s.noShot).forEach(s=>{(['d','m'] as const).forEach(k=>{const img=new Image();img.src=shotSrc(s.shot,k)})})},[]);
  /* The popup is modal, so the arrow keys drive the walkthrough wherever focus sits inside it (including the heading focused on open). */
  const indexRef=React.useRef(index);indexRef.current=index;
  useEffect(()=>{
@@ -236,19 +236,19 @@ export function HowToGuide(){
       <button type="button" className="mmri-guide2__nav-btn is-primary" onClick={()=>go(index+1)} disabled={index===last}>Дараах<Icon name="arrow" size={18}/></button>
      </div>
     </div>
-    {compact&&<div className="mmri-guide2__views" role="tablist" aria-label="Алхмын агуулга">
+    {compact&&!step.noShot&&<div className="mmri-guide2__views" role="tablist" aria-label="Алхмын агуулга">
      <button type="button" role="tab" aria-selected={view==='text'} className={`mmri-guide2__view${view==='text'?' is-active':''}`} onClick={()=>setView('text')}>Тайлбар</button>
      <button type="button" role="tab" aria-selected={view==='shot'} className={`mmri-guide2__view${view==='shot'?' is-active':''}`} onClick={()=>setView('shot')}>Дэлгэцийн зураг</button>
     </div>}
     <div className="mmri-guide2__walk-body" key={index}>
-     {(!compact||view==='text')&&<div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>}
-     {(!compact||view==='shot')&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
+     {(!compact||view==='text'||step.noShot)&&<div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>}
+     {!step.noShot&&(!compact||view==='shot')&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
       {!compact&&<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>}
       <div className="mmri-guide2__phone"><img src={shotSrc(step.shot,'m')} alt={`${step.alt} (гар утасны харагдац)`} width={390} height={844} decoding="async"/></div>
      </figure>}
     </div>
    </div>
-   {(!compact||view==='text')&&<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
+   {(!compact||view==='text'||step.noShot)&&<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
     <p>Төлбөр нь зөвхөн сонгосон чиглэлийн оношилгоонд хамаарна. Өөр чиглэл сонгох эсвэл дахин оношилгоо хийх бүрд 300,000 төгрөгийн төлбөр төлж, шинэ тайлан үүсэхийг анхаарна уу.</p></aside>}
   </section>
  </div>;

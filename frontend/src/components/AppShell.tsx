@@ -7,6 +7,7 @@ import { api, session } from '../api/client';
 import { isTerminal } from '../api/types';
 import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
 import { REPORT_AREA_KEY,isTestBusiness } from '../data/experience';
+import { DOMAIN_IDS } from '../design/domainTheme';
 
 export type RouteName='home'|'login'|'billing'|'analysis'|'profile'|'assessment'|'results'|'priorities'|'report'|'settings'|'states'|'forgot'|'reset'|'privacy'|'terms';
 
@@ -299,7 +300,7 @@ export function AppShell({route,children}:{route:RouteName;children:React.ReactN
  if(route==='login')return <>{children}</>;
 
  return <div className={`app-shell mmri-shell ${loggedIn?'is-authenticated':'is-public'} ${domainId?'has-domain-theme':''}`} data-mmri-domain={domainId||undefined} data-route={route}>
-  <span className="mmri-shell-aurora" aria-hidden="true"/>
+  <span className="mmri-shell-aurora" aria-hidden="true">{DOMAIN_IDS.map(d=><i key={d} data-d={d}/>)}</span>
   <a className="mmri-skip-link" href="#main-content">Үндсэн агуулга руу шилжих</a>
   <ShellHeader route={route}/>
   {!online&&<div className="mmri-offline-banner" role="status"><Icon name="offline" size={18}/><div><b>Сүлжээний холболт тасарсан</b><span>Баталгаажаагүй өөрчлөлтийг хадгалагдсан гэж үзэхгүй.</span></div></div>}
