@@ -8,13 +8,14 @@ import type { AdminPrincipal, Permission } from "./admin-service.js";
    Every route here needs the "accounts.manage" permission (SUPER_ADMIN only, decided on the server from the database role). Every change is a
    "sensitive" route (fresh password + MFA re-authentication within the last 5 minutes), requires a written reason, runs in one transaction, and is
    written to the admin audit trail (actor, target, reason, outcome). Passwords, password hashes, token versions and MFA data are never returned.
-   Deliberately NOT implemented (documented blockers, see FINAL_COMPLETION_REPORT):
-   - free per-domain access grant / revoke: billing_invoices carries CHECK (amountMnt > 0) and a settlement-fields check, and every entitlement must hang off a PAID
-     invoice. A free grant would need either a falsified paid invoice or a schema migration (needs owner approval). Legitimate paths that already exist: customer payment,
-     operator manual-confirm (/api/v1/operator/billing/invoices/:id/manual-confirm) and confirmed refunds (revoke the entitlement through the disputes flow).
+   Domain access: an administrator grant is a first-class entitlement (origin ADMIN_GRANT, migration 20261108100000): it has NO invoice, so it can never appear as
+   a payment or revenue; the database requires the granting admin and a written reason. Paid entitlements are never touched here (refunds use the disputes flow).
+   Deliberately NOT implemented:
    - admin-forced account deletion. Erasure stays user-initiated (docs/DATA_LIFECYCLE.md) until a retention/legal policy for
    operator-initiated erasure is decided; deactivation (below) is the safe, reversible alternative. */
 
+export const DOMAIN_CODES = ["marketing", "it", "finance", "people", "operations"] as const;
+const ACTIVE_ASSESSMENT = ["PROFILE_PENDING", "IN_PROGRESS", "PAUSED", "READY_FOR_COMPLETION", "PROCESSING"];
 const EMAIL_RE = /^[^\s@]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,}$/;
 type FP = { ip?: string; userAgent?: string };
 type H = (ctx: RouteContext, p: AdminPrincipal, fp: FP, body: any) => Promise<void>;
@@ -34,9 +35,9 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
     await audit(p.adminId, action, "FAILURE", fp, { type, id }, { reason, code: e instanceof ApiError ? e.code : "ERROR" }).catch(() => undefined);
     throw e;
   };
-  const originOf = (inv: { provider: string; amountMnt: number; status: string; providerMetadata: unknown } | null) => {
+  const originOf = (e: { origin: string }, inv: { provider: string; amountMnt: number; status: string } | null) => {
+    if (e.origin === "ADMIN_GRANT") return "ADMIN_GRANT";
     if (!inv) return "UNKNOWN";
-    if ((inv.providerMetadata as any)?.adminGrant === true) return "ADMIN_GRANT";
     return inv.status === "PAID" && inv.amountMnt > 0 ? `PAID_${inv.provider}` : `${inv.provider}_${inv.status}`;
   };
 
@@ -114,12 +115,87 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
   route("GET", "/companies/:id/entitlements", "accounts.manage", async (c) => {
     const co = await prisma.company.findUnique({ where: { id: c.params.id }, select: { id: true, name: true, erasedAt: true } });
     if (!co) throw notFound("Байгууллага олдсонгүй.");
-    const ents = await prisma.companyEntitlement.findMany({ where: { companyId: co.id }, orderBy: { createdAt: "desc" }, select: { id: true, domainCode: true, planCode: true, status: true, startsAt: true, endsAt: true, assessmentLimit: true, assessmentsUsed: true, createdAt: true,
-      sourceInvoice: { select: { id: true, provider: true, status: true, amountMnt: true, paidAt: true, refundedAt: true, providerMetadata: true } }, _count: { select: { assessments: true } } } });
+    const ents = await prisma.companyEntitlement.findMany({ where: { companyId: co.id }, orderBy: { createdAt: "desc" }, select: { id: true, domainCode: true, planCode: true, status: true, origin: true, startsAt: true, endsAt: true, assessmentLimit: true, assessmentsUsed: true, createdAt: true, grantReason: true, revokeReason: true, revokedAt: true,
+      grantedByAdmin: { select: { user: { select: { email: true } } } }, revokedByAdmin: { select: { user: { select: { email: true } } } },
+      sourceInvoice: { select: { id: true, provider: true, status: true, amountMnt: true, paidAt: true, refundedAt: true } }, _count: { select: { assessments: true } } } });
     const ids = ents.map(e => e.id);
-    const history = await prisma.adminAuditEvent.findMany({ where: { OR: [{ targetType: "ENTITLEMENT", targetId: { in: ids } }, { targetType: "COMPANY", targetId: co.id, action: { startsWith: "ADMIN_ENTITLEMENT" } }] }, orderBy: { createdAt: "desc" }, take: 30, select: { action: true, outcome: true, targetType: true, targetId: true, createdAt: true, metadata: true } });
-    ok(c.res, { company: { id: co.id, name: co.erasedAt ? null : co.name }, entitlements: ents.map(e => ({ id: e.id, domainCode: e.domainCode, planCode: e.planCode, status: e.status, startsAt: e.startsAt, endsAt: e.endsAt, assessmentLimit: e.assessmentLimit, assessmentsUsed: e.assessmentsUsed, assessments: e._count.assessments, createdAt: e.createdAt,
-      origin: originOf(e.sourceInvoice), invoice: e.sourceInvoice ? { id: e.sourceInvoice.id, provider: e.sourceInvoice.provider, status: e.sourceInvoice.status, amountMnt: e.sourceInvoice.amountMnt, paidAt: e.sourceInvoice.paidAt, refundedAt: e.sourceInvoice.refundedAt } : null,
-      revocable: e.status === "ACTIVE" && e.assessmentsUsed === 0 && e._count.assessments === 0 && (e.sourceInvoice?.providerMetadata as any)?.adminGrant === true })), history });
+    const [history, running] = await Promise.all([
+      prisma.adminAuditEvent.findMany({ where: { OR: [{ targetType: "ENTITLEMENT", targetId: { in: ids } }, { targetType: "COMPANY", targetId: co.id, action: { startsWith: "ADMIN_ENTITLEMENT" } }] }, orderBy: { createdAt: "desc" }, take: 30, select: { action: true, outcome: true, targetType: true, targetId: true, createdAt: true, metadata: true } }),
+      prisma.assessment.findMany({ where: { companyId: co.id, status: { in: ACTIVE_ASSESSMENT as any } }, select: { domainCode: true } })]);
+    ok(c.res, { company: { id: co.id, name: co.erasedAt ? null : co.name, erased: !!co.erasedAt }, runningDomains: running.map(r => r.domainCode), entitlements: ents.map(e => ({ id: e.id, domainCode: e.domainCode, planCode: e.planCode, status: e.status, startsAt: e.startsAt, endsAt: e.endsAt, assessmentLimit: e.assessmentLimit, assessmentsUsed: e.assessmentsUsed, assessments: e._count.assessments, createdAt: e.createdAt,
+      origin: originOf(e, e.sourceInvoice), grantReason: e.grantReason, grantedBy: e.grantedByAdmin?.user.email ?? null, revokedBy: e.revokedByAdmin?.user.email ?? null, revokeReason: e.revokeReason, revokedAt: e.revokedAt,
+      invoice: e.sourceInvoice ? { id: e.sourceInvoice.id, provider: e.sourceInvoice.provider, status: e.sourceInvoice.status, amountMnt: e.sourceInvoice.amountMnt, paidAt: e.sourceInvoice.paidAt, refundedAt: e.sourceInvoice.refundedAt } : null,
+      revocable: e.origin === "ADMIN_GRANT" && e.status === "ACTIVE" && e.assessmentsUsed === 0 && e._count.assessments === 0 })), history });
   }, { sensitive: false });
+
+  route("POST", "/companies/:id/entitlements/grant", "accounts.manage", async (c, p, fp, b) => {
+    const id = c.params.id; let reason: string | undefined;
+    try {
+      reason = reasonOf(b.reason);
+      const domain = String(b.domainCode ?? "");
+      if (!(DOMAIN_CODES as readonly string[]).includes(domain)) throw badRequest("Оношилгооны чиглэл буруу байна.");
+      const out = await prisma.$transaction(async tx => {
+        // same lock key as the customer purchase path (billing-service lockPurchase): a grant and a payment for one company+domain can never interleave
+        await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`mmri-purchase:${id}:${domain}`}))`;
+        const co = await tx.company.findUnique({ where: { id }, select: { id: true, erasedAt: true } });
+        if (!co) throw notFound("Байгууллага олдсонгүй.");
+        if (co.erasedAt) throw new ApiError(409, "COMPANY_ERASED", "Устгагдсан байгууллагад эрх олгохгүй.");
+        if (await tx.companyEntitlement.findFirst({ where: { companyId: id, domainCode: domain, status: "ACTIVE" }, select: { id: true } })) throw new ApiError(409, "ENTITLEMENT_EXISTS", "Энэ чиглэлд ашиглагдаагүй идэвхтэй эрх аль хэдийн байна.");
+        if (await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ACTIVE_ASSESSMENT as any } }, select: { id: true } })) throw new ApiError(409, "ASSESSMENT_ALREADY_ACTIVE", "Энэ чиглэлийн оношилгоо аль хэдийн эхэлсэн байна.");
+        if (await tx.billingInvoice.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ["CREATED", "PENDING"] } }, select: { id: true } })) throw new ApiError(409, "PAYMENT_IN_PROGRESS", "Хэрэглэгч энэ чиглэлд төлбөр хийж байна. Төлбөр дуустал хүлээнэ үү.");
+        const prior = await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ["COMPLETED", "COMPLETED_WITH_REVIEW", "EXHAUSTED"] as any } }, select: { id: true } });
+        const plan = prior ? "RETAKE" : "DIAGNOSTIC";
+        const ent = await tx.companyEntitlement.create({ data: { companyId: id, domainCode: domain, origin: "ADMIN_GRANT", planCode: plan, status: "ACTIVE", assessmentLimit: 1, assessmentsUsed: 0, grantedByAdminId: p.adminId, grantReason: reason } });
+        return { entitlementId: ent.id, plan };
+      });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT" });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "COMPANY", id }, { entitlementId: out.entitlementId, domainCode: domain });
+      ok(c.res, { granted: true, ...out, domainCode: domain });
+    } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_GRANTED", "COMPANY", id, e, reason); }
+  }, { sensitive: true });
+
+  route("POST", "/entitlements/:id/revoke", "accounts.manage", async (c, p, fp, b) => {
+    const id = c.params.id; let reason: string | undefined;
+    try {
+      reason = reasonOf(b.reason);
+      const out = await prisma.$transaction(async tx => {
+        const probe = await tx.companyEntitlement.findUnique({ where: { id }, select: { companyId: true, domainCode: true } });
+        if (!probe) throw notFound("Эрх олдсонгүй.");
+        await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`mmri-purchase:${probe.companyId}:${probe.domainCode}`}))`;
+        const e = await tx.companyEntitlement.findUnique({ where: { id }, select: { id: true, companyId: true, domainCode: true, status: true, origin: true, assessmentsUsed: true, _count: { select: { assessments: true } } } });
+        if (!e) throw notFound("Эрх олдсонгүй.");
+        if (e.origin !== "ADMIN_GRANT") throw new ApiError(409, "PAID_ENTITLEMENT_PROTECTED", "Төлбөртэй эрхийг энд цуцлахгүй. Буцаалтыг «Төлбөрүүд» хэсгийн хүсэлтээр шийднэ.");
+        if (e.status !== "ACTIVE") throw new ApiError(409, "ENTITLEMENT_NOT_ACTIVE", "Зөвхөн идэвхтэй эрхийг цуцална.");
+        if (e.assessmentsUsed > 0 || e._count.assessments > 0) throw new ApiError(409, "ENTITLEMENT_IN_USE", "Оношилгоонд ашиглагдсан эрхийг цуцлахгүй.");
+        const now = new Date();
+        const r = await tx.companyEntitlement.updateMany({ where: { id, origin: "ADMIN_GRANT", status: "ACTIVE", assessmentsUsed: 0 }, data: { status: "REVOKED", endsAt: now, revokedAt: now, revokedByAdminId: p.adminId, revokeReason: reason } });
+        if (r.count !== 1) throw new ApiError(409, "ENTITLEMENT_NOT_ACTIVE", "Эрх өөрчлөгдсөн байна. Дахин шалгана уу.");
+        return { companyId: e.companyId, domainCode: e.domainCode };
+      });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "ENTITLEMENT", id }, { reason, ...out });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "COMPANY", id: out.companyId }, { entitlementId: id, domainCode: out.domainCode });
+      ok(c.res, { revoked: true });
+    } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_REVOKED", "ENTITLEMENT", id, e, reason); }
+  }, { sensitive: true });
+
+  // ----- company details (name / industry correction) -----
+  route("POST", "/companies/:id/details", "accounts.manage", async (c, p, fp, b) => {
+    const id = c.params.id; let reason: string | undefined;
+    try {
+      reason = reasonOf(b.reason);
+      const name = b.name === undefined ? undefined : String(b.name).replace(/\s+/g, " ").trim();
+      const industry = b.industry === undefined ? undefined : String(b.industry).replace(/\s+/g, " ").trim().slice(0, 120);
+      if (name === undefined && industry === undefined) throw badRequest("Өөрчлөх мэдээллээ оруулна уу.");
+      if (name !== undefined && (name.length < 2 || name.length > 160)) throw badRequest("Байгууллагын нэр 2-160 тэмдэгт байх ёстой.");
+      const before = await prisma.$transaction(async tx => {
+        const co = await tx.company.findUnique({ where: { id }, select: { id: true, name: true, industry: true, erasedAt: true } });
+        if (!co) throw notFound("Байгууллага олдсонгүй.");
+        if (co.erasedAt) throw new ApiError(409, "COMPANY_ERASED", "Устгагдсан байгууллагын мэдээллийг өөрчлөхгүй.");
+        await tx.company.update({ where: { id }, data: { ...(name !== undefined ? { name } : {}), ...(industry !== undefined ? { industry: industry || null } : {}) } });
+        return co;
+      });
+      await audit(p.adminId, "ADMIN_COMPANY_UPDATED", "SUCCESS", fp, { type: "COMPANY", id }, { reason, nameChanged: name !== undefined && name !== before.name, industryChanged: industry !== undefined && (industry || null) !== before.industry });
+      ok(c.res, { updated: true });
+    } catch (e) { return fail(p, fp, "ADMIN_COMPANY_UPDATED", "COMPANY", id, e, reason); }
+  }, { sensitive: true });
 }

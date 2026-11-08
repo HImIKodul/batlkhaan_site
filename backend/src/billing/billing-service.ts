@@ -5,6 +5,9 @@ import type { ApiConfig } from "../api/config.js";
 import { ApiError, conflict, notFound } from "../api/errors.js";
 import { ManualPaymentAdapter, MockPaymentAdapter, QPayMerchantV2Adapter } from "./qpay-client.js";
 import type { BillingPlanCode, PaymentProviderAdapter, ProviderPaymentResult } from "./types.js";
+
+/** An entitlement is usable when it is an administrator grant (no invoice by design, enforced by a database CHECK) or its source invoice is PAID. */
+const SETTLED_ENTITLEMENT={OR:[{origin:"ADMIN_GRANT" as const},{sourceInvoice:{status:"PAID" as const}}]};
 import { normalizeDomainCode, type DomainCode } from "../domain-methodology.js";
 
 const PLAN_META:Record<BillingPlanCode,{name:string;billingLabel:string;description:string}>={
@@ -55,7 +58,7 @@ export class BillingService {
   private async recoverOrphanedEntitlementClaims(companyId:string,domainCode?:DomainCode){
     const cutoff=new Date(Date.now()-orphanEntitlementRecoveryMs());
     const stranded=await prisma.companyEntitlement.findMany({
-      where:{companyId,...(domainCode?{domainCode}:{}),status:"CONSUMED",assessmentsUsed:1,updatedAt:{lt:cutoff},sourceInvoice:{status:"PAID"},assessments:{none:{}}},
+      where:{companyId,...(domainCode?{domainCode}:{}),status:"CONSUMED",assessmentsUsed:1,updatedAt:{lt:cutoff},...SETTLED_ENTITLEMENT,assessments:{none:{}}},
       select:{id:true}
     });
     for(const row of stranded){
@@ -343,14 +346,14 @@ export class BillingService {
     await this.expireStaleEntitlements(companyId);
     const prior=await prisma.assessment.findFirst({where:{companyId,domainCode,status:{in:["COMPLETED","COMPLETED_WITH_REVIEW","EXHAUSTED"]}},select:{id:true}});
     const expectedPlan:BillingPlanCode=prior?"RETAKE":"DIAGNOSTIC";
-    const entitlement=await prisma.companyEntitlement.findFirst({where:{companyId,domainCode,planCode:expectedPlan,status:"ACTIVE",assessmentsUsed:{lt:1},sourceInvoice:{status:"PAID"}},orderBy:{startsAt:"asc"}});
+    const entitlement=await prisma.companyEntitlement.findFirst({where:{companyId,domainCode,planCode:expectedPlan,status:"ACTIVE",assessmentsUsed:{lt:1},...SETTLED_ENTITLEMENT},orderBy:{startsAt:"asc"}});
     if(entitlement){
       const claimed=await prisma.companyEntitlement.updateMany({where:{id:entitlement.id,planCode:expectedPlan,status:"ACTIVE",assessmentsUsed:{lt:1}},data:{assessmentsUsed:{increment:1},status:"CONSUMED"}});
       if(claimed.count===1)return {entitlementId:entitlement.id,claimedDiagnostic:true};
       return this.claimAssessmentEntitlement(companyId,domainCode);
     }
     if(this.config.billingEnforcement){
-      const wrongPlan=await prisma.companyEntitlement.findFirst({where:{companyId,domainCode,planCode:expectedPlan==="RETAKE"?"DIAGNOSTIC":"RETAKE",status:"ACTIVE",assessmentsUsed:{lt:1},sourceInvoice:{status:"PAID"}},select:{id:true,planCode:true}});
+      const wrongPlan=await prisma.companyEntitlement.findFirst({where:{companyId,domainCode,planCode:expectedPlan==="RETAKE"?"DIAGNOSTIC":"RETAKE",status:"ACTIVE",assessmentsUsed:{lt:1},...SETTLED_ENTITLEMENT},select:{id:true,planCode:true}});
       if(wrongPlan)throw new ApiError(409,"ENTITLEMENT_PLAN_MISMATCH",expectedPlan==="RETAKE"?"Дууссан оношилгооны дараа зөвхөн дахин оношилгооны эрх ашиглана.":"Анхны оношилгоонд анхны оношилгооны эрх шаардлагатай.");
       throw new ApiError(402,"PAYMENT_REQUIRED","Оношилгоо эхлүүлэхийн өмнө төлбөр баталгаажсан байх шаардлагатай.");
     }
@@ -359,7 +362,7 @@ export class BillingService {
 
   async releaseClaim(claim:{entitlementId:string|null;claimedDiagnostic:boolean}){
     if(!claim.entitlementId||!claim.claimedDiagnostic)return;
-    await prisma.companyEntitlement.updateMany({where:{id:claim.entitlementId,status:"CONSUMED",assessmentsUsed:1,sourceInvoice:{status:"PAID"}},data:{assessmentsUsed:0,status:"ACTIVE"}});
+    await prisma.companyEntitlement.updateMany({where:{id:claim.entitlementId,status:"CONSUMED",assessmentsUsed:1,...SETTLED_ENTITLEMENT},data:{assessmentsUsed:0,status:"ACTIVE"}});
   }
 
   /** One serialization boundary per company/domain shared by invoice creation and payment activation (transaction-scoped advisory lock; no schema change, works across instances). */
@@ -377,7 +380,7 @@ export class BillingService {
   }
 
   private async hasUsablePlan(planCode:BillingPlanCode,companyId:string,domainCode:DomainCode,db:any=prisma){
-    return !!(await db.companyEntitlement.findFirst({where:{companyId,domainCode,planCode,status:"ACTIVE",assessmentsUsed:{lt:1},sourceInvoice:{status:"PAID"}}}));
+    return !!(await db.companyEntitlement.findFirst({where:{companyId,domainCode,planCode,status:"ACTIVE",assessmentsUsed:{lt:1},...SETTLED_ENTITLEMENT}}));
   }
 
   private async expireStaleEntitlements(_companyId:string){

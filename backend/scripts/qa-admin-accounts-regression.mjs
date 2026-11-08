@@ -1,4 +1,4 @@
-/* Regression for the SUPER_ADMIN account-management API (users, e-mail, activation, read-only entitlement origin/history).
+/* Regression for the SUPER_ADMIN account-management API (users, e-mail, activation, ADMIN_GRANT access grant/revoke, company details, origin/history).
    Needs an ISOLATED API and database (the shared helpers refuse :4000 and `mmri`):
      API=http://127.0.0.1:4200/api/v1 PGDATABASE=mmri_v2_qa node scripts/qa-admin-accounts-regression.mjs
    Provisions throw-away admins through the real CLI and throw-away customers through the real register endpoint. */
@@ -14,7 +14,7 @@ const A=await mkCustomer('a'),B=await mkCustomer('b');
 const supUserId=sql(`select u.id from users u where u.email='${sup.email}'`);
 
 // ---- authorization ----
-const routes=[['GET','/admin/users'],['GET',`/admin/users/${A.id}`],['POST',`/admin/users/${A.id}/email`],['POST',`/admin/users/${A.id}/status`],['GET',`/admin/companies/${A.companyId}/entitlements`]];
+const routes=[['GET','/admin/users'],['GET',`/admin/users/${A.id}`],['POST',`/admin/users/${A.id}/email`],['POST',`/admin/users/${A.id}/status`],["GET",`/admin/companies/${A.companyId}/entitlements`],["POST",`/admin/companies/${A.companyId}/entitlements/grant`],["POST","/admin/entitlements/x/revoke"],["POST",`/admin/companies/${A.companyId}/details`]];
 const anon=await Promise.all(routes.map(([m,p])=>call(m,p,{body:m==='POST'?{}:undefined})));
 rec('ACC-01 no token: every account route answers 401',anon.every(r=>r.s===401),anon.map(r=>r.s).join(','));
 const cust=await Promise.all(routes.map(([m,p])=>call(m,p,{tok:A.tok,body:m==='POST'?{}:undefined})));
@@ -67,16 +67,56 @@ rec('ACC-23 repeating the same status is idempotent (changed:false)',(await call
 const on=await call('POST',sp,{tok:tok.sup,body:{status:'ACTIVE',reason:'automated regression check'}});
 rec('ACC-24 reactivation restores sign-in',on.s===200&&(await call('POST','/auth/login',{body:{email:B.email,password:B.password}})).s===200);
 
-// ---- entitlements: read-only origin/history; free grant/revoke deliberately absent ----
-const seeded=sql(`select e."companyId" from company_entitlements e join billing_invoices i on i.id=e."sourceInvoiceId" where i.status='PAID' and i."amountMnt">0 limit 1`);
-const ent=await call('GET',`/admin/companies/${seeded}/entitlements`,{tok:tok.sup});
-rec('ACC-25 entitlement list shows origin (PAID_*), invoice and status for a company with real paid entitlements',ent.s===200&&ent.d.entitlements.length>0&&ent.d.entitlements.every(e=>/^PAID_|^[A-Z]+_[A-Z]+$/.test(e.origin)&&e.invoice&&e.invoice.amountMnt>0),ent.d?.entitlements.map(e=>e.origin).join(','));
-rec('ACC-26 paid entitlements are never marked revocable by this API',ent.d.entitlements.every(e=>e.revocable===false));
-rec('ACC-27 no free grant/revoke route exists (404): a domain cannot be given away without a real paid invoice',(await call('POST',`/admin/companies/${B.companyId}/entitlements/grant`,{tok:tok.sup,body:{domainCode:'finance',reason:'automated regression check'}})).s===404&&(await call('POST','/admin/entitlements/x/revoke',{tok:tok.sup,body:{reason:'automated regression check'}})).s===404);
-rec('ACC-28 the database itself refuses a zero-amount paid invoice (the reason no free grant exists)',(()=>{try{sql(`insert into billing_invoices(id,"companyId","createdByUserId","planCode","amountMnt",provider,"senderInvoiceNo","callbackTokenHash",status,"updatedAt") values('x_chk','${B.companyId}','${B.id}','DIAGNOSTIC',0,'MANUAL','x_chk_no','h','PAID',now())`);return false}catch(e){return /check constraint/.test(String(e.stderr||e.message))}})());
-rec('ACC-29 entitlement list for an unknown company is 404',(await call('GET','/admin/companies/nope/entitlements',{tok:tok.sup})).s===404);
-rec('ACC-35 audit rows exist for deactivate, activate and e-mail change with a non-null actor',Number(sql(`select count(distinct action) from admin_audit_events where outcome='SUCCESS' and "adminId" is not null and action in ('ADMIN_USER_DEACTIVATED','ADMIN_USER_ACTIVATED','ADMIN_USER_EMAIL_CHANGED')`))===3);
-rec('ACC-36 no secret material in any admin audit metadata written by these actions',!/passw|\$argon|secret|token/i.test(sql(`select coalesce(string_agg(metadata::text,' '),'') from admin_audit_events where action like 'ADMIN_USER%' or action like 'ADMIN_ENTITLEMENT%'`)));
+// ---- domain access: ADMIN_GRANT (no invoice, no revenue) ----
+const Bl=await call('POST','/auth/login',{body:{email:B.email,password:B.password}});B.tok=Bl.d.accessToken; // B was deactivated/reactivated above: its old token is (correctly) dead
+const gp=`/admin/companies/${B.companyId}/entitlements/grant`;
+const revenue=()=>sql(`select coalesce(sum("amountMnt"),0)||'|'||count(*) from billing_invoices where status='PAID'`);
+const invCount=()=>sql(`select count(*) from billing_invoices`);
+const rev0=revenue(),inv0=invCount();
+rec('ACC-25 grant needs a valid domain and a reason (400)',(await call('POST',gp,{tok:tok.sup,body:{domainCode:'sales',reason:'automated regression check'}})).s===400&&(await call('POST',gp,{tok:tok.sup,body:{domainCode:'finance'}})).s===400);
+const before=await call('POST',`/companies/${B.companyId}/assessments`,{tok:B.tok,body:{domainCode:'finance'},h:{'x-mmri-writer-id':'acc-w1'}});
+rec('ACC-26 before the grant the customer cannot start a diagnosis (402 PAYMENT_REQUIRED)',before.s===402,String(before.s));
+const g1=await call('POST',gp,{tok:tok.sup,body:{domainCode:'finance',reason:'automated regression check'}});
+const row=sql(`select origin||'|'||status||'|'||"planCode"||'|'||coalesce("sourceInvoiceId",'NULL')||'|'||"assessmentLimit"||'|'||(select u.email from admin_accounts a join users u on u.id=a."userId" where a.id=e."grantedByAdminId") from company_entitlements e where id='${g1.d?.entitlementId}'`);
+rec('ACC-27 grant creates an ACTIVE one-use ADMIN_GRANT entitlement with NO invoice, naming the granting admin',g1.s===200&&row===`ADMIN_GRANT|ACTIVE|DIAGNOSTIC|NULL|1|${sup.email}`,row);
+rec('ACC-28 a grant creates no invoice and changes neither revenue nor payment history',invCount()===inv0&&revenue()===rev0,`${rev0} -> ${revenue()}`);
+const pay=await call('GET','/admin/payments?pageSize=50',{tok:tok.sup});
+rec('ACC-29 the payments list contains no row for the grant',pay.s===200&&!pay.raw.includes(g1.d?.entitlementId));
+const g2=await call('POST',gp,{tok:tok.sup,body:{domainCode:'finance',reason:'automated regression check'}});
+rec('ACC-30 a second open grant for the same domain is 409 ENTITLEMENT_EXISTS',g2.s===409&&g2.e?.code==='ENTITLEMENT_EXISTS');
+const race=await Promise.all([1,2,3].map(()=>call('POST',gp,{tok:tok.sup,body:{domainCode:'it',reason:'automated regression check'}})));
+rec('ACC-31 three concurrent grants for one domain create exactly one entitlement',race.filter(r=>r.s===200).length===1&&Number(sql(`select count(*) from company_entitlements where "companyId"='${B.companyId}' and "domainCode"='it' and status='ACTIVE'`))===1,race.map(r=>r.s).join(','));
+const seededOpen=sql(`select "companyId"||'|'||"domainCode" from company_entitlements where status='ACTIVE' and origin='PAID' limit 1`).split('|');
+const over=seededOpen[0]?await call('POST',`/admin/companies/${seededOpen[0]}/entitlements/grant`,{tok:tok.sup,body:{domainCode:seededOpen[1],reason:'automated regression check'}}):{s:0};
+rec('ACC-32 a grant never overrides an open paid entitlement (409 ENTITLEMENT_EXISTS) and the paid one is unchanged',over.s===409&&over.e?.code==='ENTITLEMENT_EXISTS'&&sql(`select status from company_entitlements where "companyId"='${seededOpen[0]}' and "domainCode"='${seededOpen[1]}' and origin='PAID' and status='ACTIVE' limit 1`)==='ACTIVE');
+const ent=await call('GET',`/admin/companies/${B.companyId}/entitlements`,{tok:tok.sup});
+const er=ent.d?.entitlements.find(e=>e.id===g1.d?.entitlementId);
+rec('ACC-33 the access list shows origin ADMIN_GRANT, who granted it, why, revocable=true and an audited history',ent.s===200&&er?.origin==='ADMIN_GRANT'&&er.grantedBy===sup.email&&er.grantReason==='automated regression check'&&er.revocable===true&&er.invoice===null&&ent.d.history.some(h=>h.action==='ADMIN_ENTITLEMENT_GRANTED'));
+const start=await call('POST',`/companies/${B.companyId}/assessments`,{tok:B.tok,body:{domainCode:'finance'},h:{'x-mmri-writer-id':'acc-w1'}});
+rec('ACC-34 after the grant the customer CAN start the diagnosis; the grant is consumed and linked to it',start.s===201&&sql(`select status||'|'||"assessmentsUsed" from company_entitlements where id='${g1.d?.entitlementId}'`)==='CONSUMED|1'&&sql(`select count(*) from assessments where "entitlementId"='${g1.d?.entitlementId}'`)==='1',`${start.s}`);
+const used=await call('POST',`/admin/entitlements/${g1.d?.entitlementId}/revoke`,{tok:tok.sup,body:{reason:'automated regression check'}});
+rec('ACC-35 a consumed grant cannot be revoked and its diagnosis is preserved (409)',used.s===409&&sql(`select count(*) from assessments where "entitlementId"='${g1.d?.entitlementId}'`)==='1');
+sql(`update company_entitlements set "assessmentsUsed"=1 where id='${race.find(r=>r.s===200)?.d?.entitlementId}'`);
+const inUse=await call('POST',`/admin/entitlements/${race.find(r=>r.s===200)?.d?.entitlementId}/revoke`,{tok:tok.sup,body:{reason:'automated regression check'}});
+rec('ACC-36 an ACTIVE grant whose usage counter is non-zero is refused (409 ENTITLEMENT_IN_USE)',inUse.s===409&&inUse.e?.code==='ENTITLEMENT_IN_USE',inUse.e?.code);
+sql(`update company_entitlements set "assessmentsUsed"=0 where id='${race.find(r=>r.s===200)?.d?.entitlementId}'`);
+const rv=await call('POST',`/admin/entitlements/${race.find(r=>r.s===200)?.d?.entitlementId}/revoke`,{tok:tok.sup,body:{reason:'automated regression check cleanup'}});
+const rvRow=sql(`select status||'|'||"revokeReason"||'|'||("revokedAt" is not null) from company_entitlements where id='${race.find(r=>r.s===200)?.d?.entitlementId}'`);
+rec('ACC-37 an unused admin grant can be revoked; the row is kept with who/when/why',rv.s===200&&rvRow==='REVOKED|automated regression check cleanup|true',rvRow);
+rec('ACC-38 revoking again is 409 ENTITLEMENT_NOT_ACTIVE; unknown id is 404; missing reason is 400',(await call('POST',`/admin/entitlements/${race.find(r=>r.s===200)?.d?.entitlementId}/revoke`,{tok:tok.sup,body:{reason:'automated regression check'}})).e?.code==='ENTITLEMENT_NOT_ACTIVE'&&(await call('POST','/admin/entitlements/nope/revoke',{tok:tok.sup,body:{reason:'automated regression check'}})).s===404&&(await call('POST',`/admin/entitlements/${g1.d?.entitlementId}/revoke`,{tok:tok.sup,body:{}})).s===400);
+const paidId=sql(`select id from company_entitlements where origin='PAID' and status='ACTIVE' limit 1`)||sql(`select id from company_entitlements where origin='PAID' limit 1`);
+const pr=await call('POST',`/admin/entitlements/${paidId}/revoke`,{tok:tok.sup,body:{reason:'automated regression check'}});
+rec('ACC-39 a paid entitlement is never revoked here (409 PAID_ENTITLEMENT_PROTECTED) and stays unchanged',pr.s===409&&pr.e?.code==='PAID_ENTITLEMENT_PROTECTED'&&sql(`select origin from company_entitlements where id='${paidId}'`)==='PAID');
+rec('ACC-40 revenue and invoices are still exactly as before every grant/revoke above',invCount()===inv0&&revenue()===rev0);
+rec('ACC-41 the database refuses an invoice-less PAID entitlement and a reasonless grant (DB-level rules)',(()=>{const bad=(q)=>{try{sql(q);return false}catch(e){return true}};return bad(`insert into company_entitlements(id,"domainCode","companyId","planCode",status,"updatedAt") values('x_chk1','it','${B.companyId}','DIAGNOSTIC','ACTIVE',now())`)&&bad(`insert into company_entitlements(id,"domainCode","companyId","planCode",status,"updatedAt",origin,"grantedByAdminId") select 'x_chk2','people','${B.companyId}','DIAGNOSTIC','ACTIVE',now(),'ADMIN_GRANT',id from admin_accounts limit 1`)})());
+rec('ACC-42 entitlement list for an unknown company is 404',(await call('GET','/admin/companies/nope/entitlements',{tok:tok.sup})).s===404);
+// company details correction
+const cd=`/admin/companies/${B.companyId}/details`;
+rec('ACC-43 company correction needs a reason and a valid name (400)',(await call('POST',cd,{tok:tok.sup,body:{name:'Valid Name'}})).s===400&&(await call('POST',cd,{tok:tok.sup,body:{name:'x',reason:'automated regression check'}})).s===400);
+const cdo=await call('POST',cd,{tok:tok.sup,body:{name:'QA Renamed Co',industry:'Үйлчилгээ',reason:'automated regression check'}});
+rec('ACC-44 company name/industry correction succeeds, is audited, and customers keep their data',cdo.s===200&&sql(`select name||'|'||industry from companies where id='${B.companyId}'`)==='QA Renamed Co|Үйлчилгээ'&&Number(sql(`select count(*) from admin_audit_events where action='ADMIN_COMPANY_UPDATED' and outcome='SUCCESS' and "targetId"='${B.companyId}'`))===1);
+rec('ACC-45 audit rows exist for every kind of change with a non-null actor',Number(sql(`select count(distinct action) from admin_audit_events where outcome='SUCCESS' and "adminId" is not null and action in ('ADMIN_USER_DEACTIVATED','ADMIN_USER_ACTIVATED','ADMIN_USER_EMAIL_CHANGED','ADMIN_ENTITLEMENT_GRANTED','ADMIN_ENTITLEMENT_REVOKED','ADMIN_COMPANY_UPDATED')`))===6);
+rec('ACC-46 no secret material in any admin audit metadata written by these actions',!/passw|\$argon|secret|token/i.test(sql(`select coalesce(string_agg(metadata::text,' '),'') from admin_audit_events where action like 'ADMIN_USER%' or action like 'ADMIN_ENTITLEMENT%' or action like 'ADMIN_COMPANY%'`)));
 // leave the QA admins disabled, as the other admin regressions do
 for(const a of [sup,rev,bil]){sql(`update admin_accounts set status='DISABLED' where "userId" in (select id from users where email='${a.email}')`)}
 console.log(fail?`\n${fail} FAILED`:'\nALL PASSED');process.exit(fail?1:0);

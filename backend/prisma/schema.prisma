@@ -931,26 +931,41 @@ model BillingInvoice {
   @@map("billing_invoices")
 }
 
-model CompanyEntitlement {
-  id              String            @id @default(cuid())
-  domainCode      String            @default("marketing")
-  companyId       String
-  sourceInvoiceId String            @unique
-  planCode        BillingPlanCode
-  status          EntitlementStatus @default(ACTIVE)
-  startsAt        DateTime          @default(now())
-  endsAt          DateTime?
-  assessmentLimit Int?
-  assessmentsUsed Int               @default(0)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+enum EntitlementOrigin {
+  PAID
+  ADMIN_GRANT
+}
 
-  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  sourceInvoice BillingInvoice @relation(fields: [sourceInvoiceId], references: [id], onDelete: Restrict)
-  assessments   Assessment[]
+model CompanyEntitlement {
+  id               String            @id @default(cuid())
+  domainCode       String            @default("marketing")
+  companyId        String
+  /// Null only for origin ADMIN_GRANT (database CHECK company_entitlements_origin_check); every PAID entitlement keeps its invoice.
+  sourceInvoiceId  String?           @unique
+  planCode         BillingPlanCode
+  status           EntitlementStatus @default(ACTIVE)
+  startsAt         DateTime          @default(now())
+  endsAt           DateTime?
+  assessmentLimit  Int?
+  assessmentsUsed  Int               @default(0)
+  origin           EntitlementOrigin @default(PAID)
+  grantedByAdminId String?
+  grantReason      String?
+  revokedAt        DateTime?
+  revokedByAdminId String?
+  revokeReason     String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sourceInvoice  BillingInvoice? @relation(fields: [sourceInvoiceId], references: [id], onDelete: Restrict)
+  grantedByAdmin AdminAccount?   @relation("EntitlementGrantedBy", fields: [grantedByAdminId], references: [id], onDelete: Restrict)
+  revokedByAdmin AdminAccount?   @relation("EntitlementRevokedBy", fields: [revokedByAdminId], references: [id], onDelete: Restrict)
+  assessments    Assessment[]
 
   @@index([companyId, status, startsAt])
   @@index([companyId, domainCode, status])
+  @@index([origin, status])
   @@map("company_entitlements")
 }
 
@@ -1918,6 +1933,8 @@ model AdminAccount {
   publishedReviews        ReportReview[]           @relation("report_reviews_publishedByAdminIdToadmin_accounts")
   supportCaseEvents       SupportCaseEvent[]
   supportCases            SupportCase[]
+  grantedEntitlements     CompanyEntitlement[]     @relation("EntitlementGrantedBy")
+  revokedEntitlements     CompanyEntitlement[]     @relation("EntitlementRevokedBy")
 
   @@map("admin_accounts")
 }
