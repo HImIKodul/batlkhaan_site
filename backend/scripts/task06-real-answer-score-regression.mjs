@@ -2,11 +2,11 @@ import fs from 'node:fs';
 import { buildDefinition, calculateRuntimeSnapshot, evidenceFromAnswer } from '../dist-engine/engine/index.js';
 
 const BUNDLES=[
-  ['marketing','methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','3.0.4'],
-  ['it','methodology/businessmri-v2.5-runtime-bundles/MMRI_ISMRI_Methodology_4.3.5_BUSINESSMRI_V2.json','4.3.5'],
-  ['finance','methodology/businessmri-v2.5-runtime-bundles/MMRI_FINMRI_Methodology_4.2.5_BUSINESSMRI_V2.json','4.2.5'],
-  ['people','methodology/businessmri-v2.5-runtime-bundles/MMRI_HRMRI_Methodology_4.1.5_BUSINESSMRI_V2.json','4.1.5'],
-  ['operations','methodology/businessmri-v2.5-runtime-bundles/MMRI_OPMRI_Methodology_4.4.5_BUSINESSMRI_V2.json','4.4.5']
+  ['marketing','methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','3.0.3'],
+  ['it','methodology/businessmri-v2.6-runtime-bundles/MMRI_ISMRI_Methodology_4.3.7_BUSINESSMRI_V2.json','4.3.7'],
+  ['finance','methodology/businessmri-v2.6-runtime-bundles/MMRI_FINMRI_Methodology_4.2.7_BUSINESSMRI_V2.json','4.2.7'],
+  ['people','methodology/businessmri-v2.6-runtime-bundles/MMRI_HRMRI_Methodology_4.1.7_BUSINESSMRI_V2.json','4.1.7'],
+  ['operations','methodology/businessmri-v2.6-runtime-bundles/MMRI_OPMRI_Methodology_4.4.7_BUSINESSMRI_V2.json','4.4.7']
 ];
 
 const checks=[];

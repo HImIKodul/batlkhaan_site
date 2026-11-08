@@ -7,7 +7,7 @@ import { runStrategyPipeline, buildFrozenStrategyPlan, strategyHashMaterial, pla
 function stableJson(value){if(value===null||typeof value!=='object')return JSON.stringify(value);if(Array.isArray(value))return `[${value.map(stableJson).join(',')}]`;return `{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${stableJson(value[k])}`).join(',')}}`;}
 const sha=x=>crypto.createHash('sha256').update(stableJson(x)).digest('hex');
 const checks=[];const check=(name,pass,detail='')=>{checks.push({name,pass:Boolean(pass),detail});if(!pass)throw new Error(`FAIL ${name}: ${detail}`)};
-const bundle=JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','utf8'));
+const bundle=JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','utf8'));
 const def=buildDefinition(bundle);
 function cell(categoryId,cellId,score=70){return {categoryId,cellId,status:'DIRECT_FINAL',directScore:score,directConfidence:.9,derivedScore:null,derivedConfidence:0,effectiveScore:score,effectiveConfidence:.9,directAnswerCount:2,independentSourceKinds:2,maxAcceptedAuthority:.9,naClaimCount:0,naClaimConfidence:0,applicabilityRelevance:1,hasHardContradiction:false,hasSameCellVariance:false,hasSecondaryTension:false,hardContradictionRuleIds:[],tensionRuleIds:[],directEvidence:[],derivedContributions:[],exhausted:false,confidenceState:'LOCKED',locked:true,lockReason:'FIXTURE',scoreDispersion:0,clusterSize:2,evidenceCount:2};}
 const cells=new Map();

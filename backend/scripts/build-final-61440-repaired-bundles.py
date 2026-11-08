@@ -25,7 +25,7 @@ for r in rows:
 
 # key, csv code, old bundle, new bundle, old canonical bank, new canonical bank, versions
 MKT_OLD = "MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json"
-MKT_NEW = "MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json"
+MKT_NEW = "MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json"
 BM = [
     ("people", "HRMRI", "4.1.4", "4.1.5", "HRMRI", "people"),
     ("finance", "FINMRI", "4.2.4", "4.2.5", "FINMRI", "finance"),

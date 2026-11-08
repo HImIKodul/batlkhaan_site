@@ -23,8 +23,19 @@ const expected=[
 "POST /api/v1/companies","GET /api/v1/companies","GET /api/v1/companies/:companyId","PUT /api/v1/companies/:companyId","PUT /api/v1/companies/:companyId/profile-answers","GET /api/v1/companies/:companyId/assessments","GET /api/v1/companies/:companyId/diagnosis-lifecycle","POST /api/v1/companies/:companyId/members","POST /api/v1/companies/:companyId/assessments",
 "GET /api/v1/assessments/:assessmentId","POST /api/v1/assessments/:assessmentId/respondents","POST /api/v1/assessments/:assessmentId/start","POST /api/v1/assessments/:assessmentId/pause","POST /api/v1/assessments/:assessmentId/resume","GET /api/v1/assessments/:assessmentId/next-question","POST /api/v1/assessments/:assessmentId/answers","POST /api/v1/assessments/:assessmentId/back","PUT /api/v1/assessments/:assessmentId/draft","POST /api/v1/assessments/:assessmentId/writer-lease/heartbeat","POST /api/v1/assessments/:assessmentId/complete","GET /api/v1/assessments/:assessmentId/status","GET /api/v1/assessments/:assessmentId/progress","GET /api/v1/assessments/:assessmentId/results",
 "POST /api/v1/assessments/:assessmentId/strategy/generate","GET /api/v1/assessments/:assessmentId/diagnosis","GET /api/v1/assessments/:assessmentId/recommendations","GET /api/v1/assessments/:assessmentId/action-plan","PATCH /api/v1/assessments/:assessmentId/action-plan/milestones/:milestoneId","GET /api/v1/assessments/:assessmentId/report-payload","GET /api/v1/assessments/:assessmentId/report","GET /api/v1/assessments/:assessmentId/report/pdf/metadata","GET /api/v1/assessments/:assessmentId/report/pdf","POST /api/v1/assessments/:assessmentId/report/pdf/regenerate","GET /api/v1/assessments/:assessmentId/trace",
-"GET /api/v1/methodology/current/profile-questions","GET /api/v1/methodology/current/respondent-roles"
+"GET /api/v1/methodology/current/profile-questions","GET /api/v1/methodology/current/respondent-roles",
+// 2026-11-05: password recovery, data export, data erasure
+"POST /api/v1/auth/password-reset/request","POST /api/v1/auth/password-reset/confirm","GET /api/v1/account/export","GET /api/v1/companies/:companyId/export","POST /api/v1/companies/:companyId/erase","POST /api/v1/account/erase",
+// 2026-11-06: admin system customer-side endpoints
+"GET /api/v1/assessments/:assessmentId/review-status","POST /api/v1/billing/invoices/:invoiceId/dispute","GET /api/v1/companies/:companyId/disputes","POST /api/v1/support/cases",
+  // Added by the functional-repair phase (MMRI-23, MMRI-24); security-reviewed: all three require a company-admin role, limit/offset are clamped, removal is advisory-locked with a last-owner guard.
+  "GET /api/v1/companies/:companyId/billing/invoices","GET /api/v1/companies/:companyId/members","DELETE /api/v1/companies/:companyId/members/:userId"
 ];
+// Admin routes are registered through a wrapper that authenticates and checks the permission server-side. Every route must name a permission
+// (only the /auth/ session routes may use null, and they still require a valid admin session).
+{const src=fs.readFileSync(new URL('../src/api/admin/admin-routes.ts',import.meta.url),'utf8');const calls=[...src.matchAll(/route\("(GET|POST|PUT|PATCH|DELETE)",\s*"([^"]+)",\s*([^,]+),/g)];
+ const bad=calls.filter(c=>!/^"[a-z]+\.[a-z]+"$/.test(c[3].trim())&&!(c[3].trim()==='null'&&c[2].startsWith('/auth/')));
+ if(calls.length<35||bad.length){console.error('Admin route permission check failed: '+calls.length+' routes, bad: '+bad.map(b=>b[2]).join(','));process.exit(1);}}
 for(const route of expected)if(!routes.includes(route)){console.error(`Missing route: ${route}`);process.exit(1);}
 const pilotRoutes=routes.filter(x=>x.includes(" /api/v1/pilot/"));
 const calibrationRoutes=routes.filter(x=>x.includes(" /api/v1/calibration/"));

@@ -4,7 +4,7 @@ import { buildDefinition } from '../dist-strategy/engine/definition.js';
 import { runStrategyPipeline, calculatePlanProgress, selectRecommendationActions } from '../dist-strategy/strategy/index.js';
 import { buildFrozenReportPayload, deterministicFallbackNarrative, validateNarrativeDraft } from '../dist-strategy/report/index.js';
 
-const bundle=JSON.parse(fs.readFileSync(new URL('../methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json',import.meta.url),'utf8'));
+const bundle=JSON.parse(fs.readFileSync(new URL('../methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json',import.meta.url),'utf8'));
 const methodology=buildDefinition(bundle);
 const cells=new Map();
 const categories=new Map();
@@ -75,7 +75,14 @@ payload={...payload,payloadHash:hash};
 check('report contract version',payload.reportContractVersion==='MMRI-REPORT-1.0',payload.reportContractVersion);
 check('FULL complete uses official metric',payload.metricType==='OFFICIAL_OVERALL_SCORE',payload.metricType);
 check('exactly five purposes',payload.purposes.length===5,String(payload.purposes.length));
-check('strength cap <=3',payload.strengths.length<=3,String(payload.strengths.length));
+// Accepted report contract (MMRI_DESIGN_SYSTEM_HANDOFF.md, REPORT_CATEGORY_FINDING_LIMIT=5 in src/report/payload.ts): exactly five strengths and
+// five weaknesses, topped up from real capability scores (basis RELATIVE_RANK) when too few meet the evidence thresholds. The older "<=3" cap was superseded.
+check('exactly five strengths (accepted contract)',payload.strengths.length===5,String(payload.strengths.length));
+check('exactly five weaknesses (accepted contract)',payload.weaknesses.length===5,String(payload.weaknesses.length));
+check('strengths and weaknesses never share a capability',payload.strengths.every(a=>!payload.weaknesses.some(b=>b.categoryId===a.categoryId)),'');
+check('every strength and weakness is traceable',[...payload.strengths,...payload.weaknesses].every(x=>Array.isArray(x.sourceTraceIds)&&x.sourceTraceIds.length>0),'');
+check('every strength/weakness capability has a real score',[...payload.strengths,...payload.weaknesses].every(x=>typeof x.score==='number'&&x.score>=0&&x.score<=100),'');
+check('narrative strength/weakness sections carry exactly five claims',(()=>{const d=deterministicFallbackNarrative(payload);return d.sections.find(x=>x.id==='S04')?.claims.length===5&&d.sections.find(x=>x.id==='S05')?.claims.length===5})(),'');
 check('root report cap <=3',payload.rootFindings.length<=3,String(payload.rootFindings.length));
 check('roadmap has five horizon rows',payload.roadmap.length===5,String(payload.roadmap.length));
 check('report trace index populated',Object.keys(payload.traceIndex).length>0,String(Object.keys(payload.traceIndex).length));

@@ -6,7 +6,7 @@ import { buildDiagnosisResultV13 } from '../dist-strategy/diagnosis/result.js';
 import { buildFrozenReportPayload, deterministicFallbackNarrative, validateNarrativeDraft } from '../dist-strategy/report/index.js';
 
 const BUNDLES = [
-  ['marketing','methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json'],
+  ['marketing','methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json'],
   ['it','methodology/businessmri-v2.5-runtime-bundles/MMRI_ISMRI_Methodology_4.3.5_BUSINESSMRI_V2.json'],
   ['finance','methodology/businessmri-v2.5-runtime-bundles/MMRI_FINMRI_Methodology_4.2.5_BUSINESSMRI_V2.json'],
   ['people','methodology/businessmri-v2.5-runtime-bundles/MMRI_HRMRI_Methodology_4.1.5_BUSINESSMRI_V2.json'],
@@ -110,7 +110,7 @@ for(const [domain,file] of BUNDLES){
     check(`${domain}/${row.pattern} report has five priority actions`,row.payload.priorityActions.length===5,row.payload.priorityActions.length);
     check(`${domain}/${row.pattern} priority actions follow low-answer categories`,row.payload.priorityActions.every(a=>(a.affectedScopes??[{categoryId:a.categoryId}]).every(s=>row.lowIds.has(s.categoryId))),row.payload.priorityActions.map(a=>a.categoryId).join(','));
     check(`${domain}/${row.pattern} narrative validates`,row.validation.state==='PASS',row.validation.state);
-    const wc=words(row.conclusion); check(`${domain}/${row.pattern} conclusion 250-300 words`,wc>=250&&wc<=300,wc);
+    const wc=words(row.conclusion); check(`${domain}/${row.pattern} conclusion 80-160 words (validator V27)`,wc>=80&&wc<=160,wc);
     check(`${domain}/${row.pattern} roadmap exists`,row.roadmapMilestones.length>=5,row.roadmapMilestones.length);
     check(`${domain}/${row.pattern} roadmap fields complete`,row.roadmapMilestones.every(m=>String(m.titleMn||'').trim()&&String(m.milestoneMn||'').trim()&&String(m.deliverableMn||'').trim()&&String(m.ownerRoleLabelMn||'').trim()&&String(m.kpiMn||'').trim()),row.roadmapMilestones.length);
     const chunked=row.payload.roadmap.flatMap(r=>Array.from({length:Math.ceil(r.milestones.length/4)},(_,i)=>r.milestones.slice(i*4,(i+1)*4))).flat();

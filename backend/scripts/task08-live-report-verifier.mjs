@@ -55,7 +55,7 @@ async function main(){
     const conclusion=narrative?.sections?.find((section)=>section.id==="S10");
     assert(conclusion,`${assessment.id}: S10 conclusion missing`);
     const conclusionWords=words(conclusion.claims?.map((claim)=>claim.textMn).join(" "));
-    assert(conclusionWords>=250&&conclusionWords<=300,`${assessment.id}: S10 must be 250-300 words, got ${conclusionWords}`);
+    assert(conclusionWords>=80&&conclusionWords<=160,`${assessment.id}: S10 must be 80-160 words (validator V27), got ${conclusionWords}`);
 
     checked.push({
       assessmentId:assessment.id,

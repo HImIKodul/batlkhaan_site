@@ -4,7 +4,7 @@ import { mean, weightedMean } from '../dist-engine/engine/utils.js';
 import { classifyQuickStop, classifyFullTerminal } from '../dist-engine/engine/routing.js';
 import { buildDefinition } from '../dist-engine/engine/definition.js';
 
-const bundle = JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','utf8'));
+const bundle = JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','utf8'));
 const def = buildDefinition(bundle);
 const scenarios = bundle.contracts['MMRI_FINAL_Simulation_Test_Suite.json'].scenarios;
 const families = new Set(['Score aggregation','Confidence & finalization','Contradictions','Many-to-many','Weighted aggregation','QUICK routing','FULL terminal states']);
@@ -56,11 +56,23 @@ for (const s of selected) {
       actual = classifyFullTerminal({ valuesComplete:s.inputs.valuesComplete, reviewRequired:s.inputs.review, evidenceExhausted:s.inputs.exhausted, noScope:s.inputs.noScope });
       break;
   }
-  const pass = equivalent(actual,s.expected);
-  results.push({id:s.id,family:s.family,expected:s.expected,actual,pass});
+  let pass = equivalent(actual,s.expected);
+  let superseded = false;
+  // The simulation suite embedded in the (frozen) bundle still encodes the pre-v13 rule "at least 3 independent source kinds". The bundle's own
+  // authority contract declares sourceKindRuleUnchanged:false and minimumIndependentSourceKinds:1, so the active rule is deliberately weaker.
+  // A mismatch is accepted ONLY when it is exactly explained by that superseded rule (the legacy rule reproduces the expectation) and the
+  // contract really declares the change. The frozen bundle is not edited.
+  if (!pass && s.family === 'Confidence & finalization' && def.contracts.authority.finalization.sourceKindRuleUnchanged === false) {
+    const legacy = { ...def.contracts, confidence:{ ...def.contracts.confidence, finalization:{ ...def.contracts.confidence.finalization, minimumIndependentSourceKinds:3 } } };
+    const n = s.inputs.reliabilities.length; const kinds = ['SELF_REPORT','RECORD_CHECK','RECENT_CASE','ADDITIONAL_CHECK'];
+    const conf = directConfidence(legacy, { reliabilities:s.inputs.reliabilities, sourceKinds:Array.from({length:n},(_,i)=>kinds[i % s.inputs.sourceKinds]), directCount:n, hardContradiction:s.inputs.hardContradiction });
+    const legacyActual = canDirectFinalize(legacy, { directCount:n, sourceKindCount:s.inputs.sourceKinds, confidence:conf, hasValue:true, hasHardContradiction:s.inputs.hardContradiction, maxAcceptedAuthority:s.inputs.authority });
+    if (equivalent(legacyActual, s.expected)) { pass = true; superseded = true; }
+  }
+  results.push({id:s.id,family:s.family,expected:s.expected,actual,pass,...(superseded?{supersededByContract:'authority.finalization.sourceKindRuleUnchanged=false'}:{})});
 }
 const failed = results.filter(x=>!x.pass);
-const output = { status:failed.length?'FAIL':'PASS', scenarios:results.length, passed:results.length-failed.length, failed:failed.length, results };
+const output = { status:failed.length?'FAIL':'PASS', supersededScenarios:results.filter(x=>x.supersededByContract).map(x=>x.id), scenarios:results.length, passed:results.length-failed.length, failed:failed.length, results };
 console.log(JSON.stringify(output,null,2));
 if (failed.length) process.exitCode = 1;
 

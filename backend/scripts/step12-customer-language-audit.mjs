@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 const root=path.resolve(process.cwd(),'..');
-const p=path.join(process.cwd(),'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json');
+const p=path.join(process.cwd(),'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
 const b=JSON.parse(fs.readFileSync(p,'utf8'));
 const hits=[];
 const test=(where,v)=>{if(typeof v==='string'&&/[A-Za-z]/.test(v))hits.push({path:where,text:v});};

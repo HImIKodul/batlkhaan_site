@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 
 const backend = process.cwd();
 const bundleRel = 'methodology/MMRI_v3.0.0_QBANK_v3.1.0_SCORING_STEP04.json';
-const step1Rel = 'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json';
+const step1Rel = 'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json';
 const bundlePath = path.resolve(backend, bundleRel);
 const step1Path = path.resolve(backend, step1Rel);
 const bundleRaw = fs.readFileSync(bundlePath,'utf8');

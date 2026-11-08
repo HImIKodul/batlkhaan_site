@@ -8,7 +8,7 @@ import { buildFrozenReportPayload } from '../dist-strategy/report/payload.js';
 import { deterministicFallbackNarrative } from '../dist-strategy/report/fallback-renderer.js';
 import { validateNarrativeDraft } from '../dist-strategy/report/validator.js';
 
-const bundlePath=path.resolve(process.cwd(),'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json');
+const bundlePath=path.resolve(process.cwd(),'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
 const bundle=JSON.parse(fs.readFileSync(bundlePath,'utf8'));
 const def=buildDefinition(bundle);
 const labels={P1:'Ашиг',P2:'Орлого',P3:'Брэндийн үнэ цэнэ',P4:'Хэрэглэгчийн тоо',P5:'Зах зээлийн эзлэх хувь'};

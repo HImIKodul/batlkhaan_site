@@ -2,7 +2,13 @@ import "dotenv/config";
 import crypto from "node:crypto";
 import { prisma } from "../dist/db.js";
 
+/* SAFETY GUARD: this gate creates users, companies and mock-paid diagnoses and talks to the database directly. It used to default to the live :4000 API and to
+   whatever DATABASE_URL backend/.env holds (the operational `mmri` DB). It now needs an explicit isolated API and DB; opt in to shared targets with MMRI_QA_ALLOW_SHARED=YES. */
+const SHARED_OK=process.env.MMRI_QA_ALLOW_SHARED==="YES";
+if(!process.env.MMRI_TASK12_BASE_URL&&!SHARED_OK)throw new Error("task12: set MMRI_TASK12_BASE_URL=<isolated api base> explicitly (default :4000 is the shared service)");
 const BASE=(process.env.MMRI_TASK12_BASE_URL||"http://127.0.0.1:4000/api/v1").replace(/\/$/,"");
+if(!SHARED_OK&&/(localhost|127\.0\.0\.1):4000(\/|$)/.test(BASE))throw new Error("task12: refusing the shared service on :4000 (opt in with MMRI_QA_ALLOW_SHARED=YES)");
+if(!SHARED_OK&&/\/mmri(\?|$)/.test(String(process.env.DATABASE_URL||"")))throw new Error("task12: refusing DATABASE_URL pointing at the shared `mmri` database (opt in with MMRI_QA_ALLOW_SHARED=YES)");
 const provider=String(process.env.MMRI_BILLING_PROVIDER||"").trim().toUpperCase();
 const environment=String(process.env.MMRI_ENVIRONMENT||process.env.NODE_ENV||"").trim().toLowerCase();
 const tag=`MMRI-TASK12-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
@@ -201,7 +207,8 @@ async function main(){
   assert(report.validation?.state==="PASS",`Report narrative validation is ${report.validation?.state||"missing"}`);
   const conclusion=(report.narrative?.sections||[]).find(x=>x.id==="S10");
   const conclusionWords=words((conclusion?.claims||[]).map(x=>x.textMn).join(" "));
-  assert(conclusionWords>=250&&conclusionWords<=300,`Conclusion must be 250-300 words; got ${conclusionWords}`);
+  /* validator V27 (src/report/validator.ts) and the PDF baseline require an 80-160 word executive conclusion; the earlier 250-300 range was stale */
+  assert(conclusionWords>=80&&conclusionWords<=160,`Conclusion must be 80-160 words; got ${conclusionWords}`);
 
   const methodology=await prisma.assessment.findUnique({where:{id:assessmentId},select:{methodologyVersionId:true}});
   const expectedPurposeCount=await prisma.purposeDefinition.count({where:{methodologyVersionId:methodology.methodologyVersionId}});

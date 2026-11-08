@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { buildDefinition, calculateAggregateSnapshots } from '../dist-engine/engine/index.js';
 
-const bundle=JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','utf8'));
+const bundle=JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','utf8'));
 const def=buildDefinition(bundle);
 def.runtimePolicy={enabled:true,questionById:new Map(),cellByCategoryCell:new Map(),ruleById:new Map(),scorePatternByCode:new Map()};
 

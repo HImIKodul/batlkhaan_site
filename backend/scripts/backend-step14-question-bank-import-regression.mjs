@@ -18,7 +18,7 @@ fs.writeFileSync(modulePath,js);
 const mod=await import(`${pathToFileURL(modulePath).href}?v=${Date.now()}`);
 
 const bundles=[
-  ['marketing','methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','3.0.4','3.1.4-HUMAN'],
+  ['marketing','methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','3.0.4','3.1.4-HUMAN'],
   ['it','methodology/businessmri-v2.5-runtime-bundles/MMRI_ISMRI_Methodology_4.3.5_BUSINESSMRI_V2.json','4.3.5','BUSINESSMRI-v2.5-ISMRI-HUMAN'],
   ['finance','methodology/businessmri-v2.5-runtime-bundles/MMRI_FINMRI_Methodology_4.2.5_BUSINESSMRI_V2.json','4.2.5','BUSINESSMRI-v2.5-FINMRI-HUMAN'],
   ['people','methodology/businessmri-v2.5-runtime-bundles/MMRI_HRMRI_Methodology_4.1.5_BUSINESSMRI_V2.json','4.1.5','BUSINESSMRI-v2.5-HRMRI-HUMAN'],

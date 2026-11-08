@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { buildDefinition, calculateRuntimeSnapshot, evidenceFromAnswer, routeNextQuestion } from "../dist-engine/engine/index.js";
 
-const bundlePath=path.resolve(process.cwd(),"methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json");
+const bundlePath=path.resolve(process.cwd(),"methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json");
 if(!fs.existsSync(bundlePath)) throw new Error(`Marketing methodology bundle missing: ${bundlePath}`);
 const definition=buildDefinition(JSON.parse(fs.readFileSync(bundlePath,"utf8")));
 const hardMaximum=Number(definition.contracts?.companyProfile?.routingLocks?.quickMaxQuestions ?? 280);

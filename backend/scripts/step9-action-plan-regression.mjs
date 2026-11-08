@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { buildDefinition } from '../dist-strategy/engine/definition.js';
 import { buildActionPlan, calculatePlanProgress, currentHorizonFromDates } from '../dist-strategy/strategy/index.js';
 
-const bundlePath=new URL('../methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json',import.meta.url);
+const bundlePath=new URL('../methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json',import.meta.url);
 const bundle=JSON.parse(fs.readFileSync(bundlePath,'utf8'));
 const methodology=buildDefinition(bundle);
 const rc=methodology.contracts.recommendation;

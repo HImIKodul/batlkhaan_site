@@ -39,7 +39,7 @@ pass(payload.displayDictionary.R01.includes('Гүйцэтгэх'),'role dictiona
 const draft=deterministicFallbackNarrative(payload);
 const conclusion=draft.sections.find(s=>s.id==='S10')?.claims[0]?.textMn||'';
 const wc=conclusion.trim().split(/\s+/).filter(Boolean).length;
-pass(wc>=250&&wc<=300,`executive conclusion is 250-300 words (${wc})`);
+pass(wc>=80&&wc<=160,`executive conclusion is 80-160 words (validator V27) (${wc})`);
 const validation=validateNarrativeDraft(payload,draft);
 pass(validation.state==='PASS',`deterministic real narrative validates (${validation.state})`);
 const roadmapClaims=draft.sections.find(s=>s.id==='S08')?.claims||[];

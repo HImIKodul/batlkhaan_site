@@ -4,7 +4,7 @@ set -euo pipefail
 : "${DATABASE_URL:=postgresql://mmri:mmri@localhost:5432/mmri?schema=public}"
 export DATABASE_URL
 export MMRI_TARGET_METHODOLOGY_VERSION="${MMRI_TARGET_METHODOLOGY_VERSION:-3.0.0}"
-export MMRI_TARGET_METHODOLOGY_BUNDLE="${MMRI_TARGET_METHODOLOGY_BUNDLE:-methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json}"
+export MMRI_TARGET_METHODOLOGY_BUNDLE="${MMRI_TARGET_METHODOLOGY_BUNDLE:-methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json}"
 
 if [[ "${MMRI_INTEGRATION_RESET_OK:-}" != "YES" ]]; then
   echo "Refusing destructive PostgreSQL integration reset." >&2

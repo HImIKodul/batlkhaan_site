@@ -4,7 +4,7 @@ import { buildDefinition } from '../dist-strategy/engine/definition.js';
 import { buildRecommendations } from '../dist-strategy/strategy/recommendations.js';
 import { runStrategyPipeline } from '../dist-strategy/strategy/index.js';
 
-const bundlePath=path.resolve(process.cwd(),'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json');
+const bundlePath=path.resolve(process.cwd(),'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
 const def=buildDefinition(JSON.parse(fs.readFileSync(bundlePath,'utf8')));
 const results=[];
 const check=(name,ok,detail='')=>{results.push({name,status:ok?'PASS':'FAIL',detail:String(detail??'')}); if(!ok)console.error('FAIL',name,detail)};

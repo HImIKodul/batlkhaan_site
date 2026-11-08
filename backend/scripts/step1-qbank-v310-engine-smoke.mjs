@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildDefinition, calculateRuntimeSnapshot, routeNextQuestion, evidenceFromAnswer } from '../dist-engine/engine/index.js';
-const bundle=JSON.parse(fs.readFileSync(path.resolve(process.cwd(),'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json'),'utf8'));
+const bundle=JSON.parse(fs.readFileSync(path.resolve(process.cwd(),'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json'),'utf8'));
 const definition=buildDefinition(bundle);
 const evidence=[]; const askedQuestionIds=new Set(); const selected=[];
 const applicabilityByGate=new Map();

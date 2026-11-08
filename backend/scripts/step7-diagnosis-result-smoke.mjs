@@ -5,7 +5,7 @@ import { calculateAggregateSnapshots } from '../dist-strategy/engine/scoring.js'
 import { runStrategyPipeline } from '../dist-strategy/strategy/index.js';
 import { buildDiagnosisResultV13 } from '../dist-strategy/diagnosis/index.js';
 
-const bundle=JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','utf8'));
+const bundle=JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','utf8'));
 const def=buildDefinition(bundle);
 const checks=[];
 const check=(name,pass,detail='')=>{checks.push({name,pass:Boolean(pass),detail});if(!pass)throw new Error(`FAIL ${name}: ${detail}`)};

@@ -73,13 +73,15 @@ check('access_token_memory_only',has(client,'let memoryAccessToken:string|null=n
 check('no_access_token_localstorage',!has(client,'localStorage.getItem(K.access)')&&!has(client,'localStorage.setItem(K.access)'));
 check('legacy_persistent_token_cleanup',has(client,"const LEGACY_ACCESS_KEY=['mmri','accessToken'].join('.')")&&has(client,'localStorage.removeItem(LEGACY_ACCESS_KEY)'));
 check('refresh_cookie_bootstrap',has(client,'export async function restoreSession()')&&has(frontendApp,'restoreSession().finally'));
-check('failed_refresh_clears_context',/if\(!r\.ok\)\{session\.clear\(\);return false\}/.test(client));
+// MMRI-17: only a definitive 401/403 from the refresh endpoint may clear local work; transient failures (5xx, 429, network, timeout) must keep it.
+check('failed_refresh_clears_context_only_on_401_403',/if\(!r\.ok\)\{if\(r\.status===401\|\|r\.status===403\)session\.clear\(\);return false\}/.test(client)&&!/if\(!r\.ok\)\{session\.clear\(\)/.test(client));
 check('login_clears_stale_context',/async login[\s\S]{0,360}session\.clear\((?:true)?\);[\s\S]{0,160}session\.accessToken=x\.accessToken/.test(client));
 check('logout_clears_context',/async logout\(\)[\s\S]{0,1200}finally\{session\.clear\(\)\}/.test(client));
 
 // Sensitive public-route surface must remain narrow.
 const falseCount=(app.match(/false\);/g)||[]).length;
-check('public_route_count_expected',falseCount===11);
+// 11 earlier public routes + POST /auth/password-reset/request and /confirm (security-reviewed: enumeration-safe 202 with constant minimum latency, per-IP and per-account limiters, 256-bit salted-hash single-use tokens, session revocation on confirm).
+check('public_route_count_expected',falseCount===13);
 check('auth_me_not_public',!/auth\/me[\s\S]{0,220}false\);/.test(app));
 check('assessment_routes_not_public',!/assessments\/:assessmentId[\s\S]{0,260}false\);/.test(app));
 check('trace_route_not_public',!/assessments\/:assessmentId\/trace[\s\S]{0,260}false\);/.test(app));

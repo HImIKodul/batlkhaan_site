@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 
 const backend = process.cwd();
 const packageRoot = path.resolve(backend, '../..');
-const bundlePath = path.resolve(backend, 'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json');
+const bundlePath = path.resolve(backend, 'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
 const canonicalPath = path.resolve(packageRoot, 'MMRI_QUESTION_BANK_v3.1.0_FROZEN_CANONICAL_REFERENCE.json');
 const freezeManifestPath = path.resolve(backend, 'methodology/MMRI_QBANK_v3.1.0_FREEZE_MANIFEST.json');
 const targetSourcePath = path.resolve(backend, 'src/methodology-target.ts');

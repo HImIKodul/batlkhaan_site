@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const methodology = path.join(root, 'methodology');
 const bundleDir = path.join(methodology, 'businessmri-v2.2-runtime-bundles');
-const marketing = path.join(methodology, 'MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json');
+const marketing = path.join(methodology, 'MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
 const files = [...fs.readdirSync(bundleDir).filter(x=>x.endsWith('.json')).map(x=>path.join(bundleDir,x)), marketing];
 const q4 = x => Math.round(Number(x) * 10000) / 10000;
 const tolerance = n => n * 0.00005 + 1e-9;

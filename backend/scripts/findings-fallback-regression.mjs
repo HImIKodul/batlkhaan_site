@@ -7,7 +7,7 @@ import { runStrategyPipeline } from '../dist-strategy/strategy/index.js';
 import { buildDiagnosisResultV13 } from '../dist-strategy/diagnosis/index.js';
 import { buildFrozenReportPayload } from '../dist-strategy/report/payload.js';
 
-const def=buildDefinition(JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json','utf8')));
+const def=buildDefinition(JSON.parse(fs.readFileSync('methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','utf8')));
 const labels={P1:'Ашиг',P2:'Орлого',P3:'Брэндийн үнэ цэнэ',P4:'Хэрэглэгчийн тоо',P5:'Зах зээлийн эзлэх хувь'};
 let failures=0,total=0;
 const check=(name,ok,detail='')=>{total++;if(!ok){failures++;console.log(`FAIL ${name} ${detail}`)}};

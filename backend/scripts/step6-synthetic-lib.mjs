@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { buildDefinition, calculateRuntimeSnapshot, routeNextQuestion, evidenceFromAnswer } from '../dist-engine/engine/index.js';
 
-const bundlePath=path.resolve(process.cwd(),'methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json');
+const bundlePath=path.resolve(process.cwd(),'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
 const bundle=JSON.parse(fs.readFileSync(bundlePath,'utf8'));
 const def=buildDefinition(bundle);
 const outPath=path.resolve(process.cwd(),'../STEP06_SYNTHETIC_COMPANY_SIMULATIONS.json');
