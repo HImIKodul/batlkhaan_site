@@ -255,7 +255,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    </div>
 
    <div className="mmri-questionnaire__answers">
-    <RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Хариултын үндсэн сонголтууд" className="is-ordered-scale" onDeselect={clearChoice} options={layout.main.map((x,i)=>{const o=x.option;const neutralMain=x.role==='neutral-main';const t=x.quality===null?null:answerToneAtQuality(x.quality);return {value:o.optionIndex,label:displaySentence(o.labelMn),className:neutralMain?'is-neutral-tone':'has-score-tone',style:t?({'--answer-color':t.color,'--answer-soft':t.soft} as React.CSSProperties):undefined}})}/>
+    <RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Хариултын үндсэн сонголтууд" className="is-ordered-scale" onDeselect={clearChoice} options={layout.main.map((x,i)=>{const o=x.option;const neutralMain=x.role==='neutral-main';const t=x.quality===null?null:answerToneAtQuality(x.quality);return {value:o.optionIndex,label:displaySentence(o.labelMn),className:neutralMain?'is-neutral-tone':'has-score-tone',style:t?({'--answer-color':t.color,'--answer-soft':t.soft,'--answer-mix':t.mix} as React.CSSProperties):undefined}})}/>
     {special.length>0&&<div className="mmri-questionnaire__special">{main.length>0&&<span>Хэрэв дээрх сонголтуудаас тодорхой хариулах боломжгүй бол доорхоос сонгоно уу:</span>}<RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Нэмэлт хариултын сонголтууд" onDeselect={clearChoice} options={special.map(o=>({value:o.optionIndex,label:displaySentence(o.labelMn),className:'is-neutral-tone'}))}/></div>}
    </div>
 
