@@ -8,13 +8,13 @@ import { session } from '../api/client';
  * Each slab is a real button: hover lights its edge and glow and lets the other slabs recede; click goes to the diagnosis hub (or sign-in) with that category opened.
  * Motion: one slow float of the stack and a soft glow breathing per slab (opacity), CSS only; no pointer-driven movement, hover never touches the page theme.
  */
-/* x/y in cqw (top-left of the unrotated plate) and r in degrees: hand-tuned per plate so the deck reads as an irregular fan, not a repeated step */
+/* r (deg) and jx/jy (cqw) are small hand-tuned per-plate offsets so the deck reads as an irregular fan, not one repeated step; the step and plate size come from CSS per breakpoint */
 const AREAS=[
- {id:'marketing',label:'Маркетинг',x:4,y:2,r:-13},
- {id:'it',label:'Мэдээллийн технологи',x:20,y:14,r:-8},
- {id:'finance',label:'Санхүү',x:37,y:26,r:-2},
- {id:'people',label:'Хүний нөөц',x:46,y:41,r:5},
- {id:'operations',label:'Үйлдвэрлэл ба үйл ажиллагаа',x:55,y:56,r:11},
+ {id:'marketing',label:'Маркетинг',r:-9,jx:0,jy:0},
+ {id:'it',label:'Мэдээллийн технологи',r:-5,jx:1.2,jy:-.4},
+ {id:'finance',label:'Санхүү',r:-1,jx:-.6,jy:.6},
+ {id:'people',label:'Хүний нөөц',r:4,jx:1,jy:-.2},
+ {id:'operations',label:'Үйлдвэрлэл ба үйл ажиллагаа',r:8,jx:-.4,jy:.4},
 ] as const;
 
 /* The chosen plate is remembered in memory (10 min; sign-in wipes sessionStorage by design) so login can carry the customer on to that category's dialog in the diagnosis hub. */
@@ -26,7 +26,7 @@ export default function HeroCrystal(){
   <div className="hx__scene">
    <div className="hx__stack">
     <i className="hx__floor"/>
-    {AREAS.map((a,i)=><button type="button" key={a.id} className="hx__slab" aria-label={`${a.label} - оношилгоо`} onClick={()=>{heroIntent.area=a.id;heroIntent.at=Date.now();go(session.accessToken?'analysis':'login')}} style={{'--i':i,'--x':a.x,'--y':a.y,'--r':a.r,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}><span className="hx__dot"/><span className="hx__name">{a.label}</span></button>)}
+    {AREAS.map((a,i)=><button type="button" key={a.id} className="hx__slab" aria-label={`${a.label} - оношилгоо`} onClick={()=>{heroIntent.area=a.id;heroIntent.at=Date.now();go(session.accessToken?'analysis':'login')}} style={{'--i':i,'--r':a.r,'--jx':a.jx,'--jy':a.jy,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}><span className="hx__dot"/><span className="hx__name">{a.label}</span></button>)}
    </div>
   </div>
  </div>;

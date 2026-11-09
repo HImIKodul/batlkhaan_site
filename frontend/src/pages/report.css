@@ -281,3 +281,34 @@
 .report-finding-column.is-positive .report-finding-arc__no,.report-finding-column.is-negative .report-finding-arc__no{background:#fff;box-shadow:inset 0 0 0 1px rgba(16,37,75,.12)}
 .report-v3 .report-finding-column.is-positive .report-finding-arc__no{color:#0B5A3C}
 .report-prelim-tag{font-style:normal;font-weight:500;font-size:13px;color:var(--mmri-color-text-muted);white-space:nowrap;color:var(--wp-ink2)}
+
+/* ===== Mobile web report (<= 640px): a dedicated reading layout, not the desktop page squeezed. Outer chrome is flattened so cards get the full phone width; ====
+   strengths / weaknesses / priorities / roadmap are single-column cards with the name and meaning at full width and the score as a badge under the title. Web view only: the PDF is untouched. */
+@media (max-width:640px){
+ html:root body.mmri-prism-page .report-v3{padding:8px 6px 96px}
+ html:root body.mmri-prism-page .report-three-pages{padding:0;gap:14px}
+ html:root body.mmri-prism-page .report-three-page{padding:16px 10px 18px;border-radius:20px}
+ html:root body.mmri-prism-page .report-three-page>header{gap:10px}
+ html:root body.mmri-prism-page .report-top-download{width:100%;max-width:none;min-height:50px}
+ /* score ring: always a true circle, readable number, shine kept (transform-only) */
+ html:root body.mmri-prism-page .report-score-stage{padding:22px 0 6px}
+ html:root body.mmri-prism-page .report-v3 .report-score{width:min(200px,56vw);height:min(200px,56vw);min-width:0;aspect-ratio:1}
+ html:root body.mmri-prism-page .report-score strong{font-size:min(72px,20vw)}
+ html:root body.mmri-prism-page .report-score::before{inset:-14px}
+ html:root body.mmri-prism-page .report-score-meta{text-align:center;padding-inline:6px}
+ /* strengths / weaknesses */
+ html:root body.mmri-prism-page .report-balance-v3{grid-template-columns:1fr;gap:14px}
+ html:root body.mmri-prism-page .report-finding-column{padding:12px 10px 14px;border-radius:18px}
+ html:root body.mmri-prism-page .report-finding-arc{grid-template-columns:26px minmax(0,1fr);column-gap:10px;row-gap:6px;padding:12px 0}
+ html:root body.mmri-prism-page .report-finding-arc>b{grid-column:2;justify-self:start;font-size:18px;padding:1px 10px;border-radius:10px}
+ html:root body.mmri-prism-page .report-finding-arc strong{font-size:15.5px;line-height:1.35}
+ html:root body.mmri-prism-page .report-finding-arc p{font-size:14px;line-height:1.5}
+ /* five priorities */
+ html:root body.mmri-prism-page .report-purpose-priorities>article{grid-template-columns:30px minmax(0,1fr);gap:8px 10px;padding:12px 10px}
+ html:root body.mmri-prism-page .report-purpose-projection{grid-column:1/-1;justify-self:stretch;width:100%;grid-template-columns:1fr 1fr}
+ html:root body.mmri-prism-page .report-purpose-copy h3{font-size:16px}
+ html:root body.mmri-prism-page .report-purpose-copy p{font-size:14px;line-height:1.5}
+ /* 12-month plan: one card per period, full width */
+ html:root body.mmri-prism-page .report-roadmap-card{grid-template-columns:1fr;gap:10px;padding:14px 12px;border-radius:16px}
+ html:root body.mmri-prism-page .report-summary{padding-inline:2px}
+}

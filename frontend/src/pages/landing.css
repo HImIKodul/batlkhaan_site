@@ -369,26 +369,33 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
 }
 
 
-/* ---- Hero (components/HeroCrystal.tsx, sketch 02): ONE fanned deck of five thick, angled glass plates cascading down-right; the first plate is on top, each later one
-   peeks out below/right of the one in front. Units are cqw of .hx. Each plate has its own perspective() tilt (no shared 3D parent, so clicks and stacking stay predictable). ---- */
-.hx{position:relative;width:min(100%,clamp(340px,calc((100dvh - 260px)*1.05),620px));aspect-ratio:1.04;margin-inline:auto;container-type:inline-size;color:var(--wp-ink)}
-.hx__stack{position:absolute;inset:0;animation:hx-float 16s ease-in-out infinite}
-@keyframes hx-float{50%{transform:translateY(-1.1cqw)}}
-.hx__floor{position:absolute;left:30%;right:-2%;bottom:1%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(2,10,80,.42),transparent);pointer-events:none}
-.hx__slab{--lift:0cqw;position:absolute;left:calc(var(--x)*1cqw);top:calc(var(--y)*1cqw);width:42cqw;height:35cqw;z-index:calc(5 - var(--i));border-radius:4.2cqw;display:flex;align-items:flex-end;justify-content:flex-start;gap:2cqw;padding:0 3.2cqw 3cqw;box-sizing:border-box;
- transform:translateY(var(--lift)) perspective(95cqw) rotate(calc(var(--r)*1deg)) rotateY(-14deg) rotateX(9deg);transform-origin:50% 50%;
- background:linear-gradient(142deg,rgba(255,255,255,.72) 0,color-mix(in srgb,var(--c) 30%,rgba(255,255,255,.28)) 38%,color-mix(in srgb,var(--c) 64%,rgba(255,255,255,.12)) 100%);
- box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.92),inset 0 .6cqw .8cqw rgba(255,255,255,.7),inset -.8cqw -1cqw 2cqw color-mix(in srgb,var(--c) 55%,transparent),
-  .5cqw .6cqw 0 color-mix(in srgb,var(--c) 38%,#e6f2ff),1cqw 1.2cqw 0 color-mix(in srgb,var(--c) 70%,#4a6ad8),1.5cqw 1.8cqw 0 color-mix(in srgb,var(--c) 88%,#0b1f6e),
-  2.2cqw 3cqw 2.4cqw -.4cqw rgba(3,12,90,.38),0 0 3.2cqw color-mix(in srgb,var(--c) 50%,transparent);
+/* ---- Hero (components/HeroCrystal.tsx, sketch 02): ONE compact, wide fan of five thick glass plates in a shared perspective. The stack is one 3D object
+   (preserve-3d on .hx__stack; plates carry their own translucency, no filter/opacity on the 3D parents); plate 1 is in front, each later plate sits deeper and further down-right.
+   Per-breakpoint geometry lives in --pw/--ph (plate size), --dx/--dy (step) in cqw of .hx; --r/--jx/--jy are the per-plate jitter. ---- */
+.hx{--pw:34;--ph:26;--dx:13.4;--dy:10.2;--fs:2.7cqw;position:relative;width:min(100%,clamp(340px,calc((100dvh - 420px)*1.55),700px));aspect-ratio:1.5;margin-inline:auto;container-type:inline-size;color:var(--wp-ink)}
+.hx__scene{position:absolute;inset:0;perspective:120cqw;perspective-origin:30% 20%}
+.hx__stack{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(16deg) rotateY(-16deg) rotateZ(-3deg);transform-origin:40% 40%;animation:hx-float 16s ease-in-out infinite}
+@keyframes hx-float{50%{transform:rotateX(16deg) rotateY(-16deg) rotateZ(-3deg) translateY(-1cqw)}}
+.hx__floor{position:absolute;left:34%;right:-2%;bottom:0;height:10%;border-radius:50%;background:radial-gradient(closest-side,rgba(2,10,80,.4),transparent);pointer-events:none;transform:translateZ(-14cqw)}
+.hx__slab{--lift:0cqw;position:absolute;left:calc((var(--i)*var(--dx) + var(--jx))*1cqw);top:calc((var(--i)*var(--dy) + var(--jy))*1cqw);width:calc(var(--pw)*1cqw);height:calc(var(--ph)*1cqw);border-radius:calc(var(--ph)*.16cqw);
+ display:flex;align-items:flex-end;justify-content:flex-start;gap:1.6cqw;padding:0 2.6cqw 1.9cqw;box-sizing:border-box;
+ transform:translate3d(0,var(--lift),calc((4 - var(--i))*3cqw)) rotateZ(calc(var(--r)*1deg));
+ background:linear-gradient(142deg,rgba(255,255,255,.7) 0,color-mix(in srgb,var(--c) 30%,rgba(255,255,255,.26)) 38%,color-mix(in srgb,var(--c) 66%,rgba(255,255,255,.1)) 100%);
+ box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.92),inset 0 .5cqw .7cqw rgba(255,255,255,.7),inset -.7cqw -.9cqw 1.8cqw color-mix(in srgb,var(--c) 55%,transparent),
+  .4cqw .5cqw 0 color-mix(in srgb,var(--c) 38%,#e6f2ff),.8cqw 1cqw 0 color-mix(in srgb,var(--c) 70%,#4a6ad8),1.2cqw 1.5cqw 0 color-mix(in srgb,var(--c) 88%,#0b1f6e),
+  1.8cqw 2.5cqw 2cqw -.3cqw rgba(3,12,90,.36),0 0 2.8cqw color-mix(in srgb,var(--c) 52%,transparent);
  transition:box-shadow .22s ease,opacity .22s ease,transform .22s cubic-bezier(.22,1,.36,1)}
-.hx__slab::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.75) 0 7%,rgba(255,255,255,.14) 8% 20%,transparent 21%),linear-gradient(180deg,rgba(255,255,255,.4),transparent 28%)}
-.hx__slab::after{content:"";position:absolute;inset:-1.6cqw;border-radius:5.6cqw;pointer-events:none;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 38%,transparent),transparent);opacity:.5;z-index:-1;animation:hx-breathe 7s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-1.4s)}
+.hx__slab::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.75) 0 6%,rgba(255,255,255,.14) 7% 17%,transparent 18%),linear-gradient(180deg,rgba(255,255,255,.4),transparent 30%)}
+.hx__slab::after{content:"";position:absolute;inset:-1.4cqw;border-radius:inherit;pointer-events:none;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 38%,transparent),transparent);opacity:.5;z-index:-1;animation:hx-breathe 7s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-1.4s)}
 @keyframes hx-breathe{to{opacity:.9}}
-.hx__dot{flex:none;width:3cqw;height:3cqw;margin-bottom:.6cqw;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 65%);box-shadow:0 0 1.6cqw var(--c),0 0 0 .35cqw rgba(255,255,255,.75)}
-.hx__name{position:relative;font-size:clamp(11px,3.3cqw,19px);font-weight:700;letter-spacing:-.01em;line-height:1.2;color:#08205a;text-shadow:0 1px 0 rgba(255,255,255,.6)}
-@media (max-width:1000px){.hx{width:min(100%,500px)}}
-@media (max-width:560px){.hx{width:min(100%,380px);aspect-ratio:1}.hx__name{font-size:clamp(10px,3.4cqw,14px)}}
+.hx__dot{flex:none;width:2.6cqw;height:2.6cqw;margin-bottom:.5cqw;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 65%);box-shadow:0 0 1.4cqw var(--c),0 0 0 .3cqw rgba(255,255,255,.75)}
+.hx__name{position:relative;max-width:calc(var(--pw)*.86cqw);font-size:max(13px,var(--fs));font-weight:700;letter-spacing:-.01em;line-height:1.15;color:#08205a;text-shadow:0 1px 0 rgba(255,255,255,.6)}
+@media (max-width:1000px){.hx{width:min(100%,560px)}}
+/* Phones: not a shrunken desktop; plates are wider than tall, overlap mostly vertically, and the label type stays 13-14px. */
+@media (max-width:560px){.hx{--pw:66;--ph:32;--dx:7.4;--dy:13.6;--fs:4cqw;width:min(100%,400px);margin-top:18px;aspect-ratio:1.14}
+ .hx__scene{perspective:150cqw}.hx__stack{transform:rotateX(12deg) rotateY(-10deg) rotateZ(-2deg);transform-origin:30% 30%;animation:none}
+ .hx__slab{padding:0 3.4cqw 2.2cqw;border-radius:5cqw;transform:translate3d(0,var(--lift),calc((4 - var(--i))*2.2cqw)) rotateZ(calc(var(--r)*.6deg))}
+ .hx__dot{width:3.6cqw;height:3.6cqw}.hx__name{max-width:none;font-size:clamp(13px,var(--fs),15px)}}
 @media (prefers-reduced-motion:reduce){.hx__stack,.hx__slab::after{animation:none}}
 /* Guide 1: the three steps all sit on the right (route + stations on the left edge of that column); the five facts stack on the left (desktop). */
 .mmri-guide2__about:not([data-paged]){display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(20px,3vw,44px);align-items:center}
@@ -460,10 +467,8 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 
 /* Hero plates are buttons: no browser chrome; hover/focus = brighter category edge + glow, a small static lift, the others recede slightly (opacity). */
 .hx__slab{appearance:none;font:inherit;border:0;cursor:pointer;text-align:left;color:inherit}
-@media (hover:hover){
- .hx__stack:has(.hx__slab:hover) .hx__slab:not(:hover){opacity:.72}
-}
-.hx__slab:hover,.hx__slab:focus-visible{--lift:-.9cqw;box-shadow:inset 0 0 0 2.5px #fff,inset 0 .6cqw .8cqw rgba(255,255,255,.8),inset -.8cqw -1cqw 2cqw color-mix(in srgb,var(--c) 60%,transparent),.5cqw .6cqw 0 color-mix(in srgb,var(--c) 38%,#e6f2ff),1cqw 1.2cqw 0 color-mix(in srgb,var(--c) 70%,#4a6ad8),1.5cqw 1.8cqw 0 color-mix(in srgb,var(--c) 88%,#0b1f6e),2.2cqw 3cqw 2.4cqw -.4cqw rgba(3,12,90,.38),0 0 5.4cqw color-mix(in srgb,var(--c) 95%,transparent)}
+@media (hover:hover){.hx__stack:has(.hx__slab:hover) .hx__slab:not(:hover){opacity:.74}}
+.hx__slab:hover,.hx__slab:focus-visible{--lift:-.8cqw;box-shadow:inset 0 0 0 2.5px #fff,inset 0 .5cqw .7cqw rgba(255,255,255,.8),inset -.7cqw -.9cqw 1.8cqw color-mix(in srgb,var(--c) 60%,transparent),.4cqw .5cqw 0 color-mix(in srgb,var(--c) 38%,#e6f2ff),.8cqw 1cqw 0 color-mix(in srgb,var(--c) 70%,#4a6ad8),1.2cqw 1.5cqw 0 color-mix(in srgb,var(--c) 88%,#0b1f6e),1.8cqw 2.5cqw 2cqw -.3cqw rgba(3,12,90,.36),0 0 4.6cqw color-mix(in srgb,var(--c) 95%,transparent)}
 .hx__slab:focus-visible{outline:3px solid #08205a;outline-offset:4px}
 .hx__slab:active{opacity:1;--lift:.2cqw}
 
@@ -488,7 +493,6 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 .mmri-guide2__stage{animation:g1-in .7s cubic-bezier(.22,1,.36,1) both}
 @media (max-width:560px){.mmri-guide2__stage{grid-template-columns:62px minmax(0,1fr);gap:16px}.mmri-guide2__node{width:62px;height:62px;border-radius:20px}.mmri-guide2__node svg{width:30px;height:30px}.mmri-guide2__node b{width:24px;height:24px;font-size:12.5px;right:-6px;top:-6px}.mmri-guide2__stage:not(:last-child)::before,.mmri-guide2__stage:not(:last-child)::after{left:31px;top:62px;height:calc(100% - 62px + 34px)}.mmri-guide2__stage .mmri-guide2__stage-card{min-height:62px;padding:12px 16px}}
 @media (prefers-reduced-motion:reduce){.mmri-guide2__stage:not(:last-child)::after{animation:none;opacity:0}}
-.hx__name{max-width:26cqw}
 
 /* ===== Guide 1 steps, reference 03: glossy pill stages (luminous periwinkle gradient, bright top reflection, contact shadow); a light travels the connector 1 -> 2 -> 3 ===== */
 .mmri-guide2__stage .mmri-guide2__stage-card{border-radius:999px;min-height:88px;padding:14px 34px 14px 26px;border:1.5px solid rgba(255,255,255,.85);
