@@ -23,8 +23,7 @@ const GEO:Geo[]=[
 ];
 export const GlassStage=memo(function GlassStage({route}:{route:RouteName}){
  return <div className="crystal-stage" data-route={route} aria-hidden="true">
-  {['neutral',...DOMAIN_IDS].map(d=><i key={d} className="crystal-stage__wash" data-d={d}/>)}
+  {DOMAIN_IDS.map(d=><i key={d} className="crystal-stage__wash" data-d={d}/>)}
   <i className="crystal-stage__obj is-field"/><i className="crystal-stage__obj is-plate"/><i className="crystal-stage__obj is-streak"/>
-  {GEO.map((g,i)=><i key={i} className={`crystal-stage__geo is-${g.k}`} style={{left:`${g.x}%`,top:`${g.y}%`,width:g.k==='sq'?`${g.w}vmin`:`${g.w}vw`,height:g.k==='sq'?`${g.w}vmin`:g.k==='path'?`${g.h}vh`:undefined,'--r0':`${g.r0}deg`,'--r1':`${g.r1}deg`,'--dx':`${g.dx}vw`,'--dy':`${g.dy}vh`,'--t':`${g.t}s`,'--d':`${g.d}s`,'--o0':g.o0,'--o1':g.o1} as React.CSSProperties}>{g.k==='path'&&<svg viewBox="0 0 100 60" preserveAspectRatio="none"><polyline points="0,50 22,18 41,36 63,6 84,30 100,10"/></svg>}</i>)}
  </div>;
 });

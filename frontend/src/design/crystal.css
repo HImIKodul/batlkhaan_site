@@ -10,6 +10,7 @@
 html:has(body.mmri-prism-page){background:#071d48}
 html:has(body.mmri-prism-page)::before,html:has(body.mmri-prism-page)::after{display:none}
 .crystal-stage{position:fixed;inset:0;z-index:-1;pointer-events:none;contain:strict;background:#0a2a70;overflow:hidden}
+.crystal-stage::before{content:"";position:absolute;inset:0;background:var(--cr-optical-field) center/cover no-repeat;filter:saturate(1.35) brightness(1.1)}
 body.mmri-prism-page{
  --wp-ink:#071c3b;--wp-ink2:#153653;--wp-ink3:#264361;--pm-ink:var(--wp-ink);
  /* Clear body with a stronger light diffuser behind the reading zone only. */
@@ -172,20 +173,19 @@ body.mmri-prism-page .mmri-shell-primary{transition:transform .2s,box-shadow .2s
 body.mmri-prism-page .mmri-guide2__nav-btn.is-primary{transition:--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out}
 body.mmri-prism-page .mmri-button--primary{transition:transform .2s,box-shadow .2s,filter .2s,--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out}
 body.mmri-prism-page .report-score::before{--dom:var(--dom-t);transition:--dom .45s cubic-bezier(.4,0,.2,1)}
-.crystal-stage__wash{position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 0s linear 2.5s;
- background:radial-gradient(70% 60% at 16% 12%,color-mix(in srgb,var(--wash-c) 62%,#fff),transparent 72%),radial-gradient(60% 60% at 90% 94%,color-mix(in srgb,var(--wash-c) 70%,#4a38b0),transparent 76%),linear-gradient(150deg,color-mix(in srgb,var(--wash-c) 66%,#12307a),color-mix(in srgb,var(--wash-c) 78%,#1c3a96) 55%,color-mix(in srgb,var(--wash-c) 62%,#2a2488))}
+.crystal-stage__wash{position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1);
+ background:radial-gradient(70% 60% at 16% 12%,color-mix(in srgb,var(--wash-c) 70%,transparent),transparent 74%),radial-gradient(60% 60% at 90% 94%,color-mix(in srgb,var(--wash-c) 70%,transparent),transparent 76%),linear-gradient(150deg,color-mix(in srgb,var(--wash-c) 40%,transparent),color-mix(in srgb,var(--wash-c) 52%,transparent))}
 .crystal-stage__wash[data-d="neutral"]{--wash-c:#2f7fe8}
-html:not([data-domain]) .crystal-stage__wash[data-d="neutral"]{opacity:1;z-index:2;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1)}
 .crystal-stage__wash[data-d="marketing"]{--wash-c:var(--mmri-domain-marketing)}
 .crystal-stage__wash[data-d="it"]{--wash-c:var(--mmri-domain-it)}
 .crystal-stage__wash[data-d="finance"]{--wash-c:var(--mmri-domain-finance)}
 .crystal-stage__wash[data-d="people"]{--wash-c:var(--mmri-domain-people)}
 .crystal-stage__wash[data-d="operations"]{--wash-c:var(--mmri-domain-operations)}
-html[data-domain="marketing"] .crystal-stage__wash[data-d="marketing"]{opacity:1;z-index:2;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1)}
-html[data-domain="it"] .crystal-stage__wash[data-d="it"]{opacity:1;z-index:2;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1)}
-html[data-domain="finance"] .crystal-stage__wash[data-d="finance"]{opacity:1;z-index:2;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1)}
-html[data-domain="people"] .crystal-stage__wash[data-d="people"]{opacity:1;z-index:2;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1)}
-html[data-domain="operations"] .crystal-stage__wash[data-d="operations"]{opacity:1;z-index:2;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1)}
+html[data-domain="marketing"] .crystal-stage__wash[data-d="marketing"]{opacity:1}
+html[data-domain="it"] .crystal-stage__wash[data-d="it"]{opacity:1}
+html[data-domain="finance"] .crystal-stage__wash[data-d="finance"]{opacity:1}
+html[data-domain="people"] .crystal-stage__wash[data-d="people"]{opacity:1}
+html[data-domain="operations"] .crystal-stage__wash[data-d="operations"]{opacity:1}
 @media (prefers-reduced-motion:reduce){.crystal-stage__wash{transition:none}}
 
 
