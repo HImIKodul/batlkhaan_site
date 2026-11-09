@@ -186,6 +186,7 @@ export function loadApiConfig(): ApiConfig {
   if(environment==="production"){
     for(const [name,value] of [["QPAY_CLIENT_ID",qpayClientId],["QPAY_CLIENT_SECRET",qpayClientSecret],["QPAY_INVOICE_CODE",qpayInvoiceCode]] as const){if(value&&looksLikePlaceholder(value))throw new Error(`${name} must not contain a placeholder in production`);}
     if((process.env.MIGRATION_DATABASE_URL??"").trim())throw new Error("MIGRATION_DATABASE_URL must not be exposed to the runtime API process");
+    if(boolEnv("MMRI_REPORT_REVIEW_REQUIRED",false)){const since=(process.env.MMRI_REPORT_REVIEW_ENFORCED_SINCE??"").trim();if(!since||Number.isNaN(new Date(since).getTime()))throw new Error("MMRI_REPORT_REVIEW_ENFORCED_SINCE (ISO timestamp of when report review was enabled) is required when MMRI_REPORT_REVIEW_REQUIRED=true in production: without it the API infers the start from the earliest review row and fails open while none exists");}
   }
   const manualPaymentQrText=(process.env.MMRI_MANUAL_PAYMENT_QR_TEXT??"").trim();
   const manualPaymentQrImage=(process.env.MMRI_MANUAL_PAYMENT_QR_IMAGE??"").trim();

@@ -12,6 +12,7 @@ import { MethodologyDefinitionCache } from "./methodology-cache.js";
 import { PrismaAssessmentEngine } from "./prisma-assessment-engine.js";
 import { TraceabilityService, TRACE_VERSION } from "./traceability-service.js";
 import { ReportPdfArtifactService } from "./report-pdf-artifact-service.js";
+import { LONG_TX } from "../lib/tx-options.js";
 
 const TERMINAL = new Set(["COMPLETED","COMPLETED_WITH_REVIEW","EXHAUSTED"]);
 
@@ -153,7 +154,7 @@ export class PrismaStrategyReportService {
         {assessmentId,eventType:"ACTION_PLAN_GENERATED",entityType:"ActionPlan",entityId:plan.id,payload:{capacityLevel:ctx.strategy.actionPlan.capacityLevel}}
       ]});
       return run.id;
-    },{maxWait:10000,timeout:30000});
+    },LONG_TX);
     return {...ctx,strategyRunId};
   }
 
@@ -267,7 +268,7 @@ export class PrismaStrategyReportService {
       await tx.auditEvent.create({data:{assessmentId,eventType:"STRATEGY_FROZEN",entityType:"StrategyPlanSnapshot",entityId:strategyHash,payload:{diagnosisResultHash:canonical.diagnosisResultHash,strategyHash,planHash}}});
       await tx.auditEvent.create({data:{assessmentId,eventType:"ACTION_PLAN_FROZEN",entityType:"StrategyPlanSnapshot",entityId:planHash,payload:{diagnosisResultHash:canonical.diagnosisResultHash,strategyHash,planHash,windowDays:canonical.actionPlan.windowDays}}});
       return canonical;
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
     return frozen;
   }
 
@@ -456,7 +457,7 @@ export class PrismaStrategyReportService {
         if(result.state==="AI_FALLBACK_USED")await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATION_FALLBACK",entityType:"ReportSnapshot",entityId:row.id,payload:{leaseId,providerError:result.providerError,providerAttempts:result.providerAttempts,providerHttpAttempts:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,nextAiRetryAt:nextAiRetryAt?.toISOString()??null}}});
         await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,diagnosisResultHash:payload.diagnosisResultHash,strategyHash:payload.strategyHash,planHash:payload.planHash,bindingHash:payload.bindingHash,narrativeHash,modelIdentifier:result.providerMetadata.modelIdentifier,promptVersion:result.providerMetadata.promptVersion,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,providerError:result.providerError,leaseId}}});
         return tx.reportSnapshot.findUnique({where:{id:row.id}});
-      },{maxWait:10000,timeout:30000});
+      },LONG_TX);
       mark("publish_transaction");emit(result.state);
       return {payload,narrative:result.narrative,validation:result.validation,generationState:result.state,aiAudit:updated?auditView(updated):{...result.providerMetadata,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,narrativeHash,providerError:result.providerError,nextAiRetryAt}};
     }catch(error:any){
@@ -466,7 +467,7 @@ export class PrismaStrategyReportService {
       await prisma.$transaction(async(tx:any)=>{
         const changed=await tx.reportSnapshot.updateMany({where:{id:row.id,generationLeaseId:leaseId},data:{generationState:restoreState,providerError:message,generationCompletedAt:new Date(),generationLeaseId:null,generationLeaseExpiresAt:null,generationFailureCount:{increment:1}}});
         if(changed.count===1)await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATION_FAILED",entityType:"ReportSnapshot",entityId:row.id,payload:{leaseId,error:message,restoredState:restoreState}}});
-      },{maxWait:10000,timeout:30000}).catch(()=>undefined);
+      },LONG_TX).catch(()=>undefined);
       throw error;
     }
   }

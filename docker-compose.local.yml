@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: mmri
       POSTGRES_DB: mmri
     ports:
-      - "55432:5432"
+      # Loopback only: never publish the development database on the LAN (default credentials, real-looking data).
+      - "127.0.0.1:55432:5432"
     volumes:
       - mmri_v3_local_postgres:/var/lib/postgresql/data
     healthcheck:

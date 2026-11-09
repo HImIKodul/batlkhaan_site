@@ -15,6 +15,7 @@ import {
 import { methodologyTargetForDomain, normalizeDomainCode, type DomainCode } from "../domain-methodology.js";
 import { enqueueReviewInTx } from "./report-review-policy.js";
 import { ACTIVE_ASSESSMENT_STATUSES, RESULT_TERMINAL_ASSESSMENT_STATUSES, canMutateRespondents, isResultTerminalAssessmentStatus } from "./assessment-lifecycle.js";
+import { LONG_TX } from "../lib/tx-options.js";
 
 export class PrismaAssessmentEngine {
   private readonly cache = new MethodologyDefinitionCache(prisma);
@@ -44,7 +45,7 @@ export class PrismaAssessmentEngine {
       const assessment=await tx.assessment.create({data:{companyId,domainCode,methodologyVersionId:version.id,mode:"QUICK",status:"PROFILE_PENDING",routingState:"PROFILE_PENDING",createdByUserId:createdByUserId??null,entitlementId:entitlementId??null,previousAssessmentId,parentAssessmentId}});
       await tx.auditEvent.create({data:{assessmentId:assessment.id,eventType:"ASSESSMENT_CREATED",entityType:"Assessment",entityId:assessment.id,payload:{domainCode,methodologyVersion:target.methodologyVersion,questionBankVersion:target.questionBankVersion,methodologyBundleSha256:version.bundleSha256,engineKind:target.engineKind,entitlementPlan,previousAssessmentId,parentAssessmentId,retakeSequence:previousAssessmentId?"RETAKE":"INITIAL"}}});
       return assessment;
-    },{maxWait:10000,timeout:30000});
+    },LONG_TX);
   }
 
   /**
@@ -118,7 +119,7 @@ export class PrismaAssessmentEngine {
         throw new Error(`Non-terminal routing state ${decision.state} did not return a next question`);
       }
       return decision;
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
   }
 
   async selectNextQuestion(assessmentId: string): Promise<RoutingDecision> {
@@ -206,7 +207,7 @@ export class PrismaAssessmentEngine {
         }
       }
       return decision;
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
   }
 
   async submitAnswer(assessmentId: string, questionExternalId: string, optionIndex: number, respondentId: string | undefined, guard: AnswerWriteGuard) {
@@ -361,7 +362,7 @@ export class PrismaAssessmentEngine {
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ANSWER_CREATED", entityType: "Answer", entityId: answer.id, payload: { questionExternalId, optionIndex, authority, clientRequestId } } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "EVIDENCE_CREATED", entityType: "Answer", entityId: answer.id, payload: { primaryCell: question.cellId, secondaryTargetCount: question.secondaryTargets.length } } });
       return { ...acknowledgement, overall: snapshot.overall, category: snapshot.categories.get(question.categoryId), modules: Object.fromEntries(snapshot.modules), purposes: Object.fromEntries(snapshot.purposes), outcomePriorities: Object.fromEntries(snapshot.outcomePriorities), cellPersistence } as any;
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
   }
 
   async rewindPreviousAnswer(assessmentId: string, guard: PersistenceWriteGuard) {
@@ -467,7 +468,7 @@ export class PrismaAssessmentEngine {
       await tx.auditEvent.create({ data: { assessmentId, eventType: "EVIDENCE_RETRACTED", entityType: "AnswerEvent", entityId: retraction.id, payload: { questionExternalId: externalId, previousAnswerId: previousAnswer.id, eventSequence: nextEventSequence } } });
 
       return { reopened: true, questionId: externalId, previousOptionIndex: previousEvent.optionIndex, assessmentRevision: assessment.assessmentRevision + 1, eventSequence: nextEventSequence, cellPersistence };
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
   }
 
   async pauseAssessment(assessmentId: string, guard: PersistenceWriteGuard) {
@@ -614,7 +615,7 @@ export class PrismaAssessmentEngine {
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, explicitCompletionRequest: true, assessmentRevision: nextRevision } } });
       await enqueueReviewInTx(tx, assessmentId);
       return { completed: true, reason: decision.stopReason, routingState: decision.state, status: nextStatus, assessmentRevision: nextRevision };
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
   }
 
   /**
@@ -674,7 +675,7 @@ export class PrismaAssessmentEngine {
       await tx.assessmentStateSnapshot.create({ data: { assessmentId, kind: "QUICK_RESULT", assessmentRevision, eventSequence, payloadHash, payload: snapshotPayload, versionBundleId: assessment.methodologyVersionId, versionBundleHash: requireBundleSha256(definition), traceVersion: "MMRI-TRACE-1.0" } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState, demoFastSeed: true, answerEvents: eventSequence, overall: snapshot.overall } } });
       return { snapshot, cellPersistence, eventSequence };
-    }, { maxWait: 10000, timeout: 30000 });
+    }, LONG_TX);
   }
 
 }

@@ -55,6 +55,8 @@ sql(`delete from admin_notifications where id like 'qa-n%'`);
 // ---------- disputes and support ----------
 const co=await call('POST','/companies',{tok:cu.tok,body:{name:'Admin QA ХХК'}});const invId='qa-inv-'+Date.now();const cid=co.d.id;
 sql(`insert into billing_invoices(id,"companyId","createdByUserId","planCode","amountMnt",currency,provider,"senderInvoiceNo","callbackTokenHash",status,"domainCode","providerPaymentId","paidAt","createdAt","updatedAt") values('${invId}','${cid}','${cu.id}','DIAGNOSTIC',300000,'MNT','MOCK','QA-${invId}','x','PAID','it','QA-PAY-${invId}',now(),now(),now())`);
+// A real purchase always yields an entitlement for its PAID invoice: insert it so the fixture satisfies the payment-integrity invariant (db:verify:backend-payment paidInvoiceWithoutEntitlement).
+sql(`insert into company_entitlements(id,"companyId","sourceInvoiceId","planCode","domainCode",status,"assessmentLimit","assessmentsUsed","updatedAt") values('qa-ent-'||'${invId}','${cid}','${invId}','DIAGNOSTIC','it','ACTIVE',1,0,now())`);
 const dsp=await call('POST',`/billing/invoices/${invId}/dispute`,{tok:cu.tok,body:{summary:'Төлбөр хоёр удаа хасагдсан гэж үзэж байна.'}});
 const other2=await customer('other');const dspOther=await call('POST',`/billing/invoices/${invId}/dispute`,{tok:other2.tok,body:{summary:'Бусдын нэхэмжлэхэд маргаан нээх оролдлого'}});
 rec('ADM-20 a customer can open a dispute only on an invoice of their own company; it notifies admins once',dsp.s===201&&dspOther.s===403&&Number(sql(`select count(*) from admin_notifications where "dedupeKey"='PAYMENT_DISPUTE:${dsp.d.id}'`))===1);

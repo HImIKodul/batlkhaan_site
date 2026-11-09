@@ -148,6 +148,8 @@
     "backend:step14:qbank:verify": "npm run backend:step14:qbank:static && npm run backend:step14:qbank:regression",
     "qa:onboarding-save": "tsx scripts/qa-onboarding-save-regression.ts",
     "qa:proxy-ip": "node scripts/qa-proxy-ip-attribution-regression.mjs",
+    "qa:authz-matrix": "node scripts/qa-authorization-matrix.mjs",
+    "qa:session-lifecycle": "node scripts/qa-session-lifecycle-regression.mjs",
     "verify:recommendation-contracts": "tsx src/verify-domain-recommendation-contracts.ts",
     "build:domain-recommendation-bundles": "python3 scripts/build-domain-recommendation-bundles.py",
     "qbank:overlay:export": "tsx src/export-question-bank-overlay-template.ts",
