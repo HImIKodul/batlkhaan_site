@@ -1,3 +1,4 @@
+import { takeHeroIntent } from '../components/HeroCrystal';
 import {Glyph} from '../components/Glyphs';
 import React,{useRef,useEffect,useState} from 'react';
 import { AppShell,PageContainer,go } from '../components/AppShell';
@@ -46,8 +47,8 @@ export default function DiagnosisHub(){
  useAmbientEnvironment(selected??'diagnosis');
  useDomainTheme(selected??null);
  useGlassHover(selected??null);
- /* a slab clicked in the homepage hero opens that category here (same dialog as selecting its tile) */
- useEffect(()=>{const a=sessionStorage.getItem('business:heroArea');if(a&&!loading&&company){sessionStorage.removeItem('business:heroArea');if(businessAreas.some(x=>x.id===a))setSelected(a as BusinessAreaId)}},[loading,company]);
+ /* a plate clicked in the homepage hero opens that category here (same dialog as selecting its tile) */
+ useEffect(()=>{if(loading||!company)return;const a=takeHeroIntent();if(a&&businessAreas.some(x=>x.id===a))setSelected(a as BusinessAreaId)},[loading,company]);
  if(loading)return <AppShell route="analysis"><PageContainer className="diagnosis-square-page"><LoadingState variant="dashboard" label="Оношилгоог бэлтгэж байна…"/></PageContainer></AppShell>;
  if(error&&!company)return <AppShell route="analysis"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
  const test=isTestBusiness(company?.name||session.companyName);const doneFor=(id:BusinessAreaId)=>assessments.filter(a=>a.domainCode===id&&isTerminal(a.status));const activeFor=(id:BusinessAreaId)=>assessments.find(a=>a.domainCode===id&&['PROFILE_PENDING','IN_PROGRESS','PAUSED'].includes(a.status));const paidFor=(id:BusinessAreaId,plan:'DIAGNOSTIC'|'RETAKE')=>!!billing?.entitlements.some(e=>e.domainCode===id&&e.planCode===plan&&e.status==='ACTIVE'&&(e.assessmentLimit==null||e.assessmentsUsed<e.assessmentLimit));

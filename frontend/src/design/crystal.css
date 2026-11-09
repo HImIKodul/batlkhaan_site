@@ -284,10 +284,8 @@ html:root body.mmri-prism-page .mmri-shell-primary .mmri-btn-glint i,html:root b
 @media(prefers-reduced-motion:reduce){.crystal-stage__geo{animation:none}}
 html.is-hidden .crystal-stage__geo{animation-play-state:paused}
 
-/* ===== Report score ring: colour = score tier (0-49 red, 50-84 amber, 85-100 green); a bright arc travels round it continuously (transform only, 9 s) and the ring breathes (opacity) ===== */
-html body.mmri-prism-page .report-score{--ra:#2fe08a;--rb:#a6ffd2;--rc:#0f9a5e}
-html body.mmri-prism-page .report-score[data-tier="low"]{--ra:#ff5a5f;--rb:#ffb0b0;--rc:#c4202f}
-html body.mmri-prism-page .report-score[data-tier="mid"]{--ra:#ffbf2f;--rb:#ffe493;--rc:#d98200}
+/* ===== Report score ring: ONE colour system = the report's category (--report-accent); a bright arc of the same hue travels round it (transform only, 9 s) and the ring breathes (opacity). No score-quality colours. ===== */
+html body.mmri-prism-page .report-score{--ra:var(--report-accent,#49B7FF);--rb:color-mix(in srgb,var(--report-accent,#49B7FF) 45%,#fff);--rc:color-mix(in srgb,var(--report-accent,#49B7FF) 70%,#07194a)}
 html:root body.mmri-prism-page .report-score{box-shadow:inset 0 3px 0 #ffffff59,inset 0 -18px 28px -12px #00063c99,inset 0 0 40px color-mix(in srgb,var(--ra) 25%,transparent),0 22px 28px -14px #01063ccc,0 0 30px 2px color-mix(in srgb,var(--ra) 45%,transparent)}
 html:root body.mmri-prism-page .report-score::before{background:conic-gradient(from 0deg,var(--rc) 0,var(--ra) 14%,var(--rb) 30%,#fff 36%,var(--rb) 42%,var(--ra) 58%,var(--rc) 78%,var(--ra) 100%);animation:rp-ring 9s linear infinite,rp-breathe 4.5s ease-in-out infinite alternate}
 @keyframes rp-ring{to{transform:rotate(360deg)}}
@@ -300,12 +298,9 @@ body.mmri-prism-page{--cr-sheet-fill:linear-gradient(160deg,rgba(238,247,255,.34
 
 .crystal-stage__geo.is-shard{background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(190,225,255,.3) 55%,rgba(255,255,255,.12))}
 
-/* ===== Report: ring identity = the report's CATEGORY colour (travelling shine, transform only); score quality (red <50, amber 50-84, green >=85) = inner ring + number rule; PDF button = category colour ===== */
-html:root body.mmri-prism-page .report-score{--ra:var(--report-accent,#49B7FF);--rb:color-mix(in srgb,var(--report-accent,#49B7FF) 45%,#fff);--rc:color-mix(in srgb,var(--report-accent,#49B7FF) 70%,#07194a);
- --tier:#2fe08a;box-shadow:inset 0 0 0 5px var(--tier),inset 0 3px 0 #ffffff59,inset 0 -18px 28px -12px #00063c99,0 22px 28px -14px #01063ccc,0 0 30px 2px color-mix(in srgb,var(--ra) 45%,transparent)}
-html:root body.mmri-prism-page .report-score[data-tier="low"]{--tier:#ff5a5f}
-html:root body.mmri-prism-page .report-score[data-tier="mid"]{--tier:#ffbf2f}
-html:root body.mmri-prism-page .report-score span{border-bottom-color:var(--tier)}
+/* ===== Report PDF button = the report's category colour ===== */
 html:root body.mmri-prism-page .report-top-download{background:linear-gradient(180deg,color-mix(in srgb,var(--report-accent,#49B7FF) 55%,#fff),var(--report-accent,#49B7FF) 55%,color-mix(in srgb,var(--report-accent,#49B7FF) 82%,#07194a));color:#07194a;border:1.5px solid rgba(255,255,255,.9);text-shadow:0 1px 0 rgba(255,255,255,.45);box-shadow:inset 0 1.5px 0 #fff,0 8px 16px -8px color-mix(in srgb,var(--report-accent,#49B7FF) 80%,#07194a)}
 html:root body.mmri-prism-page .report-top-download:hover:not(:disabled){box-shadow:inset 0 1.5px 0 #fff,0 0 0 3px rgba(255,255,255,.6),0 0 20px color-mix(in srgb,var(--report-accent,#49B7FF) 80%,transparent)}
 html:root body.mmri-prism-page .report-top-download svg{color:#07194a}
+/* the report is a long reading page: the drifting shard field rests there so scrolling stays smooth (the pattern, tint and light shapes stay alive) */
+.crystal-stage[data-route="report"] .crystal-stage__geo{animation:none}
