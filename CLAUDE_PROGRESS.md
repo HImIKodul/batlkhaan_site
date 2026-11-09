@@ -802,3 +802,12 @@ Safari/WebKit and real touch devices untested. Non-marketing QA scores are posit
 - Report: breathing rim on findings panels + slowly turning score ring light. Header band animation REMOVED (it cost 19 -> 52 ms/frame).
 - Mobile hub: tiles no longer stretched to viewport height; badge hidden <=700.
 - PERF: invalid `:is(...::pseudo)` selectors fixed (pause rules had never applied); stage light drift removed (hidden under opaque sheet); aurora translate-only + stepped (~10 fps); rim/plate/bob animations stepped; modal open = background animations OFF (not merely paused); guide overlay + panel backdrop-filters removed, bloom + route pulse static. Home idle 57 -> 24 ms, guide dialog 190 -> 51 ms (desktop software render), mobile 16.7 ms everywhere.
+
+## Release Package 1 (2026-11-09) — migration chain, dependency pins, five-domain provisioning, cleanup
+- Migration chain: manifests (`backend/prisma/` and `deploy/MIGRATION_CHAIN_SHA256.txt`) predated ADMIN_GRANT migration 20261108100000; first 29 migrations unchanged. Fingerprint updated to 6eceec69… after fresh/upgrade/constraint/rollback proof on disposable DBs.
+- Frontend `@fontsource-variable/inter` 5.3.0 and `lucide-react` 1.70.0 pinned exactly (installed versions unchanged).
+- New: `npm run domains:provision` / `domains:verify:provisioning` (backend) install and verify all five bundles (61,440 questions).
+- Dead npm scripts (missing files) removed; nine unrunnable step workflows replaced by `.github/workflows/release-gate.yml`.
+- Stale expectations updated (not weakened): security shutdown check, step-10 domain pins (4.1.7/4.2.7/4.3.7/4.4.7), billing-retake claim path + 300,000₮ disclosure.
+- Open: `VERIFY_STEP09_CSS_REGRESSION.sh` fails on CSS drift from recent visual work (pre-existing; needs design decision).
+- Cleanup: 135 obsolete step reports/prompts/verifiers/logs removed (archive in ~/Downloads/BUSINESSMRI_RELEASE_PACKAGE_01/CLEANUP_BACKUP/batch2_verified); BACKEND_STEP03–19 design docs moved to `docs/engineering/`.

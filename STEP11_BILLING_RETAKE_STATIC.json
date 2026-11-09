@@ -1,15 +1,9 @@
 {
   "schema": "mmri.step11.billing_retake.static.v1",
-  "status": "FAIL",
-  "checksPassed": 23,
+  "status": "PASS",
+  "checksPassed": 24,
   "checksTotal": 24,
-  "failed": [
-    {
-      "name": "landing_states_retake_300k",
-      "pass": false,
-      "detail": ""
-    }
-  ],
+  "failed": [],
   "checks": [
     {
       "name": "diagnostic_plan_exists",
@@ -122,8 +116,8 @@
       "detail": ""
     },
     {
-      "name": "landing_states_retake_300k",
-      "pass": false,
+      "name": "retake_300k_disclosed_and_enforced",
+      "pass": true,
       "detail": ""
     },
     {

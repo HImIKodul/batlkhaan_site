@@ -79,7 +79,7 @@ ok('four canonical BusinessMRI v2.1 banks preserve runtime code/value/state sema
 target=(B/'src/methodology-target.ts').read_text();domain=(B/'src/domain-methodology.ts').read_text();start=(ROOT/'START_LOCAL.sh').read_text()
 for token in ['3.0.3','3.1.3','MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json']:
  if token not in target+start: fail('target/start missing '+token)
-for v in ['4.1.4','4.2.4','4.3.4','4.4.4']:
+for v in ['4.1.7','4.2.7','4.3.7','4.4.7']:
  if v not in domain+start+(B/'scripts/import-five-domain-candidates.sh').read_text(): fail('domain target missing '+v)
 qs=(B/'src/api/services/query-service.ts').read_text();types=(ROOT/'frontend/src/api/types.ts').read_text();ui=(ROOT/'frontend/src/components/AssessmentInline.tsx').read_text();css=(ROOT/'frontend/src/pages/questionnaire.css').read_text()
 for token in ['contextMn:row.question.category.nameMn','contextMn:open.contextMn']:

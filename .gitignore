@@ -105,3 +105,4 @@ backend/integration/step6/MMRI_STEP6_OF_7_QUESTION_ID_RECONCILIATION.csv
 # Contains the owner personal e-mail address: kept on disk, not committed
 RECENT_CHANGE_SUMMARY.txt
 UNCOMMITTED_CHANGES.patch
+STEP11_AUDIT/STEP11_GATE_SUMMARY.tsv

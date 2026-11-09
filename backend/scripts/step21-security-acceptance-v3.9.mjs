@@ -38,7 +38,7 @@ check('login_timing_dummy_hash',auth.includes('dummyPasswordHash')&&auth.include
 check('refresh_replay_family_revocation_preserved',auth.includes('REFRESH_REPLAY')&&auth.includes('tokenVersion: { increment: 1 }'));
 check('malformed_cookie_does_not_500',cookies.includes('catch{continue;}'));
 check('last_owner_cannot_be_removed',app.includes('assertOwnerTransitionAllowed')&&rolePolicy.includes('A company must retain at least one OWNER')&&rolePolicy.includes('ownerCount<=1'));
-check('graceful_shutdown_disconnects_prisma',server.includes('prisma.$disconnect()')&&server.includes('hardStop'));
+check('graceful_shutdown_disconnects_prisma',server.includes('prisma.$disconnect()')&&server.includes('service_shutdown_forced')&&server.includes('shutdownForceTimeoutMs')&&server.includes('forceTimer.unref()'));
 const apiVersion=app.match(/version:"([^"]+)"/)?.[1]??null;
 check('api_health_version_consistent',Boolean(apiVersion)&&server.includes(`MMRI API v${apiVersion}`)&&server.includes(`version:"${apiVersion}"`),String(apiVersion));
 const [maj,min,patch]=String(pkg.version??'0.0.0').split('.').map(Number);

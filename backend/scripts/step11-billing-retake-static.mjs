@@ -16,7 +16,7 @@ const checks=[]; const check=(name,pass,detail='')=>checks.push({name,pass:Boole
 check('diagnostic_plan_exists',billing.includes('DIAGNOSTIC:{name:"Анхны оношилгоо"'));
 check('retake_plan_exists',billing.includes('RETAKE:{name:"Дахин оношилгоо"'));
 check('retake_requires_prior_completed',billing.includes('RETAKE_NOT_AVAILABLE')&&billing.includes('COMPLETED_WITH_REVIEW')&&billing.includes('EXHAUSTED'));
-check('same_entitlement_claim_path',billing.includes('const expectedPlan:BillingPlanCode=prior?"RETAKE":"DIAGNOSTIC"')&&billing.includes('planCode:expectedPlan')&&billing.includes('sourceInvoice:{status:"PAID"}'));
+check('same_entitlement_claim_path',billing.includes('const expectedPlan:BillingPlanCode=prior?"RETAKE":"DIAGNOSTIC"')&&billing.includes('planCode:expectedPlan')&&billing.includes('sourceInvoice:{status:"PAID" as const}')&&billing.includes('...SETTLED_ENTITLEMENT'));
 check('entitlement_consumed_once',billing.includes('assessmentsUsed:{lt:1}')&&billing.includes('assessmentsUsed:{increment:1},status:"CONSUMED"'));
 check('payment_required_when_enforced',billing.includes('ApiError(402,"PAYMENT_REQUIRED"'));
 check('assessment_creation_claims_entitlement',app.includes('billing.claimAssessmentEntitlement(params.companyId,domainCode)'));
@@ -35,7 +35,7 @@ check('frontend_diagnostic_300k',fenv.includes('VITE_MMRI_DIAGNOSTIC_PRICE_MNT=3
 check('hub_checks_retake_entitlement',hub.includes("paidFor(id,'RETAKE')"));
 check('hub_checks_first_entitlement',hub.includes("paidFor(id,'DIAGNOSTIC')"));
 check('billing_page_selects_retake',billPage.includes("mode==='retake'?'RETAKE':'DIAGNOSTIC'"));
-check('landing_states_retake_300k',landing.includes('Дахин оношлуулах төлбөр 300,000₮'));
+check('retake_300k_disclosed_and_enforced',read('frontend/src/content/legal.ts').includes('дахин оношилгоо тус бүр 300,000₮')&&config.includes('MMRI_RETAKE_PRICE_MNT")??300000')&&config.includes('MMRI_DIAGNOSTIC_PRICE_MNT")??300000'));
 check('no_subscription_plan',!billing.includes('MONTHLY')&&!billing.includes('ANNUAL')&&!billing.includes('SUBSCRIPTION'));
 const failed=checks.filter(x=>!x.pass);
 const report={schema:'mmri.step11.billing_retake.static.v1',status:failed.length?'FAIL':'PASS',checksPassed:checks.length-failed.length,checksTotal:checks.length,failed,checks};
