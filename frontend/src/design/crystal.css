@@ -297,3 +297,15 @@ html:root body.mmri-prism-page .report-score::before{background:conic-gradient(f
 /* Frosted glass: the sheet blurs the living scene behind it (one viewport-sized backdrop blur; content panels carry none). */
 body.mmri-prism-page .mmri-shell::before{-webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%)}
 body.mmri-prism-page{--cr-sheet-fill:linear-gradient(160deg,rgba(238,247,255,.34),rgba(205,224,255,.2) 55%,rgba(216,208,255,.24))}
+
+.crystal-stage__geo.is-shard{background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(190,225,255,.3) 55%,rgba(255,255,255,.12))}
+
+/* ===== Report: ring identity = the report's CATEGORY colour (travelling shine, transform only); score quality (red <50, amber 50-84, green >=85) = inner ring + number rule; PDF button = category colour ===== */
+html:root body.mmri-prism-page .report-score{--ra:var(--report-accent,#49B7FF);--rb:color-mix(in srgb,var(--report-accent,#49B7FF) 45%,#fff);--rc:color-mix(in srgb,var(--report-accent,#49B7FF) 70%,#07194a);
+ --tier:#2fe08a;box-shadow:inset 0 0 0 5px var(--tier),inset 0 3px 0 #ffffff59,inset 0 -18px 28px -12px #00063c99,0 22px 28px -14px #01063ccc,0 0 30px 2px color-mix(in srgb,var(--ra) 45%,transparent)}
+html:root body.mmri-prism-page .report-score[data-tier="low"]{--tier:#ff5a5f}
+html:root body.mmri-prism-page .report-score[data-tier="mid"]{--tier:#ffbf2f}
+html:root body.mmri-prism-page .report-score span{border-bottom-color:var(--tier)}
+html:root body.mmri-prism-page .report-top-download{background:linear-gradient(180deg,color-mix(in srgb,var(--report-accent,#49B7FF) 55%,#fff),var(--report-accent,#49B7FF) 55%,color-mix(in srgb,var(--report-accent,#49B7FF) 82%,#07194a));color:#07194a;border:1.5px solid rgba(255,255,255,.9);text-shadow:0 1px 0 rgba(255,255,255,.45);box-shadow:inset 0 1.5px 0 #fff,0 8px 16px -8px color-mix(in srgb,var(--report-accent,#49B7FF) 80%,#07194a)}
+html:root body.mmri-prism-page .report-top-download:hover:not(:disabled){box-shadow:inset 0 1.5px 0 #fff,0 0 0 3px rgba(255,255,255,.6),0 0 20px color-mix(in srgb,var(--report-accent,#49B7FF) 80%,transparent)}
+html:root body.mmri-prism-page .report-top-download svg{color:#07194a}

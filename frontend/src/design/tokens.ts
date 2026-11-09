@@ -95,11 +95,11 @@ export const designTokens = {
  * `ink` is the accessible foreground version used for text/icons on light UI.
  */
 export const domainVisualTokens = {
-  marketing: { accent: '#00E5A0', ink: '#075F4C', soft: 'rgba(0,229,160,.12)', secondary: '#B4FFEB', deep: '#087960' },
-  it: { accent: '#00CFFF', ink: '#0F6E8C', soft: 'rgba(0,207,255,.12)', secondary: '#C7F0FB', deep: '#1B93B6' },
-  finance: { accent: '#FFAA23', ink: '#80500A', soft: 'rgba(255,170,35,.12)', secondary: '#FFE7AA', deep: '#B56A0E' },
-  people: { accent: '#9250FF', ink: '#5B33A6', soft: 'rgba(146,80,255,.12)', secondary: '#DECFF7', deep: '#6A3FB8' },
-  operations: { accent: '#FF36B5', ink: '#841E70', soft: 'rgba(255,54,181,.12)', secondary: '#FFD0F1', deep: '#A91C8B' },
+  marketing: { accent: '#32D7C6', ink: '#075F4C', soft: 'rgba(50,215,198,.12)', secondary: '#B8F5EE', deep: '#0E8C80' },
+  it: { accent: '#49B7FF', ink: '#0F6E8C', soft: 'rgba(73,183,255,.12)', secondary: '#CDEBFF', deep: '#1B78C2' },
+  finance: { accent: '#FFC25A', ink: '#80500A', soft: 'rgba(255,194,90,.12)', secondary: '#FFE8B8', deep: '#B87A12' },
+  people: { accent: '#A879FF', ink: '#5B33A6', soft: 'rgba(168,121,255,.12)', secondary: '#E3D3FF', deep: '#6D45C4' },
+  operations: { accent: '#FF5BCF', ink: '#841E70', soft: 'rgba(255,91,207,.12)', secondary: '#FFD2F0', deep: '#B0238E' },
 } as const;
 
 export const responsiveBreakpoints = { compactPhone: 479, phone: 767, tablet: 1023 } as const;

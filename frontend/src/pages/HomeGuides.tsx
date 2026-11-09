@@ -31,15 +31,9 @@ export function AboutGuide(){
    {metrics.map(m=><li key={m.value} className="mmri-guide2__card mmri-guide2__metric"><strong>{m.value}</strong><span>{m.label}</span></li>)}
   </ul>}
   {showFlow&&<ol className="mmri-guide2__flow" aria-label="Гурван үе шат">
-   <svg className="mmri-guide2__route" viewBox="0 0 120 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-    <defs><linearGradient id="mmri-route-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5f8bff"/><stop offset=".5" stopColor="#8a74e6"/><stop offset="1" stopColor="#c46ad6"/></linearGradient></defs>
-    <path className="is-halo" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
-    <path className="is-line" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
-    <path className="is-pulse" d="M60 6V16C38 27 38 38 60 50C82 62 82 73 60 84V94" pathLength="100"/>
-   </svg>
    {stages.map((s,i)=>{const SI=stageIcons[i];return <li key={s.title} className="mmri-guide2__stage is-right">
-    <span className="mmri-guide2__node" aria-hidden="true">{i+1}</span>
-    <div className="mmri-guide2__card mmri-guide2__stage-card"><i className="mmri-guide2__stage-icon" aria-hidden="true"><SI size={36} strokeWidth={1.8}/></i><div><strong>{s.title}</strong><p>{s.text}</p></div></div>
+    <span className="mmri-guide2__node" aria-hidden="true"><SI size={40} strokeWidth={1.7}/><b>{i+1}</b></span>
+    <div className="mmri-guide2__card mmri-guide2__stage-card"><small className="mmri-guide2__stage-step">Алхам {i+1}</small><strong>{s.title}</strong><p>{s.text}</p></div>
    </li>})}
   </ol>}
   {paged&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
@@ -245,7 +239,7 @@ export function HowToGuide(){
      </figure>}
     </div>
    </div>
-   {index===last&&<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
+   {<aside className="mmri-guide2__notice" aria-labelledby="mmri-guide2-notice-title"><strong id="mmri-guide2-notice-title">Санамж</strong>
     <p>Төлбөр нь зөвхөн сонгосон чиглэлийн оношилгоонд хамаарна. Өөр чиглэл сонгох эсвэл дахин оношилгоо хийх бүрд 300,000 төгрөгийн төлбөр төлж, шинэ тайлан үүсэхийг анхаарна уу.</p></aside>}
   </section>
  </div>;

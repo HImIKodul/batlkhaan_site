@@ -97,3 +97,8 @@ html:root body.mmri-prism-page .cat-tile:hover,html:root body.mmri-prism-page .c
  html:root body.mmri-prism-page .cat-tile{transition:opacity .22s ease}
  html:root body.mmri-prism-page .cat-tile:hover{box-shadow:inset 0 2px 0 #fff,0 0 0 4px #fff,0 0 0 8px color-mix(in srgb,var(--area-accent,#7FA6FF) 85%,transparent)}
 }
+/* hovered category: clear lift (slight scale) + ring; the others recede */
+@media (hover:hover){
+ html:root body.mmri-prism-page .cat-tile{transition:opacity .22s ease,transform .22s cubic-bezier(.22,1,.36,1)}
+ html:root body.mmri-prism-page .cat-tile:hover{transform:scale(1.035)}
+}
