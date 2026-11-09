@@ -73,6 +73,21 @@ jobs:
         run: bash VERIFY_STEP11_FULL_REGRESSION.sh
       - name: UI polish contract (blocking)
         run: bash VERIFY_UI_POLISH.sh
+      - name: Onboarding save, isolation and proxy-IP regressions (isolated backends, synthetic users)
+        working-directory: backend
+        env:
+          MMRI_ENVIRONMENT: local
+          ALLOWED_ORIGINS: http://127.0.0.1:5310
+          COOKIE_SECURE: 'false'
+          MMRI_BILLING_PROVIDER: mock
+          MMRI_AI_REPORT_PROVIDER: disabled
+        run: |
+          export ACCESS_TOKEN_SECRET=$(openssl rand -hex 32) PASSWORD_PEPPER=$(openssl rand -hex 32) AUDIT_HASH_SALT=$(openssl rand -hex 32) METRICS_TOKEN=$(openssl rand -hex 32)
+          PORT=4310 npx tsx src/api/server.ts > /tmp/api4310.log 2>&1 &
+          PORT=4311 TRUST_PROXY=true TRUST_PROXY_HOPS=1 npx tsx src/api/server.ts > /tmp/api4311.log 2>&1 &
+          for p in 4310 4311; do for i in $(seq 1 40); do curl -fsS http://127.0.0.1:$p/health >/dev/null && break; sleep 2; done; done
+          API=http://127.0.0.1:4310/api/v1 npm run qa:onboarding-save
+          NO_TRUST_PORT=4310 TRUST_PORT=4311 npm run qa:proxy-ip
       - name: Frontend production build (typecheck + vite)
         working-directory: frontend
         run: npm run build

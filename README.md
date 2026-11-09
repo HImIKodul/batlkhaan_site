@@ -17,4 +17,7 @@ Runtime: Node 22.16.x, npm 10.9.x (see `.nvmrc`, `package.json` engines; lockfil
 | Install the five bundles on a database | `cd backend && MMRI_PROVISION_FIVE_DOMAINS_OK=YES MMRI_ENVIRONMENT=<env> npm run domains:provision` (add `MMRI_PROVISION_ACTIVATE=YES` to activate); read-only check: `MMRI_EXPECT_DOMAIN_STATUS=ACTIVE npm run domains:verify:provisioning` |
 | Deployment, backup/restore, observability | `deploy/RELEASE_RUNBOOK.md`, `deploy/DEDICATED_SERVER_SETUP.md`, `deploy/BACKUP_RESTORE.md`, `deploy/OBSERVABILITY.md`, `deploy/POSTGRES_LEAST_PRIVILEGE.md`, `ops/` |
 | Security & environment variables | `backend/.env.example`, `backend/docs/API_SECURITY.md`, `deploy/EXTERNAL_REQUIREMENTS.md` |
+| QA checklist, source policy | `docs/QA_CHECKLIST.md`, `docs/CLEAN_SOURCE_POLICY.md` |
+| Customer-flow regressions (isolated stack, synthetic users only) | `cd backend && npm run qa:onboarding-save` (20-question save/reload/isolation), `npm run qa:proxy-ip`; UI: `qa/ui-onboarding-save.mjs`, `qa/ui-auth-register.mjs` |
+| Reverse proxy / IIS | `TRUST_PROXY=true` and `TRUST_PROXY_HOPS` are mandatory behind IIS/ARR or nginx (otherwise all visitors share one rate-limit bucket); see `deploy/WINDOWS_SERVER_DEPLOYMENT.md` |
 | Release verification | `bash ops/release-gate.sh` (source gate), `bash VERIFY_UI_POLISH.sh`, `bash VERIFY_STEP11_FULL_REGRESSION.sh`, CI: `.github/workflows/release-gate.yml` |

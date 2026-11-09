@@ -14,7 +14,7 @@ server.maxRequestsPerSocket=1000;
 
 /* Development binds to loopback only (a LAN / tunnel could otherwise reach the API directly). Containers and production listen on all interfaces (API_HOST overrides). */
 const listenHost=process.env.API_HOST?.trim()||(process.env.NODE_ENV==="production"?"0.0.0.0":"127.0.0.1");
-server.listen(config.port,listenHost,()=>{console.log(`MMRI API v1.10.0 listening on ${listenHost}:${config.port}`);console.log(JSON.stringify({ts:new Date().toISOString(),level:"info",event:"service_started",service:"mmri-api",version:"1.10.0",port:config.port,releaseSha:config.releaseSha,instanceId:config.instanceId}));});
+server.listen(config.port,listenHost,()=>{if(config.environment==="production"&&!config.trustProxy)console.warn(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"proxy_trust_disabled",message:"TRUST_PROXY is not true: behind a reverse proxy (IIS/ARR, nginx) every visitor shares one client IP, so the per-IP login/register/API rate limits lock out all customers together. Set TRUST_PROXY=true and TRUST_PROXY_HOPS to the number of proxies.",releaseSha:config.releaseSha,instanceId:config.instanceId}));console.log(`MMRI API v1.10.0 listening on ${listenHost}:${config.port}`);console.log(JSON.stringify({ts:new Date().toISOString(),level:"info",event:"service_started",service:"mmri-api",version:"1.10.0",port:config.port,releaseSha:config.releaseSha,instanceId:config.instanceId}));});
 
 let closing=false;
 async function shutdown(signal:string,exitCode=0){
