@@ -30,7 +30,26 @@ const KNOWN_ERRORS:[RegExp,string][]=[
 function knownErrorMn(message:string){return KNOWN_ERRORS.find(([re])=>re.test(message))?.[1]}
 /** A server message is shown to a customer only if it reads like a sentence. Anything that looks like code, a stack trace, a path or a database/ORM error is replaced by the generic text (root cause of the code-like text once seen under the answer options: a raw internal error string containing Cyrillic passed the old "contains Cyrillic" test). */
 export function customerSafeMessage(message:unknown):string|null{const m=String(message??'').trim();if(!m||m.length>280)return null;if(/[\n\r`{}<>]|=>|\b(await|const|let|function|return|undefined|null|invocation|prisma|ConnectorError|stack|node_modules)\b|\/home\/|\bat\s+\S+\s*\(|Error:|\$\{|\[object/i.test(m))return null;return m}
-export class ApiError extends Error{status:number;code?:string;details?:unknown;requestId?:string;constructor(status:number,message:string,body?:any){const fallback='Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.';super(knownErrorMn(message)??mnText(customerSafeMessage(message)??'',fallback));this.name='ApiError';this.status=status;this.code=body?.error?.code;this.details=body?.error?.details;this.requestId=body?.error?.requestId;}}
+/** Customer-facing wording for a failed request. A server message is shown only when it already is a plain Mongolian sentence; a mixed English/Mongolian message is NEVER cleaned up
+ *  by stripping its Latin words (that left fragments such as "үнэлгээ;" on screen). Those cases use a complete Mongolian sentence chosen from the HTTP status / error code. */
+const BRAND_TOKENS=/\b(QPay|MMRI|BusinessMRI|PDF|OWNER|SUPER_ADMIN|ADMIN|MFA|AI)\b/g;
+function statusMessageMn(status:number,code?:string){
+ if(status===409)return /REVISION|CONFLICT/i.test(code||'CONFLICT')?'Энэ хуудас өөр цонх эсвэл төхөөрөмж дээр өөрчлөгдсөн байна. Хуудсыг дахин ачаалж үргэлжлүүлнэ үү.':'Үйлдлийг одоо гүйцэтгэх боломжгүй байна. Дахин оролдоно уу.';
+ if(status===401)return 'Нэвтрэх хугацаа дууссан байна. Дахин нэвтэрнэ үү.';
+ if(status===403)return 'Танд энэ үйлдлийг хийх эрх байхгүй байна.';
+ if(status===404)return 'Хайсан мэдээлэл олдсонгүй.';
+ if(status===400||status===422)return 'Оруулсан мэдээлэл буруу эсвэл дутуу байна. Шалгаад дахин оролдоно уу.';
+ if(status===429)return 'Хэт олон хүсэлт илгээгдлээ. Хэдэн секунд хүлээгээд дахин оролдоно уу.';
+ if(status>=500)return 'Серверт түр алдаа гарлаа. Хариулт тань алдагдаагүй. Дахин оролдоно уу.';
+ return 'Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.';
+}
+export function plainMongolianSentence(message:unknown):string|null{
+ const m=customerSafeMessage(message);if(!m)return null;
+ if(!/[А-Яа-яӨөҮү]/.test(m))return null;
+ if(/[A-Za-z]{3,}/.test(m.replace(BRAND_TOKENS,'')))return null;
+ return m;
+}
+export class ApiError extends Error{status:number;code?:string;details?:unknown;requestId?:string;constructor(status:number,message:string,body?:any){const code=body?.error?.code;super(knownErrorMn(message)??plainMongolianSentence(message)??statusMessageMn(status,code));this.name='ApiError';this.status=status;this.code=code;this.details=body?.error?.details;this.requestId=body?.error?.requestId;}}
 export const session={
  get accessToken(){return memoryAccessToken},set accessToken(v:string|null){memoryAccessToken=v},
  get userId(){return localStorage.getItem(K.user)},set userId(v:string|null){v?localStorage.setItem(K.user,v):localStorage.removeItem(K.user)},

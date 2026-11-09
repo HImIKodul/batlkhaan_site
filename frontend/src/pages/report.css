@@ -271,7 +271,7 @@
 .report-v3 .report-score span{color:rgba(235,245,255,.95);border-bottom-color:rgba(255,255,255,.6)}
 .report-v3 .report-finding-column{border-color:rgba(255,255,255,.95);box-shadow:inset 0 2px 0 #fff,0 18px 30px -22px rgba(10,40,150,.55)}
 .report-finding-column.is-positive{box-shadow:inset 3px 0 0 var(--mmri-color-success);background:linear-gradient(170deg,#E3FAEF,#CDEFE0)}
-.report-finding-column.is-negative{box-shadow:inset 3px 0 0 var(--mmri-color-danger);background:linear-gradient(170deg,#FFE9F1,#F9D4E6)}
+.report-finding-column.is-negative{box-shadow:inset 3px 0 0 var(--mmri-color-danger);background:linear-gradient(170deg,#FFE5E2,#F8CBC6)}
 .report-purpose-priorities article{border:1px solid rgba(255,255,255,.95);background:linear-gradient(170deg,#EAF3FF,#D9E9FF);box-shadow:inset 0 2px 0 #fff,0 14px 24px -18px rgba(10,50,200,.55)}
 .report-purpose-number{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:var(--mmri-color-danger);color:#fff;font-weight:800;background:radial-gradient(circle at 32% 26%,#CC3550,#9B1229 75%);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 14px rgba(255,90,120,.55)}
 .report-v3 .report-roadmap-card{border-color:rgba(255,255,255,.95);background:linear-gradient(170deg,#EDF4FF,#DDEBFF);box-shadow:inset 0 2px 0 #fff,0 14px 24px -18px rgba(10,50,200,.5)}
@@ -312,3 +312,26 @@
  html:root body.mmri-prism-page .report-roadmap-card{grid-template-columns:1fr;gap:10px;padding:14px 12px;border-radius:16px}
  html:root body.mmri-prism-page .report-summary{padding-inline:2px}
 }
+
+/* ===== Report heading: the diagnosed CATEGORY is the title (category colour, deepened for contrast); company name is secondary; the date lives only in the version strip ===== */
+html:root body.mmri-prism-page .report-company{display:grid;gap:2px;min-width:0}
+html:root body.mmri-prism-page .report-category-title{margin:0;font-size:clamp(28px,4.2vw,44px);line-height:1.12;font-weight:800;letter-spacing:-.025em;color:color-mix(in srgb,var(--report-accent) 62%,#06173f);text-shadow:0 1px 0 rgba(255,255,255,.6);overflow-wrap:anywhere}
+html:root body.mmri-prism-page .report-company__name{margin:0;font-size:clamp(16px,2vw,20px);font-weight:600;color:#0b1d4a}
+/* weaknesses: restrained red glass (heading, rim, number chips and score chips) */
+html:root body.mmri-prism-page .report-finding-column.is-negative>header h3,html:root body.mmri-prism-page .report-finding-column.is-negative>header svg{color:#7a1710}
+html:root body.mmri-prism-page .report-finding-column.is-negative{border-color:rgba(255,200,194,.9)}
+html:root body.mmri-prism-page .report-finding-column.is-negative .report-finding-arc__no{background:#fff;color:#a4281d}
+html:root body.mmri-prism-page .report-finding-column.is-negative .report-finding-arc>b{color:#a4281d;background:#fff;border-color:#e0554a}
+/* the report is reading material: every text node stays selectable and copyable (the plan cards used to be one big button) */
+html:root body.mmri-prism-page .report-three-pages,html:root body.mmri-prism-page .report-three-pages *{-webkit-user-select:text;user-select:text}
+html:root body.mmri-prism-page .report-three-pages button{-webkit-user-select:none;user-select:none}
+/* action-plan status badge (server-backed completion state; the badge is the only control, the card text is plain text) */
+.report-roadmap-card{cursor:auto}
+.report-status-badge{justify-self:start;display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:4px 14px 4px 10px;border-radius:999px;font:inherit;font-size:13.5px;font-weight:750;letter-spacing:.01em;cursor:pointer;border:1.5px solid transparent}
+.report-status-badge__mark{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:12px;line-height:1;background:#fff}
+.report-status-badge.is-open{color:#7a4a00;background:linear-gradient(180deg,#fff8e6,#ffe9b3);border-color:#e0a021}
+.report-status-badge.is-open .report-status-badge__mark{border:2px solid #c98400}
+.report-status-badge.is-done{color:#0b5a38;background:linear-gradient(180deg,#eafcf2,#b9f0d3);border-color:#1f9d63}
+.report-status-badge.is-done .report-status-badge__mark{background:#1f9d63;color:#fff}
+.report-status-badge:focus-visible{outline:3px solid #08205a;outline-offset:2px}
+.report-status-badge:hover{filter:none;box-shadow:0 0 0 3px rgba(255,255,255,.7)}

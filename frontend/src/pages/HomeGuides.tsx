@@ -1,5 +1,4 @@
 import React,{useEffect,useState} from 'react';
-import { MapPinned,Wrench,Flag } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import { type BusinessAreaId } from '../data/businessEvaluation';
 
@@ -15,7 +14,6 @@ const metrics:{value:string;label:string}[]=[
  {value:'192–280',label:'сонгогдох асуулт'},
  {value:'12',label:'сарын хөгжлийн төлөвлөгөө'},
 ];
-const stageIcons=[MapPinned,Wrench,Flag];
 const stages:{title:string;text:string}[]=[
  {title:'Бид хаана байна вэ?',text:'Бизнесийн өнөөгийн чадавхыг оношилно.'},
  {title:'Юуг сайжруулах вэ?',text:'Асуудал, шалтгаан, боломжийг тодорхойлно.'},
@@ -30,12 +28,9 @@ export function AboutGuide(){
   {showMetrics&&<ul className="mmri-guide2__metrics" aria-label="Платформын үзүүлэлтүүд">
    {metrics.map(m=><li key={m.value} className="mmri-guide2__card mmri-guide2__metric"><strong>{m.value}</strong><span>{m.label}</span></li>)}
   </ul>}
-  {showFlow&&<ol className="mmri-guide2__flow" aria-label="Гурван үе шат">
-   {stages.map((s,i)=>{const SI=stageIcons[i];return <li key={s.title} className="mmri-guide2__stage is-right">
-    <span className="mmri-guide2__node" aria-hidden="true"><SI size={40} strokeWidth={1.7}/><b>{i+1}</b></span>
-    <div className="mmri-guide2__card mmri-guide2__stage-card"><small className="mmri-guide2__stage-step">Алхам {i+1}</small><strong>{s.title}</strong><p>{s.text}</p></div>
-   </li>})}
-  </ol>}
+  {showFlow&&<ul className="mmri-guide2__flow" aria-label="Оношилгооны гурван гол үр дүн">
+   {stages.map(s=><li key={s.title} className="mmri-guide2__stage is-right"><div className="mmri-guide2__card mmri-guide2__stage-card"><strong>{s.title}</strong><p>{s.text}</p></div></li>)}
+  </ul>}
   {paged&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
    <button type="button" className="mmri-guide2__nav-btn" disabled={page===0} onClick={()=>setPage(0)}><Icon name="back" size={18}/>Өмнөх</button>
    <span className="mmri-guide2__counter" role="status" aria-live="polite">{page+1}<em> / 2</em></span>

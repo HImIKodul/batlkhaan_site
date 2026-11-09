@@ -372,7 +372,7 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
 /* ---- Hero (components/HeroCrystal.tsx, sketch 02): ONE compact, wide fan of five thick glass plates in a shared perspective. The stack is one 3D object
    (preserve-3d on .hx__stack; plates carry their own translucency, no filter/opacity on the 3D parents); plate 1 is in front, each later plate sits deeper and further down-right.
    Per-breakpoint geometry lives in --pw/--ph (plate size), --dx/--dy (step) in cqw of .hx; --r/--jx/--jy are the per-plate jitter. ---- */
-.hx{--pw:34;--ph:26;--dx:13.4;--dy:10.2;--fs:2.7cqw;position:relative;width:min(100%,clamp(340px,calc((100dvh - 420px)*1.55),700px));aspect-ratio:1.5;margin-inline:auto;container-type:inline-size;color:var(--wp-ink)}
+.hx{--pw:34;--ph:26;--dx:13.4;--dy:10.2;--fs:2.7cqw;position:relative;width:min(100%,clamp(340px,calc((100dvh - 440px)*1.42),700px));aspect-ratio:1.36;margin-inline:auto;container-type:inline-size;color:var(--wp-ink)}
 .hx__scene{position:absolute;inset:0;perspective:120cqw;perspective-origin:30% 20%}
 .hx__stack{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(16deg) rotateY(-16deg) rotateZ(-3deg);transform-origin:40% 40%;animation:hx-float 16s ease-in-out infinite}
 @keyframes hx-float{50%{transform:rotateX(16deg) rotateY(-16deg) rotateZ(-3deg) translateY(-1cqw)}}
@@ -390,9 +390,9 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
 @keyframes hx-breathe{to{opacity:.9}}
 .hx__dot{flex:none;width:2.6cqw;height:2.6cqw;margin-bottom:.5cqw;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 65%);box-shadow:0 0 1.4cqw var(--c),0 0 0 .3cqw rgba(255,255,255,.75)}
 .hx__name{position:relative;max-width:calc(var(--pw)*.86cqw);font-size:max(13px,var(--fs));font-weight:700;letter-spacing:-.01em;line-height:1.15;color:#08205a;text-shadow:0 1px 0 rgba(255,255,255,.6)}
-@media (max-width:1000px){.hx{width:min(100%,560px)}}
+@media (max-width:1000px){.hx{width:min(100%,560px);margin:34px auto 22px}}
 /* Phones: not a shrunken desktop; plates are wider than tall, overlap mostly vertically, and the label type stays 13-14px. */
-@media (max-width:560px){.hx{--pw:66;--ph:32;--dx:7.4;--dy:13.6;--fs:4cqw;width:min(100%,400px);margin-top:18px;aspect-ratio:1.14}
+@media (max-width:560px){.hx{--pw:66;--ph:32;--dx:7.4;--dy:13.6;--fs:4cqw;width:min(100%,400px);margin:34px auto 22px;aspect-ratio:1.02}
  .hx__scene{perspective:150cqw}.hx__stack{transform:rotateX(12deg) rotateY(-10deg) rotateZ(-2deg);transform-origin:30% 30%;animation:none}
  .hx__slab{padding:0 3.4cqw 2.2cqw;border-radius:5cqw;transform:translate3d(0,var(--lift),calc((4 - var(--i))*2.2cqw)) rotateZ(calc(var(--r)*.6deg))}
  .hx__dot{width:3.6cqw;height:3.6cqw}.hx__name{max-width:none;font-size:clamp(13px,var(--fs),15px)}}
@@ -472,31 +472,24 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 .hx__slab:focus-visible{outline:3px solid #08205a;outline-offset:4px}
 .hx__slab:active{opacity:1;--lift:.2cqw}
 
-/* ===== Guide 1 (final): three designed flow modules. Big glass icon medallion + step label + title + text; a running light travels the connector 1 -> 2 -> 3 in a loop. ===== */
-.mmri-guide2__flow{--spine:0px;--link:0px;gap:34px;position:relative}
+/* ===== Guide 1: three conceptual outcomes (not steps): glass capsules, right column, joined by one continuous vertical connector with a light that travels down it and restarts seamlessly. No numbers, no badges, no icons. ===== */
+.mmri-guide2__flow{--gap:44px;--spine:0px;--link:0px;list-style:none;margin:0;padding:0;position:relative;display:grid;gap:var(--gap);align-content:center}
 .mmri-guide2__flow::before{display:none}
-.mmri-guide2__stage{position:relative;display:grid;grid-template-columns:88px minmax(0,1fr);gap:24px;align-items:start;min-height:0}
-.mmri-guide2__stage:nth-of-type(1){--acc:#7ea2ff;--acc2:#5b7df0}.mmri-guide2__stage:nth-of-type(2){--acc:#8e86f6;--acc2:#6a5de8}.mmri-guide2__stage:nth-of-type(3){--acc:#b38cf8;--acc2:#8a56ec}
-.mmri-guide2__node{position:relative;left:auto;top:auto;translate:none;width:88px;height:88px;border-radius:28px;display:grid;place-items:center;color:#fff;z-index:2;
- background:linear-gradient(145deg,color-mix(in srgb,var(--acc) 85%,#fff),var(--acc2));border:1.5px solid rgba(255,255,255,.9);box-shadow:inset 0 2px 0 rgba(255,255,255,.7),inset 0 -10px 16px -8px rgba(20,20,120,.4),0 12px 20px -10px color-mix(in srgb,var(--acc2) 80%,transparent);font-size:0}
-.mmri-guide2__node svg{display:block;width:42px;height:42px;filter:none}
-.mmri-guide2__node b{position:absolute;right:-8px;top:-8px;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-size:15px;font-weight:800;color:#0a2358;background:#fff;box-shadow:0 4px 8px -3px rgba(20,30,130,.55)}
-.mmri-guide2__node::after{display:none}
-.mmri-guide2__stage .mmri-guide2__stage-card{margin-left:0!important;width:auto!important;display:grid;gap:4px;min-height:88px;align-content:center;padding:16px 24px;grid-template-columns:minmax(0,1fr)}
+.mmri-guide2__stage{position:relative;display:block;min-height:0;margin:0;padding:0;animation:g1-in .7s cubic-bezier(.22,1,.36,1) both}
+.mmri-guide2__stage:nth-child(2){animation-delay:.08s}.mmri-guide2__stage:nth-child(3){animation-delay:.16s}
+.mmri-guide2__stage .mmri-guide2__stage-card{position:relative;margin:0!important;width:auto!important;display:grid;grid-template-columns:minmax(0,1fr)!important;gap:5px;align-content:center;justify-items:center;min-height:96px;padding:16px 36px;border-radius:999px;text-align:center;border:1.5px solid rgba(255,255,255,.9);
+ background:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(236,241,255,.78) 46%,rgba(182,196,250,.82) 100%);
+ box-shadow:inset 0 2px 0 #fff,inset 0 -8px 14px -8px rgba(86,100,222,.55),0 1px 0 rgba(255,255,255,.6),0 14px 18px -12px rgba(30,44,150,.7)}
+.mmri-guide2__stage .mmri-guide2__stage-card::before{content:"";position:absolute;left:7%;right:7%;top:5px;height:36%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,0));pointer-events:none}
 .mmri-guide2__stage .mmri-guide2__stage-card::after{display:none}
-.mmri-guide2__stage-step{font-size:11.5px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--acc2) 85%,#0a2358)}
-.mmri-guide2__stage .mmri-guide2__stage-card strong{font-size:clamp(18px,1.6vw,21px);font-weight:700;letter-spacing:-.015em}
-.mmri-guide2__stage:not(:last-child)::before{content:"";position:absolute;left:44px;top:88px;width:5px;margin-left:-2.5px;height:calc(100% - 88px + 34px);border-radius:5px;background:linear-gradient(180deg,var(--acc2),color-mix(in srgb,var(--acc2) 55%,#b38cf8));opacity:.75;z-index:1}
-.mmri-guide2__stage:not(:last-child)::after{content:"";position:absolute;left:44px;top:88px;width:5px;margin-left:-2.5px;height:calc(100% - 88px + 34px);border-radius:5px;z-index:1;background:linear-gradient(180deg,transparent 0 30%,#fff 50%,transparent 70% 100%) 0 0/100% 300% no-repeat;animation:g1-run 2.6s linear infinite}
-.mmri-guide2__stage:nth-of-type(2)::after{animation-delay:.9s}
-@keyframes g1-run{from{background-position:0 100%}to{background-position:0 0%}}
-.mmri-guide2__stage{animation:g1-in .7s cubic-bezier(.22,1,.36,1) both}
-@media (max-width:560px){.mmri-guide2__stage{grid-template-columns:62px minmax(0,1fr);gap:16px}.mmri-guide2__node{width:62px;height:62px;border-radius:20px}.mmri-guide2__node svg{width:30px;height:30px}.mmri-guide2__node b{width:24px;height:24px;font-size:12.5px;right:-6px;top:-6px}.mmri-guide2__stage:not(:last-child)::before,.mmri-guide2__stage:not(:last-child)::after{left:31px;top:62px;height:calc(100% - 62px + 34px)}.mmri-guide2__stage .mmri-guide2__stage-card{min-height:62px;padding:12px 16px}}
+.mmri-guide2__stage:nth-child(2) .mmri-guide2__stage-card{background:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(240,238,255,.78) 46%,rgba(190,184,250,.84) 100%)}
+.mmri-guide2__stage:nth-child(3) .mmri-guide2__stage-card{background:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(244,238,255,.78) 46%,rgba(204,184,250,.86) 100%)}
+.mmri-guide2__stage .mmri-guide2__stage-card strong{font-size:clamp(18px,1.6vw,21px);font-weight:700;letter-spacing:-.015em;color:#0a2358}
+.mmri-guide2__stage .mmri-guide2__stage-card p{margin:0;font-size:15px;line-height:1.45;color:#26407f}
+/* connector: a slim glass rail between capsules; a short bright segment slides down it (transform only) */
+.mmri-guide2__stage:not(:last-child)::before{content:"";position:absolute;left:50%;top:100%;width:6px;height:var(--gap);margin-left:-3px;border-radius:6px;z-index:1;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(120,138,240,.85));box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+.mmri-guide2__stage:not(:last-child)::after{content:"";position:absolute;left:50%;top:100%;width:6px;height:calc(var(--gap)*.5);margin-left:-3px;border-radius:6px;z-index:2;background:linear-gradient(180deg,transparent,#fff 55%,transparent);animation:g1-slide 2.4s linear infinite;will-change:transform}
+.mmri-guide2__stage:nth-child(2)::after{animation-delay:.8s}
+@keyframes g1-slide{from{transform:translateY(calc(var(--gap)*-.5));opacity:0}18%{opacity:1}82%{opacity:1}to{transform:translateY(var(--gap));opacity:0}}
+@media (max-width:560px){.mmri-guide2__flow{--gap:30px}.mmri-guide2__stage .mmri-guide2__stage-card{min-height:84px;padding:14px 22px;border-radius:42px}.mmri-guide2__stage .mmri-guide2__stage-card p{font-size:14px}}
 @media (prefers-reduced-motion:reduce){.mmri-guide2__stage:not(:last-child)::after{animation:none;opacity:0}}
-
-/* ===== Guide 1 steps, reference 03: glossy pill stages (luminous periwinkle gradient, bright top reflection, contact shadow); a light travels the connector 1 -> 2 -> 3 ===== */
-.mmri-guide2__stage .mmri-guide2__stage-card{border-radius:999px;min-height:88px;padding:14px 34px 14px 26px;border:1.5px solid rgba(255,255,255,.85);
- background:linear-gradient(180deg,rgba(255,255,255,.95) 0,rgba(255,255,255,.55) 46%,color-mix(in srgb,var(--acc) 38%,rgba(255,255,255,.7)) 100%);
- box-shadow:inset 0 2px 0 #fff,inset 0 -6px 12px -6px color-mix(in srgb,var(--acc2) 55%,transparent),0 14px 18px -12px color-mix(in srgb,var(--acc2) 75%,#0a1a5a),0 2px 0 rgba(255,255,255,.5)}
-.mmri-guide2__node{border-radius:999px;width:88px;height:88px}
-@media (max-width:560px){.mmri-guide2__stage .mmri-guide2__stage-card{border-radius:36px;padding:10px 18px 10px 16px}.mmri-guide2__node{border-radius:999px}}

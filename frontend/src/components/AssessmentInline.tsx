@@ -264,7 +264,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
     <button type="button" className="mmri-questionnaire__clear" disabled={answer===null||busy} onClick={clearChoice}>Сонголтыг буцаах</button>
    </div>
 
-   {actionError&&<div className="mmri-questionnaire__error" role="alert"><strong>Үйлдлийг гүйцэтгэж чадсангүй.</strong><span>{actionError}</span></div>}
+   {actionError&&<div className="mmri-questionnaire__error" role="alert" aria-live="assertive"><svg className="mmri-questionnaire__error-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M12 10v4.5M12 17.6v.1" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg><div><strong>{actionError}</strong>{answer!==null&&!/ачаал/.test(actionError)&&<span>Таны сонголт энэ хуудсан дээр хэвээр байна. «Үргэлжлүүлэх» товчийг дахин дарна уу.</span>}</div></div>}
 
    <footer className="mmri-questionnaire__actions">
     <Button type="button" variant="ghost" className="is-back" disabled={busy||answered<=0||!online} loading={rewinding} onClick={()=>void goBack()}>‹ Буцах</Button>

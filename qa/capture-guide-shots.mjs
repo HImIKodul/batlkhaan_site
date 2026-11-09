@@ -7,12 +7,12 @@ if(!API||!BASE||/:4000\b|:4001\b/.test(API))throw new Error('set an isolated API
 fs.mkdirSync(OUT,{recursive:true});const sleep=ms=>new Promise(r=>setTimeout(r,ms));const W=crypto.randomUUID();
 const api=async(m,p,tok,b)=>{const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
 // fresh synthetic customer per viewport: paid IT diagnosis (step 5)
-const makeAcct=async()=>{
+const makeAcct=async(o={paid:true,profile:true})=>{
 const email=`guide.${Date.now()}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';
 const tok=(await api('POST','/auth/register',null,{email,password:pw,displayName:'Жишээ хэрэглэгч'})).d.accessToken;const co=(await api('POST','/companies',tok,{name:'Өрнөх Маркет ХХК'})).d.id;
 const pq=(await api('GET','/methodology/current/profile-questions',tok)).d;const prof=pq.slice(0,20).map(q=>({questionId:q.id,optionIndexes:[q.options[0].optionIndex]}));
-await api('PUT',`/companies/${co}/profile-answers`,tok,{profileAnswers:prof,basicInfoAnswers:Array.from({length:20},(_,i)=>({questionId:'B'+String(i+1).padStart(2,'0'),optionIndexes:[1]}))});
-const inv=(await api('POST',`/companies/${co}/billing/invoices`,tok,{planCode:'DIAGNOSTIC',domainCode:'it'})).d;await api('POST',`/billing/invoices/${inv.id}/mock-pay`,tok);
+if(o.profile)await api('PUT',`/companies/${co}/profile-answers`,tok,{profileAnswers:prof,basicInfoAnswers:Array.from({length:20},(_,i)=>({questionId:'B'+String(i+1).padStart(2,'0'),optionIndexes:[1]}))});
+if(o.paid){const inv=(await api('POST',`/companies/${co}/billing/invoices`,tok,{planCode:'DIAGNOSTIC',domainCode:'it'})).d;await api('POST',`/billing/invoices/${inv.id}/mock-pay`,tok)}
 /* paid but NOT started: the browser starts it through the real UI (starting via the API under another writer id would leave a lease that makes the page's resume call answer 409) */
 return {email,pw}};
 const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
@@ -22,11 +22,14 @@ const shot=async(p,name,kind)=>{await sleep(900);await p.screenshot({path:`${OUT
 for(const kind of ['d','m']){
  // 1 register (logged out)
  {const c=await mkctx(kind);const p=await c.newPage();await p.goto(BASE+'#/login');await p.reload();await sleep(1200);await p.locator('.mmri-tabs button',{hasText:'Бүртгүүлэх'}).first().click();await sleep(700);await shot(p,'1-register',kind);await c.close()}
- // 2,3,4,6,7 demo account (completed Marketing, four unpaid domains)
- {const c=await mkctx(kind);const p=await c.newPage();await login(p,'demo@mmri.mn','Demo2026!!');
-  await p.goto(BASE+'#/profile');await sleep(2800);await shot(p,'2-company',kind);
+ // 2 company info: fresh account WITHOUT profile answers (the real empty form)
+ {const {email,pw}=await makeAcct({paid:false,profile:false});const c=await mkctx(kind);const p=await c.newPage();await login(p,email,pw);await p.goto(BASE+'#/profile');await sleep(2800);await shot(p,'2-company',kind);await c.close()}
+ // 3 domain choice + 4 payment: fresh account with profile done and nothing paid (five locked categories)
+ {const {email,pw}=await makeAcct({paid:false,profile:true});const c=await mkctx(kind);const p=await c.newPage();await login(p,email,pw);
   await p.goto(BASE+'#/analysis');await sleep(3000);await shot(p,'3-domain',kind);
-  await p.locator('button,a',{hasText:'ТӨЛӨХ'}).first().click();await sleep(2800);await shot(p,'4-payment',kind);
+  await p.locator('button,a',{hasText:'ТӨЛӨХ'}).first().click();await sleep(2800);await shot(p,'4-payment',kind);await c.close()}
+ // 6 report + 7 retake: an account that already has completed reports (DEMO_EMAIL / DEMO_PW, e.g. the isolated QA account)
+ {const c=await mkctx(kind);const p=await c.newPage();await login(p,process.env.DEMO_EMAIL||'demo@mmri.mn',process.env.DEMO_PW||'Demo2026!!');
   await p.goto(BASE+'#/report');await sleep(3500);await shot(p,'6-report',kind);
   await p.goto(BASE+'#/analysis');await sleep(2500);await p.locator('button,a',{hasText:'Дахин оношилгоо'}).first().click();await sleep(2800);await shot(p,'7-retake',kind);await c.close()}
  // 5 questions (fresh account, started assessment)
