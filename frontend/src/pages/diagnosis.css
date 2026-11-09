@@ -87,3 +87,13 @@ body.mmri-prism-page .diagnosis-square.cat-tile .mmri-button--primary{--btn-a:#2
 /* Hover on a diagnosis tile is LOCAL and cheap: a crisp accent ring (no blurred glow transition, no filter, no page theme change). */
 html:root body.mmri-prism-page .cat-tile{transition:none}
 html:root body.mmri-prism-page .cat-tile:hover,html:root body.mmri-prism-page .cat-tile:focus-within{box-shadow:inset 0 2px 0 #fff,0 0 0 3px #fff,0 0 0 6px color-mix(in srgb,var(--area-accent,#7FA6FF) 75%,transparent);border-color:#fff}
+
+/* More air between the five categories; the hovered one is unmistakable: ring + the other four step back (opacity only). */
+.diagnosis-square-grid{gap:clamp(20px,3.4vw,58px)}
+@media (max-width:1000px){.diagnosis-square-grid{gap:clamp(14px,3vw,22px)}}
+@media (max-width:700px){.diagnosis-square-grid{gap:16px 14px}}
+@media (hover:hover){
+ html:root body.mmri-prism-page .diagnosis-square-grid:has(.cat-tile:hover) .cat-tile:not(:hover){opacity:.62}
+ html:root body.mmri-prism-page .cat-tile{transition:opacity .22s ease}
+ html:root body.mmri-prism-page .cat-tile:hover{box-shadow:inset 0 2px 0 #fff,0 0 0 4px #fff,0 0 0 8px color-mix(in srgb,var(--area-accent,#7FA6FF) 85%,transparent)}
+}

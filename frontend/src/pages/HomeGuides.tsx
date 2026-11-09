@@ -39,7 +39,7 @@ export function AboutGuide(){
    </svg>
    {stages.map((s,i)=>{const SI=stageIcons[i];return <li key={s.title} className="mmri-guide2__stage is-right">
     <span className="mmri-guide2__node" aria-hidden="true">{i+1}</span>
-    <div className="mmri-guide2__card mmri-guide2__stage-card"><i className="mmri-guide2__stage-icon" aria-hidden="true"><SI size={22} strokeWidth={1.9}/></i><div><strong>{s.title}</strong><p>{s.text}</p></div></div>
+    <div className="mmri-guide2__card mmri-guide2__stage-card"><i className="mmri-guide2__stage-icon" aria-hidden="true"><SI size={36} strokeWidth={1.8}/></i><div><strong>{s.title}</strong><p>{s.text}</p></div></div>
    </li>})}
   </ol>}
   {paged&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
@@ -186,9 +186,9 @@ const walkSteps:WalkStep[]=[
  {title:'Асуултад хариулах',shot:'5-questions',alt:'Асуултын хуудас: хариултын сонголтууд, «Буцах» ба «Үргэлжлүүлэх» товчнууд',
   text:'Эрх нээгдсэний дараа «ЭХЛҮҮЛЭХ» товч идэвхжинэ. Асуулт бүрт нэг хариулт сонгоод «Үргэлжлүүлэх» товчийг дарна; өмнөх асуулт руу «Буцах», сонголтоо болиулахдаа «Сонголтыг буцаах» товчийг ашиглана. Нийт 192–280 асуулт бөгөөд явц автоматаар хадгалагдана.',
   note:'Зурагт аппын асуултын хэсгийн жишээ асуулт харагдаж байна.'},
- {title:'Үр дүн, тайлангаа харах',shot:'6-report',alt:'Тайлангийн хуудас: нийт үнэлгээ, давуу ба сул тал, PDF татах товч',
+ {title:'Үр дүн, тайлангаа харах',shot:'6-report',desktopOnly:true,alt:'Тайлангийн хуудас: нийт үнэлгээ, давуу ба сул тал, PDF татах товч',
   text:'Асуулт дуусмагц «Тайлан» хэсэгт нийт үнэлгээ, давуу болон сул тал, тэргүүлэх ажлууд, 12 сарын төлөвлөгөө гарна. «PDF татах» товчоор тайлангаа татаж авна.'},
- {title:'Дахин оношилгоо хийх',shot:'7-retake',desktopOnly:true,extra:true,alt:'Дахин оношилгооны төлбөрийн хуудас: «Өмнөх тайлан хэвээр үлдэнэ»',
+ {title:'Дахин оношилгоо хийх',shot:'7-retake',noShot:true,extra:true,alt:'Дахин оношилгооны төлбөрийн хуудас: «Өмнөх тайлан хэвээр үлдэнэ»',
   text:'Өөр чиглэл сонгох эсвэл тухайн чиглэлээ дахин оношлуулахдаа карт дээрх «Дахин оношилгоо · 300,000₮» эсвэл тайлангийн «+ Дахин оношилгоо» товчийг дарна. Шинээр төлбөр төлж, шинэ тайлан үүснэ; өмнөх тайлан хэвээр хадгалагдана.'},
 ];
 
@@ -239,7 +239,7 @@ export function HowToGuide(){
     
     <div className="mmri-guide2__walk-body" key={index}>
      <div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>
-     {<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
+     {!step.noShot&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
       {!compact&&<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>}
       {(!step.desktopOnly||compact)&&<div className="mmri-guide2__phone"><img src={shotSrc(step.shot,'m')} alt={`${step.alt} (гар утасны харагдац)`} width={390} height={844} decoding="async"/></div>}
      </figure>}

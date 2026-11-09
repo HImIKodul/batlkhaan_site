@@ -327,3 +327,8 @@
 @media (max-width:900px){.page-container{width:calc(100% - 32px)!important}}
 @media (max-width:640px){.page-container{width:calc(100% - 28px)!important}}
 /* Payment subsection: no future diagnosis can be purchased before it exists. *//* R16.19 accessibility architecture */.mmri-route-loading{min-height:40vh}#main-content:focus,[data-route-heading]:focus{outline:none}
+
+/* Typography roles (Inter Variable, verified for Mongolian Ө Ү Ё): display 800 / headings 700 tight / controls 600-650 / body 400-500, line-height 1.5, tabular figures for numbers. One system everywhere. */
+html:root body.mmri-prism-page :is(h1,h2,h3,.mmri-brand strong,.hx__name){font-family:var(--mmri-font-family);font-optical-sizing:auto}
+html:root body.mmri-prism-page :is(.report-score strong,.cat-tile__value b,.mmri-kpi-number,.mmri-guide2__metric strong,time,small){font-variant-numeric:tabular-nums}
+html:root body.mmri-prism-page :is(p,li){line-height:1.5}
