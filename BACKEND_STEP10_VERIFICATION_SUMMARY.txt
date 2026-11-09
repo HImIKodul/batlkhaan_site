@@ -1,0 +1,22 @@
+MMRI Backend Step 10/20 verification summary
+
+Dedicated AI boundary static: 26/26 PASS
+Five-domain AI boundary regression: 60/60 PASS
+OpenAI/provider smoke: 17/17 PASS
+AI report acceptance: 59/59 PASS
+Step 9 static: PASS
+Step 8 static: 15/15 PASS
+Step 7 static: 18/18 PASS
+Step 6 static: PASS
+Step 5 static: PASS
+Step 4 lifecycle: 25/25 PASS
+Step 3 auth/tenant: 18/18 PASS
+Step 2 integrity: 16/16 PASS
+Persistence static: 58/58 PASS
+Traceability static: 49/49 PASS
+Security/RBAC static: 54/54 PASS
+Production security: 29/29 PASS
+API static: PASS (69 routes)
+
+TypeScript note: full strategy typecheck in this sandbox is blocked only because node_modules/@types/node is not present in the archive. No changed report file produced a TypeScript diagnostic, and synchronized emitted JavaScript passes node --check.
+Connected PostgreSQL/OpenAI live verification remains for later steps with real infrastructure/credentials.

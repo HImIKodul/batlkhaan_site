@@ -1,0 +1,313 @@
+/* ============================================================================
+   MMRI Design Tokens v2.0 - R17.01 / Report-first redesign
+   Direction: Blue Glass System
+   This is the authoritative visual foundation for color, typography, spacing,
+   geometry, elevation, layout and shared control dimensions.
+   ============================================================================ */
+:root {
+  color-scheme: light;
+
+  /* Color - foundation */
+  --mmri-color-canvas: #F2F7FE;
+  --mmri-color-surface: rgba(255,255,255,.10);
+  --mmri-color-surface-subtle: rgba(255,255,255,.07);
+  --mmri-color-surface-strong: rgba(255,255,255,.17);
+  --mmri-color-text-strong: #FFFFFF;
+  --mmri-color-text: rgba(255,255,255,.92);
+  --mmri-color-text-muted: rgba(255,255,255,.88);
+  --mmri-color-text-faint: rgba(255,255,255,.56);
+  --mmri-color-border: rgba(255,255,255,.24);
+  --mmri-color-border-strong: rgba(255,255,255,.38);
+
+  /* Color - brand */
+  --mmri-color-brand: #1B63D8;
+  --mmri-color-accent: #D2E2FF;
+  --mmri-color-brand-hover: #1553BD;
+  --mmri-color-brand-pressed: #0F43A0;
+  --mmri-color-brand-soft: rgba(140,170,255,.20);
+  --mmri-color-focus: #FFFFFF;
+  --mmri-color-on-brand: #FFFFFF;
+  --mmri-color-overlay-scrim: rgba(8,12,70,.45);
+
+  /* Color - semantic */
+  --mmri-color-success: #4ADE9B;
+  --mmri-color-success-soft: rgba(74,222,155,.18);
+  --mmri-color-warning: #FFC857;
+  --mmri-color-warning-soft: rgba(255,200,87,.18);
+  --mmri-color-danger: #FF8A94;
+  --mmri-color-danger-hover: #FF6F7C;
+  --mmri-color-danger-soft: rgba(255,138,148,.18);
+  --mmri-color-info: #8FB4FF;
+  --mmri-color-info-soft: rgba(143,180,255,.18);
+
+  /* Color - data */
+  --mmri-color-chart-grid: rgba(255,255,255,.2);
+  --mmri-color-chart-comparison: rgba(255,255,255,.55);
+  --mmri-color-chart-future: rgba(255,255,255,.3);
+
+  /* Typography */
+  --mmri-font-family: "Inter Variable", "Noto Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --mmri-font-feature-numeric: "tnum" 1, "lnum" 1;
+  --mmri-type-display-public-size: 60px;
+  --mmri-type-display-public-line: 64px;
+  --mmri-type-display-product-size: 44px;
+  --mmri-type-display-product-line: 50px;
+  --mmri-type-page-size: 36px;
+  --mmri-type-page-line: 42px;
+  --mmri-type-section-size: 24px;
+  --mmri-type-section-line: 32px;
+  --mmri-type-body-large-size: 18px;
+  --mmri-type-body-large-line: 28px;
+  --mmri-type-body-size: 16px;
+  --mmri-type-body-line: 25px;
+  --mmri-type-compact-size: 15px;
+  --mmri-type-compact-line: 22px;
+  --mmri-type-meta-size: 13px;
+  --mmri-type-meta-line: 18px;
+  --mmri-weight-regular: 400;
+  --mmri-weight-medium: 500;
+  --mmri-weight-semibold: 600;
+  --mmri-weight-display: 700;
+  --mmri-tracking-display: -0.025em;
+  --mmri-tracking-heading: -0.018em;
+  --mmri-tracking-compact: 0em;
+  --mmri-tracking-meta: 0.018em;
+  --mmri-type-reading-line: 25px;
+  --mmri-measure-reading: 68ch;
+  --mmri-measure-report: 74ch;
+
+  /* Spacing - 4px base, 8px-oriented rhythm */
+  --mmri-space-1: 4px;
+  --mmri-space-2: 8px;
+  --mmri-space-3: 12px;
+  --mmri-space-4: 16px;
+  --mmri-space-6: 24px;
+  --mmri-space-8: 32px;
+  --mmri-space-10: 40px;
+  --mmri-space-12: 48px;
+  --mmri-space-16: 64px;
+  --mmri-space-20: 80px;
+  --mmri-space-24: 96px;
+  --mmri-space-32: 128px;
+  --mmri-gap-control: var(--mmri-space-2);
+  --mmri-gap-section: var(--mmri-space-12);
+  --mmri-page-top: var(--mmri-space-10);
+
+  /* Geometry */
+  --mmri-radius-small: 8px;
+  --mmri-radius-control: 12px;
+  --mmri-radius-surface: 18px;
+  --mmri-radius-focal: 24px;
+  --mmri-radius-pill: 999px;
+  --mmri-border-width: 1px;
+  --mmri-control-height-compact: 36px;
+  --mmri-control-height-default: 46px;
+  --mmri-control-height-touch: 48px;
+  --mmri-control-spinner-size: 16px;
+  --mmri-control-indicator-size: 20px;
+  --mmri-control-radio-mark-size: 18px;
+  --mmri-control-radio-prefix-size: 32px;
+
+  /* Motion - restrained functional feedback */
+  --mmri-motion-instant: 0ms;
+  --mmri-motion-press: 80ms;
+  --mmri-motion-feedback: 120ms;
+  --mmri-motion-state: 150ms;
+  --mmri-motion-content: 180ms;
+  --mmri-motion-overlay: 200ms;
+  --mmri-motion-progress: 240ms;
+  --mmri-motion-loading: 760ms;
+  --mmri-motion-shimmer: 1500ms;
+  --mmri-motion-reduced: .001ms;
+  --mmri-ease-standard: cubic-bezier(.2,.6,.2,1);
+  --mmri-ease-enter: cubic-bezier(.16,1,.3,1);
+  --mmri-ease-linear: linear;
+  --mmri-motion-distance-small: 4px;
+  --mmri-motion-distance-medium: 8px;
+
+  /* Overlay component bounds */
+  --mmri-overlay-menu-min: 220px;
+  --mmri-overlay-popover-min: 260px;
+  --mmri-overlay-dialog-max: 560px;
+
+  /* Elevation */
+  --mmri-shadow-flat: none;
+  --mmri-shadow-raised: 0 10px 28px rgba(8,22,42,.28);
+  --mmri-shadow-overlay: 0 18px 48px rgba(8,22,42,.4);
+  --mmri-shadow-dialog: 0 28px 76px rgba(8,22,42,.5);
+
+
+  /* Glass - light translucent material (green+white). Use via .mmri-glass* utilities in components/glass.css */
+  --mmri-glass-bg: rgba(255,255,255,.10);
+  --mmri-glass-bg-strong: rgba(255,255,255,.16);
+  --mmri-glass-bg-overlay: rgba(12,32,58,.62);
+  --mmri-glass-bg-tint: rgba(255,255,255,.12);
+  --mmri-glass-border: rgba(255,255,255,.36);
+  --mmri-glass-edge: rgba(255,255,255,.12);
+  --mmri-glass-highlight: inset 0 1.5px 1px rgba(255,255,255,.45), inset 0 -1px 1px rgba(255,255,255,.12);
+  --mmri-glass-blur: blur(3px) saturate(125%);
+  --mmri-glass-blur-strong: blur(5px) saturate(125%);
+  --mmri-glass-shadow: 0 16px 40px rgba(8,22,42,.32);
+  --mmri-glass-shadow-lift: 0 22px 52px rgba(8,22,42,.4);
+  --mmri-glass-control-bg: linear-gradient(160deg,rgba(255,255,255,.2),rgba(255,255,255,.08));
+  --mmri-glass-control-bg-hover: linear-gradient(160deg,rgba(255,255,255,.3),rgba(255,255,255,.14));
+  --mmri-glass-control-border-hover: rgba(255,255,255,.6);
+  --mmri-glass-control-blur: blur(3px) saturate(125%);
+  --mmri-glass-control-shadow: var(--mmri-glass-highlight);
+  --mmri-glass-control-shadow-hover: var(--mmri-glass-highlight);
+  --mmri-focus-ring: 0 0 0 3px rgba(255,255,255,.35);
+  --mmri-status-square-size: 48px;
+  --mmri-domain-icon-size-large: 72px;
+
+  /* Five-domain visual semantics - strong category colors with accessible ink. */
+  --mmri-domain-marketing: #32D7C6;
+  --mmri-domain-marketing-2: #B8F5EE;
+  --mmri-domain-marketing-deep: #0E8C80;
+  --mmri-domain-marketing-ink: #075F4C;
+  --mmri-domain-marketing-soft: rgba(50,215,198,.12);
+  --mmri-domain-it: #49B7FF;
+  --mmri-domain-it-2: #CDEBFF;
+  --mmri-domain-it-deep: #1B78C2;
+  --mmri-domain-it-ink: #0F6E8C;
+  --mmri-domain-it-soft: rgba(73,183,255,.12);
+  --mmri-domain-finance: #FFC25A;
+  --mmri-domain-finance-2: #FFE8B8;
+  --mmri-domain-finance-deep: #B87A12;
+  --mmri-domain-finance-ink: #80500A;
+  --mmri-domain-finance-soft: rgba(255,194,90,.12);
+  --mmri-domain-people: #A879FF;
+  --mmri-domain-people-2: #E3D3FF;
+  --mmri-domain-people-deep: #6D45C4;
+  --mmri-domain-people-ink: #5B33A6;
+  --mmri-domain-people-soft: rgba(168,121,255,.12);
+  --mmri-domain-operations: #FF5BCF;
+  --mmri-domain-operations-2: #FFD2F0;
+  --mmri-domain-operations-deep: #B0238E;
+  --mmri-domain-operations-ink: #841E70;
+  --mmri-domain-operations-soft: rgba(255,91,207,.12);
+
+  --mmri-canvas-wash: radial-gradient(900px 640px at -6% -10%,rgba(96,165,255,.42),transparent 64%),radial-gradient(760px 540px at 104% 2%,rgba(150,205,255,.40),transparent 62%),radial-gradient(640px 480px at 74% 58%,rgba(120,170,255,.16),transparent 64%),radial-gradient(720px 520px at 6% 74%,rgba(170,215,255,.26),transparent 66%),radial-gradient(840px 560px at 26% 112%,rgba(90,150,240,.26),transparent 64%),linear-gradient(150deg,#F4F9FF 0%,#E9F3FF 44%,#DDEBFC 100%);
+
+  /* Layout */
+  --mmri-layout-max: 1360px;
+  --mmri-layout-reading: 760px;
+  --mmri-layout-report: 1120px;
+  --mmri-layout-grid-columns: 12;
+  --mmri-gutter-mobile: 16px;
+  --mmri-gutter-tablet: 24px;
+  --mmri-gutter-desktop: 32px;
+  --mmri-grid-gap-desktop: 24px;
+  --mmri-shell-height: 44px;
+  --mmri-bottom-nav-height: 64px;
+  --mmri-touch-target-min: 48px;
+  --mmri-mobile-bottom-clearance: calc(var(--mmri-bottom-nav-height) + var(--mmri-space-6) + env(safe-area-inset-bottom));
+  --mmri-qr-mobile-max: 320px;
+  --mmri-breakpoint-compact-phone: 479px;
+  --mmri-breakpoint-phone: 767px;
+  --mmri-breakpoint-tablet: 1023px;
+
+  /* Shared semantic aliases. New work should prefer the canonical names above. */
+  --mmri-canvas: var(--mmri-color-canvas);
+  --mmri-surface: var(--mmri-color-surface);
+  --mmri-surface-subtle: var(--mmri-color-surface-subtle);
+  --mmri-surface-muted: var(--mmri-color-surface-strong);
+  --mmri-ink: var(--mmri-color-text-strong);
+  --mmri-ink-secondary: var(--mmri-color-text);
+  --mmri-ink-tertiary: var(--mmri-color-text-muted);
+  --mmri-line: var(--mmri-color-border);
+  --mmri-line-strong: var(--mmri-color-border-strong);
+  --mmri-accent: var(--mmri-color-brand);
+  --mmri-accent-hover: var(--mmri-color-brand-hover);
+  --mmri-accent-pressed: var(--mmri-color-brand-pressed);
+  --mmri-accent-soft: var(--mmri-color-brand-soft);
+  --mmri-accent-line: color-mix(in srgb, var(--mmri-color-brand) 32%, var(--mmri-color-border));
+  --mmri-success: var(--mmri-color-success);
+  --mmri-success-soft: var(--mmri-color-success-soft);
+  --mmri-warning: var(--mmri-color-warning);
+  --mmri-warning-soft: var(--mmri-color-warning-soft);
+  --mmri-danger: var(--mmri-color-danger);
+  --mmri-danger-soft: var(--mmri-color-danger-soft);
+  --mmri-info: var(--mmri-color-info);
+  --mmri-info-soft: var(--mmri-color-info-soft);
+  --mmri-focus: var(--mmri-color-focus);
+  --mmri-radius-panel: var(--mmri-radius-surface);
+  --mmri-shadow-float: var(--mmri-shadow-overlay);
+
+  /* Legacy semantic aliases: compatibility only, scheduled for deletion as screens migrate. */
+  --bg: var(--mmri-color-canvas);
+  --surface: var(--mmri-color-surface);
+  --deep: var(--mmri-color-text-strong);
+  --green: var(--mmri-color-brand);
+  --green-2: var(--mmri-color-brand-hover);
+  --mint: var(--mmri-color-brand-soft);
+  --mint-2: var(--mmri-color-surface-subtle);
+  --text: var(--mmri-color-text-strong);
+  --muted: var(--mmri-color-text-muted);
+  --border: var(--mmri-color-border);
+  --soft: var(--mmri-color-surface-subtle);
+  --warn: var(--mmri-color-warning);
+  --warn-bg: var(--mmri-color-warning-soft);
+  --danger: var(--mmri-color-danger);
+  --danger-bg: var(--mmri-color-danger-soft);
+  --shadow: var(--mmri-shadow-flat);
+  --radius: var(--mmri-radius-surface);
+  --radius-sm: var(--mmri-radius-control);
+  --page: var(--mmri-layout-max);
+
+  --font-ui: var(--mmri-font-family);
+  --font-heading: var(--mmri-font-family);
+  --type-page: var(--mmri-type-page-size);
+  --type-page-line: var(--mmri-type-page-line);
+  --type-section: var(--mmri-type-section-size);
+  --type-section-line: var(--mmri-type-section-line);
+  --type-subsection: 17px;
+  --type-subsection-line: 23px;
+  --type-body: var(--mmri-type-body-size);
+  --type-body-line: var(--mmri-type-body-line);
+  --type-meta: var(--mmri-type-meta-size);
+  --type-button: var(--mmri-type-compact-size);
+  --weight-regular: var(--mmri-weight-regular);
+  --weight-medium: var(--mmri-weight-medium);
+  --weight-semibold: var(--mmri-weight-semibold);
+
+  --shell-height: var(--mmri-shell-height);
+  --shell-max: var(--mmri-layout-max);
+  --shell-nav-gap: var(--mmri-space-8);
+
+  /* Page-gutter authority used by shared layout composition. */
+  --mmri-page-gutter: var(--mmri-gutter-desktop);
+  --mmri-color-brand-dark: var(--mmri-color-brand-pressed);
+  --mmri-radius-focal-sm: var(--mmri-radius-surface);
+
+  /* Older chart/page aliases still referenced by current runtime. */
+  --mmri-bg: var(--mmri-color-canvas);
+  --mmri-text: var(--mmri-color-text-strong);
+  --mmri-muted: var(--mmri-color-text-muted);
+  --mmri-border: var(--mmri-color-border);
+  --mmri-soft: var(--mmri-color-surface-subtle);
+  --mmri-green-950: var(--mmri-color-brand-pressed);
+  --mmri-green-800: var(--mmri-color-brand);
+  --mmri-green-700: var(--mmri-color-brand);
+  --mmri-green-600: var(--mmri-color-brand-hover);
+  --mmri-green-300: color-mix(in srgb, var(--mmri-color-brand) 38%, white);
+  --mmri-green-200: color-mix(in srgb, var(--mmri-color-brand) 24%, white);
+  --mmri-green-100: var(--mmri-color-brand-soft);
+  --public-example-bg: var(--mmri-color-canvas);
+  --public-example-card: var(--mmri-color-surface);
+  --public-example-deep: var(--mmri-color-text-strong);
+  --public-example-ink: var(--mmri-color-text-strong);
+  --public-example-muted: var(--mmri-color-text-muted);
+  --public-example-line: var(--mmri-color-border);
+  --public-example-green: var(--mmri-color-brand);
+}
+
+/* Responsive foundation modes. Screen-specific recomposition happens in Step 18. */
+@media (max-width: 767px) {
+  :root { --mmri-page-gutter: var(--mmri-gutter-mobile); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root { --mmri-page-gutter: var(--mmri-gutter-tablet); }
+}
+@media (min-width: 1024px) {
+  :root { --mmri-page-gutter: var(--mmri-gutter-desktop); }
+}

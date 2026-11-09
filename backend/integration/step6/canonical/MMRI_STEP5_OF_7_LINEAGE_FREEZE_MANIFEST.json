@@ -1,0 +1,190 @@
+{
+  "manifestVersion": "MMRI-QBANK-LINEAGE-STEP5-v1.0.0",
+  "createdDate": "2026-10-10",
+  "status": "FREEZE_CANDIDATE_NOT_PRODUCTION_FINAL",
+  "purpose": "Freeze file lineage, counts, identifiers and fingerprints before runtime integration.",
+  "reasonNotFinal": [
+    "Step 1 identified minor residual Marketing wording cleanup.",
+    "Steps 2–3 identified targeted semantic/style review for the four non-Marketing banks.",
+    "Runtime scoring, normalization, routing and DB mappings still require the working system ZIP."
+  ],
+  "canonicalDataset": {
+    "domains": 5,
+    "categoriesTotal": 320,
+    "categoriesPerDomain": 64,
+    "dimensionsPerCategory": 48,
+    "variantsPerDimension": 4,
+    "questionsPerDomain": 12288,
+    "questionsTotal": 61440,
+    "uniqueQuestionIdsOverall": 61440,
+    "rowCountOverall": 61440,
+    "contentSHA256": "34337d26022965045515d57030ba1f1d2b01a1df5642c77a87d2890a12acac25"
+  },
+  "variantContract": {
+    "Q1": "A_CURRENT_STATE",
+    "Q2": "B_RECENT_OR_QUANTIFIED",
+    "Q3": "C_CORROBORATION",
+    "Q4": "D_CONFLICT_RESOLUTION"
+  },
+  "domains": [
+    {
+      "DomainCode": "MARKETING",
+      "Questions": 12288,
+      "UniqueQuestionIDs": 12288,
+      "Categories": 64,
+      "Dimensions": 48,
+      "Q1": 3072,
+      "Q2": 3072,
+      "Q3": 3072,
+      "Q4": 3072,
+      "WordingStatus": "HUMAN_CHECKED_WITH_MINOR_REPAIR_PENDING:12288",
+      "ProductionApproved": "NO:12288",
+      "ContentSHA256": "52007846e67945f9e4f7eaca18f703d26bc2347d8f85a86de573f2727a7475c9"
+    },
+    {
+      "DomainCode": "HRMRI",
+      "Questions": 12288,
+      "UniqueQuestionIDs": 12288,
+      "Categories": 64,
+      "Dimensions": 48,
+      "Q1": 3072,
+      "Q2": 3072,
+      "Q3": 3072,
+      "Q4": 3072,
+      "WordingStatus": "STAGING_REVIEW_REQUIRED:12288",
+      "ProductionApproved": "NO:12288",
+      "ContentSHA256": "0d4c2d83034e6a790ea3b034298e108de9bc2980faef32816936563a49526a79"
+    },
+    {
+      "DomainCode": "FINMRI",
+      "Questions": 12288,
+      "UniqueQuestionIDs": 12288,
+      "Categories": 64,
+      "Dimensions": 48,
+      "Q1": 3072,
+      "Q2": 3072,
+      "Q3": 3072,
+      "Q4": 3072,
+      "WordingStatus": "STAGING_REVIEW_REQUIRED:12288",
+      "ProductionApproved": "NO:12288",
+      "ContentSHA256": "befa78bc470c05a288df12e52f3ce9f122ab8abbf0a63a06a38e3a6db0b39ab5"
+    },
+    {
+      "DomainCode": "ISMRI",
+      "Questions": 12288,
+      "UniqueQuestionIDs": 12288,
+      "Categories": 64,
+      "Dimensions": 48,
+      "Q1": 3072,
+      "Q2": 3072,
+      "Q3": 3072,
+      "Q4": 3072,
+      "WordingStatus": "STAGING_REVIEW_REQUIRED:12288",
+      "ProductionApproved": "NO:12288",
+      "ContentSHA256": "7eb9bab0b27f5b7c21521ffadd1fc254abcb7ad94cd84104394c1a29d6fa5acc"
+    },
+    {
+      "DomainCode": "OPMRI",
+      "Questions": 12288,
+      "UniqueQuestionIDs": 12288,
+      "Categories": 64,
+      "Dimensions": 48,
+      "Q1": 3072,
+      "Q2": 3072,
+      "Q3": 3072,
+      "Q4": 3072,
+      "WordingStatus": "STAGING_REVIEW_REQUIRED:12288",
+      "ProductionApproved": "NO:12288",
+      "ContentSHA256": "c7254a76bc604db1c1a858221ace5101df96f4f1430f1061302ccfb98284968f"
+    }
+  ],
+  "files": [
+    {
+      "file": "MMRI_QUESTION_BANK_QUESTION_ANSWER_ALIGNED_FINAL GANBAATAR CHECK(1).xlsx",
+      "bytes": 734695,
+      "sha256": "d3cbfcf6f80dd859b24b605c1a3579c34d3badb88ef959674da31be8af60ea10"
+    },
+    {
+      "file": "01_Marketing_MRI_HUMAN_CHECKED_WORDING_FINAL.xlsx",
+      "bytes": 1090653,
+      "sha256": "e51e9abdfdc5c2bdcd8a264f37072adfb95380aaf5e12fa8ad5757bca46571c9"
+    },
+    {
+      "file": "02_HRMRI_MONGOLIAN_WORDING_ALIGNED_FINAL.xlsx",
+      "bytes": 979136,
+      "sha256": "d767ae22bc4260f13f56c259904ce1345f7ce54eea16810224fd508bbeebc15e"
+    },
+    {
+      "file": "03_FINMRI_MONGOLIAN_WORDING_ALIGNED_FINAL.xlsx",
+      "bytes": 979364,
+      "sha256": "d6744b8af6a3126fa7ae3a1896e6cc5c0b816cd99e32630a21817b37940044c2"
+    },
+    {
+      "file": "04_ISMRI_MONGOLIAN_WORDING_ALIGNED_FINAL.xlsx",
+      "bytes": 980073,
+      "sha256": "3010947244267d1487b90b2bf31962a233bff8aae0d856a5ac2ab7f1bc9c092b"
+    },
+    {
+      "file": "05_OPMRI_MONGOLIAN_WORDING_ALIGNED_FINAL.xlsx",
+      "bytes": 975733,
+      "sha256": "daea2e163e664b5c842c3c83f3071a49691a0f22529566b3af2b0f212e7a8ef1"
+    },
+    {
+      "file": "MMRI_5_DOMAIN_CANONICAL_INTEGRATION_QUESTIONS.csv",
+      "bytes": 77993206,
+      "sha256": "076804abec0d3e4683b08fc31e16e88d58d7d8fb5e8650fb2ffc7c21123828d2"
+    },
+    {
+      "file": "MMRI_5_DOMAIN_CANONICAL_INTEGRATION_QUESTIONS.jsonl",
+      "bytes": 108542660,
+      "sha256": "6de437ff29ea94c32313c6657d9d85637cf6624e98f1f24e635caf6368a0ac3c"
+    },
+    {
+      "file": "MMRI_5_DOMAIN_CANONICAL_SCHEMA_v1.json",
+      "bytes": 1434,
+      "sha256": "8590783e1ede102cc6cd851d8a785308a25f0cca13dd4f078f05b88cfde922d0"
+    },
+    {
+      "file": "MMRI_MARKETING_STYLE_CONTRACT_v1.json",
+      "bytes": 2356,
+      "sha256": "8c84507cfbf42915380ddbcf1eab3dce68e2864400d7c9e5eea721f22cac239c"
+    },
+    {
+      "file": "MMRI_STEP1_OF_7_AUDIT_REPORT.md",
+      "bytes": 5049,
+      "sha256": "2f278b291cb4aea6b6df0e6c118bc5a246282fbdd6edaacd143b5fdede05bb2e"
+    },
+    {
+      "file": "MMRI_STEP2_OF_7_SEMANTIC_ACCURACY_AUDIT.md",
+      "bytes": 10015,
+      "sha256": "6cabd60b454551b865e766fb72ab11343815cdd10b33df4618f388083ab37058"
+    },
+    {
+      "file": "MMRI_STEP3_OF_7_MARKETING_STYLE_CONSISTENCY_AUDIT.md",
+      "bytes": 9518,
+      "sha256": "f4cc93a9a9d73878d9f6160aeb47e3ebe04e17d0cb03130a611bddb37c5f83f1"
+    },
+    {
+      "file": "MMRI_STEP4_OF_7_CANONICAL_SCHEMA_GUIDE.xlsx",
+      "bytes": 6747,
+      "sha256": "c70abd5c2ed19270138751d172aea48eeaa185eeee626e96d4ded22295c00bbe"
+    },
+    {
+      "file": "MMRI_STEP4_OF_7_CANONICAL_INTEGRATION_PACKAGE.zip",
+      "bytes": 8854406,
+      "sha256": "97a5deea7c6d8327801b0db6a2a48bd543568d6c5f70357e5ad8e5f444ee9c3d"
+    }
+  ],
+  "changeControl": {
+    "doNotEditFrozenFilesInPlace": true,
+    "anyQuestionOrAnswerEditRequiresNewVersion": true,
+    "anyQuestionOrAnswerEditRequiresNewContentHash": true,
+    "preserveQuestionIDsUnlessMeaningChanges": true,
+    "preserveCategoryIDs": true,
+    "preserveDimensionIDs": true,
+    "preserveVariantOrder": true,
+    "preserveAnswerOrder": true,
+    "doNotInferScoreFromAnswerPosition": true,
+    "productionApprovalBlockedUntilSteps6And7AndRuntimeVerification": true
+  }
+}

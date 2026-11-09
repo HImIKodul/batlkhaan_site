@@ -1,0 +1,43 @@
+[phaseBounds]
+function phaseBounds(range:string,index:number){const nums=(range.match(/\d+/g)||[]).map(Number);if(nums.length>=2)return [nums[0],nums[1]] as const;const fallback:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[[0,14],[15,30],[31,90],[91,180],[181,365]];return fallback[Math.min(index,4)]}
+
+=====
+
+[stageDateRange]
+function stageDateRange(rawDate:string,stage:BusinessPlanStage,index:number){const [start,end]=phaseBounds(stage.range,index);const base=parseDate(rawDate);return `${compactDate(addDays(base,start))} — ${compactDate(addDays(base,end))}`}
+
+=====
+
+[PlanActionCopy]
+function PlanActionCopy({m,stage,title,result,measure,index=0}:{m:ReportModel;stage:BusinessPlanStage;title:string;result:string;measure:string;index?:number}){const owner=ownerByArea[m.area.id];const action=mnCustomerText(title);const finished=lowerFirst(mnCustomerText(result));const metric=lowerFirst(mnCustomerText(measure));const finishSentence=index%2===0?`Энэ ажлын төгсгөлд ${finished} бүрдсэн байна.`:`Энэ үе дуусахад ${finished} бодитоор ашиглагдаж эхэлсэн байна.`;return <div className="report-plan-action-copy"><div className="report-plan-action-copy__head"><span>{index+1}</span><h4>{action}</h4></div><p>{owner} холбогдох багтайгаа хамт энэ ажлыг хэрэгжүүлнэ. {finishSentence}</p><p className="report-plan-action-copy__check"><Icon name="check" size={15}/><span>{metric}-ийн өөрчлөлтөөр ахиц харагдана.</span></p></div>}
+
+=====
+
+[PlanCard]
+function PlanCard({m,stage,index,done,toggle}:{m:ReportModel;stage:BusinessPlanStage;index:number;done:boolean;toggle:()=>void}){return <article className={`report-roadmap-card report-roadmap-card--natural ${done?'is-complete':''}`}><div className="report-roadmap-card__time"><span>{stageDateRange(m.rawDate,stage,index)}</span><h3>{stage.title}</h3><p>{stage.purpose}</p><button type="button" className="report-plan-complete" aria-pressed={done} aria-label={done?'Энэ үе шатыг дуусаагүй болгох':'Энэ үе шатыг дууссанаар тэмдэглэх'} onClick={toggle}><Icon name="check" size={20}/><span className="report-plan-complete__tip" role="tooltip">{done?'Дууссан. Дахин дарж цуцална.':'Дууссанаар тэмдэглэх'}</span></button></div><div className="report-roadmap-card__work">{stage.actions.map((a,j)=><PlanActionCopy key={`${a.title}-${j}`} m={m} stage={stage} title={a.title} result={a.result} measure={a.measure} index={j}/>)}</div></article>}
+
+=====
+
+[PrintPlanStage]
+function PrintPlanStage({m,stage,index}:{m:ReportModel;stage:BusinessPlanStage;index:number}){return <article className="print-plan-stage print-plan-stage--natural"><div className="print-plan-stage__time"><span>{stageDateRange(m.rawDate,stage,index)}</span><strong>{stage.title}</strong><p>{stage.purpose}</p></div><div className="print-plan-stage__work">{stage.actions.map((a,j)=><PlanActionCopy key={j} m={m} stage={stage} title={a.title} result={a.result} measure={a.measure} index={j}/>)}</div></article>}
+
+=====
+
+[PrintPlanPage]
+function PrintPlanPage({m,page,stages}:{m:ReportModel;page:number;stages:Array<{stage:BusinessPlanStage;index:number}>}){return <section className="report-print-page report-print-page--plan"><PrintMeta m={m} page={page}/><div className="print-title"><b>12 САРЫН ХЭРЭГЖИЛТ</b><h2>{page===4?'Эхний 90 хоног':'91–365 хоног ба дахин үнэлгээ'}</h2></div><div className="print-target-line"><span>Одоогийн түвшин <b>{m.score}/100</b></span><i>→</i><span>Зорилтот түвшин <strong>{m.target}/100</strong></span></div><div className="print-plan-grid">{stages.map(x=><PrintPlanStage key={x.stage.range} m={m} stage={x.stage} index={x.index}/>)}</div>{page===5&&<div className="print-remeasure"><h3>Жилийн төгсгөлд</h3><p>{compactDate(addDays(parseDate(m.rawDate),365))}-ны орчим ижил аргачлалаар дахин оношилж, 64 чадавхын өөрчлөлт болон хэрэгжүүлсэн ажлын үр дүнг өмнөх тайлантай харьцуулна.</p></div>}</section>}
+
+=====
+
+[plan_css_core]
+.report-roadmap-human{display:grid!important;gap:14px!important;margin-top:18px!important}
+.report-roadmap-card--natural{display:grid!important;grid-template-columns:minmax(230px,.62fr) minmax(0,1.38fr)!important;border:1px solid #DDE6E1!important;border-radius:20px!important;background:#fff!important;overflow:hidden!important;box-shadow:none!important}
+.report-roadmap-card__time{padding:20px 21px!important;border-right:1px solid #E2E9E5!important;background:#F7FAF8!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:7px!important}.report-roadmap-card__time>span{font-size:12.5px!important;line-height:1.35!important;font-weight:900!important;color:var(--report-accent)!important}.report-roadmap-card__time>h3{margin:0!important;font-size:21px!important;line-height:1.22!important;color:#1B2D24!important}.report-roadmap-card__time>p{margin:0!important;font-size:13px!important;line-height:1.5!important;color:#5D6C64!important}.report-roadmap-card__time>button{margin-top:auto!important;border:1px solid #D4DED8!important;border-radius:999px!important;background:#fff!important;padding:7px 10px!important;display:inline-flex!important;align-items:center!important;gap:7px!important;font-size:11px!important;font-weight:800!important;color:#536159!important;cursor:pointer!important}.report-roadmap-card.is-complete .report-roadmap-card__time>button{background:#176B4D!important;color:#fff!important;border-color:#176B4D!important}
+.report-roadmap-card__work{padding:18px 20px!important;display:grid!important;gap:10px!important;align-content:start!important}
+.report-plan-action-copy{padding:14px 15px!important;border:1px solid #E4EAE7!important;border-radius:14px!important;background:#fff!important}.report-plan-action-copy h4{margin:0!important;font-size:16px!important;line-height:1.35!important;color:#1D3027!important}.report-plan-action-copy p{margin:6px 0 0!important;font-size:12.8px!important;line-height:1.5!important;color:#5B6962!important}.report-plan-action-copy p:nth-of-type(2){color:#35483E!important;font-weight:680!important}.report-plan-action-copy p:nth-of-type(3){padding-top:6px!important;border-top:1px dashed #E1E7E4!important}
+.print-plan-grid{display:grid!important;gap:3mm!important}.print-plan-stage--natural{display:grid!important;grid-template-columns:50mm minmax(0,1fr)!important;gap:4mm!important;padding:3.6mm!important;border:.3mm solid #DDE5E1!important;border-radius:3mm!important;background:#fff!important;break-inside:avoid!important}.print-plan-stage__time{padding-right:3mm!important;border-right:.3mm solid #E2E8E4!important}.print-plan-stage__time>span{display:block!important;font-size:8.2pt!important;line-height:1.3!important;color:var(--report-accent)!important;font-weight:900!important}.print-plan-stage__time>strong{display:block!important;margin-top:1.5mm!important;font-size:11.5pt!important;line-height:1.22!important}.print-plan-stage__time>p{font-size:8.2pt!important;line-height:1.42!important;margin:1.8mm 0 0!important;color:#59675F!important}.print-plan-stage__work{display:grid!important;gap:2.2mm!important}.print-plan-stage__work .report-plan-action-copy{padding:2.5mm 2.8mm!important;border:.3mm solid #E5EAE7!important;border-radius:2.4mm!important;background:#FAFCFB!important}.print-plan-stage__work h4{font-size:9pt!important;line-height:1.25!important;margin:0!important}.print-plan-stage__work p{font-size:7.6pt!important;line-height:1.35!important;margin:1mm 0 0!important}.print-plan-stage__work p:nth-of-type(3){padding-top:1mm!important;border-top:.3mm dashed #E1E7E4!important}
+.print-remeasure{margin-top:4mm!important;padding:4mm!important;border:.4mm solid color-mix(in srgb,var(--report-accent) 35%,#DCE5E0)!important;border-radius:3mm!important;background:#F4F9F6!important}.print-remeasure h3{font-size:10.5pt!important;margin:0 0 1.5mm!important}.print-remeasure p{font-size:8.8pt!important;line-height:1.42!important;margin:0!important}
+.report-plan-action-copy__check{padding-top:7px!important;border-top:1px dashed #E1E7E4!important;color:#30483C!important;font-weight:720!important}
+.report-plan-action-copy p:nth-of-type(2){color:#30483C!important;font-weight:720!important}
+.report-roadmap-card__time button{white-space:normal!important;line-height:1.25!important}
+.print-plan-stage__work .report-plan-action-copy p{font-size:7.5pt!important;line-height:1.32!important}
+.print-plan-stage__work .report-plan-action-copy__check{padding-top:1mm!important;border-top:.3mm dashed #E1E7E4!important}

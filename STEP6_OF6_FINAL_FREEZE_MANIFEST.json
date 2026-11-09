@@ -1,0 +1,22 @@
+{
+  "release": "MMRI_FINAL_FROZEN_MASTER_v3.1.20_R17_21_8_STEP6_OF6_ACCEPTED_61440_INTEGRATED_LINUX_2026-10-23",
+  "date": "2026-10-23",
+  "status": "FINAL_ACCEPTED_SOURCE_INTEGRATION_FREEZE",
+  "acceptedMasterRows": 61440,
+  "acceptedMasterSHA256": "4897b0218d51abf0d5aab28a13521b83f98ad5fd859a368aceaaff817abdd75d",
+  "residualAcceptanceDefects": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0
+  },
+  "methodologies": {
+    "marketing": "3.0.3 / 3.1.3",
+    "people": "4.1.4",
+    "finance": "4.2.4",
+    "it": "4.3.4",
+    "operations": "4.4.4"
+  },
+  "sourceRuntimeRegression": "PASS",
+  "connectedDockerPostgresGate": "NOT_RUN_ENVIRONMENT_NO_DOCKER",
+  "connectedGate": "RUN_STEP6_CONNECTED_RELEASE_GATE.sh"
+}

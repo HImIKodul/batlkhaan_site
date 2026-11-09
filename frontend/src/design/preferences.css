@@ -1,0 +1,19 @@
+/* ============================================================================
+   MMRI system accessibility preferences (reduced motion, forced colors)
+   This is the single intentional preference layer. It must stay last in the CSS import list.
+   It is not a repair/override dump: only user-selected accessibility/theme modes
+   belong here.
+   ============================================================================ */
+
+/* Step 8/10 - system accessibility preferences must work even before a user
+   explicitly changes MMRI settings. */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+@media (forced-colors:active){
+  :root{--mmri-glass-bg:Canvas;--mmri-glass-bg-strong:Canvas;--mmri-glass-bg-overlay:Canvas;--mmri-glass-border:CanvasText;--mmri-glass-edge:CanvasText;--mmri-color-border:CanvasText;--mmri-color-border-strong:CanvasText}
+  :where(a,button,input,select,textarea,summary,[role=tab],[role=menuitem],[role=option],[tabindex]):focus-visible{outline:3px solid Highlight!important;outline-offset:3px!important}
+  :where(.mmri-glass,.mmri-surface,.mmri-card){forced-color-adjust:auto;box-shadow:none!important}
+}

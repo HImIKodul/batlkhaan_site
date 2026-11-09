@@ -1,0 +1,104 @@
+/* the diagnosis page uses almost the full width so the cards can be large */
+html body .mmri-shell-main:has(.diagnosis-square-page){margin-inline:clamp(10px,2vw,32px)}
+/* Diagnosis hub: one-screen liquid-glass domain tiles, ring status top-right, glass sheet on selection. */
+.diagnosis-square-page{max-width:1680px;margin-inline:auto;padding:6px 22px 14px;display:flex;flex-direction:column;gap:14px;height:calc(100dvh - var(--mmri-chrome));color:var(--wp-ink)}
+.diagnosis-square-page>.diagnosis-square-grid{flex:1 1 auto}
+/* A banner (profile gate / error) takes its own row and its height comes out of the cards, so nothing overlaps or leaves the screen. */
+.diagnosis-square-page:has(>.mmri-support-alert) .diagnosis-square{height:clamp(260px,calc(100dvh - 360px),520px)}
+.diagnosis-square-head{text-align:center}
+.diagnosis-square-head__title{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.diagnosis-square-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(10px,1.1vw,18px);align-items:stretch;align-content:center;min-height:0;max-height:100%}
+/* Diagnosis card = .cat-tile (glass.css): big icon on the family gradient, light label strip with title, compact status, CTA. */
+.diagnosis-square{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:12fr 36fr 18fr 12fr 14fr;row-gap:8px;height:clamp(450px,min(calc(100dvh - 170px),40vw),660px);padding:14px 14px 16px;align-self:stretch;--ac:var(--area-accent);--domain-glow:color-mix(in srgb,var(--area-accent) 60%,transparent);cursor:default}
+.diagnosis-square__icon{display:grid;place-items:center;container-type:size;--dial:min(210px,90cqh,90cqw);width:100%;height:100%;min-height:0;margin:0;padding:0;border:1px solid rgba(255,255,255,.95);border-radius:22px;overflow:hidden;color:var(--wp-ink);
+ background:radial-gradient(90% 80% at 50% -10%,rgba(255,255,255,.95),transparent 70%),radial-gradient(70% 70% at 50% 115%,color-mix(in srgb,var(--ac) 30%,transparent),transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--ac) 9%,#fff),color-mix(in srgb,var(--ac) 20%,#F4F8FC));
+ box-shadow:inset 0 1.5px 0 #fff,inset 0 -1px 0 color-mix(in srgb,var(--ac) 28%,rgba(150,164,186,.4)),inset 0 -22px 30px -24px color-mix(in srgb,var(--ac) 55%,transparent),0 1px 2px rgba(20,30,50,.08),0 14px 24px -18px color-mix(in srgb,var(--ac) 60%,rgba(20,40,80,.4));cursor:pointer;font:inherit;position:relative;z-index:1;transition:box-shadow var(--wp-dur) var(--wp-ease)}
+.diagnosis-square:hover .diagnosis-square__icon,.diagnosis-square__icon:focus-visible{box-shadow:inset 0 1.5px 0 #fff,inset 0 -1px 0 color-mix(in srgb,var(--ac) 40%,rgba(150,164,186,.4)),inset 0 -22px 30px -22px color-mix(in srgb,var(--ac) 70%,transparent),0 2px 3px rgba(20,30,50,.1),0 18px 30px -16px color-mix(in srgb,var(--ac) 75%,rgba(20,40,80,.4))}
+.diagnosis-square .diagnosis-square__label{display:contents}
+.diagnosis-square h2{margin:0;width:100%;align-self:center;font-size:clamp(14px,2dvh,16.5px);line-height:1.28;font-weight:600;color:inherit;display:flex;align-items:center;justify-content:center;text-align:center;text-wrap:balance}
+.diagnosis-square__name{text-align:center;font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;min-height:44px;text-align:center;font-weight:inherit;letter-spacing:inherit;line-height:inherit}
+.diagnosis-square__icon:focus-visible,.diagnosis-square__name:focus-visible{outline:3px solid #0B0F14;outline-offset:-3px;border-radius:12px}
+.diagnosis-square__meta{display:flex;align-items:center;align-self:center;justify-content:center;min-height:0;margin:0;font-size:13px;line-height:1.4;color:var(--wp-ink2);font-weight:500;text-align:center}
+.diagnosis-square__meta b{font-variant-numeric:tabular-nums;font-weight:700}
+/* CTA on the colour surface: quiet translucent control (secondary level), clearer edge on hover. */
+.diagnosis-square .mmri-button{align-self:end;margin-top:0;min-height:44px;padding-inline:10px;white-space:nowrap;font-size:clamp(11.5px,1.1vw,14px);font-weight:650;letter-spacing:.04em}
+body.mmri-prism-page .diagnosis-square.cat-tile .mmri-button--primary{--btn-a:#22B9FF;--btn-b:#007BFA;--btn-c:#0052D2}/* reference 03: every card action stays vivid sapphire whichever domain themes the page */
+.diagnosis-pay-button b{letter-spacing:.04em}
+
+/* Selected domain: backdrop is already the domain environment; the sheet is see-through glass. */
+.mmri-dialog-layer--area{background:rgba(238,242,248,.62);-webkit-backdrop-filter:blur(14px) saturate(130%);backdrop-filter:blur(14px) saturate(130%);animation:mmri-fade .3s ease both}
+.mmri-dialog-layer--area .mmri-dialog{width:min(720px,100%);color:var(--wp-ink);border:1px solid var(--wp-silver);border-radius:var(--wp-r-lg);background:var(--wp-spec) top/100% 22% no-repeat,var(--hg-l1);-webkit-backdrop-filter:blur(30px) saturate(160%);backdrop-filter:blur(30px) saturate(160%);box-shadow:var(--wp-bevel),0 2px 6px rgba(20,30,50,.08),0 50px 100px -34px rgba(20,40,80,.38);animation:mmri-pop .34s var(--wp-ease) both}
+.mmri-dialog-layer--area .mmri-dialog__header{border-bottom:1px solid var(--wp-silver);padding:24px 28px 16px}
+.mmri-dialog-layer--area .mmri-dialog__header h2{font-size:clamp(21px,2.6vw,28px);line-height:1.2;font-weight:650;letter-spacing:-.02em;color:var(--wp-ink)}
+.mmri-dialog-layer--area .mmri-dialog__header p{color:var(--wp-ink2)}
+.mmri-dialog-layer--area .mmri-dialog__header .mmri-icon-button{width:52px;height:52px;border-radius:50%;font-size:28px;line-height:1;color:var(--wp-ink);border:1px solid var(--wp-silver2);background:var(--wp-spec) top/100% 50% no-repeat,var(--wp-glass);box-shadow:var(--wp-bevel),var(--wp-shadow-1);transition:box-shadow var(--wp-dur) ease,transform var(--wp-dur) var(--wp-ease)}
+.mmri-dialog-layer--area .mmri-dialog__header .mmri-icon-button:hover{transform:none;box-shadow:var(--wp-bevel),var(--wp-shadow-2)}
+.mmri-dialog-layer--area .mmri-dialog__body{padding:14px 28px 10px}
+.mmri-dialog-layer--area .mmri-dialog__footer{border-top:1px solid var(--wp-silver);padding:16px 28px 24px}
+.diagnosis-sheet{display:grid;justify-items:center;gap:12px;text-align:center}
+.diagnosis-sheet p{margin:0;color:var(--wp-ink2);line-height:1.6}
+.diagnosis-sheet__swatch{display:block;width:100%;height:64px;border-radius:var(--wp-r-md);border:1px solid rgba(255,255,255,.7);background:radial-gradient(90% 120% at 15% 0,rgba(255,255,255,.55),transparent 60%),linear-gradient(160deg,var(--acc2,var(--domain-secondary)),var(--acc,var(--domain-primary)) 60%,color-mix(in srgb,var(--acc,var(--domain-primary)) 86%,#0B0F14));box-shadow:inset 0 1px 0 #fff,0 10px 20px -12px rgba(20,40,80,.4)}
+
+/* Status pill: one small frosted-white pill, top-left of the card. Dot colour = state. */
+.diagnosis-status-icon{--st:#94A3B8;position:relative;align-self:center;justify-self:center;z-index:3;display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 24px);padding:5px 11px 5px 9px;border-radius:999px;background:rgba(255,255,255,.92);color:#10263f;font-size:13px;line-height:1.2;font-weight:600;white-space:nowrap;box-shadow:var(--elevation-1)}
+.diagnosis-status-icon.is-ready{--st:#1650DC}.diagnosis-status-icon.is-progress{--st:#E08A00}.diagnosis-status-icon.is-report{--st:#16A34A}
+.diagnosis-status-icon>i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--st)}
+.diagnosis-status-icon>span{overflow:hidden;text-overflow:ellipsis}
+
+@media (max-width:1000px),(max-height:639px){
+ .diagnosis-square-page{height:auto;min-height:calc(100dvh - var(--mmri-shell-height))}
+ .diagnosis-square-page:has(>.mmri-support-alert) .diagnosis-square{height:auto}
+ .diagnosis-square-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .diagnosis-square{grid-column:span 2;height:auto}
+ .diagnosis-square:nth-child(4){grid-column:2/span 2}.diagnosis-square:nth-child(5){grid-column:4/span 2}
+ .diagnosis-square__icon{min-height:130px}
+}
+/* Phones: ONE compact horizontal card per category (score ring left; status, name, meta and the primary action right) instead of tall two-column tiles. */
+@media (max-width:700px){
+ .diagnosis-square-page{padding:10px 12px calc(var(--mmri-mobile-bottom-clearance) - 8px);gap:10px;height:auto;min-height:0}
+ .diagnosis-square-head{display:none}
+ .diagnosis-square-grid{grid-template-columns:1fr;gap:12px;align-content:start;flex:0 0 auto}
+ .diagnosis-square,.diagnosis-square:nth-child(4),.diagnosis-square:nth-child(5),.diagnosis-square:last-child{grid-column:auto;width:auto;justify-self:stretch;min-height:0;height:auto;border-radius:24px;
+  display:grid;grid-template-columns:96px minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"ic st" "ic lb";column-gap:14px;row-gap:6px;align-items:center;padding:12px 14px}
+ .diagnosis-status-icon{position:static;grid-area:st;justify-self:start;max-width:100%;padding:4px 10px 4px 8px;font-size:13px;gap:5px}
+ .diagnosis-square__icon{grid-area:ic;align-self:center;width:96px;min-height:0;height:96px;padding:0;flex:none}
+ .diagnosis-square .diagnosis-square__label{grid-area:lb;padding:0;display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0}
+ .diagnosis-square h2{font-size:16px;line-height:1.25;min-height:0;text-align:left;margin:0}
+ .diagnosis-square__meta{font-size:13.5px;min-height:0;text-align:left;margin:0}
+ .diagnosis-square .mmri-button{min-height:44px;font-size:13.5px;padding-inline:10px;letter-spacing:.02em}
+ html:root body.mmri-prism-page .diagnosis-square .diagnosis-square__name{padding:0!important;min-height:0!important;background:none!important;border:0!important;box-shadow:none!important;text-align:left;font-size:16px;line-height:1.25}
+ html:root body.mmri-prism-page .diagnosis-square .diagnosis-square__retake{flex-direction:row;gap:8px;min-height:36px;padding:4px 12px;justify-content:space-between}
+ html:root body.mmri-prism-page .diagnosis-square .diagnosis-square__meta{min-height:0}
+ html:root body.mmri-prism-page .cat-tile h2{margin:0;padding:6px 12px;border-radius:14px}
+ html:root body.mmri-prism-page .cat-tile .diagnosis-square__meta:not(:empty){margin:0;padding:3px 10px}
+ html:root body.mmri-prism-page .diagnosis-square .diagnosis-square__retake{min-height:32px;padding:2px 12px;margin:0}
+ .diagnosis-square .diagnosis-square__label{gap:5px}
+ .diagnosis-square .mmri-button{min-height:42px}
+}
+
+/* Narrow desktops: compact status pill so the state name + % never truncates. */
+@media (min-width:1001px) and (max-width:1279px){
+ .diagnosis-status-icon{top:8px;left:8px;max-width:calc(100% - 16px);padding:4px 8px 4px 7px;gap:5px;font-size:12.5px}
+}
+@media (max-width:380px){.diagnosis-square,.diagnosis-square:nth-child(4),.diagnosis-square:nth-child(5),.diagnosis-square:last-child{grid-template-columns:80px minmax(0,1fr);column-gap:10px;padding:10px 12px}.diagnosis-square__icon{width:80px;height:80px}.diagnosis-square h2{font-size:15px}}
+.diagnosis-square__retake{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin:0;padding:6px 10px;flex-direction:column;gap:1px;text-align:center;line-height:1.2;border:1px solid color-mix(in srgb,var(--ac) 62%,#fff);border-radius:999px;background:linear-gradient(180deg,#fff,color-mix(in srgb,var(--ac) 16%,#fff));box-shadow:inset 0 1px 0 #fff,0 8px 14px -12px color-mix(in srgb,var(--ac) 70%,transparent);font:inherit;font-size:13px;font-weight:650;letter-spacing:0;text-wrap:balance;color:var(--wp-ink);cursor:pointer;transition:border-color var(--wp-dur) ease,box-shadow var(--wp-dur) ease,background-color var(--wp-dur) ease}
+.diagnosis-square__retake:hover{border-color:var(--ac);box-shadow:inset 0 1px 0 #fff,0 0 0 3px color-mix(in srgb,var(--ac) 22%,transparent),0 10px 18px -10px color-mix(in srgb,var(--ac) 80%,transparent)}
+.diagnosis-square__retake:focus-visible{outline:var(--ix-ring);outline-offset:var(--ix-ring-offset)}
+
+/* Hover on a diagnosis tile is LOCAL and cheap: a crisp accent ring (no blurred glow transition, no filter, no page theme change). */
+html:root body.mmri-prism-page .cat-tile{transition:none}
+html:root body.mmri-prism-page .cat-tile:hover,html:root body.mmri-prism-page .cat-tile:focus-within{box-shadow:inset 0 2px 0 #fff,0 0 0 3px #fff,0 0 0 6px color-mix(in srgb,var(--area-accent,#7FA6FF) 75%,transparent);border-color:#fff}
+
+/* More air between the five categories; the hovered one is unmistakable: ring + the other four step back (opacity only). */
+.diagnosis-square-grid{gap:clamp(20px,3.4vw,58px)}
+@media (max-width:1000px){.diagnosis-square-grid{gap:clamp(14px,3vw,22px)}}
+@media (hover:hover){
+ html:root body.mmri-prism-page .diagnosis-square-grid:has(.cat-tile:hover) .cat-tile:not(:hover){opacity:.62}
+ html:root body.mmri-prism-page .cat-tile{transition:opacity .22s ease}
+ html:root body.mmri-prism-page .cat-tile:hover{box-shadow:inset 0 2px 0 #fff,0 0 0 4px #fff,0 0 0 8px color-mix(in srgb,var(--area-accent,#7FA6FF) 85%,transparent)}
+}
+/* hovered category: clear lift (slight scale) + ring; the others recede */
+@media (hover:hover){
+ html:root body.mmri-prism-page .cat-tile{transition:opacity .22s ease,transform .22s cubic-bezier(.22,1,.36,1)}
+ html:root body.mmri-prism-page .cat-tile:hover{transform:scale(1.035)}
+}

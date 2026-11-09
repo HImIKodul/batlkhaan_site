@@ -1,0 +1,16 @@
+# Keep the production image build context small and free of secret or local material (functional-repair phase, WS-F review).
+# Everything the build needs is NOT listed here: src, public, index.html, package files, tsconfig*, vite configs, scripts,
+# AND frontend/.env.production, whose public VITE_* values (API base URL, prices, methodology version) are inlined into the bundle at build time.
+# (Vite only ever exposes VITE_* variables, so no secret may be placed in a frontend .env file.)
+node_modules
+dist
+.vite
+coverage
+*.log
+npm-debug.log*
+.git
+*.pem
+*.key
+*.dump
+.qa-credentials*
+.DS_Store

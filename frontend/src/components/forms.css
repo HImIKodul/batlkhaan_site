@@ -1,0 +1,29 @@
+/* Shared form controls and tabs - liquid-glass inputs (translucent, light text). */
+.mmri-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;background:rgba(244,247,252,.85);border:1px solid var(--mmri-glass-border);box-shadow:var(--mmri-glass-highlight);-webkit-backdrop-filter:var(--mmri-glass-blur);backdrop-filter:var(--mmri-glass-blur)}
+.mmri-tabs>button{min-height:40px;padding:0 14px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--mmri-color-text);font:inherit;font-weight:600;cursor:pointer;transition:background .3s,color .3s,box-shadow .3s}
+.mmri-tabs>button:hover:not(.is-active):not(:disabled){background:rgba(244,247,252,.85)}
+.mmri-tabs>button.is-active{background:linear-gradient(180deg,#fff,#E4EAFF);color:#17229A;box-shadow:inset 0 1px 0 #fff,0 6px 16px rgba(8,22,42,.3)}
+.mmri-tabs>button:focus-visible{outline:3px solid #0B0F14;outline-offset:1px}
+.mmri-tabs>button:disabled{opacity:.5;cursor:not-allowed}
+.mmri-field{display:grid;gap:6px}
+.mmri-field__label{font-size:var(--mmri-type-meta-size);font-weight:650;color:var(--mmri-color-text);letter-spacing:var(--mmri-tracking-meta)}
+.mmri-field__required{margin-left:2px;color:var(--mmri-color-danger)}
+.mmri-field__message{font-size:var(--mmri-type-meta-size);color:var(--mmri-color-text-muted)}
+.mmri-field--error .mmri-field__message{color:var(--mmri-color-danger)}
+.mmri-input,.mmri-textarea,.mmri-select{width:100%;box-sizing:border-box;min-height:var(--mmri-control-height-touch);padding:0 16px;border:1px solid var(--mmri-glass-border);border-radius:16px;background:linear-gradient(rgba(244,247,252,.85),rgba(244,247,252,.85)),rgba(10,16,100,.34);color:var(--mmri-color-text-strong);font:inherit;box-shadow:inset 0 1px 2px rgba(8,22,42,.3);-webkit-backdrop-filter:var(--mmri-glass-control-blur);backdrop-filter:var(--mmri-glass-control-blur);transition:background .3s,border-color .3s,box-shadow .3s}
+.mmri-input::placeholder,.mmri-textarea::placeholder{color:var(--mmri-color-text-faint)}
+.mmri-input:hover,.mmri-textarea:hover,.mmri-select:hover{border-color:rgba(130,145,170,.32)}
+.mmri-input:focus,.mmri-textarea:focus,.mmri-select:focus{outline:none;background:linear-gradient(rgba(244,247,252,.85),rgba(244,247,252,.85)),rgba(10,16,100,.4);border-color:#D9DFE8;box-shadow:var(--mmri-focus-ring)}
+.mmri-input:disabled,.mmri-select:disabled,.mmri-textarea:disabled{opacity:.55;cursor:not-allowed}
+/* Browser autofill: the field is white (prism), so the autofilled text must be dark ink on a white fill (the UA paints its own tint through the inset shadow otherwise).
+   Selectors are listed separately so one unsupported pseudo-class cannot drop the others. */
+body.mmri-prism-page .mmri-input:-webkit-autofill,body.mmri-prism-page .mmri-input:-webkit-autofill:hover,body.mmri-prism-page .mmri-input:-webkit-autofill:focus,body.mmri-prism-page .mmri-input:-webkit-autofill:active{-webkit-text-fill-color:var(--wp-ink,#0B0F14);caret-color:var(--wp-ink,#0B0F14);-webkit-box-shadow:0 0 0 1000px #fff inset;box-shadow:0 0 0 1000px #fff inset;border-color:var(--wp-silver,#D5DBE5);transition:background-color 600000s 0s,color 600000s 0s}
+body.mmri-prism-page .mmri-input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #fff inset,0 0 0 4px rgba(var(--wp-ice,90,140,255),.22);box-shadow:0 0 0 1000px #fff inset,0 0 0 4px rgba(var(--wp-ice,90,140,255),.22);border-color:rgb(var(--wp-ice,90,140,255))}
+.mmri-field--error .mmri-input,.mmri-input[aria-invalid="true"],.mmri-textarea[aria-invalid="true"],.mmri-select[aria-invalid="true"]{border-color:var(--mmri-color-danger)}
+.mmri-textarea{min-height:96px;padding:12px 16px;resize:vertical;line-height:1.5}
+.mmri-select{appearance:none;padding-right:40px;background-image:linear-gradient(45deg,transparent 50%,#fff 50%),linear-gradient(135deg,#fff 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+.mmri-select option{color:#14208E}
+
+@media (max-width:767px){
+ .mmri-tabs>button{min-height:44px}
+}

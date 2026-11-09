@@ -1,0 +1,169 @@
+{
+  "schema": "mmri.step11.report_language.audit.v1",
+  "status": "WARN_PREEXISTING_REPORT_LANGUAGE",
+  "hitCount": 178,
+  "uniqueTextCount": 164,
+  "scope": "Marketing report/action-plan contract customer-facing text fields; question/answer/category language already passes Step 9.",
+  "examples": [
+    {
+      "path": "/contracts/MMRI_FINAL_Contradiction_Contract.json/effects/tension/action",
+      "text": "INCREASE_VERIFICATION_PRIORITY"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Many_to_Many_Mapping.json/tension/action",
+      "text": "increase verification routing priority"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/0/deliverable",
+      "text": "Content-validity evidence and revisions."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/1/deliverable",
+      "text": "Question comprehension fixes."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/2/deliverable",
+      "text": "Operational feasibility."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/3/deliverable",
+      "text": "Threshold/reliability tuning."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/4/deliverable",
+      "text": "Empirical validation evidence."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/5/deliverable",
+      "text": "Temporal reliability."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/6/deliverable",
+      "text": "Respondent authority evidence."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/7/deliverable",
+      "text": "Confidence coefficient calibration."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/8/deliverable",
+      "text": "QUICK equivalence bounds."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationRoadmap/9/deliverable",
+      "text": "External validity evidence."
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/0/measure",
+      "text": "Expert item/category relevance"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/1/measure",
+      "text": "Company/cell/category agreement"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/2/measure",
+      "text": "Stable-company score agreement"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/3/measure",
+      "text": "Category/cell dimensional behavior"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/4/measure",
+      "text": "QUICK vs FULL"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/5/measure",
+      "text": "Confidence vs adjudicated agreement/error"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/6/measure",
+      "text": "Confirmed N/A vs expert adjudication"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/7/measure",
+      "text": "Hard/variance frequency and resolution"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/8/measure",
+      "text": "Diagnostic questions and time"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/9/measure",
+      "text": "Scores vs external outcomes"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/10/measure",
+      "text": "Company type/size/channel/industry"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Professional_Methodology_Audit.json/validationMetrics/11/measure",
+      "text": "Expert/user/action outcomes"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/0/title",
+      "text": "Direct mean [0, 25, 50, 75, 100]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/1/title",
+      "text": "Direct mean [100, 100, 100]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/2/title",
+      "text": "Direct mean [0, 0, 0]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/3/title",
+      "text": "Direct mean [25, 75]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/4/title",
+      "text": "Direct mean [33.3333, 66.6667]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/5/title",
+      "text": "Direct mean [0, 50, 100]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/6/title",
+      "text": "Direct mean [75]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/7/title",
+      "text": "Direct mean []"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/8/title",
+      "text": "Direct mean [25, 25, 50, 100]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/9/title",
+      "text": "Direct mean [0, 100]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/10/title",
+      "text": "Direct mean [50, 50, 50, 50]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/11/title",
+      "text": "Direct mean [25, 50, 75]"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/12/title",
+      "text": "1 answers, 1 source kinds, auth=0.9, hard=False"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/13/title",
+      "text": "2 answers, 2 source kinds, auth=0.9, hard=False"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/14/title",
+      "text": "3 answers, 2 source kinds, auth=0.9, hard=False"
+    },
+    {
+      "path": "/contracts/MMRI_FINAL_Simulation_Test_Suite.json/scenarios/15/title",
+      "text": "3 answers, 3 source kinds, auth=0.75, hard=False"
+    }
+  ]
+}

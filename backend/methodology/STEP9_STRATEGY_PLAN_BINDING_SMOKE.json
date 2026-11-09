@@ -1,0 +1,148 @@
+{
+  "suite": "MMRI Step 9 diagnosis-bound strategy and 365-day plan",
+  "total": 28,
+  "passed": 28,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "schema version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnosis hash bound",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "strategy hash populated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "plan hash populated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "runtime snapshot lineage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "methodology lineage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "365-day window",
+      "pass": true,
+      "detail": "365"
+    },
+    {
+      "name": "five plan horizons",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "recommendation version retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "root-cause version retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "action-plan version retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frozen milestones omit status",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "plan definition immutable guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "milestone progress explicitly mutable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnosis binding mandatory",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "causal lift forbidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ROI prediction forbidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "rehydration restores statuses",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "progress overlay changes runtime status",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "progress overlay does not change plan hash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "progress overlay does not change strategy hash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "definition change changes plan hash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "definition change changes strategy hash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "different diagnosis changes plan hash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "different diagnosis changes strategy hash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "included recommendations retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "priority actions retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "evidence actions retained",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

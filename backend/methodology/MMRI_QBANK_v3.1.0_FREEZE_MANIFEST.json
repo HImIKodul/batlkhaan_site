@@ -1,0 +1,215 @@
+{
+  "schema": "mmri.qbank.freeze_manifest.v1",
+  "questionBankVersion": "3.1.0",
+  "methodologyVersion": "3.0.0",
+  "status": "FROZEN_BASELINE",
+  "frozenAtUtc": "2026-09-10T11:30:00Z",
+  "questionArrayStableSha256": "264186715faffcbcc1cfe63529907c4b70c9eb0cdf06e1771fb57f9210ec3a26",
+  "validationStatus": "PASS",
+  "validationChecks": "112/112",
+  "xlsxVerification": "PASS",
+  "xlsxSha256": "53ae15cd6ce690857c904bb544564bcd9ce0e3e1cbecfc9f3f447f2db974bba0",
+  "entries": [
+    {
+      "file": "MMRI_192_PATTERN_MASTER_STEP12.csv",
+      "sha256": "c0bb2a306981b04d8a7d112ba80ac682050da956d56a3fb6082086cc15e2884c",
+      "bytes": 169113
+    },
+    {
+      "file": "MMRI_3072_RESPONDENT_AUTHORITY_ROUTING_STEP12.csv",
+      "sha256": "f9da6288b7f4136204772b0a78e82c96456779d3343aa1bd3280f90a8d9f9257",
+      "bytes": 201486
+    },
+    {
+      "file": "MMRI_48_DIMENSION_SCORING_AUDIT_STEP06.csv",
+      "sha256": "3f055534aa4703303ed82cf2bf6b52154c575858bad357f479db2bb20cafe71f",
+      "bytes": 11160
+    },
+    {
+      "file": "MMRI_64_HUMANIZED_ACTIVITY_PHRASES_STEP12.csv",
+      "sha256": "bbafb2156b2498979768f292f46965fa03cf9bce186a666c0da2ba7f584ba76f",
+      "bytes": 11012
+    },
+    {
+      "file": "MMRI_ANSWER_STATE_CONTRACT_STEP11_ALIGNED.json",
+      "sha256": "d64c52a4ea9abee526f9e66b1ecb13c37cdc6277e08b084f405b5d4a049e6a2a",
+      "bytes": 3831
+    },
+    {
+      "file": "MMRI_EVIDENCE_PATH_CONTRACT_STEP05.json",
+      "sha256": "49aff02071ea43883c36af716c8b634dfab140aced404d5cf10d33ff68ea932a",
+      "bytes": 3141
+    },
+    {
+      "file": "MMRI_FINAL_12288_COGNITIVE_AUTHORITY_AUDIT_STEP12.csv",
+      "sha256": "6a8c71bd7049879f0a8aa145134e68e25f132c0873a9702c59003919e6706a66",
+      "bytes": 4022352
+    },
+    {
+      "file": "MMRI_FINAL_12288_QA_v3.1.0_FROZEN.csv",
+      "sha256": "dfcfdbe3841dd3ddf05054a486c78c0f4e00e2d3c0ba1cad652a3b51f8aa8131",
+      "bytes": 14886452
+    },
+    {
+      "file": "MMRI_FINAL_12288_QA_v3.1.0_FROZEN.xlsx",
+      "sha256": "53ae15cd6ce690857c904bb544564bcd9ce0e3e1cbecfc9f3f447f2db974bba0",
+      "bytes": 1436380
+    },
+    {
+      "file": "MMRI_HIGH_IMPACT_CELL_AUDIT_STEP08.csv",
+      "sha256": "ff330b4b09c5c0a8276efd86ff4ca38e618f764cef96182e7daa40f0d78ab05a",
+      "bytes": 213748
+    },
+    {
+      "file": "MMRI_HIGH_IMPACT_EVIDENCE_CONTRACT_STEP08.json",
+      "sha256": "0b4644ca26567c98a41d0a84052c930ea1be99d7bfe57610207bb8f51f44e548",
+      "bytes": 2394
+    },
+    {
+      "file": "MMRI_LANGUAGE_CONSTRUCT_CONTRACT_STEP09.json",
+      "sha256": "2b4b4de4097ed3a0c40d0fe9d3c947ab1a752cf3124f05bb8be2686edac19368",
+      "bytes": 6716
+    },
+    {
+      "file": "MMRI_Methodology_v3.0.0_QBANK_v3.1.0_FROZEN_RUNTIME_COMPAT.json",
+      "sha256": "2d0f4977007a4901e8bf5a64824bc6a66c1aad4b1dac4e4a36d6d0049c6d662e",
+      "bytes": 71825611
+    },
+    {
+      "file": "MMRI_QBANK_APPLICABILITY_MATRIX_STEP03.csv",
+      "sha256": "74d92f7fd5012fdf3e6549c4b1d8f4bfb8a9f98f815e68854336f02fe29161b9",
+      "bytes": 790441
+    },
+    {
+      "file": "MMRI_QBANK_APPLICABILITY_MATRIX_STEP03.json",
+      "sha256": "4a7c5b60b109becd149a5d3e00d47996d33b0041adf37687c56bb4ebec85187d",
+      "bytes": 1949978
+    },
+    {
+      "file": "MMRI_QBANK_FREEZE_CHANGE_CONTROL_v3.1.0.md",
+      "sha256": "5264447b51979d38e6069ca454bf7d89ead6f3fddbc05f639a00939d6e49e8aa",
+      "bytes": 829
+    },
+    {
+      "file": "MMRI_QBANK_ID_COMPATIBILITY_MAP_STEP02.json",
+      "sha256": "d3c432be90b6dc3a02585d1866985a36a33e7c86868296c3f6fea6491289d391",
+      "bytes": 746021
+    },
+    {
+      "file": "MMRI_QBANK_ID_CONTRACT_STEP02.json",
+      "sha256": "935c364d721d5d7d7b5a2d80d9f337d0befdb6e2d651dae10edfadbee3923a7c",
+      "bytes": 1308
+    },
+    {
+      "file": "MMRI_QBANK_SEMANTIC_FIT_MATRIX_STEP07.csv",
+      "sha256": "e057bfa5b3bd92647a071cf21e7cc51db62830743620a7d6a217e84c5820dc14",
+      "bytes": 1323659
+    },
+    {
+      "file": "MMRI_QBANK_v3.1.0_FREEZE_CERTIFICATE.md",
+      "sha256": "375f92be5038a11185d1c5e249544c58ee75182d92ff8abad9b5a67e38bc0196",
+      "bytes": 705
+    },
+    {
+      "file": "MMRI_QBANK_v3.1.0_FROZEN_CONTENT.json",
+      "sha256": "ee12feee95d7e0d40fc28e5880aa935264cd0db1bf5a11c0c6942f78f8671798",
+      "bytes": 44066454
+    },
+    {
+      "file": "MMRI_QBANK_v3.1.0_FROZEN_ROWS.json",
+      "sha256": "4dbf038c6eecfb1cf7b5be3e3cbcf7f2f4dc6d9a74a2f66805354067244f4f92",
+      "bytes": 12201158
+    },
+    {
+      "file": "MMRI_QUESTION_BANK_v3.1.0_FROZEN_CANONICAL.json",
+      "sha256": "1fc54e5141d87a0c4c98aadc38f1fcbfecf4dbcce89252a131148a0ed4bb0401",
+      "bytes": 50022877
+    },
+    {
+      "file": "MMRI_RESPONDENT_AUTHORITY_COGNITIVE_CONTRACT_STEP12.json",
+      "sha256": "867436f445d10bd1617b0b993def93cbc3cc4302079ed76647cbe8fead0b0f04",
+      "bytes": 1463186
+    },
+    {
+      "file": "MMRI_RUNTIME_QUESTION_ID_MAP_v3.1.0_FROZEN.csv",
+      "sha256": "b22ae22e9a4ea997d5c2d70b2e50b58b3ee6bc155a0d34aae6f8040b0717ceca",
+      "bytes": 995469
+    },
+    {
+      "file": "MMRI_SCORING_CONTRACT_STEP08.json",
+      "sha256": "6d01cad3b3b53b5f307c62cfe42586669e2678dcf839492bdcd8e774f6bff147",
+      "bytes": 8575
+    },
+    {
+      "file": "MMRI_SEMANTIC_FIT_CONTRACT_STEP07.json",
+      "sha256": "2d12d57f09710a435dd45e8ffb16601966b3379d4de292fc2c107eb07a5f6a51",
+      "bytes": 2904
+    },
+    {
+      "file": "README_FROZEN_v3.1.0.md",
+      "sha256": "5c4d11abb1d946f1c3a4a5661e74d15548b24c4ae2289546e912a12c92092dfc",
+      "bytes": 1418
+    },
+    {
+      "file": "STEP07_INFER_ONLY_SECONDARY_SUPPORT.json",
+      "sha256": "f85bce47f73c7cd007c0198948023fc11431cbe9dd663ea36f68b29a60bf240c",
+      "bytes": 7196
+    },
+    {
+      "file": "STEP09_CONSTRUCT_OVERLAP_AUDIT.csv",
+      "sha256": "6437dfaf3d1d38570232b2f55c6db84d47ee015e9096411da4330850caaa4bbe",
+      "bytes": 51705
+    },
+    {
+      "file": "STEP11_STRUCTURAL_INTEGRITY_CHECKLIST.csv",
+      "sha256": "0d8bb91381931e425ff2befa21f28950d34f01fc8cdad84a11fbeb61e60fe61e",
+      "bytes": 9438
+    },
+    {
+      "file": "STEP11_STRUCTURAL_INTEGRITY_VALIDATION.json",
+      "sha256": "a0abbd23d3efae824f2f13a2de4fd727d3ebba4443fdac8489876cc22143ff95",
+      "bytes": 28483
+    },
+    {
+      "file": "STEP12_COGNITIVE_AUTHORITY_VALIDATION.json",
+      "sha256": "e85f08ccda53c55956e2199f2cbdb225f19a528313e0853bd7b320c4488ac974",
+      "bytes": 11147
+    },
+    {
+      "file": "STEP12_COGNITIVE_ISSUE_REDUCTION.csv",
+      "sha256": "b3ccdae06f94d5b5a14ee8571b9600c69c1b14d6ce91fccd257cefa3ec6bfebd",
+      "bytes": 293
+    },
+    {
+      "file": "STEP12_QUESTION_LANGUAGE_CHANGES.csv",
+      "sha256": "140600978e72f3cda6923729e3525889f2a41a0de641680cc510e2dc19ebd9a0",
+      "bytes": 3372883
+    },
+    {
+      "file": "STEP12_RESPONDENT_PERSONA_SIMULATION.csv",
+      "sha256": "bd9e067dd8c618a12e533e59c2289f824f1b87c704253bd7f292c1066e486ba5",
+      "bytes": 1956
+    },
+    {
+      "file": "STEP13_FREEZE_CHECKLIST.csv",
+      "sha256": "53e3ed2d041e11bb061f2762d70b8198566cc43091d4bbcd889251ec0503c6f4",
+      "bytes": 3815
+    },
+    {
+      "file": "STEP13_FREEZE_READINESS_VALIDATION.json",
+      "sha256": "68a7c80075ed5d916dd27065b2ff06a7adaec2ecc9eee98008aa76495de826d2",
+      "bytes": 11497
+    },
+    {
+      "file": "STEP13_XLSX_VERIFICATION.json",
+      "sha256": "af7a8bb019340f63bfd3d6546fe7e08095358e54806ad8ec17ddc889b3a574fe",
+      "bytes": 667
+    },
+    {
+      "file": "verify_frozen_baseline.py",
+      "sha256": "e88d910729348b034af1e42bbf9c5f757d12578291617c8897e6b6e226912203",
+      "bytes": 619
+    }
+  ],
+  "xlsxPending": false
+}

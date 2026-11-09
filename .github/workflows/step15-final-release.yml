@@ -1,0 +1,54 @@
+name: MMRI Step 15 Final Release Gate
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'scripts/**'
+      - 'deploy/**'
+      - '.github/workflows/step15-final-release.yml'
+jobs:
+  source-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: bash ops/final-release-gate.sh
+  connected-gate:
+    if: ${{ false }} # enable only after exact backend/frontend package-lock.json files are committed and secrets are configured
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: mmri
+          POSTGRES_PASSWORD: mmri
+          POSTGRES_DB: mmri_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mmri -d mmri_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - run: test -f backend/package-lock.json && test -f frontend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - name: Final connected gate
+        env:
+          MMRI_FINAL_LIVE_GATE: YES
+          MMRI_INTEGRATION_RESET_OK: YES
+          DATABASE_URL: postgresql://mmri:mmri@127.0.0.1:5432/mmri_test?schema=public
+        run: MMRI_FINAL_LIVE_GATE=YES bash ops/final-release-gate.sh

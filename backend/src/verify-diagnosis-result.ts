@@ -1,0 +1,34 @@
+import { prisma } from "./db.js";
+import { classifyResultHash } from "./lib/hash.js";
+
+const assessmentId=process.argv[2];
+if(!assessmentId)throw new Error("Usage: npm run db:verify:diagnosis -- <assessmentId>");
+const row=await prisma.diagnosisSnapshot.findUnique({where:{assessmentId},include:{assessment:{include:{methodologyVersion:true}}}});
+if(!row)throw new Error(`Diagnosis snapshot not found for assessment ${assessmentId}`);
+const result=row.result as any;
+const checks:[string,boolean,string][]=[];
+const check=(name:string,pass:boolean,detail:string)=>checks.push([name,pass,detail]);
+check("schemaVersion",result.schemaVersion==="MMRI-DIAGNOSIS-RESULT-1.0",String(result.schemaVersion));
+check("persisted resultHash",result.resultHash===row.resultHash,`${result.resultHash} / ${row.resultHash}`);
+const hashClass=classifyResultHash(result,row.resultHash);
+if(hashClass==="LEGACY_FLOAT_TRUNCATED")console.error(`WARN legacy float-truncated snapshot ${assessmentId}: stored hash preserved, not re-derivable`);
+check("recomputed resultHash",hashClass!=="MISMATCH_ON_NORMALIZED",hashClass==="LEGACY_FLOAT_TRUNCATED"?"LEGACY_UNVERIFIABLE_FLOAT_PRECISION (stored hash preserved)":hashClass==="REPRODUCIBLE"?"canonical hash":"MISMATCH_ON_NORMALIZED (integrity failure)");
+check("methodology version",result.methodologyVersion===row.assessment.methodologyVersion.version,String(result.methodologyVersion));
+check("methodology bundle hash",result.methodologyBundleSha256===row.assessment.methodologyVersion.bundleSha256,String(result.methodologyBundleSha256));
+check("runtime snapshot hash",result.trace?.runtimeSnapshotHash===row.runtimeSnapshotHash,String(result.trace?.runtimeSnapshotHash));
+// Legacy monolithic methodology 3.x has 8 modules; per-domain methodology 4.x has 5 (64 capabilities and 3072 cells in both).
+const expectedModules=String(row.assessment.methodologyVersion.version).startsWith("3.")?8:5;
+check(`${expectedModules} modules`,Array.isArray(result.modules)&&result.modules.length===expectedModules,String(result.modules?.length));
+check("64 capabilities",Array.isArray(result.capabilities)&&result.capabilities.length===64,String(result.capabilities?.length));
+check("3072 cells",result.evidence?.totalCells===3072,String(result.evidence?.totalCells));
+check("5 business outcomes",Array.isArray(result.businessOutcomes)&&result.businessOutcomes.length===5,String(result.businessOutcomes?.length));
+check("5 outcome priorities",Array.isArray(result.businessOutcomePriorities)&&result.businessOutcomePriorities.length===5,String(result.businessOutcomePriorities?.length));
+check("compat categories",Array.isArray(result.categories)&&result.categories.length===64,String(result.categories?.length));
+check("causal guardrail",result.outcomeGuardrail?.causalFinancialLiftClaimAllowed===false,String(result.outcomeGuardrail?.causalFinancialLiftClaimAllowed));
+check("ROI guardrail",result.outcomeGuardrail?.roiPredictionAllowed===false,String(result.outcomeGuardrail?.roiPredictionAllowed));
+const report=await prisma.reportSnapshot.findFirst({where:{assessmentId},orderBy:{generatedAt:"desc"}});
+if(report)check("report diagnosis binding",report.diagnosisResultHash===row.resultHash,String(report.diagnosisResultHash));
+const failed=checks.filter(([,pass])=>!pass);
+console.log(JSON.stringify({status:failed.length?"FAIL":"PASS",assessmentId,resultHash:row.resultHash,checks:checks.map(([name,pass,detail])=>({name,status:pass?"PASS":"FAIL",detail}))},null,2));
+await prisma.$disconnect();
+if(failed.length)process.exit(1);

@@ -1,0 +1,108 @@
+{
+  "step": "10/12",
+  "date": "2026-10-16",
+  "status": "STATIC_INTEGRATION_PASS_RUNTIME_REGRESSION_PENDING",
+  "release": "MMRI_CANDIDATE_v3.1.17_R17_21_5_STEP10_MONGOLIAN_WORDING_INTEGRATED_LINUX_2026-10-16",
+  "sourceArchive": {
+    "filename": "MMRI_FINAL_FROZEN_MASTER_v3.1.16_R17_21_4_STEP15_HOME_RADAR_STATIONARY_GEOMETRY_LINUX_2026-10-11(1).zip",
+    "sha256": "fd42ff6af5582bd1828ef49a1c2b2f5b383247be417367ed5439f37967ab35bf",
+    "bytes": 25278627
+  },
+  "step9Master": {
+    "path": "backend/integration/step10/MMRI_STEP09_FINAL_MONGOLIAN_QA_VERIFIED_61440.csv",
+    "sha256": "f767d26f5888ff27696d40fc7305a5bc58d3cc6bbe3558e1b12bf91f394fb671",
+    "rows": 61440
+  },
+  "targets": {
+    "marketing": {
+      "methodologyVersion": "3.0.1",
+      "questionBankVersion": "3.1.1",
+      "file": "MMRI_v3.0.1_QBANK_v3.1.1_MONGOLIAN_WORDING_STEP10.json",
+      "sha256": "36d27cde2471caa2bd06b7ef8b0c6ec80fa92cb19f432299c29fd3f131fb214b",
+      "questions": 12288,
+      "categories": 64,
+      "engineKind": "MARKETING_V3"
+    },
+    "people": {
+      "mri": "HRMRI",
+      "methodologyVersion": "4.1.1",
+      "questionBankVersion": "BUSINESSMRI-v2.1-HRMRI",
+      "file": "MMRI_HRMRI_Methodology_4.1.1_BUSINESSMRI_V2.json",
+      "sha256": "b90989292ffcbbf12274075cef9a7a7da57680c1e9dba10b383ad9c9904e1d7d",
+      "canonicalBank": "people-businessmri-v2.1-mongolian-wording.json",
+      "canonicalBankSha256": "0dd62b98c9400d0febd6083e6928d2e2a498c26716ce1f5b8b3ada26a04234ed",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    },
+    "finance": {
+      "mri": "FINMRI",
+      "methodologyVersion": "4.2.1",
+      "questionBankVersion": "BUSINESSMRI-v2.1-FINMRI",
+      "file": "MMRI_FINMRI_Methodology_4.2.1_BUSINESSMRI_V2.json",
+      "sha256": "9bbdac9ba864f5462bedf9786b1b04588e4b4584c3aeec820e91c555bdd11401",
+      "canonicalBank": "finance-businessmri-v2.1-mongolian-wording.json",
+      "canonicalBankSha256": "d468d727d6615f9eb17cf883edcca0bf21482bb09c0cb76ddae1a4a02ad59843",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    },
+    "it": {
+      "mri": "ISMRI",
+      "methodologyVersion": "4.3.1",
+      "questionBankVersion": "BUSINESSMRI-v2.1-ISMRI",
+      "file": "MMRI_ISMRI_Methodology_4.3.1_BUSINESSMRI_V2.json",
+      "sha256": "d191122294420d97489d1a89293cc5d15a4d01e6735b6309f01f0d89d0215197",
+      "canonicalBank": "it-businessmri-v2.1-mongolian-wording.json",
+      "canonicalBankSha256": "2a34486df6f3a36603698c5d7bdcee54f6ed10f6525e51d3c1a66e3330a31087",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    },
+    "operations": {
+      "mri": "OPMRI",
+      "methodologyVersion": "4.4.1",
+      "questionBankVersion": "BUSINESSMRI-v2.1-OPMRI",
+      "file": "MMRI_OPMRI_Methodology_4.4.1_BUSINESSMRI_V2.json",
+      "sha256": "77c46336f4fe7070c2d4e0392efcbdd216052a02c8572a4679abba7782240681",
+      "canonicalBank": "operations-businessmri-v2.1-mongolian-wording.json",
+      "canonicalBankSha256": "eb7826027f6c876a77f1ae3ddab9240ecfbe8df54116ace926ea7081844a82fb",
+      "questions": 12288,
+      "categories": 64,
+      "cells": 3072,
+      "goals": 5,
+      "engineKind": "BUSINESSMRI_V2"
+    }
+  },
+  "runtimePreservation": {
+    "engineKinds": {
+      "marketing": "MARKETING_V3",
+      "people": "BUSINESSMRI_V2",
+      "finance": "BUSINESSMRI_V2",
+      "it": "BUSINESSMRI_V2",
+      "operations": "BUSINESSMRI_V2"
+    },
+    "questionIdsPreserved": 61440,
+    "optionOrderingChanged": 0,
+    "scoreValueChanges": 0,
+    "runtimeStateChanges": 0,
+    "routingPolicyChanges": 0,
+    "rollback": "Original methodology/runtime files remain in package byte-identical; previous ACTIVE versions are archived, not deleted, during promotion."
+  },
+  "uiIntegration": {
+    "contextField": "contextMn",
+    "contextSource": "Question.category.nameMn",
+    "rendering": "Separate line above question; never Category — Question",
+    "staticCapabilityLabels": 320,
+    "demoSamples": 320
+  },
+  "staticVerification": "PASS",
+  "productionApproved": false,
+  "next": "Step 11 full runtime regression"
+}

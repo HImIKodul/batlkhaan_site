@@ -1,0 +1,155 @@
+/* App shell: header, primary nav, notifications, account menu, mobile bottom nav. Green + white. */
+.mmri-shell{position:relative;z-index:1;min-height:100dvh;color:var(--mmri-color-text-strong)}
+.mmri-skip-link{position:absolute;left:12px;top:-60px;z-index:100;padding:10px 14px;border-radius:var(--mmri-radius-small);background:var(--mmri-color-brand);color:#fff;font-weight:600}
+.mmri-skip-link:focus{top:12px}
+.mmri-shell-header{position:relative;top:0;z-index:50;margin:0 clamp(8px,2vw,24px);padding-top:6px;background:none;border:0;box-shadow:none}
+.mmri-shell-inner{display:flex;align-items:center;gap:var(--mmri-space-6);height:var(--mmri-shell-height);padding-inline:var(--mmri-space-6);max-width:var(--mmri-layout-max);margin-inline:auto}
+.mmri-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;flex:none}
+.mmri-brand-mark{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.34);border-radius:var(--mmri-radius-control);background:linear-gradient(180deg,#2F7BEA,var(--mmri-color-brand));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 16px rgba(27,99,216,.18)}
+.mmri-brand strong{font-size:19px;letter-spacing:.04em;font-weight:800}
+.mmri-primary-nav{display:flex;gap:4px;margin-inline:auto;padding:0;border:0;border-radius:999px;background:none}
+.mmri-primary-nav a{display:flex;align-items:center;gap:9px;height:46px;padding:0 20px;border-radius:999px;color:rgba(255,255,255,.92);font-weight:700;font-size:18px;text-decoration:none;position:relative;transition:background-color var(--mmri-motion-state),color var(--mmri-motion-state),box-shadow var(--mmri-motion-state)}
+.mmri-primary-nav a:hover{background:rgba(255,255,255,.12);color:#fff}
+.mmri-primary-nav a.is-active{color:#fff;background:none;box-shadow:none}
+.mmri-primary-nav a.is-active::after{content:"";display:block;position:absolute;left:20px;right:20px;bottom:2px;height:3px;border-radius:2px;background:#fff}
+.mmri-shell-actions{display:flex;align-items:center;gap:10px;flex:none}
+.mmri-shell-login{padding:11px 16px;border-radius:var(--mmri-radius-small);color:#fff;font-weight:700;font-size:17px;text-decoration:none}
+.mmri-shell-login:hover{background:rgba(255,255,255,.16)}
+.mmri-shell-primary,.mmri-public-mobile-actions .is-primary{position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;height:46px;padding:0 22px;border:1.5px solid rgba(190,230,255,.9);border-radius:14px;color:#fff;font-weight:800;font-size:16px;text-decoration:none;
+  background:radial-gradient(70% 100% at 10% 0%,rgba(140,200,255,.55),transparent 70%),linear-gradient(172deg,#2F6FF0,#1650DC 50%,#0A32A8);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -5px 7px -3px rgba(110,190,255,.7),2px 4px 0 #08205F,6px 10px 10px -2px rgba(0,8,40,.45),10px 16px 18px -6px rgba(30,120,255,.7);transition:box-shadow .3s,filter .3s}
+.mmri-shell-primary::before{content:"";position:absolute;z-index:-1;inset:2px 6px auto 6px;height:46%;border-radius:8px 8px 50% 50%/8px 8px 60% 60%;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0));pointer-events:none}
+.mmri-shell-primary:hover{filter:brightness(1.1) saturate(1.1)}
+.mmri-public-mobile-menu{display:none}
+
+.mmri-bottom-nav{display:none}
+
+.mmri-notifications,.mmri-account{position:relative}
+.mmri-notification-trigger>span{position:absolute;top:-6px;right:-6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border:1.5px solid rgba(255,255,255,.92);border-radius:10px;background:linear-gradient(180deg,#FF6B6B,var(--mmri-color-danger));color:#fff;font-size:12px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 8px rgba(183,67,67,.35)}
+.mmri-notification-panel,.mmri-account-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;border:1px solid var(--mmri-glass-border);border-radius:24px;background:var(--mmri-glass-bg-overlay);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow-lift);border-color:var(--mmri-glass-border)}
+.mmri-notification-panel{width:min(380px,calc(100vw - 32px));max-height:70dvh;overflow:auto;overflow-x:hidden}
+.mmri-notification-panel>header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 14px 12px 16px;border-bottom:1px solid var(--mmri-color-border)}
+.mmri-notification-panel>header>div{display:grid;gap:2px}
+.mmri-notification-panel small{color:var(--mmri-color-text-muted)}
+.mmri-notification-close{display:grid;place-items:center;flex:none;width:44px;height:44px;margin:-6px -4px 0 0;border:1px solid rgba(255,255,255,.5);border-radius:var(--radius-control);background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.04));color:#fff;cursor:pointer;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7);transition:border-color .2s,box-shadow .2s}
+.mmri-notification-close:hover{border-color:#fff;box-shadow:inset 0 1.5px 0 #fff,0 0 14px rgba(255,255,255,.4)}
+.mmri-notification-tools{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 12px;border-bottom:1px solid var(--mmri-color-border)}
+.mmri-notification-tools button{min-height:36px;padding:0 6px;border:0;border-radius:8px;background:none;color:#BFE3FF;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.mmri-notification-tools button:hover:not(:disabled){color:#fff;background:rgba(255,255,255,.1)}
+.mmri-notification-tools button:disabled{opacity:.45;cursor:not-allowed}
+.mmri-notification-item{display:flex;align-items:stretch;border-bottom:1px solid var(--mmri-color-border);transition:background .2s}
+.mmri-notification-item>a{flex:1;min-width:0;display:flex;gap:12px;padding:12px 8px 12px 16px;color:inherit;text-decoration:none}
+.mmri-notification-item:hover{background:rgba(255,255,255,.08)}
+.mmri-notification-item.is-unread{background:rgba(120,190,255,.14);box-shadow:inset 3px 0 0 #6CC0FF}
+.mmri-notification-item.is-read>a{opacity:.78}
+.mmri-notification-item strong{display:flex;align-items:center;gap:7px}
+.mmri-notification-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#6CC0FF;box-shadow:0 0 8px #6CC0FF}
+.mmri-notification-item__actions{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:2px;padding:6px 8px 6px 0}
+.mmri-notification-item__actions button{min-width:44px;min-height:36px;padding:0 8px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:#BFE3FF;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.mmri-notification-item__actions button:hover{color:#fff;background:rgba(255,255,255,.12)}
+.mmri-notification-panel p{margin:2px 0;font-size:13.5px;color:var(--mmri-color-text)}
+.mmri-notification-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:var(--mmri-radius-small);background:var(--mmri-color-brand-soft);color:var(--mmri-color-accent)}
+.mmri-notification-empty{padding:18px 16px;margin:0;color:var(--mmri-color-text-muted)}
+.mmri-notification-loading__row{display:flex;gap:10px;padding:14px 16px}
+.mmri-notification-loading__row i{width:34px;height:34px;border-radius:8px;background:var(--mmri-color-surface-strong)}
+.mmri-notification-loading__row b,.mmri-notification-loading__row em{flex:1;height:12px;margin-top:6px;border-radius:4px;background:var(--mmri-color-surface-subtle)}
+.mmri-account-menu{width:280px;padding:6px}
+.mmri-account-context{display:flex;gap:10px;align-items:center;padding:10px;border-bottom:1px solid var(--mmri-color-border);margin-bottom:6px}
+.mmri-account-context-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:var(--mmri-radius-small);background:var(--mmri-color-brand-soft);color:var(--mmri-color-accent);font-weight:800}
+.mmri-account-context small{display:block;color:var(--mmri-color-text-muted);font-size:13px}
+.mmri-account-menu [role=menuitem]{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:var(--mmri-radius-small);background:none;color:var(--mmri-color-text-strong);font:inherit;font-weight:500;text-align:left;text-decoration:none;cursor:pointer}
+.mmri-account-menu [role=menuitem]:hover,.mmri-account-menu [role=menuitem]:focus-visible{background:var(--mmri-color-brand-soft)}
+.mmri-account-divider{height:1px;margin:6px 0;background:var(--mmri-color-border)}
+.mmri-account-logout{color:var(--mmri-color-danger)!important}
+.mmri-offline-banner{display:flex;gap:10px;align-items:center;padding:10px 24px;background:var(--mmri-color-warning-soft);color:var(--mmri-color-warning)}
+.mmri-offline-banner span{display:block;font-size:13px}
+
+
+@media (max-width:900px){
+ .mmri-shell-inner{padding-inline:16px;gap:12px}
+ .mmri-primary-nav,.mmri-shell-login,.mmri-shell-primary{display:none}
+ .mmri-shell-actions{margin-left:auto}
+ .mmri-public-menu-trigger{display:grid}
+ .mmri-account-trigger{padding:0 6px;background:var(--mmri-glass-control-bg);box-shadow:var(--mmri-glass-control-shadow);-webkit-backdrop-filter:var(--mmri-glass-control-blur);backdrop-filter:var(--mmri-glass-control-blur)}
+ .mmri-public-mobile-menu{display:block;padding:8px 16px 16px;border-top:1px solid var(--mmri-glass-border);background:var(--mmri-glass-bg-overlay);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong)}
+ .mmri-public-mobile-menu nav{display:grid}
+ .mmri-public-mobile-menu nav a{padding:13px 8px;border-bottom:1px solid var(--mmri-color-border);color:var(--mmri-color-text-strong);font-weight:600;text-decoration:none}
+ .mmri-public-mobile-menu nav a.is-active{color:var(--mmri-color-accent)}
+ .mmri-public-mobile-actions{display:grid;gap:8px;margin-top:12px}
+ .mmri-public-mobile-actions a{display:flex;justify-content:center;align-items:center;height:44px;border:1px solid var(--mmri-color-border-strong);border-radius:var(--mmri-radius-control);color:var(--mmri-color-text-strong);font-weight:700;text-decoration:none}
+ .mmri-public-mobile-actions .is-primary{border-color:transparent}
+ .mmri-bottom-nav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;inset:auto 0 0 0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px);border-top:1px solid rgba(255,255,255,.3);background:linear-gradient(180deg,rgba(14,38,70,.9),rgba(8,24,46,.96));-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+ .mmri-bottom-nav a{display:grid;justify-items:center;gap:2px;padding:8px 4px;color:var(--mmri-color-text-muted);font-size:13px;font-weight:600;text-decoration:none}
+ .mmri-bottom-nav a.is-active{color:#fff}
+ .mmri-shell.is-authenticated .mmri-shell-main{padding-bottom:64px}
+}
+/* Page ground: clean green wash so glass has something to sit on. */
+/* Page background + ambient blobs live in glass.css */
+/* Header controls: one glass-control recipe (bell, account, mobile menu). */
+html body .mmri-notification-trigger,html body .mmri-account-trigger,html body .mmri-public-menu-trigger{position:relative;display:grid;place-items:center;height:54px;border:0;border-radius:var(--radius-control);background:none;color:#fff;cursor:pointer;transition:background-color .25s}
+html body .mmri-notification-trigger,html body .mmri-public-menu-trigger{width:54px}
+.mmri-account-trigger{display:flex;align-items:center;gap:8px;padding:0 8px;font-weight:650}
+html body .mmri-notification-trigger:hover,html body .mmri-account-trigger:hover,html body .mmri-public-menu-trigger:hover,html body .mmri-notification-trigger[aria-expanded=true],html body .mmri-account-trigger[aria-expanded=true]{background:rgba(255,255,255,.14)}
+.mmri-account-avatar{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:linear-gradient(155deg,#7FA6FF,#7A55E0);color:#fff;box-shadow:inset 0 1px 1px rgba(255,255,255,.5)}
+
+@media (max-width:767px){.mmri-notification-panel{position:fixed;left:var(--mmri-gutter-mobile);right:var(--mmri-gutter-mobile);top:calc(var(--mmri-shell-height) + 8px);width:auto;max-height:calc(100dvh - var(--mmri-shell-height) - var(--mmri-bottom-nav-height) - 32px)}}
+/* Route container: plain block; no transform/animation (a transform would trap fixed modals). */
+.route-stage{min-height:100vh}
+
+/* Compact desktop header (901-1279px): nothing may collide. */
+@media (min-width:901px) and (max-width:1279px){
+ .mmri-shell-inner{gap:12px;padding-inline:16px}
+ .mmri-brand strong{font-size:16px}
+ .mmri-primary-nav{gap:0}
+ .mmri-primary-nav a{padding:0 13px;font-size:16px;gap:0}
+ .mmri-primary-nav a svg{display:none}
+ .mmri-shell-login{display:none}
+ .mmri-shell-primary{padding:0 16px;font-size:14px;height:42px}
+}
+
+/* Phone header: brand + controls must fit 360px. */
+@media (max-width:520px){
+ .mmri-brand strong{font-size:14px;letter-spacing:.02em}
+ .mmri-brand{gap:8px}
+ .mmri-brand-mark{width:38px;height:38px}
+ .mmri-shell-inner{padding-inline:12px;gap:8px}
+ html body .mmri-notification-trigger,html body .mmri-public-menu-trigger{width:44px;height:44px}
+ html body .mmri-account-trigger{height:44px;padding:0 4px}
+ .mmri-account-avatar{width:40px;height:40px}
+}
+
+@media (max-width:360px){
+ .mmri-brand strong{font-size:13px;letter-spacing:0}
+ .mmri-brand{gap:6px}
+ .mmri-brand-mark{width:34px;height:34px}
+ .mmri-shell-inner{padding-inline:8px;gap:4px}
+ html body .mmri-notification-trigger,html body .mmri-public-menu-trigger{width:40px;height:40px}
+ html body .mmri-account-trigger{height:40px}
+ .mmri-account-avatar{width:36px;height:36px}
+}
+
+/* Mobile shell controls keep a full touch target without changing icon geometry. */
+@media (max-width:900px){
+ .mmri-public-menu-trigger,.mmri-notification-trigger,.mmri-account-trigger{min-width:var(--mmri-touch-target-min);height:var(--mmri-touch-target-min)}
+ .mmri-public-mobile-actions a{height:var(--mmri-touch-target-min)}
+}
+
+
+/* Step 8/10 - responsive interaction geometry and safe-area behavior. */
+.mmri-primary-nav a,.mmri-shell-login,.mmri-shell-primary,.mmri-public-menu-trigger,.mmri-notification-trigger,.mmri-account-trigger{min-height:44px}
+.mmri-shell-main :where([data-route-heading],h1[id],h2[id]){scroll-margin-top:calc(var(--mmri-shell-height) + 16px)}
+@media (pointer:coarse){
+  .mmri-shell :where(a,button){touch-action:manipulation}
+  .mmri-public-menu-trigger,.mmri-notification-trigger,.mmri-account-trigger,.mmri-bottom-nav a{min-width:var(--mmri-touch-target-min);min-height:var(--mmri-touch-target-min)}
+}
+@media (max-width:900px){
+  .mmri-bottom-nav a{min-height:var(--mmri-bottom-nav-height);align-content:center}
+  .mmri-shell.is-authenticated .mmri-shell-main{padding-bottom:var(--mmri-mobile-bottom-clearance)}
+}
+
+/* legal footer: quiet, under every page; leaves room for the mobile bottom bar */
+.mmri-legal-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 14px;padding:6px 16px calc(30px + var(--mmri-bottom-nav-height,0px));font-size:12px;line-height:1.4;color:var(--wp-ink3,#566683)}
+.mmri-legal-footer nav{display:flex;flex-wrap:wrap;gap:4px 16px}
+.mmri-legal-footer a{display:inline-flex;align-items:center;min-height:26px;color:var(--wp-ink2,#33435A);font-weight:500;text-underline-offset:3px}
+.mmri-legal-footer small{text-align:center}.mmri-legal-footer small::before{content:'·';margin-right:14px}@media (max-width:640px){.mmri-legal-footer small{flex-basis:100%}.mmri-legal-footer small::before{content:none}}
+@media (min-width:768px){.mmri-legal-footer{padding-bottom:30px}}

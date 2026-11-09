@@ -1,0 +1,95 @@
+name: MMRI Step 22 Production Readiness
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'deploy/**'
+      - 'load/**'
+      - 'scripts/step22-**'
+      - '.github/workflows/step22-production-readiness.yml'
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: mmri
+          POSTGRES_PASSWORD: mmri
+          POSTGRES_DB: mmri_step22
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U mmri -d mmri_step22"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DATABASE_URL: postgresql://mmri:mmri@127.0.0.1:5432/mmri_step22?schema=public
+      NODE_ENV: test
+      MMRI_INTEGRATION_RESET_OK: YES
+      CHROMIUM_BIN: chromium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Require reproducible lockfiles
+        run: |
+          test -f backend/package-lock.json
+          test -f frontend/package-lock.json
+      - name: Install Chromium and PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y chromium postgresql-client
+      - name: Install backend
+        working-directory: backend
+        run: npm ci --no-audit --no-fund
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Step 22 static acceptance
+        run: node scripts/step22-production-ops-acceptance-v3.10.mjs
+      - name: Frozen regression gates
+        run: |
+          node scripts/final-cross-page-qa-v3.6.mjs
+          node scripts/step19-clean-3-section-acceptance-v3.7.mjs
+          node backend/scripts/step21-security-acceptance-v3.9.mjs
+      - name: Production builds
+        run: |
+          (cd backend && npm run build:prod)
+          (cd frontend && npm run build)
+      - name: Production preflight contract
+        env:
+          NODE_ENV: production
+          ACCESS_TOKEN_SECRET: ci-access-secret-012345678901234567890123456789
+          PASSWORD_PEPPER: ci-password-pepper-012345678901234567890123456789
+          AUDIT_HASH_SALT: ci-audit-hash-salt-012345678901234567890123456789
+          METRICS_TOKEN: ci-metrics-token-012345678901234567890123456789
+          ALLOWED_ORIGINS: https://mmri.example.com
+          COOKIE_SECURE: 'true'
+          RELEASE_SHA: 1234567890abcdef
+          INSTANCE_ID: ci-step22
+          MMRI_API_IMAGE: ghcr.io/example/mmri-api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          MMRI_WEB_IMAGE: ghcr.io/example/mmri-web@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+          MMRI_MIGRATE_IMAGE: ghcr.io/example/mmri-migrate@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+        run: node ops/preflight.mjs
+      - name: Live Step 21 + Step 20 gate
+        run: bash scripts/step21-live-release-gate.sh
+      - name: Docker build validation
+        run: |
+          docker build -f backend/Dockerfile.production backend -t mmri-api:step22
+          docker build -f backend/Dockerfile.migrate backend -t mmri-migrate:step22
+          docker build -f frontend/Dockerfile.production frontend -t mmri-web:step22
+      - name: Upload audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step22-audit
+          path: |
+            STEP20_AUDIT
+            STEP21_AUDIT
+            STEP22_AUDIT

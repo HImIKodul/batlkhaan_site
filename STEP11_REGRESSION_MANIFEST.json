@@ -1,0 +1,65 @@
+{
+  "step": "11/12",
+  "date": "2026-10-17",
+  "candidate": "MMRI_CANDIDATE_v3.1.18_R17_21_6_STEP11_REGRESSION_GATED_LINUX_2026-10-17",
+  "status": "SOURCE_RUNTIME_HARNESS_PASS_CONNECTED_HOLD",
+  "sourceRegression": {
+    "engineTypecheck": "PASS",
+    "strategyTypecheck": "PASS",
+    "adaptiveRouting": "40/40 PASS",
+    "confidence": "48/48 PASS",
+    "scoring": "2342/2342 PASS",
+    "cellReachability": "3797/3797 PASS",
+    "targetedSynthetic": "27/27 PASS",
+    "recommendations": "43/43 PASS",
+    "actionPlan": "45/45 PASS",
+    "persistenceStatic": "58/58 PASS",
+    "persistenceRuntime": "29/29 PASS",
+    "traceabilityStatic": "49/49 PASS",
+    "traceabilityRuntime": "30/30 PASS",
+    "securityStatic": "54/54 PASS",
+    "securityRuntime": "38/38 PASS",
+    "apiStatic": "PASS / 68 routes",
+    "billingRetakeStatic": "24/24 PASS",
+    "uiPdf": [
+      "Step08 responsive PASS",
+      "Step10 exact corrections 14/14 PASS",
+      "Step11 responsive/report/PDF 21/21 PASS",
+      "Step14 current report/PDF 23/23 PASS",
+      "Step15 radar geometry PASS"
+    ]
+  },
+  "connectedGate": {
+    "status": "HOLD_NOT_RUN",
+    "reason": "Docker command is unavailable in the current execution environment.",
+    "requiredLater": [
+      "PostgreSQL migrations",
+      "Marketing 3.0.1 import/verification",
+      "BusinessMRI 4.1.1–4.4.1 imports",
+      "five-domain promotion",
+      "active DB verification",
+      "DB persistence/trace/report verifiers",
+      "frontend Vite production build",
+      "browser/API E2E against PostgreSQL"
+    ],
+    "script": "backend/scripts/step11-connected-release-gate.sh"
+  },
+  "externalProviderGate": {
+    "qpay": "STATIC_PASS_LIVE_SETTLEMENT_NOT_RUN"
+  },
+  "knownWarning": {
+    "code": "PREEXISTING_MARKETING_REPORT_LANGUAGE",
+    "status": "WARN",
+    "hits": 808,
+    "uniqueStrings": 334,
+    "meaning": "Older Marketing 365-day action-plan/report contract fields still contain mixed English terms. Step-9 question/answer/category/dimension wording is clean; this warning is outside the question-bank payload but blocks claiming that every report template in the whole legacy system is fully Mongolian."
+  },
+  "staleHarnessesSuperseded": [
+    "legacy engine-core assertions from pre-v3 routing model",
+    "old Step7/Step8 frontend/result tests that demand internal/English disclosures",
+    "Step12 five-page and Step13 2+3 PDF staging assertions superseded by current Step14 four-page report contract",
+    "old 67-route API assertion superseded by current 68-route application"
+  ],
+  "productionApproved": false,
+  "next": "Step 12 final freeze/package after deciding/clearing remaining connected-runtime and legacy report-language holds."
+}

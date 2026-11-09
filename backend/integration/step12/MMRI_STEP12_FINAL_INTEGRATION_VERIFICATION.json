@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "domains": [
+    {
+      "domain": "marketing",
+      "oldSha256": "36d27cde2471caa2bd06b7ef8b0c6ec80fa92cb19f432299c29fd3f131fb214b",
+      "newSha256": "83a8dfe77fe5abff8d00158d8d8bfdefdfe392cdf7c85bc863f0228ef7385fb4",
+      "methodologyVersion": "3.0.2",
+      "questionBankVersion": "3.1.2",
+      "questions": 12288,
+      "runtimeSemanticDrift": 0
+    },
+    {
+      "domain": "people",
+      "oldSha256": "b90989292ffcbbf12274075cef9a7a7da57680c1e9dba10b383ad9c9904e1d7d",
+      "newSha256": "62b3fbb0e9881d7b4758e8aa2af9394f8e2a75bc92d7856b1fc2ab8b79b33dad",
+      "methodologyVersion": "4.1.2",
+      "questionBankVersion": "BUSINESSMRI-v2.2-HRMRI",
+      "questions": 12288,
+      "runtimeSemanticDrift": 0
+    },
+    {
+      "domain": "finance",
+      "oldSha256": "9bbdac9ba864f5462bedf9786b1b04588e4b4584c3aeec820e91c555bdd11401",
+      "newSha256": "f82f1645907209894ecdde6202fd3e23a4075dfe54c1ccdca18ab8e3fe420f2b",
+      "methodologyVersion": "4.2.2",
+      "questionBankVersion": "BUSINESSMRI-v2.2-FINMRI",
+      "questions": 12288,
+      "runtimeSemanticDrift": 0
+    },
+    {
+      "domain": "it",
+      "oldSha256": "d191122294420d97489d1a89293cc5d15a4d01e6735b6309f01f0d89d0215197",
+      "newSha256": "bd4540e834c05a0067c9a2db4f833e2841e32c0e364a0d6508a1c8e15696b19d",
+      "methodologyVersion": "4.3.2",
+      "questionBankVersion": "BUSINESSMRI-v2.2-ISMRI",
+      "questions": 12288,
+      "runtimeSemanticDrift": 0
+    },
+    {
+      "domain": "operations",
+      "oldSha256": "77c46336f4fe7070c2d4e0392efcbdd216052a02c8572a4679abba7782240681",
+      "newSha256": "daaafafba4c5e2a7e71a32f5bdf800f72bc5fb704c036065425ec48c7a6768ef",
+      "methodologyVersion": "4.4.2",
+      "questionBankVersion": "BUSINESSMRI-v2.2-OPMRI",
+      "questions": 12288,
+      "runtimeSemanticDrift": 0
+    }
+  ],
+  "totalQuestions": 61440,
+  "rollbackFilesByteIdentical": true,
+  "scoringRoutingRuntimePolicyChanged": false
+}

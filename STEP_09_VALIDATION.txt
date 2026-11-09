@@ -1,0 +1,226 @@
+MMRI STEP 09/10 VALIDATION
+Date: 2026-10-29
+
+== Existing UI gate ==
+UI POLISH GATE: 120/120 PASS
+PASS homepage exact hero
+PASS homepage exact subtext
+PASS four exact guide labels
+PASS radar no internal demo fallback
+PASS radar center-safe axes
+PASS radar scores use true zero baseline
+PASS homepage guides keep app-tile composition
+PASS domain icon contrast uses ink token
+PASS TS tokens mirror green-white brand
+PASS TS geometry mirrors CSS token scale
+PASS five domain colors are canonical CSS tokens
+PASS five domain colors are canonical TS tokens
+PASS report/radar palette consumes canonical TS domain tokens
+PASS Results consumes canonical CSS domain tokens
+PASS shared buttons use one control material
+PASS shared form controls use same material/focus ring
+PASS shell controls use shared material tokens
+PASS status-square geometry is shared
+PASS secondary domain icon geometry is tokenized
+PASS shared controls do not duplicate primary button rules
+PASS retired purple/navy token palette absent from active source
+PASS radar category hover stationary — ['background:radial-gradient(circle at 30% 18%,#fff,rgba(255,255,255,.88) 55%,color-mix(in srgb,var(--domain-accent) 12%,rgba(255,255,255,.78)));border-color:var(--domain-accent);box-shadow:inset 0 1px 0 #fff,0 0 0 4px color-mix(in srgb,var(--domain-accent) 16%,transparent),0 18px 42px rgba(10,72,51,.16)']
+PASS PDF button stationary — ['background:linear-gradient(180deg,rgba(19,119,84,.98),rgba(12,87,61,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.36),0 10px 24px rgba(9,74,50,.28)']
+PASS PDF button busy state
+PASS PDF download validates binary signature
+PASS PDF demo print is exactly three pages
+PASS PDF no obsolete 250-300 frontend gate
+PASS preferences imported
+PASS preference CSS consumes all settings
+PASS dark mode avoids navy/purple
+PASS no source backup files
+PASS unused home.css removed
+PASS legacy stylesheet bounded — 65816
+PASS CSS import count controlled — 20
+PASS preferences are last CSS layer — import './design/preferences.css';
+PASS settings writes all preference attributes
+PASS diagnosis zero answers stay zero percent
+PASS diagnosis visible top title removed
+PASS diagnosis locked payment includes price
+PASS diagnosis uses intentional 3+2 desktop grid
+PASS questionnaire progress is answer-count based
+PASS questionnaire answer semantic rail
+PASS questionnaire mobile touch actions
+PASS results header is domain-aware
+PASS results module comparison is domain-aware
+PASS results canonical findings come from backend payload
+PASS results preliminary state is explicit and customer-safe
+PASS results hide internal root classification codes
+PASS results five-domain accent contract
+PASS results semantic strength weakness surfaces
+PASS results no customer-facing canonical jargon
+PASS report progress never fabricates minimum percent
+PASS report history newest first
+PASS report roadmap completion is report-specific
+PASS report score is centered circle without /100
+PASS report active status ornament is outside paper
+PASS report active status ornament stationary
+PASS report domain tabs have no thin outline
+PASS report critical score comparison has no arrow
+PASS report roadmap is tap-to-complete native button
+PASS report document paper stays solid white
+PASS report page outline follows active domain
+PASS report locked payment shows price
+PASS report domain icons use accessible ink token
+PASS PDF browser fallback isolated from screen
+PASS PDF browser fallback fixed A4 three-page surface
+PASS PDF renderer version
+PASS PDF Noto fonts
+PASS PDF five domain accents
+PASS PDF explicit three-section flow
+PASS PDF exact three-page guard
+PASS PDF roadmap compact table
+PASS PDF domain frame
+PASS billing plan copy is five-domain safe
+PASS login shows compact value proof
+PASS login selected plan shows current price
+PASS billing exposes three-step payment state
+PASS billing modal has explicit close control
+PASS billing error is announced
+PASS billing normalizes invalid stored domain
+PASS profile completion count is data-driven
+PASS profile empty company save is not silent
+PASS settings unknown payment domain is not mislabeled marketing
+PASS settings uses accessible switch semantics
+PASS settings logout is separated from display controls
+PASS priorities avoid score arrows
+PASS priorities use five-domain neutral fallback
+PASS priorities remove strategy-domain residue
+PASS Results accessible module label is domain-aware
+PASS Results module rows announce score context
+PASS Billing success dialog traps full focus set and restores focus
+PASS Report history controls expose selection state
+PASS OS reduced-motion preference is globally honored
+PASS forced-colors mode has explicit focus and glass fallback
+PASS shell has skip link and route focus target
+PASS mobile shell uses safe bottom clearance
+PASS mobile report domain/date controls remain horizontally reachable
+PASS guide modal respects safe areas and contained scrolling
+PASS billing modal respects safe areas and coarse-pointer targets
+PASS support stepper collapses to reachable mobile scroller
+PASS CSS structure tokens.css — depth=0
+PASS CSS structure styles.css — depth=0
+PASS CSS structure components.css — depth=0
+PASS CSS structure visualizations.css — depth=0
+PASS CSS structure buttons.css — depth=0
+PASS CSS structure shell.css — depth=0
+PASS CSS structure radar.css — depth=0
+PASS CSS structure glass.css — depth=0
+PASS CSS structure forms.css — depth=0
+PASS CSS structure landing.css — depth=0
+PASS CSS structure login.css — depth=0
+PASS CSS structure results.css — depth=0
+PASS CSS structure diagnosis.css — depth=0
+PASS CSS structure billing.css — depth=0
+PASS CSS structure account.css — depth=0
+PASS CSS structure questionnaire.css — depth=0
+PASS CSS structure report.css — depth=0
+PASS CSS structure priorities.css — depth=0
+PASS CSS structure support.css — depth=0
+PASS CSS structure preferences.css — depth=0
+
+== CSS regression gate ==
+STEP 09 CSS REGRESSION GATE: 92/92 PASS
+PASS active CSS import count is frozen — count=20
+PASS active CSS imports are unique
+PASS CSS import exists: ./design/tokens.css
+PASS CSS import exists: ./styles.css
+PASS CSS import exists: ./components/components.css
+PASS CSS import exists: ./components/visualizations.css
+PASS CSS import exists: ./components/buttons.css
+PASS CSS import exists: ./components/shell.css
+PASS CSS import exists: ./components/radar.css
+PASS CSS import exists: ./components/glass.css
+PASS CSS import exists: ./components/forms.css
+PASS CSS import exists: ./pages/landing.css
+PASS CSS import exists: ./pages/login.css
+PASS CSS import exists: ./pages/results.css
+PASS CSS import exists: ./pages/diagnosis.css
+PASS CSS import exists: ./pages/billing.css
+PASS CSS import exists: ./pages/account.css
+PASS CSS import exists: ./pages/questionnaire.css
+PASS CSS import exists: ./pages/report.css
+PASS CSS import exists: ./pages/priorities.css
+PASS CSS import exists: ./pages/support.css
+PASS CSS import exists: ./design/preferences.css
+PASS no retired CSS layer is re-imported
+PASS CSS structure: ./design/tokens.css — depth=0
+PASS CSS structure: ./styles.css — depth=0
+PASS CSS structure: ./components/components.css — depth=0
+PASS CSS structure: ./components/visualizations.css — depth=0
+PASS CSS structure: ./components/buttons.css — depth=0
+PASS CSS structure: ./components/shell.css — depth=0
+PASS CSS structure: ./components/radar.css — depth=0
+PASS CSS structure: ./components/glass.css — depth=0
+PASS CSS structure: ./components/forms.css — depth=0
+PASS CSS structure: ./pages/landing.css — depth=0
+PASS CSS structure: ./pages/login.css — depth=0
+PASS CSS structure: ./pages/results.css — depth=0
+PASS CSS structure: ./pages/diagnosis.css — depth=0
+PASS CSS structure: ./pages/billing.css — depth=0
+PASS CSS structure: ./pages/account.css — depth=0
+PASS CSS structure: ./pages/questionnaire.css — depth=0
+PASS CSS structure: ./pages/report.css — depth=0
+PASS CSS structure: ./pages/priorities.css — depth=0
+PASS CSS structure: ./pages/support.css — depth=0
+PASS CSS structure: ./design/preferences.css — depth=0
+PASS no duplicate top-level selectors: ./design/tokens.css
+PASS legacy styles.css duplicate budget — count=43
+PASS no duplicate top-level selectors: ./components/components.css
+PASS no duplicate top-level selectors: ./components/visualizations.css
+PASS no duplicate top-level selectors: ./components/buttons.css
+PASS no duplicate top-level selectors: ./components/shell.css
+PASS no duplicate top-level selectors: ./components/radar.css
+PASS no duplicate top-level selectors: ./components/glass.css
+PASS no duplicate top-level selectors: ./components/forms.css
+PASS no duplicate top-level selectors: ./pages/landing.css
+PASS no duplicate top-level selectors: ./pages/login.css
+PASS no duplicate top-level selectors: ./pages/results.css
+PASS no duplicate top-level selectors: ./pages/diagnosis.css
+PASS no duplicate top-level selectors: ./pages/billing.css
+PASS no duplicate top-level selectors: ./pages/account.css
+PASS no duplicate top-level selectors: ./pages/questionnaire.css
+PASS no duplicate top-level selectors: ./pages/report.css
+PASS no duplicate top-level selectors: ./pages/priorities.css
+PASS no duplicate top-level selectors: ./pages/support.css
+PASS no duplicate top-level selectors: ./design/preferences.css
+PASS legacy styles.css remains bounded — bytes=65816
+PASS undefined CSS vars are only runtime-injected vars
+PASS runtime CSS variable contract has not silently expanded — missing= extra=
+PASS !important budget: ./design/tokens.css — 0>0
+PASS !important budget: ./styles.css — 154>154
+PASS !important budget: ./components/components.css — 0>0
+PASS !important budget: ./components/visualizations.css — 0>0
+PASS !important budget: ./components/buttons.css — 0>0
+PASS !important budget: ./components/shell.css — 2>2
+PASS !important budget: ./components/radar.css — 0>0
+PASS !important budget: ./components/glass.css — 0>0
+PASS !important budget: ./components/forms.css — 0>0
+PASS !important budget: ./pages/landing.css — 0>0
+PASS !important budget: ./pages/login.css — 0>0
+PASS !important budget: ./pages/results.css — 0>0
+PASS !important budget: ./pages/diagnosis.css — 0>0
+PASS !important budget: ./pages/billing.css — 0>0
+PASS !important budget: ./pages/account.css — 0>0
+PASS !important budget: ./pages/questionnaire.css — 0>0
+PASS !important budget: ./pages/report.css — 247>247
+PASS !important budget: ./pages/priorities.css — 1>1
+PASS !important budget: ./pages/support.css — 0>0
+PASS !important budget: ./design/preferences.css — 15>15
+PASS guide safe-area lives in canonical rule
+PASS auth brand late override was folded into base rule
+PASS billing modal has one canonical overlay rule
+PASS account preview control has one canonical rule
+PASS report download visual override was folded into base rule
+PASS priority score late flex override is gone
+
+== Shell syntax ==
+PASS VERIFY_STEP09_CSS_REGRESSION.sh bash syntax
+
+== PDF renderer Python compile ==
+PASS render_report_pdf.py compile

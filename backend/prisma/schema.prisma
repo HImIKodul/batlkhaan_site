@@ -1,0 +1,2151 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MethodologyStatus {
+  DRAFT
+  VALIDATING
+  ACTIVE
+  ARCHIVED
+}
+
+enum NaPolicy {
+  CATEGORY_GATE
+  CONDITIONAL
+  DISALLOWED
+}
+
+enum SourceKind {
+  SELF_REPORT
+  RECENT_CASE
+  RECORD_CHECK
+  ADDITIONAL_CHECK
+  RESERVE
+  RESOLVER
+}
+
+enum AssessmentMode {
+  QUICK
+  FULL
+}
+
+enum AssessmentStatus {
+  PROFILE_PENDING
+  IN_PROGRESS
+  PAUSED
+  READY_FOR_COMPLETION
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_REVIEW
+  EXHAUSTED
+  CANCELLED
+}
+
+enum AnswerStatus {
+  ANSWERED
+  DNK
+  N_A_CLAIM
+  UNAVAILABLE
+}
+
+enum QuestionIssueStatus {
+  ISSUED
+  ANSWERED
+  CANCELLED
+}
+
+enum AssessmentSnapshotKind {
+  QUICK_RESULT
+  FULL_RESULT
+}
+
+enum EvidenceSignalKind {
+  PRIMARY
+  SECONDARY
+}
+
+enum CellStateStatus {
+  UNASSESSED
+  GATHERING
+  DIRECT_PROVISIONAL
+  DERIVED_PROVISIONAL
+  REVIEW_REQUIRED
+  DIRECT_FINAL
+  NOT_APPLICABLE
+  UNRESOLVED
+}
+
+enum CellConfidenceState {
+  UNASSESSED
+  UNKNOWN
+  ESTIMATED
+  VALIDATED
+  LOCKED
+  NOT_APPLICABLE
+}
+
+enum ContradictionStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum CompanyRole {
+  OWNER
+  ADMIN
+  ASSESSOR
+  CONSULTANT
+  VIEWER
+}
+
+enum AuditEventType {
+  ASSESSMENT_CREATED
+  PROFILE_UPDATED
+  QUESTION_ASKED
+  QUESTION_ISSUED
+  ANSWER_CREATED
+  ANSWER_UPDATED
+  EVIDENCE_CREATED
+  EVIDENCE_RETRACTED
+  CELL_UPDATED
+  CELL_FINALIZED
+  CELL_LOCKED
+  CELL_REOPENED
+  CELL_UNLOCKED
+  CONTRADICTION_FOUND
+  CONTRADICTION_RESOLVED
+  ASSESSMENT_COMPLETED
+  REPORT_GENERATED
+  STRATEGY_GENERATED
+  ACTION_PLAN_GENERATED
+  REPORT_VALIDATED
+  REPORT_GENERATION_STARTED
+  REPORT_GENERATION_FAILED
+  REPORT_GENERATION_FALLBACK
+  STRATEGY_FROZEN
+  ACTION_PLAN_FROZEN
+  ACTION_PLAN_MILESTONE_STATUS_CHANGED
+  ACTION_PLAN_MILESTONE_TRACKING_UPDATED
+  ASSESSMENT_PAUSED
+  ASSESSMENT_RESUMED
+  WRITER_LEASE_ACQUIRED
+  WRITER_LEASE_RENEWED
+  DRAFT_SAVED
+  ANSWER_EVENT_APPENDED
+  STATE_SNAPSHOT_FROZEN
+  DIAGNOSIS_FROZEN
+  TRACE_GRAPH_FROZEN
+  TRACE_GRAPH_VERIFIED
+  REPORT_PUBLICATION_BLOCKED
+}
+
+enum RecommendationType {
+  EXECUTION
+  LOCAL_IMPROVEMENT
+  VALIDATE_CAUSE
+  COLLECT_EVIDENCE
+  RESOLVE_EVIDENCE
+}
+
+enum PriorityBand {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum PlanMilestoneStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+  BLOCKED
+  SKIPPED
+}
+
+enum ReportGenerationState {
+  PAYLOAD_FROZEN
+  PASS
+  REPAIR_REQUIRED
+  GENERATION_BLOCKED
+  AI_FALLBACK_USED
+}
+
+enum BillingPlanCode {
+  DIAGNOSTIC
+  RETAKE
+  CONTINUOUS
+}
+
+enum PaymentProvider {
+  QPAY
+  MOCK
+  MANUAL
+}
+
+enum BillingInvoiceStatus {
+  CREATED
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+  REFUNDED
+}
+
+enum EntitlementStatus {
+  ACTIVE
+  CONSUMED
+  EXPIRED
+  REVOKED
+}
+
+enum PilotStudyStatus {
+  DRAFT
+  RECRUITING
+  ACTIVE
+  ANALYSIS
+  READY_FOR_REVIEW
+  CLOSED
+}
+
+enum PilotConsentStatus {
+  PENDING
+  CONSENTED
+  DECLINED
+  WITHDRAWN
+}
+
+enum PilotAssessmentRole {
+  COGNITIVE
+  BASELINE
+  SECOND_RATER
+  RETEST
+}
+
+enum PilotFeedbackDimension {
+  CLARITY
+  BURDEN
+  DIAGNOSIS_USEFULNESS
+  RECOMMENDATION_USEFULNESS
+}
+
+enum PilotGateDecisionStatus {
+  APPROVE
+  REVISE
+  HOLD
+}
+
+enum CalibrationProposalStatus {
+  DRAFT
+  SUBMITTED
+  REVISE_REQUIRED
+  APPROVED
+  REJECTED
+  ACTIVATED
+  WITHDRAWN
+}
+
+enum CalibrationChangeKind {
+  CONTRIBUTION_STRENGTH
+  CONFIDENCE_EVIDENCE_UNIT
+  ADAPTIVE_ROUTING_COEFFICIENT
+  STOP_THRESHOLD
+  INFORMATION_VALUE_PRIOR
+  PROFILE_FIT_MULTIPLIER
+  UNCERTAINTY_BAND
+  QUESTION_WORDING
+  QUESTION_MAPPING
+  CATEGORY_WEIGHT
+  CELL_WEIGHT
+  SCORING_RULE
+  OTHER_SEMANTIC
+}
+
+enum CalibrationReviewDecision {
+  APPROVE
+  REVISE
+  REJECT
+}
+
+model MethodologyVersion {
+  id                String            @id
+  domainCode        String            @default("marketing")
+  version           String            @unique
+  bundleVersion     String
+  sourceMethodology String
+  bundleSha256      String            @unique
+  status            MethodologyStatus @default(DRAFT)
+  validation        Json
+  generatedAtUtc    DateTime?
+  createdAt         DateTime          @default(now())
+  activatedAt       DateTime?
+
+  modules                        Module[]
+  categories                     Category[]
+  cellTemplates                  CellTemplate[]
+  diagnosticCells                DiagnosticCell[]
+  questions                      Question[]
+  profileQuestions               ProfileQuestion[]
+  scoringProfiles                ScoringProfile[]
+  contracts                      MethodologyContract[]
+  manifestEntries                SourceManifestEntry[]
+  respondentRoles                RespondentRole[]
+  purposes                       PurposeDefinition[]
+  categoryDependencies           CategoryDependency[]
+  cellDependencies               CellDependency[]
+  importRuns                     ImportRun[]
+  assessments                    Assessment[]
+  pilotStudies                   PilotStudy[]
+  sourceCalibrationProposals     CalibrationProposal[]   @relation("CalibrationSourceMethodology")
+  candidateCalibrationProposals  CalibrationProposal[]   @relation("CalibrationCandidateMethodology")
+  calibrationReleasesAsSource    CalibrationRelease[]    @relation("CalibrationReleaseSource")
+  calibrationReleasesAsCandidate CalibrationRelease[]    @relation("CalibrationReleaseCandidate")
+  questionRuntimePolicies        QuestionRuntimePolicy[]
+  cellRuntimePolicies            CellRuntimePolicy[]
+  runtimeRuleDefinitions         RuntimeRuleDefinition[]
+  runtimeScorePatterns           RuntimeScorePattern[]
+
+  @@map("methodology_versions")
+}
+
+model Module {
+  id                   String  @id
+  methodologyVersionId String
+  code                 String
+  nameMn               String
+  weightPct            Decimal @db.Decimal(8, 4)
+  orderIndex           Int
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  categories         Category[]
+  moduleResults      ModuleResult[]
+
+  @@unique([methodologyVersionId, code])
+  @@unique([methodologyVersionId, nameMn])
+  @@index([methodologyVersionId, orderIndex])
+  @@map("modules")
+}
+
+model Category {
+  id                   String  @id
+  methodologyVersionId String
+  moduleId             String
+  externalId           String
+  nameMn               String
+  moduleWeightPct      Decimal @db.Decimal(8, 4)
+  categoryWeightPct    Decimal @db.Decimal(8, 4)
+  orderIndex           Int
+
+  methodologyVersion     MethodologyVersion              @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  module                 Module                          @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  diagnosticCells        DiagnosticCell[]
+  questions              Question[]
+  purposeMappings        CategoryPurposeMapping[]
+  prerequisiteEdges      CategoryDependency[]            @relation("CategoryDependencyPrerequisite")
+  dependentEdges         CategoryDependency[]            @relation("CategoryDependencyDependent")
+  categoryResults        CategoryResult[]
+  outcomePriorityResults CategoryOutcomePriorityResult[]
+  rootFindings           RootFindingRecord[]
+  recommendations        RecommendationRecord[]
+
+  @@unique([methodologyVersionId, externalId])
+  @@index([methodologyVersionId, moduleId])
+  @@map("categories")
+}
+
+model CellTemplate {
+  id                   String   @id
+  methodologyVersionId String
+  externalId           String
+  nameMn               String
+  groupMn              String
+  roleMn               String
+  weightPct            Decimal  @db.Decimal(8, 4)
+  naPolicy             NaPolicy
+  sourceNaEligibility  String
+  orderIndex           Int
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  diagnosticCells    DiagnosticCell[]
+
+  @@unique([methodologyVersionId, externalId])
+  @@index([methodologyVersionId, orderIndex])
+  @@map("cell_templates")
+}
+
+model DiagnosticCell {
+  id                                   String   @id
+  weightPctOverride                    Decimal? @db.Decimal(12, 8)
+  methodologyVersionId                 String
+  categoryId                           String
+  cellTemplateId                       String
+  externalId                           String
+  directQuestionCount                  Int
+  independentSourceKinds               Int
+  minThreePathConfidenceAtAuthority075 Decimal  @db.Decimal(8, 6)
+  preferredRoleCode                    String
+  preferredAuthority                   Decimal  @db.Decimal(6, 4)
+  coverageStatus                       String
+
+  methodologyVersion MethodologyVersion        @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  category           Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  cellTemplate       CellTemplate              @relation(fields: [cellTemplateId], references: [id], onDelete: Restrict)
+  questions          Question[]
+  authorityRouting   AuthorityRouting?
+  incomingSecondary  QuestionSecondaryTarget[] @relation("SecondaryTargetCell")
+  outgoingCellDeps   CellDependency[]          @relation("CellDependencyPrerequisite")
+  incomingCellDeps   CellDependency[]          @relation("CellDependencyDependent")
+  cellStates         AssessmentCellState[]
+  evidenceSignals    EvidenceSignal[]
+  contradictions     Contradiction[]
+  rootFindings       RootFindingRecord[]
+  recommendations    RecommendationRecord[]
+  runtimePolicy      CellRuntimePolicy?
+
+  @@unique([methodologyVersionId, externalId])
+  @@unique([categoryId, cellTemplateId])
+  @@index([methodologyVersionId, categoryId])
+  @@index([cellTemplateId])
+  @@map("diagnostic_cells")
+}
+
+model Question {
+  id                   String     @id
+  methodologyVersionId String
+  categoryId           String
+  primaryCellId        String
+  externalId           String
+  sourceRow            Int
+  path                 Int
+  sourceKind           SourceKind
+  textMn               String     @db.Text
+  primaryCoefficient   Decimal    @db.Decimal(6, 4)
+  scoringProfileCode   String?
+  optionSetHash        String
+
+  methodologyVersion MethodologyVersion        @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  category           Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  primaryCell        DiagnosticCell            @relation(fields: [primaryCellId], references: [id], onDelete: Cascade)
+  options            QuestionOption[]
+  secondaryTargets   QuestionSecondaryTarget[]
+  answers            Answer[]
+  askedQuestions     AssessmentAskedQuestion[]
+  answerEvents       AnswerEvent[]
+  responseDrafts     ResponseDraft[]
+  runtimePolicy      QuestionRuntimePolicy?
+
+  @@unique([methodologyVersionId, externalId])
+  @@unique([methodologyVersionId, sourceRow])
+  @@index([primaryCellId, path])
+  @@index([categoryId])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id          String   @id
+  questionId  String
+  optionIndex Int
+  labelMn     String   @db.Text
+  score       Decimal? @db.Decimal(8, 4)
+  state       String
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, optionIndex])
+  @@map("question_options")
+}
+
+model QuestionSecondaryTarget {
+  id           String  @id
+  questionId   String
+  targetCellId String
+  coefficient  Decimal @db.Decimal(6, 4)
+  relationCode String
+
+  question   Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  targetCell DiagnosticCell @relation("SecondaryTargetCell", fields: [targetCellId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, targetCellId, relationCode], map: "question_secondary_targets_questionId_targetCellId_relationCode")
+  @@index([targetCellId])
+  @@map("question_secondary_targets")
+}
+
+model QuestionRuntimePolicy {
+  id                   String   @id @default(cuid())
+  methodologyVersionId String
+  questionId           String   @unique
+  questionRole         String
+  scoreEligible        Boolean
+  scoringMethod        String
+  scoredOptionCount    Int
+  scorePatternCode     String
+  directAskAllowed     Boolean  @default(true)
+  routingState         String   @default("DIRECT_ALLOWED")
+  askStage             String
+  selectionPriority    Int
+  isAnchor             Boolean  @default(false)
+  applicabilityGateKey String
+  triggerRuleId        String
+  confidenceRuleId     String
+  defaultAsk           Boolean  @default(false)
+  stopRuleId           String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @default(now()) @updatedAt
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  question           Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([methodologyVersionId, askStage, selectionPriority], map: "question_runtime_policies_methodologyVersionId_askStage_selecti")
+  @@index([methodologyVersionId, applicabilityGateKey], map: "question_runtime_policies_methodologyVersionId_applicabilityGat")
+  @@map("question_runtime_policies")
+}
+
+model CellRuntimePolicy {
+  id                     String   @id @default(cuid())
+  methodologyVersionId   String
+  diagnosticCellId       String   @unique
+  applicabilityMode      String
+  applicabilityGateKey   String
+  isAnchorCell           Boolean  @default(false)
+  directAskableQuestions Int
+  maxDirectQuestions     Int
+  indirectConfidenceCap  Decimal  @db.Decimal(8, 6)
+  primaryConfidenceFloor Decimal  @db.Decimal(8, 6)
+  lockThreshold          Decimal  @db.Decimal(8, 6)
+  conflictGapThreshold   Decimal  @db.Decimal(8, 4)
+  stateModelId           String
+  valueRuleId            String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  diagnosticCell     DiagnosticCell     @relation(fields: [diagnosticCellId], references: [id], onDelete: Cascade)
+
+  @@index([methodologyVersionId, applicabilityMode], map: "cell_runtime_policies_methodologyVersionId_applicabilityMode_id")
+  @@index([methodologyVersionId, applicabilityGateKey], map: "cell_runtime_policies_methodologyVersionId_applicabilityGateKey")
+  @@map("cell_runtime_policies")
+}
+
+model RuntimeRuleDefinition {
+  id                   String   @id @default(cuid())
+  methodologyVersionId String
+  ruleId               String
+  ruleType             String
+  definition           Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @default(now()) @updatedAt
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, ruleId])
+  @@index([methodologyVersionId, ruleType])
+  @@map("runtime_rule_definitions")
+}
+
+model RuntimeScorePattern {
+  id                   String   @id @default(cuid())
+  methodologyVersionId String
+  code                 String
+  scoreEligible        Boolean
+  scoredOptionCount    Int
+  optionScores         Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @default(now()) @updatedAt
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, code])
+  @@map("runtime_score_patterns")
+}
+
+model ProfileQuestion {
+  id                   String  @id
+  methodologyVersionId String
+  externalId           String
+  textMn               String  @db.Text
+  questionType         String?
+  orderIndex           Int
+
+  methodologyVersion MethodologyVersion      @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  options            ProfileQuestionOption[]
+
+  @@unique([methodologyVersionId, externalId])
+  @@map("profile_questions")
+}
+
+model ProfileQuestionOption {
+  id                String @id
+  profileQuestionId String
+  optionIndex       Int
+  labelMn           String @db.Text
+
+  profileQuestion ProfileQuestion @relation(fields: [profileQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([profileQuestionId, optionIndex])
+  @@map("profile_question_options")
+}
+
+model ScoringProfile {
+  id                   String @id
+  methodologyVersionId String
+  code                 String
+  definition           Json
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, code])
+  @@map("scoring_profiles")
+}
+
+model MethodologyContract {
+  id                   String  @id
+  methodologyVersionId String
+  sourceName           String
+  contractVersion      String
+  sha256               String?
+  definition           Json
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, sourceName])
+  @@map("methodology_contracts")
+}
+
+model SourceManifestEntry {
+  id                   String @id
+  methodologyVersionId String
+  sourceName           String
+  sourceVersion        String
+  sha256               String
+  chunkCount           Int
+  sizeValue            Int
+  role                 String
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, sourceName])
+  @@map("source_manifest_entries")
+}
+
+model RespondentRole {
+  id                   String @id
+  methodologyVersionId String
+  externalId           String
+  code                 String
+  labelMn              String
+  scopeMn              String
+
+  methodologyVersion    MethodologyVersion     @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  preferredFor          AuthorityRouting[]
+  assessmentRespondents AssessmentRespondent[]
+
+  @@unique([methodologyVersionId, externalId])
+  @@unique([methodologyVersionId, code])
+  @@map("respondent_roles")
+}
+
+model AuthorityRouting {
+  id                 String  @id
+  diagnosticCellId   String  @unique
+  preferredRoleId    String
+  preferredAuthority Decimal @db.Decimal(6, 4)
+  backupRoles        Json
+
+  diagnosticCell DiagnosticCell @relation(fields: [diagnosticCellId], references: [id], onDelete: Cascade)
+  preferredRole  RespondentRole @relation(fields: [preferredRoleId], references: [id], onDelete: Restrict)
+
+  @@index([preferredRoleId])
+  @@map("authority_routing")
+}
+
+model PurposeDefinition {
+  id                   String @id
+  methodologyVersionId String
+  externalId           String
+  code                 String
+  labelMn              String
+  orderIndex           Int
+
+  methodologyVersion     MethodologyVersion              @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  categoryMappings       CategoryPurposeMapping[]
+  purposeResults         PurposeResult[]
+  outcomePriorityResults CategoryOutcomePriorityResult[]
+
+  @@unique([methodologyVersionId, externalId])
+  @@unique([methodologyVersionId, code])
+  @@map("purpose_definitions")
+}
+
+model CategoryPurposeMapping {
+  id          String  @id
+  categoryId  String
+  purposeId   String
+  coefficient Decimal @db.Decimal(6, 4)
+  rationale   String? @db.Text
+
+  category Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  purpose  PurposeDefinition @relation(fields: [purposeId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, purposeId])
+  @@index([purposeId])
+  @@map("category_purpose_mappings")
+}
+
+model CategoryDependency {
+  id                     String  @id
+  methodologyVersionId   String
+  externalId             String
+  prerequisiteCategoryId String
+  dependentCategoryId    String
+  strength               Decimal @db.Decimal(6, 4)
+  dependencyType         String
+  rationale              String  @db.Text
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  prerequisite       Category           @relation("CategoryDependencyPrerequisite", fields: [prerequisiteCategoryId], references: [id], onDelete: Cascade)
+  dependent          Category           @relation("CategoryDependencyDependent", fields: [dependentCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, externalId])
+  @@index([prerequisiteCategoryId])
+  @@index([dependentCategoryId])
+  @@map("category_dependencies")
+}
+
+model CellDependency {
+  id                   String  @id
+  methodologyVersionId String
+  externalId           String
+  prerequisiteCellId   String
+  dependentCellId      String
+  strength             Decimal @db.Decimal(6, 4)
+  dependencyType       String
+  rationale            String  @db.Text
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+  prerequisite       DiagnosticCell     @relation("CellDependencyPrerequisite", fields: [prerequisiteCellId], references: [id], onDelete: Cascade)
+  dependent          DiagnosticCell     @relation("CellDependencyDependent", fields: [dependentCellId], references: [id], onDelete: Cascade)
+
+  @@unique([methodologyVersionId, externalId, prerequisiteCellId], map: "cell_dependencies_methodologyVersionId_externalId_prerequisiteC")
+  @@index([prerequisiteCellId])
+  @@index([dependentCellId])
+  @@map("cell_dependencies")
+}
+
+model ImportRun {
+  id                   String    @id @default(cuid())
+  methodologyVersionId String
+  bundleSha256         String
+  startedAt            DateTime  @default(now())
+  finishedAt           DateTime?
+  status               String
+  counts               Json?
+  errorMessage         String?   @db.Text
+
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id], onDelete: Cascade)
+
+  @@index([methodologyVersionId, startedAt])
+  @@map("import_runs")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  displayName  String?
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  tokenVersion Int        @default(1)
+  lastLoginAt  DateTime?
+  /// Set when the account was erased at the user's request (personal data removed; payment/audit rows are retained, see docs/DATA_LIFECYCLE.md).
+  erasedAt     DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships                  CompanyMembership[]
+  refreshSessions              RefreshSession[]
+  passwordResetTokens          PasswordResetToken[]
+  authEvents                   AuthAuditEvent[]
+  assessmentsCreated           Assessment[]          @relation("AssessmentCreator")
+  billingInvoicesCreated       BillingInvoice[]      @relation("BillingInvoiceCreator")
+  pilotStudiesCreated          PilotStudy[]          @relation("PilotStudyCreator")
+  pilotGateDecisions           PilotGateDecision[]   @relation("PilotGateReviewer")
+  calibrationProposalsCreated  CalibrationProposal[] @relation("CalibrationProposalCreator")
+  calibrationProposalsToReview CalibrationProposal[] @relation("CalibrationProposalReviewer")
+  calibrationReviews           CalibrationReview[]   @relation("CalibrationReviewer")
+  calibrationReleasesActivated CalibrationRelease[]  @relation("CalibrationReleaseActivator")
+  adminAccount                 AdminAccount?
+  paymentDisputeEvents         PaymentDisputeEvent[]
+  paymentDisputes              PaymentDispute[]
+  supportCaseEvents            SupportCaseEvent[]
+  supportCases                 SupportCase[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model CompanyMembership {
+  id        String      @id @default(cuid())
+  companyId String
+  userId    String
+  role      CompanyRole
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+  @@index([userId, role])
+  @@index([companyId, role])
+  @@index([companyId, role, userId], map: "company_memberships_company_role_user_idx")
+  @@map("company_memberships")
+}
+
+/// One-time password reset tokens. Only a hash of the token is stored; the token itself exists only in the e-mail link.
+model PasswordResetToken {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  requestIpHash String?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model RefreshSession {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  familyId      String
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  rotatedAt     DateTime?
+  ipHash        String?
+  userAgentHash String?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([familyId])
+  @@map("refresh_sessions")
+}
+
+model AuthAuditEvent {
+  id            String   @id @default(cuid())
+  userId        String?
+  eventType     String
+  ipHash        String?
+  userAgentHash String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("auth_audit_events")
+}
+
+model Company {
+  id              String    @id @default(cuid())
+  name            String
+  industry        String?
+  businessModel   String?
+  employeeCount   Int?
+  companyAgeYears Decimal?  @db.Decimal(8, 2)
+  marketType      String?
+  country         String?
+  profile         Json?
+  /// Set when customer content was erased at the owner's request. The row stays as an anonymised shell so retained invoices keep a valid parent.
+  erasedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  memberships      CompanyMembership[]
+  assessments      Assessment[]
+  billingInvoices  BillingInvoice[]
+  entitlements     CompanyEntitlement[]
+  pilotEnrollments PilotEnrollment[]
+  paymentDisputes  PaymentDispute[]
+  reportReviews    ReportReview[]
+  supportCases     SupportCase[]
+
+  @@map("companies")
+}
+
+model BillingInvoice {
+  id                 String               @id @default(cuid())
+  domainCode         String               @default("marketing")
+  companyId          String
+  createdByUserId    String
+  planCode           BillingPlanCode
+  amountMnt          Int
+  currency           String               @default("MNT")
+  provider           PaymentProvider
+  providerInvoiceId  String?              @unique
+  providerPaymentId  String?              @unique
+  senderInvoiceNo    String               @unique
+  callbackTokenHash  String
+  status             BillingInvoiceStatus @default(CREATED)
+  qrText             String?              @db.Text
+  qrImage            String?              @db.Text
+  shortUrl           String?              @db.Text
+  deeplinks          Json?
+  providerMetadata   Json?
+  callbackReceivedAt DateTime?
+  lastVerifiedAt     DateTime?
+  paidAt             DateTime?
+  refundedAt         DateTime?
+  refundReference    String?
+  // Uniqueness is enforced by a PARTIAL unique index (billing_invoices_refundReference_key ... WHERE "refundReference" IS NOT NULL, migration
+  // 20261025051000). Prisma cannot express partial indexes, so it is intentionally not declared here; look invoices up with findFirst.
+  refundReason       String?              @db.Text
+  failureReason      String?              @db.Text
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy       User                @relation("BillingInvoiceCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  entitlement     CompanyEntitlement?
+  paymentDisputes PaymentDispute[]
+
+  @@index([companyId, createdAt])
+  @@index([companyId, domainCode, status])
+  @@index([status, createdAt])
+  @@map("billing_invoices")
+}
+
+enum EntitlementOrigin {
+  PAID
+  ADMIN_GRANT
+}
+
+model CompanyEntitlement {
+  id               String            @id @default(cuid())
+  domainCode       String            @default("marketing")
+  companyId        String
+  /// Null only for origin ADMIN_GRANT (database CHECK company_entitlements_origin_check); every PAID entitlement keeps its invoice.
+  sourceInvoiceId  String?           @unique
+  planCode         BillingPlanCode
+  status           EntitlementStatus @default(ACTIVE)
+  startsAt         DateTime          @default(now())
+  endsAt           DateTime?
+  assessmentLimit  Int?
+  assessmentsUsed  Int               @default(0)
+  origin           EntitlementOrigin @default(PAID)
+  grantedByAdminId String?
+  grantReason      String?
+  revokedAt        DateTime?
+  revokedByAdminId String?
+  revokeReason     String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sourceInvoice  BillingInvoice? @relation(fields: [sourceInvoiceId], references: [id], onDelete: Restrict)
+  grantedByAdmin AdminAccount?   @relation("EntitlementGrantedBy", fields: [grantedByAdminId], references: [id], onDelete: Restrict)
+  revokedByAdmin AdminAccount?   @relation("EntitlementRevokedBy", fields: [revokedByAdminId], references: [id], onDelete: Restrict)
+  assessments    Assessment[]
+
+  @@index([companyId, status, startsAt])
+  @@index([companyId, domainCode, status])
+  @@index([origin, status])
+  @@map("company_entitlements")
+}
+
+model Assessment {
+  id                                  String           @id @default(cuid())
+  domainCode                          String           @default("marketing")
+  companyId                           String
+  methodologyVersionId                String
+  mode                                AssessmentMode
+  status                              AssessmentStatus @default(PROFILE_PENDING)
+  routingState                        String?
+  profile                             Json?
+  overallPartialScore                 Decimal?         @db.Decimal(8, 4)
+  overallOfficialScore                Decimal?         @db.Decimal(8, 4)
+  overallConfidence                   Decimal?         @db.Decimal(8, 6)
+  coverage                            Decimal?         @db.Decimal(8, 6)
+  aggregationVersion                  String           @default("LEGACY")
+  assessmentRevision                  Int              @default(0)
+  routingRevision                     Int              @default(0)
+  eventSequence                       Int              @default(0)
+  profileRevision                     Int              @default(0)
+  currentQuestionIssueId              String?          @unique
+  resumeState                         Json?
+  pausedAt                            DateTime?
+  activeWriterLeaseId                 String?
+  writerLeaseExpiresAt                DateTime?
+  lastMaterializedAnswerEventSequence Int              @default(0)
+  parentAssessmentId                  String?
+  previousAssessmentId                String?
+  createdByUserId                     String?
+  entitlementId                       String?
+  startedAt                           DateTime?
+  completedAt                         DateTime?
+  createdAt                           DateTime         @default(now())
+  updatedAt                           DateTime         @updatedAt
+
+  company                Company                         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  methodologyVersion     MethodologyVersion              @relation(fields: [methodologyVersionId], references: [id], onDelete: Restrict)
+  createdBy              User?                           @relation("AssessmentCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  entitlement            CompanyEntitlement?             @relation(fields: [entitlementId], references: [id], onDelete: SetNull)
+  currentQuestionIssue   AssessmentAskedQuestion?        @relation("CurrentQuestionIssue", fields: [currentQuestionIssueId], references: [id], onDelete: SetNull)
+  parentAssessment       Assessment?                     @relation("AssessmentParent", fields: [parentAssessmentId], references: [id], onDelete: SetNull)
+  childAssessments       Assessment[]                    @relation("AssessmentParent")
+  previousAssessment     Assessment?                     @relation("AssessmentPrevious", fields: [previousAssessmentId], references: [id], onDelete: SetNull)
+  nextAssessments        Assessment[]                    @relation("AssessmentPrevious")
+  respondents            AssessmentRespondent[]
+  askedQuestions         AssessmentAskedQuestion[]
+  answers                Answer[]
+  evidenceSignals        EvidenceSignal[]
+  cellStates             AssessmentCellState[]
+  categoryResults        CategoryResult[]
+  moduleResults          ModuleResult[]
+  purposeResults         PurposeResult[]
+  outcomePriorityResults CategoryOutcomePriorityResult[]
+  contradictions         Contradiction[]
+  auditEvents            AuditEvent[]
+  strategyRun            StrategyRun?
+  reportSnapshots        ReportSnapshot[]
+  diagnosisSnapshots     DiagnosisSnapshot[]
+  strategyPlanSnapshot   StrategyPlanSnapshot?
+  answerEvents           AnswerEvent[]
+  responseDraft          ResponseDraft?
+  stateSnapshots         AssessmentStateSnapshot[]
+  traceSnapshots         TraceSnapshot[]
+  pilotLink              PilotAssessmentLink?
+  pilotFeedback          PilotFeedback[]
+  reportReview           ReportReview?
+
+  @@index([companyId, createdAt])
+  @@index([companyId, domainCode, createdAt])
+  @@index([status, updatedAt])
+  @@index([methodologyVersionId, status])
+  @@index([createdByUserId, createdAt])
+  @@index([entitlementId])
+  @@index([parentAssessmentId])
+  @@index([previousAssessmentId])
+  @@map("assessments")
+}
+
+model AssessmentRespondent {
+  id                String   @id @default(cuid())
+  assessmentId      String
+  roleId            String
+  displayName       String?
+  authorityMetadata Json?
+  createdAt         DateTime @default(now())
+
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  role         RespondentRole @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  answers      Answer[]
+  answerEvents AnswerEvent[]
+
+  @@index([assessmentId])
+  @@map("assessment_respondents")
+}
+
+model AssessmentAskedQuestion {
+  id           String              @id @default(cuid())
+  assessmentId String
+  questionId   String
+  askedOrder   Int
+  priority     Decimal?            @db.Decimal(12, 8)
+  reason       Json?
+  status       QuestionIssueStatus @default(ISSUED)
+  askedAt      DateTime            @default(now())
+  answeredAt   DateTime?
+
+  assessment           Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question             Question        @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  currentForAssessment Assessment?     @relation("CurrentQuestionIssue")
+  answerEvents         AnswerEvent[]
+  responseDrafts       ResponseDraft[]
+
+  @@unique([assessmentId, questionId])
+  @@unique([assessmentId, askedOrder])
+  @@index([assessmentId, status, askedOrder])
+  @@map("assessment_asked_questions")
+}
+
+model AnswerEvent {
+  id                        String   @id @default(cuid())
+  assessmentId              String
+  questionIssueId           String
+  questionId                String
+  answerId                  String
+  respondentId              String?
+  clientRequestId           String
+  eventSequence             Int
+  optionIndex               Int?
+  answerState               String
+  rawValue                  Json?
+  authority                 Decimal? @db.Decimal(6, 4)
+  effectiveReliability      Decimal? @db.Decimal(8, 6)
+  methodologyVersion        String
+  questionBankVersion       String
+  acknowledgement           Json?
+  questionExternalId        String?
+  primaryCategoryExternalId String?
+  primaryCellExternalId     String?
+  questionPath              Int?
+  sourceKindSnapshot        String?
+  normalizedScore           Decimal? @db.Decimal(8, 4)
+  createdAt                 DateTime @default(now())
+
+  assessment    Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionIssue AssessmentAskedQuestion @relation(fields: [questionIssueId], references: [id], onDelete: Cascade)
+  question      Question                @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  answer        Answer                  @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  respondent    AssessmentRespondent?   @relation(fields: [respondentId], references: [id], onDelete: SetNull)
+
+  @@unique([assessmentId, clientRequestId])
+  @@unique([assessmentId, eventSequence])
+  @@index([assessmentId, questionId, eventSequence])
+  @@index([assessmentId, createdAt])
+  @@index([questionIssueId])
+  @@index([answerId])
+  @@index([respondentId])
+  @@map("answer_events")
+}
+
+model ResponseDraft {
+  id              String   @id @default(cuid())
+  assessmentId    String   @unique
+  questionIssueId String
+  questionId      String
+  draft           Json
+  draftRevision   Int      @default(1)
+  serverAckAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  assessment    Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionIssue AssessmentAskedQuestion @relation(fields: [questionIssueId], references: [id], onDelete: Cascade)
+  question      Question                @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@index([questionIssueId])
+  @@map("response_drafts")
+}
+
+model AssessmentStateSnapshot {
+  id                 String                 @id @default(cuid())
+  assessmentId       String
+  kind               AssessmentSnapshotKind
+  assessmentRevision Int
+  eventSequence      Int
+  payloadHash        String                 @unique
+  payload            Json
+  versionBundleId    String?
+  versionBundleHash  String?
+  traceVersion       String                 @default("MMRI-TRACE-1.0")
+  createdAt          DateTime               @default(now())
+
+  assessment      Assessment       @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  reportSnapshots ReportSnapshot[]
+
+  @@unique([assessmentId, kind, assessmentRevision], map: "assessment_state_snapshots_assessmentId_kind_assessmentRevision")
+  @@index([assessmentId, createdAt])
+  @@map("assessment_state_snapshots")
+}
+
+model Answer {
+  id           String       @id @default(cuid())
+  assessmentId String
+  respondentId String?
+  questionId   String
+  optionIndex  Int?
+  rawValue     Json?
+  status       AnswerStatus
+  authority    Decimal?     @db.Decimal(6, 4)
+  revision     Int          @default(1)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  assessment      Assessment            @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  respondent      AssessmentRespondent? @relation(fields: [respondentId], references: [id], onDelete: SetNull)
+  question        Question              @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  evidenceSignals EvidenceSignal[]
+  answerEvents    AnswerEvent[]
+
+  @@unique([assessmentId, questionId, revision])
+  @@index([assessmentId, active])
+  @@index([respondentId])
+  @@map("answers")
+}
+
+model EvidenceSignal {
+  id           String             @id @default(cuid())
+  assessmentId String
+  answerId     String
+  cellId       String
+  signalKind   EvidenceSignalKind
+  sourceKind   SourceKind
+  coefficient  Decimal            @db.Decimal(6, 4)
+  score        Decimal?           @db.Decimal(8, 4)
+  reliability  Decimal?           @db.Decimal(8, 6)
+  state        String
+  active       Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+
+  assessment Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  answer     Answer         @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  cell       DiagnosticCell @relation(fields: [cellId], references: [id], onDelete: Restrict)
+
+  @@index([assessmentId, cellId, active])
+  @@index([answerId, active])
+  @@map("evidence_signals")
+}
+
+model AssessmentCellState {
+  id                     String              @id @default(cuid())
+  assessmentId           String
+  cellId                 String
+  value                  Json?
+  normalizedScore        Decimal?            @db.Decimal(8, 4)
+  confidence             Decimal             @default(0) @db.Decimal(8, 6)
+  directAnswerCount      Int                 @default(0)
+  independentSourceKinds Int                 @default(0)
+  contradictionIndex     Decimal             @default(0) @db.Decimal(8, 6)
+  status                 CellStateStatus     @default(UNASSESSED)
+  confidenceState        CellConfidenceState @default(UNASSESSED)
+  evidenceCount          Int                 @default(0)
+  scoreDispersion        Decimal?            @db.Decimal(8, 4)
+  lockReason             String?
+  lockedAt               DateTime?
+  calculationVersion     String              @default("LEGACY")
+  finalizedAt            DateTime?
+  updatedAt              DateTime            @updatedAt
+
+  assessment Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  cell       DiagnosticCell @relation(fields: [cellId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, cellId])
+  @@index([assessmentId, status])
+  @@index([assessmentId, confidenceState])
+  @@index([assessmentId, lockedAt])
+  @@map("assessment_cell_states")
+}
+
+model CategoryResult {
+  id                           String   @id @default(cuid())
+  assessmentId                 String
+  categoryId                   String
+  partialScore                 Decimal? @db.Decimal(8, 4)
+  officialScore                Decimal? @db.Decimal(8, 4)
+  confidence                   Decimal? @db.Decimal(8, 6)
+  coverage                     Decimal? @db.Decimal(8, 6)
+  applicableCells              Int
+  finalizedCells               Int
+  effectiveModuleWeightPct     Decimal? @db.Decimal(8, 4)
+  partialContributionToModule  Decimal? @db.Decimal(8, 4)
+  officialContributionToModule Decimal? @db.Decimal(8, 4)
+  aggregationVersion           String   @default("LEGACY")
+  updatedAt                    DateTime @updatedAt
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, categoryId])
+  @@map("category_results")
+}
+
+model ModuleResult {
+  id                        String   @id @default(cuid())
+  assessmentId              String
+  moduleId                  String
+  partialScore              Decimal? @db.Decimal(8, 4)
+  officialScore             Decimal? @db.Decimal(8, 4)
+  confidence                Decimal? @db.Decimal(8, 6)
+  coverage                  Decimal? @db.Decimal(8, 6)
+  applicableCategories      Int
+  finalizedCategories       Int
+  unresolvedCategories      Int
+  reviewRequiredCategories  Int
+  baseWeightPct             Decimal  @db.Decimal(8, 4)
+  effectiveOverallWeightPct Decimal? @db.Decimal(8, 4)
+  partialContribution       Decimal? @db.Decimal(8, 4)
+  officialContribution      Decimal? @db.Decimal(8, 4)
+  aggregationVersion        String   @default("LEGACY")
+  updatedAt                 DateTime @updatedAt
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, moduleId])
+  @@index([assessmentId, aggregationVersion])
+  @@map("module_results")
+}
+
+model PurposeResult {
+  id                         String   @id @default(cuid())
+  assessmentId               String
+  purposeId                  String
+  partialScore               Decimal? @db.Decimal(8, 4)
+  officialScore              Decimal? @db.Decimal(8, 4)
+  confidence                 Decimal? @db.Decimal(8, 6)
+  coverage                   Decimal? @db.Decimal(8, 6)
+  knownGap                   Decimal? @db.Decimal(8, 4)
+  confidenceAdjustedKnownGap Decimal? @db.Decimal(8, 4)
+  uncertaintyKnownGap        Decimal? @db.Decimal(8, 4)
+  rankedCategoryCount        Int      @default(0)
+  topPriorityCategoryIds     Json?
+  calculationVersion         String   @default("LEGACY")
+  updatedAt                  DateTime @updatedAt
+
+  assessment Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  purpose    PurposeDefinition @relation(fields: [purposeId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, purposeId])
+  @@index([assessmentId, calculationVersion])
+  @@map("purpose_results")
+}
+
+model CategoryOutcomePriorityResult {
+  id                                String   @id @default(cuid())
+  assessmentId                      String
+  purposeId                         String
+  categoryId                        String
+  relevance                         Decimal  @db.Decimal(6, 4)
+  structuralWeight                  Decimal  @db.Decimal(10, 6)
+  effectivePurposeWeightPct         Decimal  @db.Decimal(8, 4)
+  categoryScore                     Decimal  @db.Decimal(8, 4)
+  categoryGap                       Decimal  @db.Decimal(8, 4)
+  confidence                        Decimal? @db.Decimal(8, 6)
+  coverage                          Decimal? @db.Decimal(8, 6)
+  gapContribution                   Decimal  @db.Decimal(8, 4)
+  confidenceAdjustedGapContribution Decimal  @db.Decimal(8, 4)
+  uncertaintyGapContribution        Decimal  @db.Decimal(8, 4)
+  relativePriority                  Decimal  @db.Decimal(8, 6)
+  rank                              Int
+  calculationVersion                String   @default("OUTCOME_PRIORITY_V13")
+  updatedAt                         DateTime @updatedAt
+
+  assessment Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  purpose    PurposeDefinition @relation(fields: [purposeId], references: [id], onDelete: Restrict)
+  category   Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, purposeId, categoryId], map: "category_outcome_priority_results_assessmentId_purposeId_catego")
+  @@index([assessmentId, purposeId, rank], map: "category_outcome_priority_results_assessmentId_purposeId_rank_i")
+  @@index([assessmentId, categoryId])
+  @@map("category_outcome_priority_results")
+}
+
+model Contradiction {
+  id           String              @id @default(cuid())
+  assessmentId String
+  cellId       String
+  status       ContradictionStatus @default(OPEN)
+  severity     String
+  ruleCode     String
+  details      Json
+  createdAt    DateTime            @default(now())
+  resolvedAt   DateTime?
+
+  assessment Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  cell       DiagnosticCell @relation(fields: [cellId], references: [id], onDelete: Restrict)
+
+  @@index([assessmentId, status])
+  @@map("contradictions")
+}
+
+model AuditEvent {
+  id           String         @id @default(cuid())
+  assessmentId String
+  eventType    AuditEventType
+  entityType   String?
+  entityId     String?
+  payload      Json?
+  createdAt    DateTime       @default(now())
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, createdAt])
+  @@map("audit_events")
+}
+
+model StrategyRun {
+  id                    String   @id @default(cuid())
+  assessmentId          String   @unique
+  rootContractVersion   String
+  recommendationVersion String
+  actionPlanVersion     String
+  snapshotHash          String
+  diagnosisResultHash   String?
+  strategyHash          String?
+  generatedAt           DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  assessment      Assessment             @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  rootFindings    RootFindingRecord[]
+  recommendations RecommendationRecord[]
+  actionPlan      ActionPlanRecord?
+
+  @@index([diagnosisResultHash])
+  @@map("strategy_runs")
+}
+
+model RootFindingRecord {
+  id                   String   @id @default(cuid())
+  strategyRunId        String
+  categoryId           String
+  cellId               String
+  externalId           String
+  classification       String
+  findingRole          String
+  classificationBasis  String
+  categoryValue        Decimal? @db.Decimal(8, 4)
+  cellValue            Decimal? @db.Decimal(8, 4)
+  categorySeverity     Decimal  @db.Decimal(8, 6)
+  cellSeverity         Decimal  @db.Decimal(8, 6)
+  categoryEvidence     Decimal  @db.Decimal(8, 6)
+  cellEvidence         Decimal  @db.Decimal(8, 6)
+  categoryRootScore    Decimal  @db.Decimal(8, 4)
+  cellRootScore        Decimal  @db.Decimal(8, 4)
+  rootStrength         Decimal  @db.Decimal(8, 6)
+  incomingCauseSupport Decimal  @db.Decimal(8, 6)
+  selected             Boolean  @default(false)
+  downstream           Json
+  sourceTrace          Json
+  createdAt            DateTime @default(now())
+
+  strategyRun     StrategyRun            @relation(fields: [strategyRunId], references: [id], onDelete: Cascade)
+  category        Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cell            DiagnosticCell         @relation(fields: [cellId], references: [id], onDelete: Restrict)
+  recommendations RecommendationRecord[]
+
+  @@unique([strategyRunId, externalId])
+  @@index([strategyRunId, selected])
+  @@index([categoryId, classification])
+  @@map("root_findings")
+}
+
+model RecommendationRecord {
+  id               String             @id @default(cuid())
+  strategyRunId    String
+  rootFindingId    String
+  categoryId       String
+  cellId           String
+  externalId       String
+  type             RecommendationType
+  interventionCode String
+  titleMn          String             @db.Text
+  objectiveMn      String             @db.Text
+  actionMn         String             @db.Text
+  deliverableMn    String             @db.Text
+  kpiMn            String             @db.Text
+  ownerRoleId      String
+  sponsorRoleId    String
+  currentCellScore Decimal?           @db.Decimal(8, 4)
+  targetCellScore  Decimal?           @db.Decimal(8, 4)
+  effortLevel      Int
+  priority         Decimal            @db.Decimal(8, 4)
+  priorityBand     PriorityBand
+  components       Json
+  sourceTrace      Json
+  selectedGroup    String?
+  suppressedReason String?
+  createdAt        DateTime           @default(now())
+
+  strategyRun StrategyRun                 @relation(fields: [strategyRunId], references: [id], onDelete: Cascade)
+  rootFinding RootFindingRecord           @relation(fields: [rootFindingId], references: [id], onDelete: Cascade)
+  category    Category                    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cell        DiagnosticCell              @relation(fields: [cellId], references: [id], onDelete: Restrict)
+  milestones  ActionPlanMilestoneRecord[]
+
+  @@unique([strategyRunId, externalId])
+  @@index([strategyRunId, selectedGroup, priority])
+  @@index([rootFindingId])
+  @@map("recommendations")
+}
+
+model ActionPlanRecord {
+  id                  String   @id @default(cuid())
+  strategyRunId       String   @unique
+  contractVersion     String
+  capacityLevel       Int
+  windowDays          Int
+  diagnosisResultHash String?
+  planHash            String?
+  remeasurement       Json
+  generatedAt         DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  strategyRun StrategyRun                 @relation(fields: [strategyRunId], references: [id], onDelete: Cascade)
+  milestones  ActionPlanMilestoneRecord[]
+
+  @@index([diagnosisResultHash])
+  @@map("action_plans")
+}
+
+model ActionPlanMilestoneRecord {
+  id                     String              @id @default(cuid())
+  actionPlanId           String
+  recommendationId       String
+  externalId             String
+  findingExternalId      String
+  horizon                String
+  phaseIndex             Int
+  requirement            String
+  titleMn                String              @db.Text
+  milestoneMn            String              @db.Text
+  deliverableMn          String              @db.Text
+  kpiMn                  String              @db.Text
+  ownerRoleId            String
+  priorityBand           PriorityBand
+  recommendationPriority Decimal             @db.Decimal(8, 4)
+  scheduleScore          Decimal             @db.Decimal(8, 4)
+  status                 PlanMilestoneStatus @default(NOT_STARTED)
+  progressPercent        Int                 @default(0)
+  plannedStartDate       DateTime?
+  plannedEndDate         DateTime?
+  actualStartDate        DateTime?
+  actualCompletedDate    DateTime?
+  noteMn                 String?             @db.Text
+  delayReasonMn          String?             @db.Text
+  metricCurrentValue     Float?
+  metricTargetValue      Float?
+  metricUnitMn           String?
+  sourceTrace            Json
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+
+  actionPlan     ActionPlanRecord     @relation(fields: [actionPlanId], references: [id], onDelete: Cascade)
+  recommendation RecommendationRecord @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@unique([actionPlanId, externalId])
+  @@index([actionPlanId, horizon, status])
+  @@index([recommendationId])
+  @@index([actionPlanId, plannedEndDate, status])
+  @@map("action_plan_milestones")
+}
+
+model StrategyPlanSnapshot {
+  id                      String   @id @default(cuid())
+  assessmentId            String   @unique
+  schemaVersion           String
+  methodologyVersion      String
+  methodologyBundleSha256 String
+  runtimeSnapshotHash     String
+  diagnosisResultHash     String   @unique
+  strategyHash            String   @unique
+  planHash                String   @unique
+  snapshot                Json
+  generatedAt             DateTime @default(now())
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([methodologyVersion, generatedAt])
+  @@map("strategy_plan_snapshots")
+}
+
+model DiagnosisSnapshot {
+  id                      String   @id @default(cuid())
+  assessmentId            String   @unique
+  schemaVersion           String
+  methodologyVersion      String
+  methodologyBundleSha256 String
+  runtimeSnapshotHash     String
+  resultHash              String   @unique
+  result                  Json
+  generatedAt             DateTime @default(now())
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([methodologyVersion, generatedAt])
+  @@map("diagnosis_snapshots")
+}
+
+model ReportArtifact {
+  id               String    @id @default(cuid())
+  reportSnapshotId String
+  kind             String    @default("PDF")
+  mimeType         String    @default("application/pdf")
+  storageKey       String    @unique
+  sourceHash       String
+  contentHash      String
+  sizeBytes        Int
+  generatorVersion String
+  generatedAt      DateTime  @default(now())
+  verifiedAt       DateTime?
+
+  reportSnapshot ReportSnapshot @relation(fields: [reportSnapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([reportSnapshotId, kind])
+  @@index([sourceHash])
+  @@index([contentHash])
+  @@map("report_artifacts")
+}
+
+model ReportSnapshot {
+  id                       String                @id @default(cuid())
+  assessmentId             String
+  externalId               String
+  reportContractVersion    String
+  aiContractVersion        String
+  payloadHash              String                @unique
+  diagnosisResultHash      String?
+  strategyHash             String?
+  planHash                 String?
+  bindingHash              String?
+  payload                  Json
+  narrative                Json?
+  narrativeHash            String?               @unique
+  validation               Json?
+  modelIdentifier          String?
+  modelConfig              Json?
+  promptVersion            String?
+  validatorVersion         String?
+  generationAttemptCount   Int                   @default(0)
+  providerHttpAttemptCount Int                   @default(0)
+  providerRetryCount       Int                   @default(0)
+  providerRequestIds       Json?
+  providerError            String?
+  nextAiRetryAt            DateTime?
+  generationLeaseId        String?
+  generationLeaseExpiresAt DateTime?
+  generationStartedAt      DateTime?
+  generationCompletedAt    DateTime?
+  generationFailureCount   Int                   @default(0)
+  sourceSnapshotId         String?
+  sourceSnapshotHash       String?
+  versionBundleId          String?
+  versionBundleHash        String?
+  traceVersion             String?
+  traceGraphHash           String?
+  generationState          ReportGenerationState @default(PAYLOAD_FROZEN)
+  generatedAt              DateTime              @default(now())
+  publishedAt              DateTime?
+
+  assessment     Assessment               @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  sourceSnapshot AssessmentStateSnapshot? @relation(fields: [sourceSnapshotId], references: [id], onDelete: SetNull)
+  traceSnapshots TraceSnapshot[]
+  artifacts      ReportArtifact[]
+
+  @@unique([assessmentId, externalId])
+  @@index([assessmentId, generatedAt])
+  @@index([diagnosisResultHash])
+  @@index([strategyHash])
+  @@index([planHash])
+  @@index([bindingHash])
+  @@index([generationLeaseExpiresAt])
+  @@index([nextAiRetryAt])
+  @@index([sourceSnapshotId])
+  @@index([sourceSnapshotHash])
+  @@index([traceGraphHash])
+  @@map("report_snapshots")
+}
+
+model TraceSnapshot {
+  id                 String   @id @default(cuid())
+  assessmentId       String
+  externalId         String
+  traceVersion       String
+  sourceSnapshotId   String
+  sourceSnapshotHash String
+  versionBundleId    String
+  versionBundleHash  String
+  graphHash          String   @unique
+  graph              Json
+  publicationStatus  String
+  reportSnapshotId   String?
+  createdAt          DateTime @default(now())
+
+  assessment     Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  reportSnapshot ReportSnapshot? @relation(fields: [reportSnapshotId], references: [id], onDelete: SetNull)
+
+  @@unique([assessmentId, externalId])
+  @@index([assessmentId, createdAt])
+  @@index([sourceSnapshotHash])
+  @@index([reportSnapshotId])
+  @@map("trace_snapshots")
+}
+
+model PilotStudy {
+  id                   String           @id @default(cuid())
+  code                 String           @unique
+  title                String
+  methodologyVersionId String
+  status               PilotStudyStatus @default(DRAFT)
+  targetCompanies      Int              @default(30)
+  cognitiveTarget      Int              @default(8)
+  fieldTarget          Int              @default(20)
+  retestTarget         Int              @default(8)
+  retestMinDays        Int              @default(7)
+  retestMaxDays        Int              @default(14)
+  createdByUserId      String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  closedAt             DateTime?
+
+  methodologyVersion   MethodologyVersion    @relation(fields: [methodologyVersionId], references: [id], onDelete: Restrict)
+  createdBy            User                  @relation("PilotStudyCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  enrollments          PilotEnrollment[]
+  analysisRuns         PilotAnalysisRun[]
+  gateDecisions        PilotGateDecision[]
+  calibrationProposals CalibrationProposal[]
+
+  @@index([status, createdAt])
+  @@index([methodologyVersionId])
+  @@map("pilot_studies")
+}
+
+model PilotEnrollment {
+  id               String             @id @default(cuid())
+  studyId          String
+  companyId        String
+  deidentifiedCode String
+  consentStatus    PilotConsentStatus @default(PENDING)
+  consentedAt      DateTime?
+  withdrawnAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  study    PilotStudy            @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  company  Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  links    PilotAssessmentLink[]
+  feedback PilotFeedback[]
+  baseline PilotOutcomeBaseline?
+
+  @@unique([studyId, companyId])
+  @@unique([studyId, deidentifiedCode])
+  @@index([studyId, consentStatus])
+  @@map("pilot_enrollments")
+}
+
+model PilotAssessmentLink {
+  id           String              @id @default(cuid())
+  enrollmentId String
+  assessmentId String              @unique
+  role         PilotAssessmentRole
+  pairKey      String?
+  linkedAt     DateTime            @default(now())
+
+  enrollment PilotEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  assessment Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+
+  @@unique([enrollmentId, role])
+  @@index([enrollmentId, role])
+  @@index([pairKey])
+  @@map("pilot_assessment_links")
+}
+
+model PilotFeedback {
+  id                 String                 @id @default(cuid())
+  enrollmentId       String
+  assessmentId       String?
+  questionExternalId String?
+  dimension          PilotFeedbackDimension
+  rating             Int
+  commentText        String?                @db.Text
+  createdAt          DateTime               @default(now())
+
+  enrollment PilotEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  assessment Assessment?     @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+
+  @@index([enrollmentId, dimension])
+  @@index([assessmentId, dimension])
+  @@map("pilot_feedback")
+}
+
+model PilotOutcomeBaseline {
+  id              String   @id @default(cuid())
+  enrollmentId    String   @unique
+  revenueBand     String?
+  profitBand      String?
+  customerBand    String?
+  marketShareBand String?
+  brandIndexBand  String?
+  recordedAt      DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  enrollment PilotEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@map("pilot_outcome_baselines")
+}
+
+model PilotAnalysisRun {
+  id          String   @id @default(cuid())
+  studyId     String
+  inputSha256 String
+  metrics     Json
+  gates       Json
+  createdAt   DateTime @default(now())
+
+  study                PilotStudy            @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  decisions            PilotGateDecision[]
+  calibrationProposals CalibrationProposal[]
+
+  @@index([studyId, createdAt])
+  @@index([inputSha256])
+  @@map("pilot_analysis_runs")
+}
+
+model PilotGateDecision {
+  id             String                  @id @default(cuid())
+  studyId        String
+  analysisRunId  String
+  reviewerUserId String
+  status         PilotGateDecisionStatus
+  rationale      String                  @db.Text
+  createdAt      DateTime                @default(now())
+
+  study                PilotStudy            @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  analysisRun          PilotAnalysisRun      @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
+  reviewer             User                  @relation("PilotGateReviewer", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+  calibrationProposals CalibrationProposal[]
+
+  @@index([studyId, createdAt])
+  @@index([analysisRunId])
+  @@map("pilot_gate_decisions")
+}
+
+model CalibrationProposal {
+  id                            String                    @id @default(cuid())
+  studyId                       String
+  analysisRunId                 String
+  pilotDecisionId               String
+  sourceMethodologyVersionId    String
+  candidateMethodologyVersionId String?                   @unique
+  proposedVersion               String                    @unique
+  title                         String
+  summary                       String                    @db.Text
+  evidenceSha256                String                    @unique
+  candidateBundleSha256         String?                   @unique
+  status                        CalibrationProposalStatus @default(DRAFT)
+  createdByUserId               String
+  reviewerUserId                String
+  createdAt                     DateTime                  @default(now())
+  submittedAt                   DateTime?
+  approvedAt                    DateTime?
+  activatedAt                   DateTime?
+
+  study                PilotStudy          @relation(fields: [studyId], references: [id], onDelete: Restrict)
+  analysisRun          PilotAnalysisRun    @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
+  pilotDecision        PilotGateDecision   @relation(fields: [pilotDecisionId], references: [id], onDelete: Restrict)
+  sourceMethodology    MethodologyVersion  @relation("CalibrationSourceMethodology", fields: [sourceMethodologyVersionId], references: [id], onDelete: Restrict)
+  candidateMethodology MethodologyVersion? @relation("CalibrationCandidateMethodology", fields: [candidateMethodologyVersionId], references: [id], onDelete: Restrict)
+  createdBy            User                @relation("CalibrationProposalCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  reviewer             User                @relation("CalibrationProposalReviewer", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+  changes              CalibrationChange[]
+  reviews              CalibrationReview[]
+  release              CalibrationRelease?
+
+  @@index([studyId, createdAt])
+  @@index([sourceMethodologyVersionId, status])
+  @@index([reviewerUserId, status])
+  @@map("calibration_proposals")
+}
+
+model CalibrationChange {
+  id              String                @id @default(cuid())
+  proposalId      String
+  orderIndex      Int
+  kind            CalibrationChangeKind
+  sourcePath      String
+  beforeValue     Json
+  proposedValue   Json
+  rationale       String                @db.Text
+  evidenceGateIds Json
+  createdAt       DateTime              @default(now())
+
+  proposal CalibrationProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@unique([proposalId, orderIndex])
+  @@index([proposalId, kind])
+  @@map("calibration_changes")
+}
+
+model CalibrationReview {
+  id             String                    @id @default(cuid())
+  proposalId     String
+  reviewerUserId String
+  decision       CalibrationReviewDecision
+  rationale      String                    @db.Text
+  createdAt      DateTime                  @default(now())
+
+  proposal CalibrationProposal @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  reviewer User                @relation("CalibrationReviewer", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+
+  @@index([proposalId, createdAt])
+  @@index([reviewerUserId, createdAt])
+  @@map("calibration_reviews")
+}
+
+model CalibrationRelease {
+  id                            String   @id @default(cuid())
+  proposalId                    String   @unique
+  sourceMethodologyVersionId    String
+  candidateMethodologyVersionId String   @unique
+  activatedByUserId             String
+  releaseSha256                 String   @unique
+  activatedAt                   DateTime @default(now())
+
+  proposal             CalibrationProposal @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  sourceMethodology    MethodologyVersion  @relation("CalibrationReleaseSource", fields: [sourceMethodologyVersionId], references: [id], onDelete: Restrict)
+  candidateMethodology MethodologyVersion  @relation("CalibrationReleaseCandidate", fields: [candidateMethodologyVersionId], references: [id], onDelete: Restrict)
+  activatedBy          User                @relation("CalibrationReleaseActivator", fields: [activatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([activatedAt])
+  @@map("calibration_releases")
+}
+
+// ===== Admin system (migration 20261106100000_admin_system). References to existing tables are plain FK columns enforced in SQL. =====
+model AdminAccount {
+  id                      String                   @id @default(cuid())
+  userId                  String                   @unique
+  role                    String
+  status                  String                   @default("PENDING_MFA")
+  mfaSecretEnc            String?
+  mfaLastStep             BigInt                   @default(0)
+  failedLogins            Int                      @default(0)
+  lockedUntil             DateTime?
+  createdByAdminId        String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @default(now()) @updatedAt
+  disabledAt              DateTime?
+  user                    User                     @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  notificationReads       AdminNotificationRead[]
+  sessions                AdminSession[]
+  paymentDisputeEvents    PaymentDisputeEvent[]
+  paymentDisputes         PaymentDispute[]
+  reportReviewRevisions   ReportReviewRevision[]
+  reportReviewSuggestions ReportReviewSuggestion[]
+  approvedReviews         ReportReview[]           @relation("report_reviews_approvedByAdminIdToadmin_accounts")
+  assignedReviews         ReportReview[]           @relation("report_reviews_assignedAdminIdToadmin_accounts")
+  publishedReviews        ReportReview[]           @relation("report_reviews_publishedByAdminIdToadmin_accounts")
+  supportCaseEvents       SupportCaseEvent[]
+  supportCases            SupportCase[]
+  grantedEntitlements     CompanyEntitlement[]     @relation("EntitlementGrantedBy")
+  revokedEntitlements     CompanyEntitlement[]     @relation("EntitlementRevokedBy")
+
+  @@map("admin_accounts")
+}
+
+model AdminSession {
+  id                String       @id @default(cuid())
+  adminId           String
+  tokenHash         String       @unique
+  createdAt         DateTime     @default(now())
+  lastSeenAt        DateTime     @default(now())
+  expiresAt         DateTime
+  absoluteExpiresAt DateTime
+  reauthAt          DateTime?
+  revokedAt         DateTime?
+  ipHash            String?
+  userAgentHash     String?
+  admin             AdminAccount @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([adminId])
+  @@map("admin_sessions")
+}
+
+model ReportReview {
+  id                    String                   @id @default(cuid())
+  assessmentId          String                   @unique
+  companyId             String
+  domainCode            String
+  status                String
+  submittedAt           DateTime
+  deadlineAt            DateTime
+  draftGeneratedAt      DateTime?
+  assignedAdminId       String?
+  currentRevision       Int                      @default(0)
+  approvedAt            DateTime?
+  approvedByAdminId     String?
+  publishedAt           DateTime?
+  publishedByAdminId    String?
+  publishedRevision     Int?
+  remindersSent         Json                     @default("{}")
+  lastError             String?
+  version               Int                      @default(0)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @default(now()) @updatedAt
+  approvedRevision      Int?
+  approvedNarrativeHash String?
+  revisions             ReportReviewRevision[]
+  suggestions           ReportReviewSuggestion[]
+  approvedBy            AdminAccount?            @relation("report_reviews_approvedByAdminIdToadmin_accounts", fields: [approvedByAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assessment            Assessment               @relation(fields: [assessmentId], references: [id], onUpdate: NoAction)
+  assignedAdmin         AdminAccount?            @relation("report_reviews_assignedAdminIdToadmin_accounts", fields: [assignedAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  company               Company                  @relation(fields: [companyId], references: [id], onUpdate: NoAction)
+  publishedBy           AdminAccount?            @relation("report_reviews_publishedByAdminIdToadmin_accounts", fields: [publishedByAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([companyId], map: "report_reviews_company_idx")
+  @@index([status, deadlineAt], map: "report_reviews_status_deadline_idx")
+  @@map("report_reviews")
+}
+
+model ReportReviewRevision {
+  id               String        @id @default(cuid())
+  reviewId         String
+  revision         Int
+  narrative        Json
+  source           String
+  reason           String?
+  changedClaims    Json          @default("[]")
+  createdByAdminId String?
+  createdAt        DateTime      @default(now())
+  createdByAdmin   AdminAccount? @relation(fields: [createdByAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  review           ReportReview  @relation(fields: [reviewId], references: [id], onUpdate: NoAction)
+
+  @@unique([reviewId, revision])
+  @@map("report_review_revisions")
+}
+
+model ReportReviewSuggestion {
+  id               String        @id @default(cuid())
+  reviewId         String
+  revision         Int
+  claimId          String
+  original         String
+  suggested        String
+  reason           String
+  evidence         Json          @default("[]")
+  warning          String        @default("NONE")
+  source           String        @default("MOCK")
+  status           String        @default("PROPOSED")
+  decidedByAdminId String?
+  decidedAt        DateTime?
+  createdAt        DateTime      @default(now())
+  decidedByAdmin   AdminAccount? @relation(fields: [decidedByAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  review           ReportReview  @relation(fields: [reviewId], references: [id], onUpdate: NoAction)
+
+  @@index([reviewId, status], map: "report_review_suggestions_review_idx")
+  @@map("report_review_suggestions")
+}
+
+model AdminNotification {
+  id         String                  @id @default(cuid())
+  type       String
+  dedupeKey  String                  @unique
+  targetType String
+  targetId   String
+  severity   String                  @default("INFO")
+  title      String
+  body       String
+  createdAt  DateTime                @default(now())
+  reads      AdminNotificationRead[]
+
+  @@index([createdAt(sort: Desc)], map: "admin_notifications_created_idx")
+  @@map("admin_notifications")
+}
+
+model AdminNotificationRead {
+  adminId        String
+  notificationId String
+  readAt         DateTime          @default(now())
+  admin          AdminAccount      @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  notification   AdminNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([adminId, notificationId])
+  @@map("admin_notification_reads")
+}
+
+model PaymentDispute {
+  id               String                @id @default(cuid())
+  invoiceId        String
+  companyId        String
+  status           String                @default("OPEN")
+  category         String                @default("GENERAL")
+  summary          String
+  openedByUserId   String?
+  assignedAdminId  String?
+  refundApprovedAt DateTime?
+  refundExecutedAt DateTime?
+  resolution       String?
+  version          Int                   @default(0)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @default(now()) @updatedAt
+  events           PaymentDisputeEvent[]
+  assignedAdmin    AdminAccount?         @relation(fields: [assignedAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  company          Company               @relation(fields: [companyId], references: [id], onUpdate: NoAction)
+  invoice          BillingInvoice        @relation(fields: [invoiceId], references: [id], onUpdate: NoAction)
+  openedBy         User?                 @relation(fields: [openedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([status, createdAt], map: "payment_disputes_status_idx")
+  @@map("payment_disputes")
+}
+
+model PaymentDisputeEvent {
+  id        String         @id @default(cuid())
+  disputeId String
+  adminId   String?
+  userId    String?
+  kind      String
+  body      String
+  createdAt DateTime       @default(now())
+  admin     AdminAccount?  @relation(fields: [adminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dispute   PaymentDispute @relation(fields: [disputeId], references: [id], onUpdate: NoAction)
+  user      User?          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("payment_dispute_events")
+}
+
+model SupportCase {
+  id              String             @id @default(cuid())
+  companyId       String?
+  userId          String?
+  category        String
+  priority        String             @default("NORMAL")
+  status          String             @default("OPEN")
+  subject         String
+  assignedAdminId String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+  events          SupportCaseEvent[]
+  assignedAdmin   AdminAccount?      @relation(fields: [assignedAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  company         Company?           @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user            User?              @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([status, createdAt], map: "support_cases_status_idx")
+  @@map("support_cases")
+}
+
+model SupportCaseEvent {
+  id          String        @id @default(cuid())
+  caseId      String
+  adminId     String?
+  userId      String?
+  kind        String
+  body        String
+  createdAt   DateTime      @default(now())
+  admin       AdminAccount? @relation(fields: [adminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supportCase SupportCase   @relation(fields: [caseId], references: [id], onUpdate: NoAction)
+  user        User?         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("support_case_events")
+}
+
+model AdminAuditEvent {
+  id         String   @id @default(cuid())
+  adminId    String?
+  action     String
+  targetType String?
+  targetId   String?
+  outcome    String
+  ipHash     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)], map: "admin_audit_events_created_idx")
+  @@index([adminId, createdAt], map: "admin_audit_events_admin_idx")
+  @@map("admin_audit_events")
+}

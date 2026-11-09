@@ -1,0 +1,6801 @@
+{
+  "status": "PASS",
+  "checks": 1359,
+  "results": [
+    {
+      "name": "five deterministic outcome priority snapshots",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "64 x 5 category-outcome priority rows",
+      "pass": true,
+      "detail": "320"
+    },
+    {
+      "name": "P1 priority version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 causal lift guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 priority score mirrors deterministic purpose score",
+      "pass": true,
+      "detail": "actual=54.920488165680474 expected=54.920488165680474"
+    },
+    {
+      "name": "P1 known gap = 100 - outcome score",
+      "pass": true,
+      "detail": "actual=45.079511834319526 expected=45.079511834319526"
+    },
+    {
+      "name": "P1 all 64 category priority rows exist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 effective purpose weights total 100",
+      "pass": true,
+      "detail": "actual=99.99999999999996 expected=100"
+    },
+    {
+      "name": "P1 category gap contributions reconcile to outcome gap",
+      "pass": true,
+      "detail": "actual=45.07951183431953 expected=45.079511834319526"
+    },
+    {
+      "name": "P1 confidence adjusted contributions reconcile",
+      "pass": true,
+      "detail": "actual=40.57156065088759 expected=40.57156065088757"
+    },
+    {
+      "name": "P1 confirmed + uncertain gap reconcile",
+      "pass": true,
+      "detail": "actual=45.079511834319526 expected=45.079511834319526"
+    },
+    {
+      "name": "P1 rank starts at 1",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 top category relative priority is 1",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1 top-five category IDs follow deterministic rank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS01 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS01 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4000000000000004 expected=2.4000000000000004"
+    },
+    {
+      "name": "P1/MS01 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS01 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS02 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS02 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.55 expected=2.55"
+    },
+    {
+      "name": "P1/MS02 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS02 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS03 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS03 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P1/MS03 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS03 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS04 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS04 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P1/MS04 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS04 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS05 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS05 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.875 expected=1.875"
+    },
+    {
+      "name": "P1/MS05 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS05 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS06 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS06 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.8 expected=1.8"
+    },
+    {
+      "name": "P1/MS06 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS06 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS07 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS07 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P1/MS07 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS07 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS08 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS08 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.275 expected=1.275"
+    },
+    {
+      "name": "P1/MS08 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS08 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS09 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS09 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P1/MS09 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS09 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS10 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS10 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9 expected=0.9"
+    },
+    {
+      "name": "P1/MS10 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS10 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS11 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS11 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.65 expected=0.65"
+    },
+    {
+      "name": "P1/MS11 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS11 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS12 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS12 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS12 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS12 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS13 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS13 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS13 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS13 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS14 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS14 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P1/MS14 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS14 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS15 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS15 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS15 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS15 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS16 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS16 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS16 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS16 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS17 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P1/MS17 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.375 expected=0.375"
+    },
+    {
+      "name": "P1/MS17 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS17 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS18 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS18 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P1/MS18 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS18 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS19 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS19 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P1/MS19 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS19 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS20 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS20 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P1/MS20 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS20 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS21 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS21 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P1/MS21 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS21 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS22 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS22 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P1/MS22 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS22 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS23 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P1/MS23 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.2 expected=0.2"
+    },
+    {
+      "name": "P1/MS23 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS23 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS24 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS24 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.3 expected=0.3"
+    },
+    {
+      "name": "P1/MS24 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS24 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS25 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS25 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS25 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS25 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS26 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P1/MS26 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P1/MS26 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS26 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS27 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P1/MS27 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.325 expected=0.325"
+    },
+    {
+      "name": "P1/MS27 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS27 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS28 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P1/MS28 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.3 expected=0.3"
+    },
+    {
+      "name": "P1/MS28 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS28 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS29 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS29 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P1/MS29 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS29 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS30 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS30 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.65 expected=0.65"
+    },
+    {
+      "name": "P1/MS30 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS30 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS31 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS31 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P1/MS31 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS31 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS32 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS32 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P1/MS32 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS32 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS33 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS33 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P1/MS33 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS33 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS34 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS34 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P1/MS34 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS34 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS35 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS35 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.85 expected=0.85"
+    },
+    {
+      "name": "P1/MS35 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS35 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS36 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS36 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P1/MS36 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS36 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS37 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS37 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P1/MS37 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS37 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS38 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS38 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P1/MS38 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS38 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS39 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS39 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P1/MS39 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS39 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS40 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS40 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5750000000000002 expected=1.5750000000000002"
+    },
+    {
+      "name": "P1/MS40 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS40 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS41 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS41 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P1/MS41 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS41 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS42 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS42 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P1/MS42 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS42 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS43 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS43 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P1/MS43 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS43 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS44 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS44 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P1/MS44 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS44 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS45 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS45 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P1/MS45 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS45 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS46 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS46 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4249999999999998 expected=1.4249999999999998"
+    },
+    {
+      "name": "P1/MS46 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS46 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS47 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS47 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P1/MS47 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS47 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS48 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS48 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P1/MS48 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS48 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS49 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS49 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P1/MS49 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS49 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS50 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS50 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.5249999999999999 expected=0.5249999999999999"
+    },
+    {
+      "name": "P1/MS50 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS50 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS51 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS51 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P1/MS51 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS51 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS52 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P1/MS52 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.3 expected=0.3"
+    },
+    {
+      "name": "P1/MS52 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS52 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS53 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P1/MS53 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.1375 expected=0.1375"
+    },
+    {
+      "name": "P1/MS53 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS53 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS54 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS54 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P1/MS54 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS54 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS55 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS55 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P1/MS55 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS55 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS56 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS56 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P1/MS56 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS56 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS57 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS57 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6 expected=1.6"
+    },
+    {
+      "name": "P1/MS57 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS57 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS58 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS58 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8250000000000001 expected=0.8250000000000001"
+    },
+    {
+      "name": "P1/MS58 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS58 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS59 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS59 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P1/MS59 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS59 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS60 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS60 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P1/MS60 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS60 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS61 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS61 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P1/MS61 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS61 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS62 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS62 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P1/MS62 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS62 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS63 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P1/MS63 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P1/MS63 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS63 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS64 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P1/MS64 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.675 expected=0.675"
+    },
+    {
+      "name": "P1/MS64 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1/MS64 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 priority version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 causal lift guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 priority score mirrors deterministic purpose score",
+      "pass": true,
+      "detail": "actual=56.21733608509285 expected=56.21733608509285"
+    },
+    {
+      "name": "P2 known gap = 100 - outcome score",
+      "pass": true,
+      "detail": "actual=43.78266391490715 expected=43.78266391490715"
+    },
+    {
+      "name": "P2 all 64 category priority rows exist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 effective purpose weights total 100",
+      "pass": true,
+      "detail": "actual=99.99999999999997 expected=100"
+    },
+    {
+      "name": "P2 category gap contributions reconcile to outcome gap",
+      "pass": true,
+      "detail": "actual=43.78266391490714 expected=43.78266391490715"
+    },
+    {
+      "name": "P2 confidence adjusted contributions reconcile",
+      "pass": true,
+      "detail": "actual=39.404397523416414 expected=39.40439752341641"
+    },
+    {
+      "name": "P2 confirmed + uncertain gap reconcile",
+      "pass": true,
+      "detail": "actual=43.78266391490715 expected=43.78266391490715"
+    },
+    {
+      "name": "P2 rank starts at 1",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 top category relative priority is 1",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2 top-five category IDs follow deterministic rank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS01 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS01 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4000000000000004 expected=2.4000000000000004"
+    },
+    {
+      "name": "P2/MS01 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS01 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS02 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS02 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.55 expected=2.55"
+    },
+    {
+      "name": "P2/MS02 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS02 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS03 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS03 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.8 expected=2.8"
+    },
+    {
+      "name": "P2/MS03 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS03 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS04 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS04 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.7999999999999998 expected=1.7999999999999998"
+    },
+    {
+      "name": "P2/MS04 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS04 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS05 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS05 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.875 expected=1.875"
+    },
+    {
+      "name": "P2/MS05 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS05 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS06 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS06 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9 expected=0.9"
+    },
+    {
+      "name": "P2/MS06 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS06 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS07 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS07 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P2/MS07 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS07 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS08 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS08 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.85 expected=0.85"
+    },
+    {
+      "name": "P2/MS08 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS08 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS09 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS09 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P2/MS09 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS09 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS10 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS10 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P2/MS10 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS10 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS11 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS11 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.65 expected=0.65"
+    },
+    {
+      "name": "P2/MS11 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS11 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS12 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS12 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P2/MS12 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS12 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS13 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS13 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P2/MS13 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS13 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS14 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS14 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P2/MS14 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS14 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS15 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS15 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P2/MS15 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS15 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS16 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS16 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS16 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS16 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS17 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS17 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS17 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS17 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS18 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS18 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P2/MS18 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS18 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS19 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS19 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P2/MS19 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS19 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS20 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS20 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6 expected=1.6"
+    },
+    {
+      "name": "P2/MS20 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS20 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS21 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS21 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P2/MS21 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS21 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS22 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS22 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P2/MS22 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS22 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS23 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS23 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.4 expected=0.4"
+    },
+    {
+      "name": "P2/MS23 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS23 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS24 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS24 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.3 expected=0.3"
+    },
+    {
+      "name": "P2/MS24 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS24 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS25 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS25 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS25 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS25 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS26 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS26 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P2/MS26 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS26 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS27 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS27 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9750000000000001 expected=0.9750000000000001"
+    },
+    {
+      "name": "P2/MS27 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS27 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS28 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS28 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P2/MS28 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS28 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS29 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS29 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P2/MS29 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS29 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS30 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS30 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9750000000000001 expected=0.9750000000000001"
+    },
+    {
+      "name": "P2/MS30 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS30 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS31 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS31 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P2/MS31 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS31 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS32 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS32 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P2/MS32 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS32 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS33 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS33 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P2/MS33 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS33 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS34 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS34 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P2/MS34 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS34 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS35 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS35 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.7 expected=1.7"
+    },
+    {
+      "name": "P2/MS35 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS35 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS36 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS36 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.8 expected=1.8"
+    },
+    {
+      "name": "P2/MS36 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS36 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS37 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS37 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P2/MS37 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS37 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS38 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS38 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P2/MS38 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS38 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS39 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS39 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4 expected=2.4"
+    },
+    {
+      "name": "P2/MS39 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS39 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS40 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS40 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5750000000000002 expected=1.5750000000000002"
+    },
+    {
+      "name": "P2/MS40 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS40 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS41 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS41 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P2/MS41 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS41 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS42 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS42 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P2/MS42 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS42 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS43 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS43 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.8 expected=1.8"
+    },
+    {
+      "name": "P2/MS43 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS43 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS44 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS44 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P2/MS44 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS44 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS45 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS45 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6 expected=1.6"
+    },
+    {
+      "name": "P2/MS45 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS45 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS46 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS46 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.9 expected=1.9"
+    },
+    {
+      "name": "P2/MS46 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS46 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS47 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS47 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P2/MS47 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS47 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS48 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS48 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P2/MS48 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS48 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS49 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS49 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P2/MS49 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS49 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS50 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS50 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.5249999999999999 expected=0.5249999999999999"
+    },
+    {
+      "name": "P2/MS50 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS50 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS51 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS51 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P2/MS51 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS51 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS52 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS52 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.44999999999999996 expected=0.44999999999999996"
+    },
+    {
+      "name": "P2/MS52 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS52 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS53 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS53 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P2/MS53 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS53 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS54 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS54 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P2/MS54 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS54 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS55 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS55 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P2/MS55 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS55 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS56 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS56 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P2/MS56 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS56 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS57 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS57 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P2/MS57 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS57 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS58 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS58 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P2/MS58 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS58 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS59 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS59 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P2/MS59 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS59 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS60 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS60 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P2/MS60 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS60 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS61 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS61 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P2/MS61 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS61 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS62 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P2/MS62 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P2/MS62 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS62 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS63 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P2/MS63 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P2/MS63 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS63 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS64 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P2/MS64 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P2/MS64 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2/MS64 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 priority version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 causal lift guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 priority score mirrors deterministic purpose score",
+      "pass": true,
+      "detail": "actual=54.8157894736842 expected=54.8157894736842"
+    },
+    {
+      "name": "P3 known gap = 100 - outcome score",
+      "pass": true,
+      "detail": "actual=45.1842105263158 expected=45.1842105263158"
+    },
+    {
+      "name": "P3 all 64 category priority rows exist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 effective purpose weights total 100",
+      "pass": true,
+      "detail": "actual=100 expected=100"
+    },
+    {
+      "name": "P3 category gap contributions reconcile to outcome gap",
+      "pass": true,
+      "detail": "actual=45.18421052631577 expected=45.1842105263158"
+    },
+    {
+      "name": "P3 confidence adjusted contributions reconcile",
+      "pass": true,
+      "detail": "actual=40.665789473684185 expected=40.665789473684185"
+    },
+    {
+      "name": "P3 confirmed + uncertain gap reconcile",
+      "pass": true,
+      "detail": "actual=45.1842105263158 expected=45.1842105263158"
+    },
+    {
+      "name": "P3 rank starts at 1",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 top category relative priority is 1",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3 top-five category IDs follow deterministic rank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS01 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS01 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4000000000000004 expected=2.4000000000000004"
+    },
+    {
+      "name": "P3/MS01 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS01 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS02 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS02 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.55 expected=2.55"
+    },
+    {
+      "name": "P3/MS02 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS02 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS03 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS03 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P3/MS03 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS03 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS04 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS04 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P3/MS04 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS04 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS05 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS05 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.25 expected=1.25"
+    },
+    {
+      "name": "P3/MS05 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS05 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS06 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS06 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P3/MS06 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS06 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS07 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS07 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P3/MS07 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS07 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS08 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS08 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.85 expected=0.85"
+    },
+    {
+      "name": "P3/MS08 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS08 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS09 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS09 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P3/MS09 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS09 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS10 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS10 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9 expected=0.9"
+    },
+    {
+      "name": "P3/MS10 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS10 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS11 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS11 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.325 expected=0.325"
+    },
+    {
+      "name": "P3/MS11 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS11 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS12 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS12 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS12 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS12 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS13 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS13 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS13 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS13 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS14 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS14 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P3/MS14 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS14 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS15 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS15 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P3/MS15 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS15 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS16 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS16 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS16 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS16 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS17 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS17 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS17 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS17 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS18 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS18 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P3/MS18 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS18 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS19 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS19 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P3/MS19 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS19 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS20 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS20 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P3/MS20 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS20 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS21 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS21 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P3/MS21 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS21 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS22 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS22 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P3/MS22 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS22 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS23 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS23 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.2 expected=0.2"
+    },
+    {
+      "name": "P3/MS23 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS23 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS24 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS24 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.15 expected=0.15"
+    },
+    {
+      "name": "P3/MS24 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS24 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS25 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS25 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P3/MS25 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS25 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS26 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS26 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P3/MS26 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS26 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS27 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS27 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.3 expected=1.3"
+    },
+    {
+      "name": "P3/MS27 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS27 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS28 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS28 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P3/MS28 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS28 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS29 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS29 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P3/MS29 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS29 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS30 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS30 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.3 expected=1.3"
+    },
+    {
+      "name": "P3/MS30 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS30 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS31 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS31 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P3/MS31 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS31 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS32 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS32 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P3/MS32 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS32 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS33 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS33 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS33 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS33 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS34 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS34 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.35 expected=0.35"
+    },
+    {
+      "name": "P3/MS34 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS34 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS35 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS35 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.85 expected=0.85"
+    },
+    {
+      "name": "P3/MS35 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS35 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS36 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS36 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P3/MS36 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS36 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS37 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS37 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P3/MS37 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS37 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS38 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS38 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.35 expected=0.35"
+    },
+    {
+      "name": "P3/MS38 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS38 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS39 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS39 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P3/MS39 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS39 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS40 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS40 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5750000000000002 expected=1.5750000000000002"
+    },
+    {
+      "name": "P3/MS40 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS40 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS41 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS41 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS41 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS41 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS42 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS42 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P3/MS42 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS42 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS43 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS43 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P3/MS43 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS43 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS44 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS44 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P3/MS44 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS44 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS45 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS45 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.4 expected=0.4"
+    },
+    {
+      "name": "P3/MS45 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS45 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS46 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS46 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.475 expected=0.475"
+    },
+    {
+      "name": "P3/MS46 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS46 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS47 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS47 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P3/MS47 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS47 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS48 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS48 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS48 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS48 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS49 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS49 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.4 expected=0.4"
+    },
+    {
+      "name": "P3/MS49 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS49 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS50 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS50 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.35 expected=0.35"
+    },
+    {
+      "name": "P3/MS50 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS50 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS51 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS51 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.1375 expected=0.1375"
+    },
+    {
+      "name": "P3/MS51 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS51 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS52 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS52 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.44999999999999996 expected=0.44999999999999996"
+    },
+    {
+      "name": "P3/MS52 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS52 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS53 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P3/MS53 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P3/MS53 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS53 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS54 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS54 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.35 expected=0.35"
+    },
+    {
+      "name": "P3/MS54 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS54 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS55 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS55 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.1375 expected=0.1375"
+    },
+    {
+      "name": "P3/MS55 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS55 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS56 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS56 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.1375 expected=0.1375"
+    },
+    {
+      "name": "P3/MS56 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS56 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS57 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS57 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8 expected=0.8"
+    },
+    {
+      "name": "P3/MS57 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS57 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS58 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS58 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P3/MS58 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS58 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS59 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS59 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.2 expected=0.2"
+    },
+    {
+      "name": "P3/MS59 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS59 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS60 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS60 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.35 expected=0.35"
+    },
+    {
+      "name": "P3/MS60 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS60 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS61 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P3/MS61 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P3/MS61 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS61 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS62 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS62 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P3/MS62 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS62 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS63 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P3/MS63 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.375 expected=0.375"
+    },
+    {
+      "name": "P3/MS63 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS63 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS64 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P3/MS64 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P3/MS64 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3/MS64 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 priority version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 causal lift guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 priority score mirrors deterministic purpose score",
+      "pass": true,
+      "detail": "actual=57.226201696512724 expected=57.226201696512724"
+    },
+    {
+      "name": "P4 known gap = 100 - outcome score",
+      "pass": true,
+      "detail": "actual=42.773798303487276 expected=42.773798303487276"
+    },
+    {
+      "name": "P4 all 64 category priority rows exist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 effective purpose weights total 100",
+      "pass": true,
+      "detail": "actual=100.00000000000007 expected=100"
+    },
+    {
+      "name": "P4 category gap contributions reconcile to outcome gap",
+      "pass": true,
+      "detail": "actual=42.77379830348729 expected=42.773798303487276"
+    },
+    {
+      "name": "P4 confidence adjusted contributions reconcile",
+      "pass": true,
+      "detail": "actual=38.49641847313857 expected=38.49641847313856"
+    },
+    {
+      "name": "P4 confirmed + uncertain gap reconcile",
+      "pass": true,
+      "detail": "actual=42.773798303487276 expected=42.773798303487276"
+    },
+    {
+      "name": "P4 rank starts at 1",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 top category relative priority is 1",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4 top-five category IDs follow deterministic rank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS01 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS01 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4000000000000004 expected=2.4000000000000004"
+    },
+    {
+      "name": "P4/MS01 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS01 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS02 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS02 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.55 expected=2.55"
+    },
+    {
+      "name": "P4/MS02 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS02 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS03 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS03 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.8 expected=2.8"
+    },
+    {
+      "name": "P4/MS03 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS03 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS04 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS04 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.7999999999999998 expected=1.7999999999999998"
+    },
+    {
+      "name": "P4/MS04 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS04 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS05 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS05 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.875 expected=1.875"
+    },
+    {
+      "name": "P4/MS05 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS05 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS06 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P4/MS06 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P4/MS06 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS06 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS07 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS07 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P4/MS07 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS07 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS08 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS08 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.85 expected=0.85"
+    },
+    {
+      "name": "P4/MS08 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS08 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS09 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS09 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P4/MS09 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS09 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS10 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS10 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P4/MS10 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS10 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS11 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS11 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.65 expected=0.65"
+    },
+    {
+      "name": "P4/MS11 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS11 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS12 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS12 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P4/MS12 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS12 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS13 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS13 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P4/MS13 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS13 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS14 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS14 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P4/MS14 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS14 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS15 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS15 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P4/MS15 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS15 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS16 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS16 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P4/MS16 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS16 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS17 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS17 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS17 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS17 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS18 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS18 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P4/MS18 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS18 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS19 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS19 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P4/MS19 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS19 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS20 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS20 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6 expected=1.6"
+    },
+    {
+      "name": "P4/MS20 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS20 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS21 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS21 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P4/MS21 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS21 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS22 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS22 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P4/MS22 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS22 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS23 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS23 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.4 expected=0.4"
+    },
+    {
+      "name": "P4/MS23 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS23 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS24 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS24 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.3 expected=0.3"
+    },
+    {
+      "name": "P4/MS24 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS24 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS25 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS25 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P4/MS25 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS25 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS26 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS26 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8250000000000001 expected=0.8250000000000001"
+    },
+    {
+      "name": "P4/MS26 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS26 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS27 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS27 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.3 expected=1.3"
+    },
+    {
+      "name": "P4/MS27 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS27 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS28 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS28 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P4/MS28 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS28 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS29 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS29 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P4/MS29 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS29 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS30 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS30 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9750000000000001 expected=0.9750000000000001"
+    },
+    {
+      "name": "P4/MS30 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS30 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS31 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS31 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P4/MS31 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS31 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS32 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS32 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P4/MS32 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS32 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS33 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS33 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P4/MS33 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS33 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS34 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS34 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P4/MS34 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS34 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS35 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS35 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.7 expected=1.7"
+    },
+    {
+      "name": "P4/MS35 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS35 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS36 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS36 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.8 expected=1.8"
+    },
+    {
+      "name": "P4/MS36 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS36 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS37 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS37 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P4/MS37 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS37 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS38 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS38 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P4/MS38 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS38 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS39 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS39 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4 expected=2.4"
+    },
+    {
+      "name": "P4/MS39 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS39 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS40 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS40 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.1 expected=2.1"
+    },
+    {
+      "name": "P4/MS40 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS40 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS41 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS41 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P4/MS41 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS41 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS42 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS42 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P4/MS42 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS42 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS43 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS43 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.8 expected=1.8"
+    },
+    {
+      "name": "P4/MS43 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS43 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS44 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS44 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.2 expected=2.2"
+    },
+    {
+      "name": "P4/MS44 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS44 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS45 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS45 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P4/MS45 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS45 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS46 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS46 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.95 expected=0.95"
+    },
+    {
+      "name": "P4/MS46 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS46 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS47 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS47 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P4/MS47 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS47 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS48 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS48 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P4/MS48 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS48 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS49 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS49 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P4/MS49 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS49 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS50 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS50 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P4/MS50 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS50 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS51 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS51 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P4/MS51 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS51 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS52 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS52 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P4/MS52 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS52 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS53 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS53 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P4/MS53 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS53 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS54 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS54 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P4/MS54 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS54 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS55 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS55 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.41250000000000003 expected=0.41250000000000003"
+    },
+    {
+      "name": "P4/MS55 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS55 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS56 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS56 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P4/MS56 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS56 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS57 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS57 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2000000000000002 expected=1.2000000000000002"
+    },
+    {
+      "name": "P4/MS57 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS57 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS58 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS58 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.55 expected=0.55"
+    },
+    {
+      "name": "P4/MS58 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS58 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS59 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS59 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P4/MS59 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS59 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS60 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS60 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.0499999999999998 expected=1.0499999999999998"
+    },
+    {
+      "name": "P4/MS60 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS60 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS61 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS61 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P4/MS61 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS61 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS62 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P4/MS62 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P4/MS62 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS62 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS63 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS63 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P4/MS63 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS63 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS64 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P4/MS64 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P4/MS64 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4/MS64 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 priority version",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 causal lift guardrail",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 priority score mirrors deterministic purpose score",
+      "pass": true,
+      "detail": "actual=56.51619217081847 expected=56.51619217081847"
+    },
+    {
+      "name": "P5 known gap = 100 - outcome score",
+      "pass": true,
+      "detail": "actual=43.48380782918153 expected=43.48380782918153"
+    },
+    {
+      "name": "P5 all 64 category priority rows exist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 effective purpose weights total 100",
+      "pass": true,
+      "detail": "actual=99.99999999999991 expected=100"
+    },
+    {
+      "name": "P5 category gap contributions reconcile to outcome gap",
+      "pass": true,
+      "detail": "actual=43.483807829181444 expected=43.48380782918153"
+    },
+    {
+      "name": "P5 confidence adjusted contributions reconcile",
+      "pass": true,
+      "detail": "actual=39.13542704626333 expected=39.13542704626333"
+    },
+    {
+      "name": "P5 confirmed + uncertain gap reconcile",
+      "pass": true,
+      "detail": "actual=43.48380782918153 expected=43.48380782918153"
+    },
+    {
+      "name": "P5 rank starts at 1",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 top category relative priority is 1",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5 top-five category IDs follow deterministic rank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS01 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS01 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4000000000000004 expected=2.4000000000000004"
+    },
+    {
+      "name": "P5/MS01 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS01 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS02 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS02 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.55 expected=2.55"
+    },
+    {
+      "name": "P5/MS02 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS02 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS03 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS03 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.8 expected=2.8"
+    },
+    {
+      "name": "P5/MS03 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS03 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS04 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS04 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4 expected=2.4"
+    },
+    {
+      "name": "P5/MS04 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS04 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS05 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS05 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.25 expected=1.25"
+    },
+    {
+      "name": "P5/MS05 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS05 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS06 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS06 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P5/MS06 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS06 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS07 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS07 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P5/MS07 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS07 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS08 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS08 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.85 expected=0.85"
+    },
+    {
+      "name": "P5/MS08 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS08 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS09 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS09 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P5/MS09 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS09 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS10 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS10 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P5/MS10 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS10 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS11 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS11 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9750000000000001 expected=0.9750000000000001"
+    },
+    {
+      "name": "P5/MS11 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS11 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS12 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS12 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P5/MS12 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS12 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS13 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS13 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P5/MS13 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS13 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS14 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS14 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P5/MS14 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS14 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS15 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS15 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P5/MS15 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS15 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS16 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS16 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.375 expected=0.375"
+    },
+    {
+      "name": "P5/MS16 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS16 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS17 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS17 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P5/MS17 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS17 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS18 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS18 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6 expected=1.6"
+    },
+    {
+      "name": "P5/MS18 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS18 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS19 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS19 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P5/MS19 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS19 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS20 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS20 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6 expected=1.6"
+    },
+    {
+      "name": "P5/MS20 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS20 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS21 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS21 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.4 expected=1.4"
+    },
+    {
+      "name": "P5/MS21 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS21 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS22 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS22 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P5/MS22 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS22 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS23 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS23 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6000000000000001 expected=0.6000000000000001"
+    },
+    {
+      "name": "P5/MS23 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS23 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS24 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS24 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.44999999999999996 expected=0.44999999999999996"
+    },
+    {
+      "name": "P5/MS24 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS24 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS25 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS25 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P5/MS25 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS25 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS26 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS26 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8250000000000001 expected=0.8250000000000001"
+    },
+    {
+      "name": "P5/MS26 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS26 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS27 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS27 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.3 expected=1.3"
+    },
+    {
+      "name": "P5/MS27 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS27 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS28 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS28 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P5/MS28 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS28 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS29 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS29 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.2 expected=1.2"
+    },
+    {
+      "name": "P5/MS29 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS29 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS30 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS30 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.9750000000000001 expected=0.9750000000000001"
+    },
+    {
+      "name": "P5/MS30 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS30 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS31 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS31 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P5/MS31 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS31 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS32 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS32 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8999999999999999 expected=0.8999999999999999"
+    },
+    {
+      "name": "P5/MS32 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS32 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS33 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS33 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P5/MS33 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS33 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS34 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS34 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P5/MS34 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS34 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS35 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS35 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.7 expected=1.7"
+    },
+    {
+      "name": "P5/MS35 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS35 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS36 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS36 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P5/MS36 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS36 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS37 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS37 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.1 expected=1.1"
+    },
+    {
+      "name": "P5/MS37 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS37 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS38 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS38 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P5/MS38 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS38 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS39 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS39 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2.4 expected=2.4"
+    },
+    {
+      "name": "P5/MS39 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS39 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS40 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS40 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.05 expected=1.05"
+    },
+    {
+      "name": "P5/MS40 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS40 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS41 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS41 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=2 expected=2"
+    },
+    {
+      "name": "P5/MS41 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS41 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS42 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS42 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS42 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS42 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS43 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS43 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.35 expected=1.35"
+    },
+    {
+      "name": "P5/MS43 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS43 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS44 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS44 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.6500000000000001 expected=1.6500000000000001"
+    },
+    {
+      "name": "P5/MS44 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS44 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS45 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS45 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8 expected=0.8"
+    },
+    {
+      "name": "P5/MS45 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS45 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS46 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS46 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.95 expected=0.95"
+    },
+    {
+      "name": "P5/MS46 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS46 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS47 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS47 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS47 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS47 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS48 relevance preserved",
+      "pass": true,
+      "detail": "actual=1 expected=1"
+    },
+    {
+      "name": "P5/MS48 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.5 expected=1.5"
+    },
+    {
+      "name": "P5/MS48 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS48 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS49 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS49 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.4 expected=0.4"
+    },
+    {
+      "name": "P5/MS49 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS49 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS50 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS50 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.35 expected=0.35"
+    },
+    {
+      "name": "P5/MS50 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS50 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS51 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS51 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P5/MS51 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS51 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS52 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS52 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.3 expected=0.3"
+    },
+    {
+      "name": "P5/MS52 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS52 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS53 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS53 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P5/MS53 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS53 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS54 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS54 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.5249999999999999 expected=0.5249999999999999"
+    },
+    {
+      "name": "P5/MS54 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS54 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS55 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS55 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.1375 expected=0.1375"
+    },
+    {
+      "name": "P5/MS55 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS55 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS56 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS56 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.1375 expected=0.1375"
+    },
+    {
+      "name": "P5/MS56 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS56 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS57 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS57 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.8 expected=0.8"
+    },
+    {
+      "name": "P5/MS57 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS57 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS58 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS58 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.275 expected=0.275"
+    },
+    {
+      "name": "P5/MS58 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS58 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS59 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS59 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.2 expected=0.2"
+    },
+    {
+      "name": "P5/MS59 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS59 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS60 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS60 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.7 expected=0.7"
+    },
+    {
+      "name": "P5/MS60 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS60 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS61 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.75 expected=0.75"
+    },
+    {
+      "name": "P5/MS61 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=1.125 expected=1.125"
+    },
+    {
+      "name": "P5/MS61 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS61 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS62 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS62 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.6 expected=0.6"
+    },
+    {
+      "name": "P5/MS62 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS62 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS63 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.25 expected=0.25"
+    },
+    {
+      "name": "P5/MS63 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.375 expected=0.375"
+    },
+    {
+      "name": "P5/MS63 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS63 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS64 relevance preserved",
+      "pass": true,
+      "detail": "actual=0.5 expected=0.5"
+    },
+    {
+      "name": "P5/MS64 structural weight = category weight x relevance",
+      "pass": true,
+      "detail": "actual=0.45 expected=0.45"
+    },
+    {
+      "name": "P5/MS64 nonnegative gap contribution",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5/MS64 confidence adjustment cannot inflate gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "missing category removes only its five unknown priority rows",
+      "pass": true,
+      "detail": "315"
+    },
+    {
+      "name": "P1 missing category not fabricated as zero-gap or 100-gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 missing evidence reduces coverage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 missing category not fabricated as zero-gap or 100-gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 missing evidence reduces coverage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 missing category not fabricated as zero-gap or 100-gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 missing evidence reduces coverage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 missing category not fabricated as zero-gap or 100-gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 missing evidence reduces coverage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 missing category not fabricated as zero-gap or 100-gap",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 missing evidence reduces coverage",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "N/A category excluded from five outcome rankings",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 confirmed N/A category excluded",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P2 confirmed N/A category excluded",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P3 confirmed N/A category excluded",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P4 confirmed N/A category excluded",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "P5 confirmed N/A category excluded",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

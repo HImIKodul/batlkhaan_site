@@ -1,0 +1,44 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+const root=process.cwd();
+const read=(p)=>fs.readFileSync(path.join(root,p),'utf8');
+const engine=read('src/services/prisma-assessment-engine.ts');
+const api=read('src/api/app.ts');
+const query=read('src/api/services/query-service.ts');
+const schema=read('prisma/schema.prisma');
+const migration=read('prisma/migrations/20261024160000_backend_answer_persistence_hardening/migration.sql');
+const verifier=read('src/verify-backend-answer-persistence.ts');
+const checks=[];
+const check=(name,ok)=>{checks.push({name,ok:Boolean(ok)}); if(!ok) console.error(`FAIL ${name}`);};
+
+check('answer endpoint requires request id / issue id / expected revision',api.includes('clientRequestId, questionIssueId and expectedAssessmentRevision are required'));
+check('answer request id normalized',engine.includes('const clientRequestId = guard.clientRequestId?.trim()'));
+check('question issue id normalized',engine.includes('const questionIssueId = guard.questionIssueId?.trim()'));
+check('idempotency lookup scoped to assessment + request id',engine.includes('assessmentId_clientRequestId: { assessmentId, clientRequestId }'));
+check('idempotency payload mismatch rejected',engine.includes('clientRequestId has already been used for a different answer payload'));
+check('idempotency requires persisted acknowledgement',engine.includes('Previous answer request exists without a persisted acknowledgement'));
+check('duplicate active answer blocked in application',engine.includes('already has an accepted answer'));
+check('back operation deactivates answer',engine.includes('data: { active: false }'));
+check('back operation deactivates evidence',engine.includes('evidenceSignal.updateMany')&&engine.includes('active: false'));
+check('back operation appends retraction event',engine.includes('answerState: "RETRACTED"')&&engine.includes('optionIndex: null'));
+check('back operation reopens prior question',engine.includes('kind: "USER_BACK_CORRECTION"'));
+check('back operation restores previous selection as draft',engine.includes('draft: { optionIndex: previousEvent.optionIndex }'));
+check('resume payload returns matching draft only',query.includes('draft&&open&&draft.questionIssueId===open.questionIssueId'));
+check('draft save requires current issued question',engine.includes('Draft does not match current issued question'));
+check('draft save checks question identity',engine.includes('Draft question id does not match issue'));
+check('progress counts active answers only',query.includes('prisma.answer.count({where:{assessmentId,active:true}})'));
+check('partial unique active-answer database index',migration.includes('answers_one_active_assessment_question_key')&&migration.includes('WHERE "active"=TRUE'));
+check('answer lineage database guard',migration.includes('mmri_guard_answer_consistency'));
+check('evidence lineage database guard',migration.includes('mmri_guard_evidence_signal_consistency'));
+check('draft lineage database guard',migration.includes('mmri_guard_response_draft_consistency'));
+check('answer event append lineage guard',migration.includes('mmri_guard_answer_event_append'));
+check('answer event immutable database guard',migration.includes('mmri_guard_answer_event_immutable'));
+check('client request id database format check',migration.includes('answer_events_client_request_id_format_check'));
+check('runtime verifier covers latest-event/live-answer agreement',verifier.includes('badLatestEventState'));
+check('schema keeps event request id uniqueness',schema.includes('@@unique([assessmentId, clientRequestId])'));
+check('schema keeps answer revisions unique',schema.includes('@@unique([assessmentId, questionId, revision])'));
+
+const failed=checks.filter(x=>!x.ok);
+console.log(JSON.stringify({status:failed.length?'FAIL':'PASS',contract:'BACKEND-STEP05-ANSWER-PERSISTENCE-STATIC-v1',passed:checks.length-failed.length,total:checks.length,checks},null,2));
+if(failed.length) process.exit(1);

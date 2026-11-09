@@ -1,0 +1,194 @@
+{
+  "suite": "MMRI strategy/report contract regression",
+  "version": "1.3.0",
+  "total": 37,
+  "passed": 37,
+  "failed": 0,
+  "results": [
+    {
+      "name": "root contract version",
+      "status": "PASS",
+      "detail": "MMRI-ROOT-CAUSE-1.0"
+    },
+    {
+      "name": "root findings generated",
+      "status": "PASS",
+      "detail": "7"
+    },
+    {
+      "name": "MS01 C03 has causal support",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "root selection <= contract max",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "recommendation contract version",
+      "status": "PASS",
+      "detail": "MMRI-RECOMMENDATION-1.0"
+    },
+    {
+      "name": "execution action cap <=5",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "name": "report evidence action cap <=2",
+      "status": "PASS",
+      "detail": "0"
+    },
+    {
+      "name": "report critical action cap <=5",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "selected purpose is P2",
+      "status": "PASS",
+      "detail": "P2"
+    },
+    {
+      "name": "capacity uses P05 option",
+      "status": "PASS",
+      "detail": "3"
+    },
+    {
+      "name": "all priorities bounded",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all execution actions are contract templates",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "hard contradiction yields resolution candidate",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "evidence gap yields collection candidate",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "action plan contract version",
+      "status": "PASS",
+      "detail": "MMRI-ACTION-PLAN-1.0"
+    },
+    {
+      "name": "action plan 365 days",
+      "status": "PASS",
+      "detail": "365"
+    },
+    {
+      "name": "action plan has five horizons",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "milestone IDs unique",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "required milestone plans exist",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "remeasurement starts H2",
+      "status": "PASS",
+      "detail": "H2"
+    },
+    {
+      "name": "plan progress bounded",
+      "status": "PASS",
+      "detail": "0"
+    },
+    {
+      "name": "report contract version",
+      "status": "PASS",
+      "detail": "MMRI-REPORT-1.0"
+    },
+    {
+      "name": "FULL complete uses official metric",
+      "status": "PASS",
+      "detail": "OFFICIAL_OVERALL_SCORE"
+    },
+    {
+      "name": "exactly five purposes",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "exactly five strengths (accepted contract)",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "exactly five weaknesses (accepted contract)",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "strengths and weaknesses never share a capability",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "every strength and weakness is traceable",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "every strength/weakness capability has a real score",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "narrative strength/weakness sections carry exactly five claims",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "root report cap <=3",
+      "status": "PASS",
+      "detail": "3"
+    },
+    {
+      "name": "roadmap has five horizon rows",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "name": "report trace index populated",
+      "status": "PASS",
+      "detail": "114"
+    },
+    {
+      "name": "deterministic fallback validates",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "name": "QUICK uses estimate label",
+      "status": "PASS",
+      "detail": "QUICK_ESTIMATE"
+    },
+    {
+      "name": "QUICK warning required",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "QUICK official mislabel is blocked",
+      "status": "PASS",
+      "detail": "[{\"checkId\":\"V05\",\"severity\":\"BLOCK\",\"message\":\"QUICK estimate is described as official/final.\"}]"
+    }
+  ]
+}

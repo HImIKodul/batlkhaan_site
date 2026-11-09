@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "date": "2026-10-10",
+  "standard": "Human-audited Marketing wording",
+  "scope": ["HRMRI", "FINMRI", "ISMRI", "OPMRI"],
+  "immutable": [
+    "Question ID",
+    "Category ID",
+    "Dimension ID",
+    "row order",
+    "A/B/C/D role",
+    "answer ordering",
+    "canonical score/state mapping",
+    "applicability logic",
+    "normalization",
+    "dependencies"
+  ],
+  "rules": [
+    "One question asks one observable point",
+    "Use direct natural Mongolian verbs",
+    "Capability/category name is separate display context, not mechanically prepended to every question",
+    "Keep detailed diagnostic specificity mainly in answer options",
+    "A/Q1 asks current state directly",
+    "B/Q2 asks recent or quantified evidence with matching tense",
+    "C/Q3 asks independent corroboration in plain language",
+    "D/Q4 resolves conflicting information neutrally without presupposing a contradiction",
+    "Simplify unnecessary evidence/audit jargon",
+    "Never alter the frozen semantic/scoring contract during humanization"
+  ],
+  "priority_replacements": {
+    "батлагдах / баталж болох": "Prefer a direct observable phrase such as 'бүртгэлээс харагддаг уу?' or 'өөр эх сурвалжаар шалгаж болдог уу?' where semantically valid",
+    "зөрүү байвал": "Use neutral conflict-resolution wording without assuming a contradiction",
+    "тулгахад / тулгалт": "Prefer 'хооронд нь харьцуулахад' where the same fact is preserved",
+    "эх өгөгдөл": "Prefer 'анхны бүртгэл' or 'эх мэдээлэл' depending on construct",
+    "тайлант хугацаа": "Use the actual reference period in plain language",
+    "цагийн тэмдэглэгээ": "Prefer 'огноо, цагийн бүртгэл' where appropriate",
+    "нэг утгаар тогтоох": "Prefer 'тодорхой болгож болох уу?' where appropriate"
+  },
+  "metrics": {
+    "mechanical_prefix_rows_total": 49152,
+    "high_priority_robotic_rows": {
+      "HRMRI": 5421,
+      "FINMRI": 5421,
+      "ISMRI": 5312,
+      "OPMRI": 5421
+    },
+    "average_body_words": {
+      "HRMRI": 12.42,
+      "FINMRI": 12.41,
+      "ISMRI": 12.42,
+      "OPMRI": 12.42,
+      "Marketing_full_question": 15.28
+    }
+  }
+}

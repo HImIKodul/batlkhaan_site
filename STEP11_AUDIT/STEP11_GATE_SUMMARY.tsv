@@ -1,0 +1,24 @@
+gate	status	detail
+step10_wording	PASS	completed
+engine_typecheck	PASS	completed
+strategy_typecheck	PASS	completed
+adaptive_routing	PASS	completed
+confidence	PASS	completed
+scoring	PASS	completed
+cell_reachability	PASS	completed
+targeted_synthetic	PASS	completed
+recommendations	PASS	completed
+action_plan	PASS	completed
+persistence_static	PASS	completed
+persistence_runtime	PASS	completed
+traceability_static	PASS	completed
+traceability_runtime	PASS	completed
+security_static	PASS	completed
+security_runtime	PASS	completed
+api_static	PASS	completed
+billing_retake_static	PASS	completed
+ui_polish	PASS	completed
+css_regression	PASS	completed
+shell_syntax	PASS	completed
+report_language_audit	WARN_PREEXISTING_REPORT_LANGUAGE	pre-existing report/action-plan language; does not change question/scoring gate
+connected_postgres_browser	HOLD_NOT_RUN	set MMRI_STEP11_CONNECTED_GATE=YES on Linux with Docker/PostgreSQL and installed dependencies

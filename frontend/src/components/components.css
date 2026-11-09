@@ -1,0 +1,87 @@
+/* ============================================================================
+   MMRI shared component system v1 - R16.07 / Step 7 of 20
+   One visual/interaction authority for reusable controls and transient layers.
+   Screen composition remains in styles.css until its dedicated migration step.
+   ============================================================================ */
+.mmri-checkbox:has(input:focus-visible),.mmri-menu__trigger:focus-visible,.mmri-menu__content>button:focus-visible,.mmri-popover__trigger:focus-visible{outline:3px solid color-mix(in srgb,var(--mmri-color-focus) 28%,transparent);outline-offset:2px}.mmri-icon-button{width:var(--mmri-control-height-default);padding:0;flex:none}
+
+.mmri-surface{background:var(--mmri-glass-bg);border:var(--mmri-border-width) solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-surface);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow);-webkit-backdrop-filter:var(--mmri-glass-blur);backdrop-filter:var(--mmri-glass-blur)}.mmri-surface--subtle{background:color-mix(in srgb,var(--mmri-glass-bg-tint) 78%,rgba(255,255,255,.88))}.mmri-surface--focal{background:var(--mmri-glass-bg-strong);border-radius:var(--mmri-radius-focal);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow-lift);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong)}
+
+.mmri-tag{display:inline-flex;align-items:center;justify-content:center;gap:var(--mmri-space-1);min-height:24px;padding:2px var(--mmri-space-2);border:1px solid var(--mmri-color-border);border-radius:var(--mmri-radius-pill);background:rgba(244,247,252,.85);color:var(--mmri-color-text-muted);font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);font-weight:var(--mmri-weight-medium);white-space:nowrap}.mmri-tag.is-active{background:var(--mmri-color-brand-soft);border-color:color-mix(in srgb,var(--mmri-color-brand) 32%,var(--mmri-color-border));color:var(--mmri-color-brand-pressed)}.mmri-tag.is-muted{opacity:.68}.mmri-field__label{display:inline-flex;align-items:center;gap:var(--mmri-space-1);font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line);font-weight:var(--mmri-weight-semibold);color:var(--mmri-color-text-strong)}.mmri-field__required{color:var(--mmri-color-danger)}.mmri-field__message{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);color:var(--mmri-color-text-muted)}.mmri-field__message--error{color:var(--mmri-color-danger)}
+
+.mmri-checkbox{position:relative;display:flex;align-items:flex-start;gap:var(--mmri-space-2);min-height:var(--mmri-control-height-default);padding:var(--mmri-space-2) var(--mmri-space-3);border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-control);background:var(--mmri-glass-control-bg);box-shadow:var(--mmri-glass-control-shadow);-webkit-backdrop-filter:var(--mmri-glass-control-blur);backdrop-filter:var(--mmri-glass-control-blur);cursor:pointer}.mmri-checkbox:hover{border-color:color-mix(in srgb,var(--mmri-color-brand) 28%,var(--mmri-glass-border));background:var(--mmri-glass-control-bg-hover)}.mmri-checkbox input{position:absolute;opacity:0;pointer-events:none}.mmri-checkbox__control{width:var(--mmri-control-indicator-size);height:var(--mmri-control-indicator-size);margin-top:2px;display:grid;place-items:center;border:1px solid var(--mmri-color-border-strong);border-radius:var(--mmri-radius-small);background:var(--mmri-color-surface);color:transparent;font-size:var(--mmri-type-meta-size);line-height:1;flex:none}.mmri-checkbox:has(input:checked){border-color:color-mix(in srgb,var(--mmri-color-brand) 38%,var(--mmri-color-border));background:var(--mmri-color-brand-soft)}.mmri-checkbox input:checked+.mmri-checkbox__control{background:var(--mmri-color-brand);border-color:var(--mmri-color-accent);color:var(--mmri-color-on-brand)}.mmri-checkbox__copy{display:grid;gap:2px;font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line);color:var(--mmri-color-text-strong)}.mmri-checkbox__copy small{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);color:var(--mmri-color-text-muted)}
+
+.mmri-menu,.mmri-popover,.mmri-tooltip{position:relative;display:inline-flex}.mmri-menu__trigger,.mmri-popover__trigger{border:0;background:transparent;color:inherit;font:inherit;padding:0;cursor:pointer}.mmri-menu__content,.mmri-popover__content{position:absolute;z-index:90;top:calc(100% + var(--mmri-space-2));min-width:var(--mmri-overlay-menu-min);padding:var(--mmri-space-2);background:var(--mmri-glass-bg-overlay);border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-surface);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow-lift);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong)}.mmri-menu__content--end,.mmri-popover__content--end{right:0}.mmri-menu__content--start,.mmri-popover__content--start{left:0}.mmri-menu__content>button{width:100%;min-height:var(--mmri-control-height-default);padding:var(--mmri-space-2) var(--mmri-space-3);border:0;border-radius:var(--mmri-radius-control);background:transparent;color:var(--mmri-color-text);font-family:var(--mmri-font-family);font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line);font-weight:var(--mmri-weight-medium);text-align:left;cursor:pointer}.mmri-menu__content>button:hover:not(:disabled),.mmri-menu__content>button:focus-visible{background:rgba(244,247,252,.85);color:var(--mmri-color-text-strong)}.mmri-menu__content>button.is-danger{color:var(--mmri-color-danger)}.mmri-menu__content>button:disabled{opacity:.45;cursor:not-allowed}.mmri-popover__content{padding:var(--mmri-space-4);min-width:var(--mmri-overlay-popover-min)}
+
+.mmri-dialog-layer{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:var(--mmri-space-4);background:var(--mmri-color-overlay-scrim);-webkit-backdrop-filter:blur(3px) saturate(120%);backdrop-filter:blur(3px) saturate(120%)}.mmri-dialog{width:min(var(--mmri-overlay-dialog-max),100%);max-height:min(760px,calc(100vh - 32px));overflow:auto;background:var(--mmri-glass-bg-overlay);border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-focal);box-shadow:var(--mmri-glass-highlight),var(--mmri-shadow-dialog);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong)}.mmri-dialog__header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--mmri-space-4);padding:var(--mmri-space-6) var(--mmri-space-6) var(--mmri-space-4);border-bottom:1px solid var(--mmri-color-border)}.mmri-dialog__header h2{margin:0;font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-heading)}.mmri-dialog__header p{margin:var(--mmri-space-1) 0 0;max-width:var(--mmri-measure-reading);color:var(--mmri-color-text-muted);font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-body-line)}.mmri-dialog__body{padding:var(--mmri-space-6)}.mmri-dialog__footer{display:flex;justify-content:flex-end;gap:var(--mmri-space-2);padding:var(--mmri-space-4) var(--mmri-space-6);border-top:1px solid var(--mmri-color-border)}
+
+.mmri-tooltip__content{position:absolute;z-index:130;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);min-width:max-content;max-width:260px;padding:var(--mmri-space-1) var(--mmri-space-2);border-radius:var(--mmri-radius-small);background:var(--mmri-color-text-strong);color:var(--mmri-color-on-brand);font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);font-weight:var(--mmri-weight-medium);box-shadow:var(--mmri-shadow-overlay);opacity:0;visibility:hidden;pointer-events:none}.mmri-tooltip:hover .mmri-tooltip__content,.mmri-tooltip:focus-within .mmri-tooltip__content{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+
+.mmri-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-surface);background:var(--mmri-glass-bg-strong);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow);-webkit-backdrop-filter:var(--mmri-glass-blur);backdrop-filter:var(--mmri-glass-blur)}.mmri-table{width:100%;border-collapse:collapse;color:var(--mmri-color-text);font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line)}.mmri-table caption{padding:var(--mmri-space-3) var(--mmri-space-4);text-align:left;color:var(--mmri-color-text-muted);font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line)}.mmri-table th,.mmri-table td{padding:var(--mmri-space-3) var(--mmri-space-4);border-bottom:1px solid var(--mmri-color-border);text-align:left;vertical-align:middle}.mmri-table th{background:rgba(244,247,252,.85);color:var(--mmri-color-text-muted);font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);font-weight:var(--mmri-weight-semibold)}.mmri-table tbody tr:last-child td{border-bottom:0}.mmri-table tbody tr:hover{background:color-mix(in srgb,var(--mmri-color-surface-subtle) 65%,transparent)}
+
+
+
+/* R16.16 - shared support states ------------------------------------------------ */
+.mmri-api-state{
+  min-height:320px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:var(--mmri-space-10) var(--mmri-space-6);
+  border:var(--mmri-border-width) solid var(--mmri-glass-border);
+  outline:1px solid var(--mmri-glass-edge);
+  outline-offset:-1px;
+  border-radius:var(--mmri-radius-surface);
+  background:var(--mmri-glass-bg);
+  box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow);
+  -webkit-backdrop-filter:var(--mmri-glass-blur);
+  backdrop-filter:var(--mmri-glass-blur);
+}
+.mmri-api-state__visual{
+  width:var(--mmri-control-height-touch);
+  height:var(--mmri-control-height-touch);
+  display:grid;
+  place-items:center;
+  margin-bottom:var(--mmri-space-4);
+  border:var(--mmri-border-width) solid var(--mmri-color-border);
+  border-radius:var(--mmri-radius-control);
+  background:rgba(244,247,252,.85);
+  color:var(--mmri-color-text-muted);
+}
+.mmri-api-state--error .mmri-api-state__visual{border-color:color-mix(in srgb,var(--mmri-color-danger) 28%,var(--mmri-color-border));background:var(--mmri-color-danger-soft);color:var(--mmri-color-danger)}
+.mmri-api-state--offline .mmri-api-state__visual{border-color:color-mix(in srgb,var(--mmri-color-warning) 28%,var(--mmri-color-border));background:var(--mmri-color-warning-soft);color:var(--mmri-color-warning)}
+.mmri-api-state--coming .mmri-api-state__visual{background:rgba(244,247,252,.85);color:var(--mmri-color-text-muted)}
+.mmri-api-state__copy{max-width:470px}
+.mmri-api-state h3{margin:0;font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-heading);color:var(--mmri-color-text-strong)}
+.mmri-api-state p{margin:var(--mmri-space-2) auto 0;max-width:455px;font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line);color:var(--mmri-color-text-muted)}
+.mmri-api-state__action{margin-top:var(--mmri-space-4)}
+.mmri-api-state .loader-ring{width:28px;height:28px;border-width:3px;border-color:var(--mmri-color-border);border-top-color:var(--mmri-color-accent);margin:0}
+.mmri-api-state.compact{min-height:210px;padding:var(--mmri-space-6) var(--mmri-space-4)}
+.mmri-api-state.compact .mmri-api-state__visual{width:var(--mmri-control-height-default);height:var(--mmri-control-height-default);margin-bottom:var(--mmri-space-3)}
+.mmri-api-state.compact h3{font-size:var(--mmri-type-body-large-size);line-height:var(--mmri-type-body-large-line)}
+.mmri-api-state.compact p{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);max-width:390px}
+.mmri-api-state.compact .mmri-api-state__action{margin-top:var(--mmri-space-3)}
+
+/* R17.20 - browser-independent accessible choice selector. */
+
+/* Shared eyebrow/kicker label used by support and section headers. */
+.eyebrow{display:block;font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--mmri-color-accent)}
+
+/* Loading fact: one quiet glass note under a loading screen (see LoadingFact.tsx). */
+.mmri-loading-fact{position:relative;margin:28px auto 0;max-width:620px;padding:20px 24px 18px;text-align:left;border:1px solid rgba(190,200,216,.7);border-radius:22px;
+ background:var(--hg-l1);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);
+ box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,30,50,.06),0 18px 36px -24px rgba(20,40,80,.32);color:#0B0F14;animation:mmri-fact-in .5s cubic-bezier(.2,.7,.2,1) both}
+.mmri-loading-fact__kicker{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#667085}
+.mmri-loading-fact__text{margin:8px 0 0;display:grid;gap:4px}
+.mmri-loading-fact__text strong{font-size:clamp(26px,3vw,34px);line-height:1.1;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mmri-loading-fact__text span{font-size:15.5px;line-height:1.55;color:#3B4656}
+.mmri-loading-fact__source{margin:10px 0 0;font-size:13px;line-height:1.4;color:#667085}
+@keyframes mmri-fact-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mmri-loading-fact{animation:none}}
+@media (prefers-reduced-transparency:reduce){.mmri-loading-fact{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff}}
+/* Loading screens: the skeleton wrapper had no styles, so its announcement text showed and the boot screen fell back to the legacy dark ground. */
+.mmri-skeleton__sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+main.mmri-route-loading{min-height:100dvh;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(ellipse at 50% 0,#fff,#EEF2F8 70%)}
+.mmri-skeleton{width:100%}

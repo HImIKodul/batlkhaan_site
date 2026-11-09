@@ -1,0 +1,42 @@
+{
+  "MARKETING": {
+    "frontendAreaId": "marketing",
+    "customerNameMn": "Маркетингийн менежмент",
+    "currentRuntime": "LIVE",
+    "runtimeMethodology": "3.0.0",
+    "currentQuestionBank": "3.1.0",
+    "architecture": "PRESERVE_EXISTING_MARKETING_BUNDLE"
+  },
+  "ISMRI": {
+    "frontendAreaId": "it",
+    "customerNameMn": "Мэдээллийн технологийн менежмент",
+    "currentRuntime": "LOCKED_NON_LIVE",
+    "runtimeMethodology": null,
+    "currentQuestionBank": null,
+    "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+  },
+  "FINMRI": {
+    "frontendAreaId": "finance",
+    "customerNameMn": "Санхүүгийн менежмент",
+    "currentRuntime": "LOCKED_NON_LIVE",
+    "runtimeMethodology": null,
+    "currentQuestionBank": null,
+    "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+  },
+  "HRMRI": {
+    "frontendAreaId": "people",
+    "customerNameMn": "Хүний нөөцийн менежмент",
+    "currentRuntime": "LOCKED_NON_LIVE",
+    "runtimeMethodology": null,
+    "currentQuestionBank": null,
+    "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+  },
+  "OPMRI": {
+    "frontendAreaId": "operations",
+    "customerNameMn": "Үйлдвэрлэл ба үйл ажиллагааны менежмент",
+    "currentRuntime": "LOCKED_NON_LIVE",
+    "runtimeMethodology": null,
+    "currentQuestionBank": null,
+    "architecture": "NEW_DOMAIN_SCOPED_METHODOLOGY_REQUIRED"
+  }
+}

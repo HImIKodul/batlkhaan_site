@@ -1,0 +1,219 @@
+{
+  "suite": "MMRI Step 8 recommendations regression",
+  "version": "1.0.0",
+  "total": 42,
+  "passed": 42,
+  "failed": 0,
+  "results": [
+    {
+      "name": "64 category objectives",
+      "status": "PASS",
+      "detail": "64"
+    },
+    {
+      "name": "47 intervention templates; C01 gate excluded",
+      "status": "PASS",
+      "detail": "47"
+    },
+    {
+      "name": "all interventions have title",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all interventions have action",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all interventions have deliverable",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all interventions have kpi",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "intervention title values unique",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "intervention action values unique",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "intervention deliverable values unique",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "intervention kpi values unique",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "no KPI equals deliverable",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "hard contradiction yields RESOLVE_EVIDENCE",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "hard contradiction blocks execution for same finding",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "unresolved gap yields COLLECT_EVIDENCE",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "unresolved gap blocks execution",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "possible cause yields validation not execution",
+      "status": "PASS",
+      "detail": "VALIDATE_CAUSE"
+    },
+    {
+      "name": "isolated reliable weakness yields local improvement",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "same intervention appears only once in visible execution list",
+      "status": "PASS",
+      "detail": "1"
+    },
+    {
+      "name": "consolidated recommendation preserves multiple scopes",
+      "status": "PASS",
+      "detail": "12"
+    },
+    {
+      "name": "consolidated source traces preserve all root findings",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "no duplicate interventionCode in execution actions",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all capacity levels keep customer-visible execution list within five",
+      "status": "PASS",
+      "detail": "5/5/5"
+    },
+    {
+      "name": "low capacity does not hide grounded critical actions",
+      "status": "PASS",
+      "detail": "5/5"
+    },
+    {
+      "name": "capacity levels derived from P05",
+      "status": "PASS",
+      "detail": "1/3/5"
+    },
+    {
+      "name": "construct-aware owner overrides clear mismatch",
+      "status": "PASS",
+      "detail": "R02"
+    },
+    {
+      "name": "external partner is never auto-selected as owner",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "category sponsor preserved",
+      "status": "PASS",
+      "detail": "R02"
+    },
+    {
+      "name": "default owner preserved when already well suited",
+      "status": "PASS",
+      "detail": "R02"
+    },
+    {
+      "name": "selected purpose uses P20",
+      "status": "PASS",
+      "detail": "P2"
+    },
+    {
+      "name": "all candidate priorities bounded",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all priority bands valid",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all recommendations carry causal guardrail",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all recommendations carry affected scope",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "all recommendations preserve recommendation trace",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "execution targets are not predictions",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "execution target scores bounded 60..75",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "evidence actions have null target",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "execution KPIs non-empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "visible evidence action titles are distinct",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "visible evidence wording avoids internal jargon",
+      "status": "PASS",
+      "detail": "Тухайн шалтгааныг өөр эх сурвалж, бодит бүртгэл эсвэл давтан тохиолдлоор шалгаж, батлагдсан эсэхийг тогтоох. | Тухайн шалтгааныг өөр эх сурвалж, бодит бүртгэл эсвэл давтан тохиолдлоор шалгаж, батлагдсан эсэхийг тогтоох."
+    },
+    {
+      "name": "dependency-aware ordering keeps upstream C03 before C04 when both visible",
+      "status": "PASS",
+      "detail": "0/1"
+    },
+    {
+      "name": "NOT_APPLICABLE cell produces no recommendation",
+      "status": "PASS",
+      "detail": "0"
+    }
+  ]
+}

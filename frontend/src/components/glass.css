@@ -1,0 +1,224 @@
+/* ============================================================================
+   Liquid-glass system: deep ambient environment + reusable glass material + glyphs.
+   Everything is driven by shared variables; `html[data-env="…"]` (design/environment.ts)
+   re-points them so background, glass tint, glow and accents change together.
+   ============================================================================ */
+@property --env-deep{syntax:'<color>';inherits:true;initial-value:#4F7596}
+@property --env-main{syntax:'<color>';inherits:true;initial-value:#86A6C2}
+@property --env-hi{syntax:'<color>';inherits:true;initial-value:#C4DAEC}
+@property --domain-primary{syntax:'<color>';inherits:true;initial-value:#0284C7}
+@property --domain-secondary{syntax:'<color>';inherits:true;initial-value:#38BDF8}
+
+/* Liquid-glass tokens. Structure: (1) category-coloured geometric acrylic environment, (2) CLEAR shiny glass sheet
+   (.mmri-shell-main), (3) content. Glass is transparent + reflective with minimal blur (3-6px); the whole
+   environment (not the glass) takes the category family via --env-deep/main/hi. */
+:root{
+  --mmri-chrome:calc(var(--mmri-shell-height) + 120px);
+  --env-deep:#0B2347;--env-main:#2B63AE;--env-hi:#7FB3EA;--env-shade:0%;
+  --env-dark:#2E5073;--env-dark2:#284662;--env-white:#EEF6FF;
+  --ambient-1:var(--env-main);
+  --ambient-2:var(--env-hi);
+  --ambient-3:color-mix(in srgb,var(--env-deep) 45%,var(--env-main));
+  --ambient-base:color-mix(in srgb,#07101f var(--env-shade),var(--env-main));
+  --seam-tint:0%;
+  --lg-seam-light:color-mix(in srgb,var(--env-hi) var(--seam-tint),rgba(238,246,255,.5));
+  --lg-seam-dark:rgba(8,22,46,.12);
+  --domain-primary:#0284C7;--domain-secondary:#38BDF8;--domain-deep:#075985;--domain-glow:color-mix(in srgb,var(--domain-primary) 60%,transparent);
+  --glass-bg:rgba(20,44,76,.26);--glass-bg-strong:rgba(255,255,255,.14);
+  --glass-border:rgba(255,255,255,.55);--glass-highlight:rgba(255,255,255,.8);
+  --glass-shadow:rgba(4,12,30,.4);--glass-blur:4px;--glass-saturation:125%;--glass-highlight-12:rgba(255,255,255,.12);
+  --glass-text:#fff;--glass-text-soft:rgba(255,255,255,.9);
+  --radius-control:10px;--radius-button:12px;--radius-card:16px;--radius-surface:22px;--radius-modal:26px;
+  --blur-clear:4px;--blur-regular:14px;--blur-content:0px;
+  --border-light:rgba(255,255,255,.42);--border-strong:rgba(255,255,255,.62);--border-refract:rgba(20,45,70,.16);
+  /* Elevation levels. L1 small cards/inputs, L2 floating functional controls, L3 modal/guide/overlay.
+     Each = tight contact shadow + larger soft ambient shadow, falling downward. */
+  --ease-smooth:cubic-bezier(.22,1,.36,1);
+  --motion-fast:.16s;--motion-normal:.26s;--motion-environment:.6s;--motion-reveal:.45s;
+  --elevation-1:0 1px 2px rgba(5,12,28,.3),0 4px 10px -2px rgba(5,12,28,.22);
+  --elevation-2:0 1px 3px rgba(5,12,28,.36),0 10px 24px -6px rgba(5,12,28,.42);
+  --elevation-3:0 2px 4px rgba(5,12,28,.4),0 18px 44px -10px rgba(5,12,28,.58);
+  --shadow-contact:0 1px 3px rgba(5,12,28,.34);
+  --shadow-ambient:0 10px 24px -6px rgba(5,12,28,.4);
+  --elev-object:var(--elevation-2);--elev-object-hover:var(--elevation-3);--elev-overlay:var(--elevation-3);
+  --elev-reflect:color-mix(in srgb,var(--env-hi) 55%,transparent);
+  --surface-content:rgba(255,255,255,.05);--surface-glass:rgba(12,26,50,.6);--surface-glass-strong:rgba(12,26,50,.74);
+  --border-glass:rgba(255,255,255,.22);--highlight-glass:inset 0 1px 0 rgba(255,255,255,.32);
+  --glass-radius:30px;--glass-border-highlight:rgba(255,255,255,.95);--glass-inner-highlight:rgba(255,255,255,.8);
+  --glass-shadow-deep:rgba(4,12,30,.5);
+  --glass-edge:rgba(255,255,255,.62);
+  --glass-glow:color-mix(in srgb,var(--env-hi) 30%,transparent);
+  /* Neutral, clear page glass (layer 2) - never category coloured. */
+  --page-glass-bg:rgba(255,255,255,.05);--page-glass-upper:rgba(255,255,255,.1);--page-glass-border:rgba(255,255,255,.6);--page-glass-highlight:rgba(255,255,255,.12);
+  --environment-category-seam:var(--lg-seam-light);
+  --glass-category-rim:rgba(255,255,255,.62);
+  --glass-category-reflection:rgba(255,255,255,.08);
+  --category-marketing:#DC2626;--category-marketing-glow:#EF4444;
+  --category-it:#0284C7;--category-it-glow:#38BDF8;
+  --category-finance:#F59E0B;--category-finance-glow:#FBBF24;
+  --category-hr:#7C3AED;--category-hr-glow:#A855F7;
+  --category-operations:#10B981;--category-operations-glow:#34D399;
+  --popup-bg:linear-gradient(150deg,rgba(255,255,255,.2),rgba(8,24,48,.56) 55%,rgba(8,24,48,.46));
+  --popup-border:var(--border-strong);
+  --popup-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),inset 0 -1px 0 var(--border-refract),0 6px 12px rgba(8,22,42,.3),0 34px 64px -18px rgba(8,22,42,.62);
+  /* No transition on these inherited registered tokens: animating them on <html> restyles the whole document every frame. Smooth domain blending is owned by design/crystal.css (DOMAIN THEME). */
+}
+
+/* Category: the WHOLE environment takes the family (deep base, main fields, highlight light). Same geometry. */
+html[data-env="marketing"]{--env-deep:color-mix(in srgb,var(--mmri-domain-marketing-deep) 45%,var(--mmri-domain-marketing));--env-main:color-mix(in srgb,var(--mmri-domain-marketing) 82%,#fff);--env-hi:color-mix(in srgb,var(--mmri-domain-marketing-2) 62%,#fff);--env-shade:0%;--seam-tint:30%;--domain-primary:var(--mmri-domain-marketing);--domain-secondary:var(--mmri-domain-marketing-2);--domain-deep:var(--mmri-domain-marketing-deep)}
+html[data-env="it"]{--env-deep:color-mix(in srgb,var(--mmri-domain-it-deep) 45%,var(--mmri-domain-it));--env-main:color-mix(in srgb,var(--mmri-domain-it) 82%,#fff);--env-hi:color-mix(in srgb,var(--mmri-domain-it-2) 62%,#fff);--env-shade:0%;--seam-tint:30%;--domain-primary:var(--mmri-domain-it);--domain-secondary:var(--mmri-domain-it-2);--domain-deep:var(--mmri-domain-it-deep)}
+html[data-env="finance"]{--env-deep:color-mix(in srgb,var(--mmri-domain-finance-deep) 45%,var(--mmri-domain-finance));--env-main:color-mix(in srgb,var(--mmri-domain-finance) 82%,#fff);--env-hi:color-mix(in srgb,var(--mmri-domain-finance-2) 62%,#fff);--env-shade:0%;--seam-tint:30%;--domain-primary:var(--mmri-domain-finance);--domain-secondary:var(--mmri-domain-finance-2);--domain-deep:var(--mmri-domain-finance-deep)}
+html[data-env="people"]{--env-deep:color-mix(in srgb,var(--mmri-domain-people-deep) 45%,var(--mmri-domain-people));--env-main:color-mix(in srgb,var(--mmri-domain-people) 82%,#fff);--env-hi:color-mix(in srgb,var(--mmri-domain-people-2) 62%,#fff);--env-shade:0%;--seam-tint:30%;--domain-primary:var(--mmri-domain-people);--domain-secondary:var(--mmri-domain-people-2);--domain-deep:var(--mmri-domain-people-deep)}
+html[data-env="operations"]{--env-deep:color-mix(in srgb,var(--mmri-domain-operations-deep) 45%,var(--mmri-domain-operations));--env-main:color-mix(in srgb,var(--mmri-domain-operations) 82%,#fff);--env-hi:color-mix(in srgb,var(--mmri-domain-operations-2) 62%,#fff);--env-shade:0%;--seam-tint:30%;--domain-primary:var(--mmri-domain-operations);--domain-secondary:var(--mmri-domain-operations-2);--domain-deep:var(--mmri-domain-operations-deep)}
+
+/* Guide mode: ONE cobalt environment shared by all four guides (not per-guide colours). */
+html[data-env="guide"]{--env-deep:#0A2A8C;--env-main:#2D6AE6;--env-hi:#8DC1FF;--env-shade:0%;--seam-tint:30%;--domain-primary:#1650DC;--domain-secondary:#5FB0FF;--domain-deep:#0A2E9E}
+
+/* White Prism: the homepage and its guide popups sit on plain white; no category colour, no cobalt. */
+html[data-env="prism"]{background:#fff;--env-deep:#fff;--env-main:#fff;--env-hi:#fff}
+/* ENVIRONMENT (layer 1): one category colour, one directional light from the upper-left, one shadow region at the lower-right.
+   No tiles, blobs or multi-hue gradients. Geometry never changes between categories - only --env-* does. */
+html{background:linear-gradient(165deg,color-mix(in srgb,var(--env-hi) 34%,var(--env-main)) 0%,var(--env-main) 42%,var(--env-deep) 100%);background-attachment:fixed;min-height:100%;scroll-behavior:smooth;overscroll-behavior-y:none}
+html::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(72% 58% at 10% 0%,rgba(255,255,255,.26),transparent 70%),radial-gradient(80% 70% at 100% 100%,rgba(3,10,26,.46),transparent 66%)}
+html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(4,14,34,.5) 0,rgba(4,14,34,.2) 56px,transparent 130px)}
+html[data-env="prism"]::before,html[data-env="prism"]::after{display:none}
+@media print{html::before,html::after{display:none}}
+
+/* CONTENT (layer 2): quiet, readable. Dense areas never get strong glass. */
+.lg,.content-surface{position:relative;isolation:isolate;overflow:hidden;color:var(--glass-text);background:var(--surface-content);border:1px solid rgba(255,255,255,.14);border-radius:var(--radius-card);box-shadow:var(--elevation-1);transition:background var(--motion-fast) ease,border-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease}
+.lg--strong{background:rgba(255,255,255,.08)}
+.lg:is(button,a,[role=button],[role=tab]):hover{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.09)}
+.lg:is(button,a,[role=button],[role=tab]):active{background:rgba(255,255,255,.04);box-shadow:none}
+.lg:is(button,a,[role=button],[role=tab]):focus-visible{outline:3px solid #fff;outline-offset:2px}
+.lg:is([aria-expanded=true],[aria-pressed=true],[aria-selected=true],[aria-current=true],.is-selected,.is-active){border-color:rgba(255,255,255,.7)}
+
+/* FUNCTIONAL GLASS (layer 3): navigation menus, popups, dropdowns. Thin refractive edge, upper specular line, one soft shadow. */
+.glass-regular{position:relative;isolation:isolate;color:var(--glass-text);background:var(--surface-glass);border:1px solid var(--border-glass);border-radius:var(--radius-card);
+  -webkit-backdrop-filter:blur(var(--blur-regular)) saturate(130%);backdrop-filter:blur(var(--blur-regular)) saturate(130%);box-shadow:var(--highlight-glass),var(--elevation-3)}
+.glass-clear{position:relative;isolation:isolate;overflow:hidden;color:#fff;border-radius:var(--radius-card);-webkit-backdrop-filter:blur(var(--blur-clear)) saturate(130%);backdrop-filter:blur(var(--blur-clear)) saturate(130%);transition:box-shadow var(--motion-fast) ease,border-color var(--motion-fast) ease,background var(--motion-fast) ease}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass-regular{background:rgba(14,34,60,.94)}}
+@media (prefers-reduced-transparency:reduce){.glass-regular,.glass-clear,html body .mmri-shell-main::before{-webkit-backdrop-filter:none;backdrop-filter:none}.glass-regular{background:rgb(18,42,72)}html body .glass-clear{background:rgba(30,82,140,.9)}}
+@media (max-width:767px){html body .glass-clear{-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Page plane: one calm surface floating above the floor. Light, thin edge; the shadow beneath it is the main depth cue. Home/Diagnosis are
+   airy (the category tiles sit directly on it); content pages use a denser quiet tint so text is always legible. */
+html body .mmri-shell-main{position:relative;z-index:0;margin:12px clamp(10px,5.5vw,92px) 10px;min-height:calc(100dvh - var(--mmri-chrome))}
+html body .mmri-shell-main::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:var(--radius-surface);pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.03) 38%),rgba(8,18,36,.32);
+  -webkit-backdrop-filter:blur(6px) saturate(130%);backdrop-filter:blur(6px) saturate(130%);
+  border:1px solid rgba(255,255,255,.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 4px rgba(4,12,30,.5),0 18px 28px -8px rgba(4,12,30,.5),0 44px 70px -22px rgba(4,12,30,.5)}
+html body .mmri-shell-main::after{display:none}
+/* Homepage composes its own cards on the bare environment: no surrounding plane. */
+html body .mmri-shell-main:has(.mmri-home2)::before{background:none;border-color:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html body .mmri-shell-main:not(:has(.mmri-home2,.diagnosis-square-page))::before{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02) 40%),rgba(8,18,36,.78)}
+/* Report: quiet readable plane that still carries the category colour through it. */
+html body .mmri-shell-main:has(.report-v3)::before{background:linear-gradient(180deg,color-mix(in srgb,var(--domain-primary) 34%,transparent),color-mix(in srgb,var(--domain-deep) 46%,transparent)),rgba(8,18,36,.56)}
+@media (max-width:767px){html body .mmri-shell-main{margin:10px 8px 14px}html body .mmri-shell-main::before{border-radius:var(--radius-card)}}
+
+/* .cat-tile (Diagnosis cards): pearl glass card; the domain colour lives in ONE glossy panel (the score) and nowhere else.
+   Stationary geometry: hover/focus only deepen the shadow and brighten the edge. */
+.cat-tile{--tile-ink:#0B0F14;position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;padding:10px;margin:0;font:inherit;text-align:left;color:var(--wp-ink,#0B0F14);cursor:pointer;
+  border-radius:28px;border:1px solid color-mix(in srgb,var(--wp-silver,#D9DFE8) 65%,transparent);
+  background:radial-gradient(120% 50% at 50% 0,color-mix(in srgb,var(--area-accent,#7FA6FF) 9%,transparent),transparent 70%),var(--wp-spec) top/100% 38% no-repeat,var(--wp-glass);
+  box-shadow:var(--wp-bevel),var(--wp-shadow-1),0 26px 40px -30px rgba(40,70,110,.35);transition:box-shadow var(--wp-dur) var(--wp-ease),border-color var(--wp-dur) ease}
+.cat-tile::before{content:"";position:absolute;z-index:2;left:22px;right:22px;top:0;height:3px;border-radius:0 0 4px 4px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--area-accent,#7FA6FF),transparent);opacity:.7;transition:opacity var(--wp-dur) ease}
+.cat-tile__value{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:grid;place-content:center;justify-items:center;gap:2px;padding:12px;color:var(--tile-ink);border:0;background:none;font:inherit}
+.cat-tile__value:not(.is-empty)::before{content:"";position:absolute;left:50%;top:50%;width:var(--dial,120px);height:var(--dial,120px);translate:-50% -50%;border-radius:50%;pointer-events:none;background:conic-gradient(var(--area-accent) calc(var(--v,0)*1%),rgba(16,37,75,.24) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 12px),#000 calc(100% - 11px));mask:radial-gradient(farthest-side,transparent calc(100% - 12px),#000 calc(100% - 11px))}
+.cat-tile__value:not(.is-empty)::after{content:"";position:absolute;left:50%;top:50%;width:calc(var(--dial,120px) - 28px);height:calc(var(--dial,120px) - 28px);translate:-50% -50%;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 35% 25%,#fff,rgba(255,255,255,.55) 70%);box-shadow:inset 0 1px 0 #fff,inset 0 -6px 10px -8px color-mix(in srgb,var(--area-accent) 55%,transparent),0 6px 14px -8px rgba(20,40,80,.3)}
+.cat-tile__value>*{position:relative;z-index:1}
+.cat-tile__value b{font-size:clamp(38px,min(6.4dvh,4.2vw),62px);line-height:1;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.cat-tile__value small{font-size:13px;line-height:1.2;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+/* No score yet: a faceted glass diamond, the same mark the hero crystal and guide popups use. */
+.cat-tile__value.is-empty::after{content:"";width:clamp(34px,7vh,58px);aspect-ratio:1;rotate:45deg;border-radius:24%;border:1px solid rgba(255,255,255,.85);background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,.1) 60%,rgba(255,255,255,.35));box-shadow:inset 0 1px 0 #fff,0 10px 18px -10px rgba(0,0,0,.35)}
+.cat-tile__label{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:flex-start;flex:none;padding:0 10px 8px;background:none;border:0;font-weight:620;font-size:14px;line-height:1.28;text-align:left}
+.cat-tile:hover,.cat-tile:focus-within{border-color:color-mix(in srgb,var(--area-accent,#7FA6FF) 45%,var(--wp-silver2,#C4CCD8));box-shadow:var(--wp-bevel),0 0 0 1px color-mix(in srgb,var(--area-accent,#7FA6FF) 22%,transparent),0 30px 46px -26px color-mix(in srgb,var(--area-accent,#7FA6FF) 55%,rgba(30,60,110,.45))}
+.cat-tile:hover::before,.cat-tile:focus-within::before{opacity:1}
+.cat-tile:focus-visible{outline:var(--ix-ring,3px solid #0B0F14);outline-offset:3px}
+.cat-tile:active{box-shadow:var(--wp-bevel),var(--wp-shadow-1)}
+.cat-tile.is-selected{border-color:#fff}
+
+@media (min-width:768px){:root{--mmri-shell-height:64px}}
+
+/* Glyph family (see components/Glyphs.tsx). `.is-light` = luminous white glyph for saturated glass tiles. */
+.mmri-glyph{display:block;overflow:visible;filter:drop-shadow(0 10px 14px color-mix(in srgb,var(--glyph-a,var(--domain-primary)) 45%,transparent))}
+.mmri-glyph .gl-back{fill:rgba(255,255,255,.3);stroke:rgba(255,255,255,.95);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.mmri-glyph .gl-front{stroke:rgba(255,255,255,.85);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.mmri-glyph .gl-line{fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.mmri-glyph .gl-dim{stroke:var(--glyph-a,var(--domain-primary));stroke-opacity:.55;stroke-width:2.6}
+.mmri-glyph .gl-dash{stroke-dasharray:1 6}
+.mmri-glyph .gl-dot{fill:#fff;stroke:none}
+.mmri-glyph .gl-hole{fill:rgba(255,255,255,.4)}
+.mmri-glyph.is-light{filter:drop-shadow(0 12px 16px rgba(8,22,42,.38))}
+.mmri-glyph.is-light .gl-line{stroke:var(--glyph-ink,var(--domain-primary))}
+.mmri-glyph.is-light .gl-dim{stroke:rgba(255,255,255,.9);stroke-opacity:1}
+.mmri-glyph.is-light .gl-dot{fill:var(--glyph-ink,var(--domain-primary))}
+.mmri-glyph.is-light .gl-back{fill:rgba(255,255,255,.22)}
+
+/* Status ring (see StatusRing in Glyphs.tsx): solid state colour, readable at 44px. */
+.mmri-status-ring{display:block;overflow:visible;filter:drop-shadow(0 4px 8px rgba(8,22,42,.4))}
+.mmri-status-ring .sr-track{fill:none;stroke:rgba(255,255,255,.35);stroke-width:4}
+.mmri-status-ring .sr-arc{fill:none;stroke:var(--sr-ring);stroke-width:4;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.mmri-status-ring .sr-disc{fill:var(--sr-disc)}
+.mmri-status-ring .sr-icon{fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.mmri-status-ring .sr-fill{fill:#fff;stroke:none}
+
+/* Bare headings/labels that sit directly on the deep environment (not inside a card). */
+body .auth__brand,
+body .auth__message h1,
+body .auth__message h1 em,
+body .page-heading h1,
+body .page-heading .eyebrow,
+body .page-heading .section-desc,
+body .technical-settings>header h1,
+body .account-payment-history>header h1,
+body .company-detail-editor>header h1,
+body .profile-onboarding>header h1,
+body .technical-settings>header b,
+body .account-payment-history>header b,
+body .company-detail-editor>header b,
+body .technical-settings>header p,
+body .account-payment-history>header p,
+body .company-detail-editor>header p,
+body .profile-onboarding>header p,
+body .profile-login-required p,
+body .priority-advisory-head h1,
+body .priority-advisory-head p,
+body .priority-register-head h1,
+body .priority-register-head p,
+body .priority-register-head span,
+body .priority-advisory-head span,
+body .priority-register-summary p{color:var(--mmri-color-text-strong)}
+body :is(.page-heading,.diagnosis-square-head,.priority-advisory-head,.priority-register-head,.technical-settings>header,.account-payment-history>header,.company-detail-editor>header,.profile-onboarding>header) :is(h1,p,b,span){text-shadow:none}
+.diagnosis-square-head__title{text-shadow:none}
+body .auth__message h1 em{color:var(--mmri-color-text-muted)}
+body .auth__proof li{background:linear-gradient(150deg,rgba(255,255,255,.18),rgba(255,255,255,.06));border-color:rgba(255,255,255,.4);outline:0}
+body .auth__proof b,
+body .auth__proof span{color:#fff}
+
+/* Global keyboard focus baseline (zero specificity; components may refine). */
+:where(a,button,input,select,textarea,summary,[role=tab],[role=menuitem],[role=option],[tabindex]):focus-visible{outline:3px solid var(--mmri-color-focus);outline-offset:2px}
+
+/* Dropdowns (notifications, account): localised strong blur + dense dark-glass surface so text stays readable. The page
+   itself is never blurred. */
+html body .mmri-notification-panel,html body .mmri-account-menu{color:#fff;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(10,28,56,.9);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,.28);border-radius:var(--radius-card);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),var(--elev-overlay)}
+
+/* Entrance motion (one-shot, restrained). Reduced-motion users get the final state immediately via design/preferences.css. */
+@keyframes mmri-rise{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes mmri-sweep{from{transform:translateX(-130%) skewX(-18deg)}to{transform:translateX(260%) skewX(-18deg)}}
+.mmri-enter{animation:mmri-rise var(--motion-reveal) var(--ease-smooth) both;animation-delay:var(--enter-delay,0s)}
+
+/* Smooth scrolling + calmer scroll chaining; reduced-motion users get instant scrolling (design/preferences.css). */
+
+
+/* Travelling rim light (components/RimSheen.tsx): a conic highlight rotating inside a 2px perimeter mask. Only a transform animates;
+   the panel's own edge/shadow stay static, so reduced-motion keeps a bright static rim. */
+.mmri-rim{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;overflow:hidden;padding:var(--rim-w,2px);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.mmri-rim i{position:absolute;inset:-70%;background:conic-gradient(from 0deg,transparent 0 62%,rgba(255,255,255,.95) 78%,var(--rim-c,#8ff0ff) 84%,transparent 94%);animation:mmri-rim var(--rim-t,16s) linear infinite;animation-delay:var(--rim-d,0s);will-change:transform}
+@keyframes mmri-rim{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.mmri-rim i{animation:none;transform:rotate(-35deg)}}
+html body .mmri-shell.has-hx-hole::before{-webkit-mask:var(--hx-hole) 0 0/100% 100% no-repeat;mask:var(--hx-hole) 0 0/100% 100% no-repeat}
+html.is-hidden .crystal-stage__obj,html.is-hidden .mmri-rim i,html.is-hidden .hx__plate,html.is-hidden .mmri-guide2__route .is-pulse,html.is-hidden .mmri-shell-glint i{animation-play-state:paused}

@@ -1,0 +1,46 @@
+# Provenance-only sources kept ON DISK but not committed (each > 3 MB, not referenced by the live database).
+# Format: sha256  bytes  path.  Verify with:  sha256sum -c <(awk '!/^#/{print $1"  "$3}' PROVENANCE_MANIFEST.sha256)  (run from the repository root)
+# Live-referenced bundles (3.0.3, 4.x.4-4.x.7) ARE committed. Methodology 3.0.4 is a separate, governed future release.
+f086dad5b5d97a6ddabcc93edf12ac2c3def75cdc8daa0bfe1b377609d27b024  27254132  backend/integration/final_61440/MMRI_FINAL_61440_QUESTION_BANK.csv
+445e09f565d5e2a4392119e810a9a2fa4fa9f07f15e9b465ed1334e2371a3ad9  16395437  backend/integration/step6/MMRI_STEP6_OF_7_QUESTION_ID_RECONCILIATION.csv
+36d27cde2471caa2bd06b7ef8b0c6ec80fa92cb19f432299c29fd3f131fb214b  47499063  backend/methodology/MMRI_v3.0.1_QBANK_v3.1.1_MONGOLIAN_WORDING_STEP10.json
+83a8dfe77fe5abff8d00158d8d8bfdefdfe392cdf7c85bc863f0228ef7385fb4  47536753  backend/methodology/MMRI_v3.0.2_QBANK_v3.1.2_FINAL_MONGOLIAN_STEP12.json
+aa5b2f844bb29249ff1ce6d38a44ad8aba9f8411c346aec30674e7511e287a3b  47938620  backend/methodology/MMRI_v3.0.4_QBANK_v3.1.4_FINAL_61440_REPAIRED.json
+ba6705fc1d53582bf60704585fc860b54a416bea530775e9ee62f830b8b550a8  30665980  backend/methodology/businessmri-v2-runtime-bundles/MMRI_FINMRI_Methodology_4.2.0_BUSINESSMRI_V2.json
+a395964a7a7900c384e0f64ae6b5aa38a4a05c2ab0631429b588b08dd64cb44a  30706101  backend/methodology/businessmri-v2-runtime-bundles/MMRI_HRMRI_Methodology_4.1.0_BUSINESSMRI_V2.json
+d72219b0ac35ac590f4e54c3d56805432b03e9b5536a2e20d6146096552e6976  30631057  backend/methodology/businessmri-v2-runtime-bundles/MMRI_ISMRI_Methodology_4.3.0_BUSINESSMRI_V2.json
+587f6c38896716b4f135c1847692362b54b65c94457d4e53567c80fd935f9de4  30592448  backend/methodology/businessmri-v2-runtime-bundles/MMRI_OPMRI_Methodology_4.4.0_BUSINESSMRI_V2.json
+9bbdac9ba864f5462bedf9786b1b04588e4b4584c3aeec820e91c555bdd11401  30896608  backend/methodology/businessmri-v2.1-runtime-bundles/MMRI_FINMRI_Methodology_4.2.1_BUSINESSMRI_V2.json
+b90989292ffcbbf12274075cef9a7a7da57680c1e9dba10b383ad9c9904e1d7d  30941062  backend/methodology/businessmri-v2.1-runtime-bundles/MMRI_HRMRI_Methodology_4.1.1_BUSINESSMRI_V2.json
+d191122294420d97489d1a89293cc5d15a4d01e6735b6309f01f0d89d0215197  30870105  backend/methodology/businessmri-v2.1-runtime-bundles/MMRI_ISMRI_Methodology_4.3.1_BUSINESSMRI_V2.json
+77c46336f4fe7070c2d4e0392efcbdd216052a02c8572a4679abba7782240681  30824207  backend/methodology/businessmri-v2.1-runtime-bundles/MMRI_OPMRI_Methodology_4.4.1_BUSINESSMRI_V2.json
+f82f1645907209894ecdde6202fd3e23a4075dfe54c1ccdca18ab8e3fe420f2b  30934264  backend/methodology/businessmri-v2.2-runtime-bundles/MMRI_FINMRI_Methodology_4.2.2_BUSINESSMRI_V2.json
+62b3fbb0e9881d7b4758e8aa2af9394f8e2a75bc92d7856b1fc2ab8b79b33dad  30978718  backend/methodology/businessmri-v2.2-runtime-bundles/MMRI_HRMRI_Methodology_4.1.2_BUSINESSMRI_V2.json
+bd4540e834c05a0067c9a2db4f833e2841e32c0e364a0d6508a1c8e15696b19d  30907761  backend/methodology/businessmri-v2.2-runtime-bundles/MMRI_ISMRI_Methodology_4.3.2_BUSINESSMRI_V2.json
+daaafafba4c5e2a7e71a32f5bdf800f72bc5fb704c036065425ec48c7a6768ef  30861863  backend/methodology/businessmri-v2.2-runtime-bundles/MMRI_OPMRI_Methodology_4.4.2_BUSINESSMRI_V2.json
+dba6ec6ba0f578b37cb30f9ee5ab0623f02350adaac9b586a3e09b39b59fe4cf  22913665  backend/methodology/domain-question-banks-businessmri-v2.0/finance-businessmri-v2.0-canonical-frozen.json
+29c2209cd19067a4aed0cd559d454c29f040d45f9517c6f13a547c80ab2fd9b9  22894957  backend/methodology/domain-question-banks-businessmri-v2.0/it-businessmri-v2.0-canonical-frozen.json
+70b52812668a96db124ea934f0b38d8a9a4406af9fd99320e4c6039d721a7deb  22784220  backend/methodology/domain-question-banks-businessmri-v2.0/operations-businessmri-v2.0-canonical-frozen.json
+1457030cec9c494b403ccb91b46268c708a6b0d0676d42b045d45b7fec7ca4b6  22806171  backend/methodology/domain-question-banks-businessmri-v2.0/people-businessmri-v2.0-canonical-frozen.json
+d468d727d6615f9eb17cf883edcca0bf21482bb09c0cb76ddae1a4a02ad59843  22796776  backend/methodology/domain-question-banks-businessmri-v2.1/finance-businessmri-v2.1-mongolian-wording.json
+2a34486df6f3a36603698c5d7bdcee54f6ed10f6525e51d3c1a66e3330a31087  23044984  backend/methodology/domain-question-banks-businessmri-v2.1/it-businessmri-v2.1-mongolian-wording.json
+eb7826027f6c876a77f1ae3ddab9240ecfbe8df54116ace926ea7081844a82fb  22950652  backend/methodology/domain-question-banks-businessmri-v2.1/operations-businessmri-v2.1-mongolian-wording.json
+0dd62b98c9400d0febd6083e6928d2e2a498c26716ce1f5b8b3ada26a04234ed  22718065  backend/methodology/domain-question-banks-businessmri-v2.1/people-businessmri-v2.1-mongolian-wording.json
+638ff5f210dff380806a398885faa679f3edf90490975146d33181b154ca7241  26075204  backend/methodology/domain-question-banks-businessmri-v2.4/finance-businessmri-v2.4-accepted.json
+3748b77969818ba7ebbd943891e8c4eefd7b5b23d90da50457a56329cda32840  26093178  backend/methodology/domain-question-banks-businessmri-v2.4/it-businessmri-v2.4-accepted.json
+8b8a3b145d4942bca6fe31598333cbca6f6ed444a06b4ef946efed3edcf192bf  25917147  backend/methodology/domain-question-banks-businessmri-v2.4/operations-businessmri-v2.4-accepted.json
+da4d167ad251ac6e09bf7f46b2017b55384e1de45f5b586e2c1ee9282f6009d2  25596933  backend/methodology/domain-question-banks-businessmri-v2.4/people-businessmri-v2.4-accepted.json
+9ed9ef84b4d907e6853aa1d0b1b2a5eb814210f1a7a16cf29fdce34af7bed39f  26062585  backend/methodology/domain-question-banks-businessmri-v2.5/finance-businessmri-v2.5-final-repaired.json
+623ade4ffa328e4dba811aca1234d401415bd0d0df319067bfa4975649a3f489  26077561  backend/methodology/domain-question-banks-businessmri-v2.5/it-businessmri-v2.5-final-repaired.json
+89a9b077bc5e1d066c85c228efcb6a734618e080a2d26aeb279bffab21693c8d  25903313  backend/methodology/domain-question-banks-businessmri-v2.5/operations-businessmri-v2.5-final-repaired.json
+dcd3d9932daf53966ff158859f5af4586e4bb64410d230b911cd0c8fb078b87f  25584193  backend/methodology/domain-question-banks-businessmri-v2.5/people-businessmri-v2.5-final-repaired.json
+991b2519ce02f6eed47452d64729d2b94a180142e04f5f664d471fb46dbbf934  12532162  backend/methodology/domain-question-banks/finance-2.8.0-repaired.json
+21d940ad58b7f97acd4284e0a284a2b4923d8a8e422a5c619df8b20009bdcdcb  3201056  backend/methodology/domain-question-banks/it-1.5-repaired.json
+57ad23130f0d8c5e59b0196d11f0946f248a1df403e3e844d7bc9da6e3a701cf  3139531  backend/methodology/domain-question-banks/operations-1.4-repaired.json
+9b1a5b7369bc4548e6812f437dd2616b19a3aad85555c63112043ec12da7ff92  3139025  backend/methodology/domain-question-banks/people-18.4-repaired.json
+# --- additional ignored data files (older ignore rules), added 2026-11-08
+f767d26f5888ff27696d40fc7305a5bc58d3cc6bbe3558e1b12bf91f394fb671  89368844  backend/integration/step10/MMRI_STEP09_FINAL_MONGOLIAN_QA_VERIFIED_61440.csv
+076804abec0d3e4683b08fc31e16e88d58d7d8fb5e8650fb2ffc7c21123828d2  77993206  backend/integration/step6/canonical/MMRI_5_DOMAIN_CANONICAL_INTEGRATION_QUESTIONS.csv
+6de437ff29ea94c32313c6657d9d85637cf6624e98f1f24e635caf6368a0ac3c  108542660  backend/integration/step6/canonical/MMRI_5_DOMAIN_CANONICAL_INTEGRATION_QUESTIONS.jsonl
+4897b0218d51abf0d5aab28a13521b83f98ad5fd859a368aceaaff817abdd75d  55547050  backend/integration/step6_of6/MMRI_STEP5_OF6_ACCEPTED_5_DOMAIN_MASTER_61440.csv
+2dab0a3b313d018bc57f28f798b92a31738e4b33e99f3e7adc5e9422fc8b9ed0  71831514  backend/methodology/MMRI_v3.0.0_QBANK_v3.1.0_CELL_REACHABILITY_STEP05.json

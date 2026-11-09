@@ -1,0 +1,288 @@
+openapi: 3.1.0
+info:
+  title: MMRI API
+  version: 2.5.0
+  description: Authenticated HTTP contract around MMRI methodology v2.0.0 recovery candidate, deterministic diagnosis, strategy/report generation, and server-verified QPay billing entitlements.
+servers:
+  - url: http://localhost:4000
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      responses: { '200': { description: OK } }
+  /api/v1/auth/register:
+    post:
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RegisterRequest' } } } }
+      responses: { '201': { description: Registered }, '409': { description: Email already exists } }
+  /api/v1/auth/login:
+    post:
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } } }
+      responses: { '200': { description: Logged in }, '401': { description: Invalid credentials } }
+  /api/v1/auth/refresh:
+    post:
+      security: []
+      responses: { '200': { description: Access token refreshed }, '401': { description: Refresh invalid } }
+  /api/v1/auth/logout:
+    post:
+      security: []
+      responses: { '204': { description: Logged out } }
+  /api/v1/auth/me:
+    get:
+      responses: { '200': { description: Current user } }
+  /api/v1/billing/plans:
+    get:
+      security: []
+      responses: { '200': { description: Server-authoritative billing catalog; unavailable plans have null amount } }
+  /api/v1/companies/{companyId}/billing/status:
+    get:
+      parameters: [ { $ref: '#/components/parameters/CompanyId' } ]
+      responses: { '200': { description: Company entitlement status for OWNER/ADMIN } }
+  /api/v1/companies/{companyId}/billing/invoices:
+    post:
+      parameters: [ { $ref: '#/components/parameters/CompanyId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [planCode]
+              properties: { planCode: { type: string, enum: [DIAGNOSTIC] } }
+      responses: { '201': { description: Local invoice plus QPay QR/deeplinks }, '409': { description: Price unavailable or entitlement already active }, '502': { description: Payment provider failure } }
+  /api/v1/billing/invoices/{invoiceId}:
+    get:
+      parameters: [ { name: invoiceId, in: path, required: true, schema: { type: string } } ]
+      responses: { '200': { description: Current MMRI invoice state; does not poll QPay } }
+  /api/v1/billing/invoices/{invoiceId}/mock-pay:
+    post:
+      parameters: [ { name: invoiceId, in: path, required: true, schema: { type: string } } ]
+      responses: { '200': { description: Marks a MOCK invoice paid in non-production only }, '404': { description: Disabled in production or non-MOCK mode } }
+  /api/v1/billing/qpay/callback/{invoiceId}:
+    get:
+      security: []
+      parameters:
+        - { name: invoiceId, in: path, required: true, schema: { type: string } }
+        - { name: token, in: query, required: true, schema: { type: string } }
+      responses: { '200': { description: SUCCESS after callback-triggered server verification } }
+    post:
+      security: []
+      parameters:
+        - { name: invoiceId, in: path, required: true, schema: { type: string } }
+        - { name: token, in: query, required: true, schema: { type: string } }
+      responses: { '200': { description: SUCCESS after callback-triggered server verification } }
+  /api/v1/companies:
+    get:
+      responses: { '200': { description: Companies visible to current user } }
+    post:
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreateCompanyRequest' } } } }
+      responses: { '201': { description: Company created; creator becomes OWNER } }
+  /api/v1/companies/{companyId}:
+    get:
+      parameters: [ { $ref: '#/components/parameters/CompanyId' } ]
+      responses: { '200': { description: Company } }
+  /api/v1/companies/{companyId}/members:
+    post:
+      parameters: [ { $ref: '#/components/parameters/CompanyId' } ]
+      responses: { '201': { description: Membership created or updated } }
+  /api/v1/companies/{companyId}/assessments:
+    get:
+      parameters: [ { $ref: '#/components/parameters/CompanyId' } ]
+      responses: { '200': { description: Assessment history visible to the current company member; newest first } }
+    post:
+      parameters: [ { $ref: '#/components/parameters/CompanyId' } ]
+      responses: { '201': { description: Assessment created and pinned to methodology version and entitlement when available }, '402': { description: PAYMENT_REQUIRED when billing enforcement is enabled and no usable entitlement exists } }
+  /api/v1/assessments/{assessmentId}:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Assessment summary } }
+  /api/v1/assessments/{assessmentId}/respondents:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '201': { description: Diagnostic respondent added } }
+  /api/v1/assessments/{assessmentId}/start:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StartAssessmentRequest' } } } }
+      responses: { '200': { description: Assessment started; authoritative revision, issued-question id and next public question returned } }
+  /api/v1/assessments/{assessmentId}/pause:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevisionGuardRequest' } } } }
+      responses: { '200': { description: Assessment paused atomically with exact resume state } }
+  /api/v1/assessments/{assessmentId}/resume:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevisionGuardRequest' } } } }
+      responses: { '200': { description: Assessment resumed with same unanswered question, acknowledged draft and authoritative revision } }
+  /api/v1/assessments/{assessmentId}/next-question:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      responses: { '200': { description: Current or next sanitized question } }
+  /api/v1/assessments/{assessmentId}/answers:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AnswerRequest' } } } }
+      responses: { '200': { description: Answer accepted exactly once; immutable AnswerEvent and authoritative next state returned }, '409': { description: Stale revision, duplicate accepted question, invalid issue, or writer-lease conflict } }
+  /api/v1/assessments/{assessmentId}/draft:
+    put:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DraftRequest' } } } }
+      responses: { '200': { description: Draft acknowledged by server; draft remains non-evidence until answer submit } }
+  /api/v1/assessments/{assessmentId}/writer-lease/heartbeat:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      responses: { '200': { description: Active writer lease renewed } }
+  /api/v1/assessments/{assessmentId}/complete:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' }, { $ref: '#/components/parameters/WriterId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevisionGuardRequest' } } } }
+      responses: { '200': { description: Revision-guarded completion request; terminal state and immutable state snapshot are persisted only when router completion criteria are satisfied } }
+  /api/v1/assessments/{assessmentId}/status:
+    get:
+      summary: Read resumable assessment lifecycle state
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses:
+        '200':
+          description: Lifecycle state, current open question, progress and allowed lifecycle actions
+          content: { application/json: { schema: { $ref: '#/components/schemas/AssessmentStatusResponse' } } }
+  /api/v1/assessments/{assessmentId}/progress:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Safe progress data } }
+  /api/v1/assessments/{assessmentId}/results:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Overall, 8 module aggregates, 64 capabilities, five business-outcome scores, and deterministic category-to-outcome priority rankings; no causal lift or ROI prediction } }
+  /api/v1/assessments/{assessmentId}/strategy/generate:
+    post:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Freeze deterministic root-cause, strategic priorities and immutable 365-day plan definition bound to canonical diagnosis resultHash } }
+  /api/v1/assessments/{assessmentId}/diagnosis:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Contract-grounded root findings with evidence/severity/support trace } }
+  /api/v1/assessments/{assessmentId}/recommendations:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Diagnosis-bound strategic priorities with schemaVersion, diagnosisResultHash, strategyHash and planHash plus owners, deliverables and KPIs } }
+  /api/v1/assessments/{assessmentId}/action-plan:
+    get:
+      parameters:
+        - { $ref: '#/components/parameters/AssessmentId' }
+        - { name: horizon, in: query, required: false, schema: { type: string, enum: [H0,H1,H2,H3,H4], default: H0 } }
+      responses: { '200': { description: Diagnosis-bound immutable 365-day plan definition (planHash) plus mutable milestone progress/health state } }
+  /api/v1/assessments/{assessmentId}/action-plan/milestones/{milestoneId}:
+    patch:
+      parameters:
+        - { $ref: '#/components/parameters/AssessmentId' }
+        - { name: milestoneId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [NOT_STARTED,IN_PROGRESS,DONE,BLOCKED,SKIPPED] }
+      responses: { '200': { description: Milestone execution status updated; diagnosisResultHash/planHash remain unchanged and diagnostic score is not changed } }
+  /api/v1/assessments/{assessmentId}/report-payload:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Frozen 1–2 page report payload bound to diagnosisResultHash + strategyHash + planHash, with bindingHash, trace index and required warnings } }
+  /api/v1/assessments/{assessmentId}/report:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: Immutable validated executive report bound to diagnosisResultHash + strategyHash + planHash; schema-constrained AI may render/explain only, with deterministic fallback on provider or validation failure } }
+  /api/v1/assessments/{assessmentId}/trace:
+    get:
+      parameters: [ { $ref: '#/components/parameters/AssessmentId' } ]
+      responses: { '200': { description: MMRI-TRACE-1.0 canonical provenance graph and publication-gate verification; restricted to owner/admin/consultant roles } }
+  /api/v1/methodology/current/profile-questions:
+    get:
+      responses: { '200': { description: Public company-profile questions and labels } }
+  /api/v1/methodology/current/respondent-roles:
+    get:
+      responses: { '200': { description: Diagnostic respondent roles } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    CompanyId: { name: companyId, in: path, required: true, schema: { type: string } }
+    AssessmentId: { name: assessmentId, in: path, required: true, schema: { type: string } }
+    WriterId: { name: X-MMRI-Writer-ID, in: header, required: true, description: Stable per-tab writer identity used for the 120-second single-writer lease, schema: { type: string, maxLength: 160 } }
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email,password]
+      properties: { email: { type: string, format: email }, password: { type: string, minLength: 10, maxLength: 128 }, displayName: { type: string } }
+    LoginRequest:
+      type: object
+      required: [email,password]
+      properties: { email: { type: string, format: email }, password: { type: string } }
+    CreateCompanyRequest:
+      type: object
+      required: [name]
+      properties: { name: { type: string }, industry: { type: string }, businessModel: { type: string }, employeeCount: { type: integer, minimum: 0 }, companyAgeYears: { type: number, minimum: 0 }, marketType: { type: string }, country: { type: string } }
+    ProfileAnswer:
+      type: object
+      required: [questionId,optionIndexes]
+      properties: { questionId: { type: string }, optionIndexes: { type: array, items: { type: integer, minimum: 1 } } }
+    StartAssessmentRequest:
+      type: object
+      required: [mode,profileAnswers]
+      properties: { mode: { type: string, enum: [QUICK,FULL] }, profileAnswers: { type: array, items: { $ref: '#/components/schemas/ProfileAnswer' } } }
+    RevisionGuardRequest:
+      type: object
+      required: [expectedAssessmentRevision]
+      properties: { expectedAssessmentRevision: { type: integer, minimum: 0 } }
+    AnswerRequest:
+      type: object
+      required: [questionId,optionIndex,questionIssueId,clientRequestId,expectedAssessmentRevision]
+      properties: { questionId: { type: string }, optionIndex: { type: integer, minimum: 1 }, respondentId: { type: string }, questionIssueId: { type: string }, clientRequestId: { type: string, maxLength: 160 }, expectedAssessmentRevision: { type: integer, minimum: 0 } }
+    DraftRequest:
+      type: object
+      required: [questionIssueId,questionId,draft,expectedAssessmentRevision]
+      properties:
+        questionIssueId: { type: string }
+        questionId: { type: string }
+        draft: { type: object, additionalProperties: true }
+        expectedAssessmentRevision: { type: integer, minimum: 0 }
+    PublicQuestion:
+      type: object
+      required: [id,textMn,options]
+      properties:
+        id: { type: string }
+        textMn: { type: string }
+        options: { type: array, items: { type: object, required: [optionIndex,labelMn], properties: { optionIndex: { type: integer }, labelMn: { type: string } } } }
+    AssessmentLifecycle:
+      type: object
+      required: [canStart,canPause,canResume,canRequestQuestion,canAnswer,canRequestCompletion,isTerminal]
+      properties:
+        canStart: { type: boolean }
+        canPause: { type: boolean }
+        canResume: { type: boolean }
+        canRequestQuestion: { type: boolean }
+        canAnswer: { type: boolean }
+        canRequestCompletion: { type: boolean }
+        isTerminal: { type: boolean }
+    AssessmentStatusResponse:
+      type: object
+      required: [assessmentId,methodologyVersion,status,answeredQuestions,askedQuestions,lifecycle]
+      properties:
+        assessmentId: { type: string }
+        methodologyVersion: { type: string }
+        mode: { type: string, enum: [QUICK,FULL] }
+        status: { type: string }
+        routingState: { type: string, nullable: true }
+        answeredQuestions: { type: integer }
+        askedQuestions: { type: integer }
+        assessmentRevision: { type: integer, minimum: 0 }
+        routingRevision: { type: integer, minimum: 0 }
+        eventSequence: { type: integer, minimum: 0 }
+        currentQuestion: { oneOf: [ { $ref: '#/components/schemas/PublicQuestion' }, { type: 'null' } ] }
+        lifecycle: { $ref: '#/components/schemas/AssessmentLifecycle' }

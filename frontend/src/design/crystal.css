@@ -1,0 +1,306 @@
+/* Sapphire optical system. One environment, directional bevels, two shadow
+   scales. Last material owner; accessibility preferences remain last in main.tsx. */
+:root{
+ --cr-optical-field:url('../assets/materials/sapphire-field.svg');
+ --cr-frost-field:url('../assets/materials/sapphire-field-frost.webp');
+ --cr-contact:0 3px 5px -2px rgb(0 17 45 / .45);
+ --cr-float:8px 18px 22px -12px rgb(0 17 45 / .5),16px 32px 42px -20px rgb(0 18 48 / .32);
+ --cr-polish:inset 0 1px 0 rgb(255 255 255 / .92),inset 1px 0 0 rgb(214 249 255 / .55),inset -1px -2px 0 rgb(19 75 131 / .5);
+}
+html:has(body.mmri-prism-page){background:#071d48}
+html:has(body.mmri-prism-page)::before,html:has(body.mmri-prism-page)::after{display:none}
+.crystal-stage{position:fixed;inset:0;z-index:-1;pointer-events:none;contain:strict;background:#0a2a70;overflow:hidden}
+.crystal-stage::before{content:"";position:absolute;inset:0;background:var(--cr-optical-field) center/cover no-repeat;filter:saturate(1.3) brightness(1.3)}
+body.mmri-prism-page{
+ --wp-ink:#071c3b;--wp-ink2:#153653;--wp-ink3:#264361;--pm-ink:var(--wp-ink);
+ /* Clear body with a stronger light diffuser behind the reading zone only. */
+ --cr-sheet-lights:radial-gradient(34% 8% at 10% 0,rgba(255,255,255,.95),transparent 80%),linear-gradient(122deg,transparent 12%,rgba(255,255,255,.62) 18%,rgba(190,246,255,.26) 26%,transparent 32%),linear-gradient(122deg,transparent 47%,rgba(255,255,255,.4) 52%,rgba(170,235,255,.14) 58%,transparent 63%),linear-gradient(122deg,transparent 69%,rgba(150,235,255,.42) 73%,transparent 79%);
+ --cr-sheet-fill:radial-gradient(58% 78% at 17% 42%,rgba(255,255,255,.7),rgba(196,242,255,.4) 46%,transparent 74%),radial-gradient(52% 70% at 86% 58%,rgba(14,52,235,.6),transparent 72%),radial-gradient(40% 32% at 94% 0,rgba(60,245,255,.9),transparent 72%),radial-gradient(38% 32% at 100% 100%,rgba(160,70,255,.8),transparent 74%),radial-gradient(32% 28% at 0 100%,rgba(255,100,200,.5),transparent 72%),linear-gradient(160deg,rgba(150,226,255,.5) 0%,rgba(40,140,255,.42) 48%,rgba(100,60,255,.5) 100%),var(--cr-frost-field) center/cover;
+ --cr-sheet-shadow:inset 0 2px 0 rgba(255,255,255,.98),inset 2px 0 0 rgba(255,255,255,.55),inset -2px 0 0 rgba(90,230,255,.65),inset 0 -3px 0 rgba(40,80,220,.55),inset 0 -2px 0 rgba(200,250,255,.95),inset 0 -6px 12px -2px rgba(110,240,255,.95),inset 0 -26px 40px -22px rgba(100,235,255,.75),inset 0 -40px 70px -44px rgba(139,92,255,.55),1px 1px 0 #D6F7FF,2px 2px 0 #A8E8FF,3px 3px 0 #78CFFF,4px 4px 0 #4DAEF8,5px 5px 0 #3586EA,6px 6px 0 #2863D4,7px 7px 0 #1F49B2,0 2px 3px rgba(3,10,70,.45),0 26px 44px -12px rgba(3,14,110,.55),0 70px 120px -30px rgba(2,8,80,.7),0 0 0 1px rgba(160,238,255,.75),0 0 52px 9px rgba(80,225,255,.88),16px 28px 90px -20px rgba(150,90,255,.8),0 60px 90px -40px rgba(60,160,255,.7);
+ --cr-sheet-edge:linear-gradient(135deg,#fff 0,#5BE3FF 18%,rgba(255,255,255,.12) 44%,rgba(120,90,255,.55) 70%,#FF9AD5 88%,#fff 100%);
+ /* One glass material: shared specular overlay + frost field (same baked blur as the sheet, registered to the viewport) + rim (--cr-sheet-edge) + floor shadow. Surfaces only tint it. */
+ --gl-overlay:linear-gradient(112deg,rgba(255,255,255,.36) 0,rgba(255,255,255,.1) 15%,transparent 30%),linear-gradient(180deg,rgba(255,255,255,.4),transparent 36%);
+ --gl-frost:var(--cr-frost-field) center/cover no-repeat;
+ --hg-l1:linear-gradient(115deg,#def4ffb8,#b0d8f2a3 55%,#95beea91);
+ --hg-l2:linear-gradient(115deg,#e6f7ffcc,#b3dff4b8 55%,#8ab5eaa6);
+ --hg-bevel:var(--cr-polish);--hg-shadow-1:var(--cr-contact),6px 12px 18px -10px #03275366;--hg-shadow-2:var(--cr-contact),var(--cr-float);
+ --mmri-color-brand:#0064ed;--mmri-color-brand-hover:#0056d1;--mmri-color-focus:#003e94;
+ --wp-black:linear-gradient(180deg,#22b9ff,#007bfa 42%,#0052d2 92%,#0047b7);
+ --wp-spec:linear-gradient(175deg,#ffffff70,transparent 36%);
+}
+/* The rim is a plain edge gradient. It used to add the optical field with background-attachment:fixed, which forces the whole page-tall sheet to repaint on every scroll frame. */
+/* Frost is baked into --cr-frost-field (pre-blurred copy of the crystal field): no live backdrop-filter, so animating light behind the sheet never forces a re-blur. */
+body.mmri-prism-page .mmri-shell::before{background:var(--cr-sheet-fill);border-color:#ffffffe6;box-shadow:var(--cr-sheet-shadow)}
+body.mmri-prism-page .mmri-shell::after{padding:1.5px;opacity:1;background:var(--cr-sheet-edge)}
+/* HEADER: floating ice-to-sapphire glass rail. Static specular top edge + inner light + contact shadow; one small glint (transform only) crosses it. */
+body.mmri-prism-page .mmri-shell-inner{position:relative;isolation:isolate;margin-bottom:12px;border-radius:28px;border:1px solid rgba(255,255,255,.8);
+ background:radial-gradient(50% 160% at 6% -50%,rgba(255,255,255,.9),transparent 62%),linear-gradient(98deg,rgba(228,244,255,.94),rgba(178,210,255,.88) 52%,rgba(120,158,246,.84));
+ box-shadow:inset 0 1.5px 0 #fff,inset 0 -12px 20px -14px rgba(36,76,200,.5),inset 0 0 0 1px rgba(160,200,255,.35),0 14px 24px -14px rgba(8,36,150,.6),0 2px 3px rgba(8,36,150,.18)}
+body.mmri-prism-page .mmri-shell-inner::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:linear-gradient(112deg,rgba(255,255,255,.5) 0 9%,transparent 10% 58%,rgba(255,255,255,.2) 59% 61%,transparent 62%)}
+.mmri-shell-glint{position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.mmri-shell-glint i{position:absolute;top:0;bottom:0;left:0;width:14%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7) 50%,transparent);transform:translateX(-130%) skewX(-18deg);animation:mmri-glint 14s ease-in-out 2s infinite}
+@keyframes mmri-glint{0%,62%{transform:translateX(-130%) skewX(-18deg)}100%{transform:translateX(780%) skewX(-18deg)}}
+@media(prefers-reduced-motion:reduce){.mmri-shell-glint i{animation:none;opacity:0}}
+html.is-hidden .mmri-shell-glint i{animation-play-state:paused}
+.mmri-shell:is([data-route=report],[data-route=results],[data-route=assessment],[data-route=priorities],[data-route=settings],[data-route=billing],[data-route=profile]) .mmri-shell-inner>.mmri-shell-glint i{animation:none;opacity:0}
+body.mmri-prism-page .mmri-shell-inner>:not(.mmri-shell-glint){position:relative;z-index:1}
+body.mmri-prism-page .mmri-brand strong{font-weight:800;letter-spacing:.07em;color:#07204f}
+body.mmri-prism-page .mmri-primary-nav a{font-size:15.5px;font-weight:600;letter-spacing:-.005em}
+body.mmri-prism-page .mmri-primary-nav a.is-active::after{display:block;content:"";position:absolute;left:50%;bottom:4px;width:18px;height:3px;margin-left:-9px;border-radius:3px;background:#fff;box-shadow:0 0 8px 1px rgba(160,235,255,.9);opacity:1}
+body.mmri-prism-page .mmri-primary-nav{background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.2));border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1.5px 0 #fff,inset 0 -6px 10px -6px rgba(60,100,220,.35),0 3px 6px -3px #07386560}
+body.mmri-prism-page .mmri-primary-nav a{color:var(--wp-ink2)}
+body.mmri-prism-page .mmri-primary-nav a.is-active{transition:color .2s,background-color .2s,box-shadow .2s,--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out;background:var(--wp-black);color:#fff;box-shadow:inset 0 1px 0 #bdf6ff,0 2px 2px #00479b80,0 5px 8px -4px #00377870}
+body.mmri-prism-page .mmri-primary-nav a:hover:not(.is-active){background:#dff7ff65}
+body.mmri-prism-page :is(.mmri-button--primary,.mmri-shell-primary,.mmri-home2__start){background:var(--wp-black);border:1px solid #9cdaffb3;box-shadow:inset 0 1px 0 #b9f0ff,inset 0 -1px 0 #003b99,0 2px 3px -1px #002c6580,3px 8px 12px -5px #00316b80;text-shadow:0 1px 1px #00337660}
+body.mmri-prism-page :is(.mmri-button--primary,.mmri-shell-primary,.mmri-home2__start):hover:not(:disabled){background:var(--wp-black);filter:brightness(1.06);box-shadow:inset 0 1px 0 #dbfaff,0 2px 3px -1px #002c6580,4px 10px 16px -6px #00316b80}
+body.mmri-prism-page .mmri-brand-mark{box-shadow:var(--cr-polish),0 3px 5px -2px #00317a70,3px 7px 12px -6px #00377866}
+body.mmri-prism-page .mmri-home2__stage{gap:clamp(24px,4vh,42px)}
+body.mmri-prism-page .mmri-home2__copy h1{letter-spacing:-.035em;line-height:1.1;color:#061631}
+body.mmri-prism-page .mmri-home2__copy h1 em{font-weight:500;line-height:1.45;letter-spacing:-.015em}
+/* Guide slabs: the same glass as the sheet (shared overlay + frost field + rim + floor shadow), strongly tinted per guide by --g1/--g2/--gg. The control never moves. */
+body.mmri-prism-page .mmri-home2__guide{--g1:#a9c4ff;--g2:#5a7cea;--gg:#7f9fff;position:relative;isolation:isolate;color:#0a2358;border:1px solid #ffffffd9;backdrop-filter:none;-webkit-backdrop-filter:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.26) 0,rgba(255,255,255,.04) 44%,transparent 46%),radial-gradient(90% 130% at 10% 0,color-mix(in srgb,var(--g1) 92%,#fff),transparent 62%),linear-gradient(155deg,var(--g1),color-mix(in srgb,var(--g1) 45%,var(--g2)) 40%,var(--g2)),var(--gl-frost);
+ box-shadow:inset 0 2px 0 #ffffffe6,inset 0 0 0 1px color-mix(in srgb,var(--g1) 45%,#fff),inset 0 -16px 26px -12px color-mix(in srgb,var(--g1) 75%,#fff),0 0 40px 2px color-mix(in srgb,var(--gg) 70%,transparent),1px 2px 0 color-mix(in srgb,var(--g1) 60%,#fff),3px 5px 0 var(--g2),7px 16px 20px -8px #0a2a8a99,0 36px 44px -22px color-mix(in srgb,var(--gg) 80%,transparent)}
+body.mmri-prism-page .mmri-home2__guide::before{content:"";position:absolute;inset:1px;z-index:-1;pointer-events:none;border-radius:inherit;background:linear-gradient(112deg,#fff3,transparent 19% 75%,#ffffff2e 76%,transparent 77%)}
+body.mmri-prism-page .mmri-home2__guide::after{content:"";position:absolute;inset:-1px;z-index:3;border-radius:inherit;padding:1.5px;pointer-events:none;background:var(--cr-sheet-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+body.mmri-prism-page .mmri-home2__guide .mmri-home2__guide-title{color:#0a2358;text-shadow:0 1px 0 #ffffff80}
+body.mmri-prism-page .mmri-home2__guide:hover{filter:brightness(1.08) saturate(1.12);box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px color-mix(in srgb,var(--g1) 55%,#fff),inset 0 -16px 26px -12px color-mix(in srgb,var(--g1) 80%,#fff),0 0 46px 2px color-mix(in srgb,var(--gg) 90%,transparent),1px 2px 0 color-mix(in srgb,var(--g1) 70%,#fff),3px 5px 0 var(--g2),7px 16px 20px -8px #020a5acc,0 38px 46px -22px color-mix(in srgb,var(--gg) 85%,transparent)}
+body.mmri-prism-page :is(.mmri-home2__guide-chip,.mmri-home2__start-chip){background:#e6f8ffb8;border:1px solid #f2ffffa6;box-shadow:inset 0 1px 0 #fff,0 2px 4px -2px #00345d70}
+body.mmri-prism-page :is(.lg,.content-surface,.mmri-surface,.technical-settings__group,.profile-company-card,.account-payment-history){border-color:#d2f0ffb3;background:var(--hg-l1);box-shadow:var(--cr-polish),var(--hg-shadow-1)}
+body.mmri-prism-page :is(.lg,.content-surface,.mmri-surface,.technical-settings__group,.profile-company-card,.account-payment-history)::before{opacity:.4;padding:1px}
+/* Domain glass: saturated translucent body, bright rim, coloured glow, floor shadow. --a is the domain accent; every domain surface derives from it. */
+body.mmri-prism-page .cat-tile{--a:var(--area-accent,#7FA6FF);--ad:color-mix(in srgb,var(--a) 50%,#04094a);border:1px solid #fffffff2;
+ background:linear-gradient(112deg,rgba(255,255,255,.26) 0,rgba(255,255,255,.06) 15%,transparent 30%),linear-gradient(180deg,rgba(255,255,255,.2),transparent 30%),radial-gradient(75% 38% at 88% 62%,color-mix(in srgb,var(--a) 92%,#fff),transparent 72%),linear-gradient(162deg,color-mix(in srgb,var(--a) 94%,#fff),var(--a) 34%,color-mix(in srgb,var(--a) 90%,#0a2a9a) 62%,color-mix(in srgb,var(--ad) 98%,transparent)),var(--gl-frost);
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+ box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px color-mix(in srgb,var(--a) 40%,#fff),inset 0 -24px 36px -18px color-mix(in srgb,var(--a) 80%,#fff),1px 2px 0 color-mix(in srgb,var(--a) 55%,#fff),3px 5px 0 color-mix(in srgb,var(--a) 90%,#fff),5px 9px 0 var(--ad),0 0 0 2px color-mix(in srgb,var(--a) 70%,#fff),0 0 92px 16px color-mix(in srgb,var(--a) 95%,transparent),12px 30px 34px -16px #020a5acc,0 64px 64px -22px color-mix(in srgb,var(--a) 100%,transparent)}
+body.mmri-prism-page .cat-tile::after{opacity:.9;padding:1.5px;background:linear-gradient(145deg,#fff,color-mix(in srgb,var(--a) 40%,#fff) 25%,transparent 52%,color-mix(in srgb,var(--a) 70%,#fff) 82%,#fff)}
+body.mmri-prism-page .cat-tile:hover,body.mmri-prism-page .cat-tile:focus-within{box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px color-mix(in srgb,var(--a) 45%,#fff),inset 0 -24px 36px -18px color-mix(in srgb,var(--a) 85%,#fff),1px 2px 0 color-mix(in srgb,var(--a) 60%,#fff),3px 5px 0 color-mix(in srgb,var(--a) 90%,#fff),5px 9px 0 var(--ad),0 0 0 2px color-mix(in srgb,var(--a) 80%,#fff),0 0 120px 22px color-mix(in srgb,var(--a) 100%,transparent),12px 30px 34px -16px #020a5acc,0 70px 70px -22px color-mix(in srgb,var(--a) 100%,transparent)}
+/* dial arc: luminous in the domain colour */
+body.mmri-prism-page .cat-tile__value:not(.is-empty)::before{background:conic-gradient(color-mix(in srgb,var(--area-accent) 40%,#fff) calc(var(--v,0)*1%),rgba(6,16,70,.42) 0);filter:drop-shadow(0 0 7px #fff9) drop-shadow(0 0 10px var(--area-accent)) drop-shadow(0 0 16px color-mix(in srgb,var(--area-accent) 70%,transparent))}
+body.mmri-prism-page .cat-tile.is-selected{box-shadow:inset 0 2px 0 #fff,0 0 0 2px #fff,0 0 0 5px color-mix(in srgb,var(--a) 85%,#fff),0 0 40px 2px color-mix(in srgb,var(--a) 80%,transparent),var(--cr-float)}
+body.mmri-prism-page .cat-tile h2{margin:0 2px;padding:10px 12px;border-radius:16px;text-align:center;background:linear-gradient(180deg,#ffffffe6,#ffffffb8);border:1px solid #fffffff2;box-shadow:inset 0 1px 0 #fff,0 6px 12px -8px #02084f99}
+body.mmri-prism-page .cat-tile h2 .diagnosis-square__name{color:#0b1d4a}
+body.mmri-prism-page .cat-tile__value.is-empty::after{display:none}
+body.mmri-prism-page .cat-tile__value.is-empty .mmri-glyph{filter:drop-shadow(0 0 14px #ffffffb0) drop-shadow(0 14px 14px #02084f66)}
+body.mmri-prism-page .diagnosis-square__icon{background:radial-gradient(70% 70% at 50% 28%,#ffffff2e,transparent 70%),linear-gradient(160deg,#ffffff1f,#ffffff08);border:1px solid #ffffffa6;box-shadow:inset 0 2px 0 #ffffffd0,inset 0 -14px 24px -14px color-mix(in srgb,var(--ac,var(--a)) 80%,#fff),0 10px 18px -12px #02084f99}
+body.mmri-prism-page :is(.mmri-questionnaire__form,.mmri-questionnaire__top){background:linear-gradient(116deg,#316fa5d9,#0e417ddb 55%,#263c85e3);border-color:#d5f5ffb3;backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);box-shadow:inset 0 1.5px 0 #e7faff,inset -1px -2px 0 #0a2a64,1px 2px 0 #85cfe6,2px 4px 0 #204d85,var(--cr-contact),var(--cr-float)}
+/* Status text sits on the dark questionnaire glass, independently of the
+   semantic colors used for answer cards on their pale surfaces. */
+body.mmri-prism-page .mmri-questionnaire__top .mmri-save-status{color:#e7faff}
+body.mmri-prism-page .mmri-questionnaire__top .mmri-save-status--saved{color:#bfffe1}
+body.mmri-prism-page .mmri-questionnaire__top .mmri-save-status--error{color:#ffe1e6}
+body.mmri-prism-page .mmri-radio-group .mmri-radio-card{border-radius:18px;box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 color-mix(in srgb,var(--ac) 35%,transparent),0 3px 6px -3px #001b3c80}
+body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected{box-shadow:inset 0 1px 0 #fff,0 0 0 2px var(--ac),0 0 0 4px #dbffffb3,0 5px 9px -3px #00233380}
+body.mmri-prism-page .mmri-guide2__panel{
+ /* translucent periwinkle/sapphire pane: the living scene shows through; static highlight strokes only */
+ background:linear-gradient(118deg,rgba(255,255,255,.5) 0 6%,rgba(255,255,255,.1) 7% 20%,transparent 21% 58%,rgba(255,255,255,.14) 59% 61%,transparent 62%),linear-gradient(150deg,rgba(185,204,255,.62) 0%,rgba(143,169,255,.56) 38%,rgba(117,146,246,.6) 70%,rgba(125,124,238,.66) 100%);
+ backdrop-filter:none;-webkit-backdrop-filter:none;
+ box-shadow:inset 0 2px 0 #fff,inset 2px 0 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(214,226,255,.6),inset -2px -3px 0 rgba(58,78,210,.5),0 4px 8px rgba(8,20,110,.28),0 34px 52px -22px rgba(10,24,130,.7)}
+body.mmri-prism-page .mmri-guide2__panel::before{opacity:.65;padding:1.5px}
+body.mmri-prism-page .mmri-guide2__panel::after{background:linear-gradient(118deg,#d8f9ff20,transparent 27% 80%,#b79cff15);pointer-events:none}
+body.mmri-prism-page .account-payment-history>section>article{background:linear-gradient(110deg,#dff7ffba,#91c6e6a6);box-shadow:var(--cr-polish),var(--cr-contact)}
+body.mmri-prism-page .mmri-legal-footer{background:linear-gradient(180deg,transparent,#d8eefa99 45%)}
+@media screen{
+ /* Reading paper stays near-solid (alpha >= .9); depth and glow come from the rim, the cobalt thickness and the under-light, not from transparency. */
+ body.mmri-prism-page .report-three-page{background:linear-gradient(116deg,transparent 0 10%,rgba(255,255,255,.5) 12%,rgba(255,255,255,0) 22%),linear-gradient(180deg,rgba(255,255,255,.55),transparent 18%),linear-gradient(160deg,#e9f7ffee,#c4e2ffec 50%,#a9ccffe8);border-color:#ffffff;box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1px #9fe6ff80,inset 0 -18px 30px -22px #5aa8ff80,1px 2px 0 #b6e6ff,2px 4px 0 #5a95f0,4px 7px 0 #2a54c4,0 22px 30px -20px rgba(2,10,90,.55)}
+ /* Report glass rim + reflections: STATIC (no animation, no backdrop-filter), so the long report keeps native-speed scrolling. */
+ body.mmri-prism-page .report-finding-column{position:relative;isolation:isolate}
+ body.mmri-prism-page .report-finding-column::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:linear-gradient(114deg,rgba(255,255,255,.55) 0 7%,rgba(255,255,255,.12) 8% 22%,transparent 23% 70%,rgba(255,255,255,.22) 71% 73%,transparent 74%),linear-gradient(180deg,rgba(255,255,255,.4),transparent 18%)}
+ body.mmri-prism-page .report-score::after{content:"";position:absolute;inset:7px;border-radius:50%;pointer-events:none;background:linear-gradient(145deg,rgba(255,255,255,.5) 0,rgba(255,255,255,.12) 14%,transparent 30%),radial-gradient(60% 40% at 70% 96%,rgba(120,255,230,.35),transparent 70%);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+ body.mmri-prism-page .report-finding-column{border:1px solid #edffffbd;box-shadow:var(--cr-polish),0 8px 12px -7px #05355d66}
+ body.mmri-prism-page .report-finding-column.is-positive{outline:1.5px solid #ffffffb3;outline-offset:-1.5px;background:radial-gradient(70% 40% at 12% 0,#ffffffa6,transparent 70%),linear-gradient(140deg,#bdfbe0f5,#4fe8b4f2 50%,#18c98ff0);box-shadow:var(--cr-polish),inset 0 0 0 2px rgba(255,255,255,.55),inset 0 -16px 26px -18px #0fa57a,0 10px 16px -8px #05355d80}
+ body.mmri-prism-page .report-finding-column.is-negative{outline:1.5px solid #ffffffb3;outline-offset:-1.5px;background:radial-gradient(70% 40% at 12% 0,#ffffffa6,transparent 70%),linear-gradient(140deg,#ffd0ecf0,#ff8fd0ee 50%,#e04bb0ec);box-shadow:var(--cr-polish),inset 0 0 0 2px rgba(255,255,255,.55),inset 0 -16px 26px -18px #c0398f,0 10px 16px -8px #05355d80}
+ body.mmri-prism-page .report-score{border:2px solid #b8faff;background:radial-gradient(circle at 30% 18%,#247eae,#0c3e73 62%,#08274c);box-shadow:inset 0 2px 1px #c2efff80,inset 0 -4px 8px #00172f60,0 0 0 3px #26c6e6,0 0 0 4px #e1ffff,0 2px 8px #35e7ff60,7px 15px 18px -8px #052c5c80}
+ body.mmri-prism-page .report-purpose-priorities>article{background:linear-gradient(120deg,#effbffcc,#c7dff1ba);box-shadow:var(--cr-polish),0 6px 10px -7px #03407680}
+}
+@media(max-width:700px){
+ body.mmri-prism-page{--cr-sheet-fill:linear-gradient(107deg,#cbeafaed,#a1ccebde 50%,#6a9dd5d4)}
+ body.mmri-prism-page .mmri-shell::before{backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:inset 0 1.5px 0 #fff,inset -1px -2px 1px #225c92,1px 3px 0 #85cce9,2px 5px 0 #174b79,6px 14px 20px -9px #001e4a99}
+ body.mmri-prism-page .mmri-shell-inner{border-radius:22px;margin-bottom:6px}
+ body.mmri-prism-page .mmri-home2__guide{box-shadow:inset 0 2px 0 #ffffffe6,0 0 22px -2px color-mix(in srgb,var(--gg) 70%,transparent),1px 3px 0 var(--g2),5px 12px 16px -8px #020a5acc}
+ body.mmri-prism-page .mmri-radio-group .mmri-radio-card{border-radius:16px}
+ body.mmri-prism-page :is(.mmri-questionnaire__form,.mmri-questionnaire__top,.report-three-page){backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+@media(prefers-reduced-transparency:reduce){body.mmri-prism-page{--cr-sheet-fill:#b6d9ed;--hg-l1:#c3def2;--hg-l2:#dceefb}body.mmri-prism-page .mmri-shell::before{backdrop-filter:none;-webkit-backdrop-filter:none}body.mmri-prism-page :is(.mmri-home2__guide,.cat-tile){backdrop-filter:none;-webkit-backdrop-filter:none;background-color:#bad9ed}}
+@media print{.crystal-stage{display:none}body.mmri-prism-page .mmri-shell::before{background:#fff;box-shadow:none}body.mmri-prism-page .mmri-shell::after{display:none}
+@media (max-width:767px){body.mmri-prism-page .mmri-shell::after{inset:8px 6px 8px;border-radius:28px}}}
+
+/* Question panel: deep sapphire glass with a luminous rim; answer bars stay light glass (dark ink) so the semantic answer hues keep their contrast. */
+html body.mmri-prism-page .mmri-questionnaire .mmri-questionnaire__form{color:#f2fbff;border:1px solid #c4f2ffd9;
+ background:radial-gradient(60% 30% at 14% 0,#9fe8ff80,transparent 72%),radial-gradient(48% 40% at 100% 100%,#9a5aff66,transparent 70%),linear-gradient(150deg,#3b8cf2e0,#2459d8e8 55%,#5d52dae6);
+ -webkit-backdrop-filter:blur(8px) saturate(150%);backdrop-filter:blur(8px) saturate(150%);
+ box-shadow:inset 0 2px 0 #ffffffcc,inset 0 0 0 1px #78dcff59,inset 0 -30px 44px -30px #5ae6ff8c,0 0 40px -2px #46c8ffa6,10px 28px 40px -16px #01063ccc,22px 56px 70px -30px #010432b3}
+html body.mmri-prism-page .mmri-questionnaire__form :is(h1,h2,h3,legend,.mmri-questionnaire__question-head>*:not(.mmri-questionnaire__context)){color:#fff;text-shadow:0 1px 10px #02104a80}
+html body.mmri-prism-page .mmri-questionnaire__form :is(.mmri-questionnaire__special>span,.mmri-questionnaire__save-line,.mmri-questionnaire__save-line *){color:#d9f3ff}
+html body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-card{color:#0b1d4a;box-shadow:inset 0 2px 0 #fff,0 8px 16px -8px #01063c99}
+html body.mmri-prism-page .mmri-questionnaire__form .mmri-radio-card.is-selected{box-shadow:inset 0 2px 0 #fff,0 0 0 2px #fff,0 0 30px 2px color-mix(in srgb,var(--answer-color,#5ae6ff) 85%,transparent),0 10px 18px -8px #01063ccc}
+
+body.mmri-prism-page .cat-tile .diagnosis-square__meta{align-self:center;margin:0 auto;padding:6px 12px;border-radius:999px;background:#ffffffd9;border:1px solid #fffffff2;color:#0b1d4a;font-weight:600;box-shadow:inset 0 1px 0 #fff,0 4px 8px -6px #02084f99}
+body.mmri-prism-page .cat-tile .diagnosis-square__meta b{margin-right:.35em;color:#0b1d4a}
+body.mmri-prism-page .cat-tile .diagnosis-square__meta:empty{padding:0;background:none;border:0;box-shadow:none}
+/* Report score: thick luminous cyan-to-green glass rim (decorative full ring, not a gauge) around a deep sapphire disc, with a floor shadow. */
+html body.mmri-prism-page .report-score{border:0;background:radial-gradient(circle at 34% 22%,#2f6fe0,#0e2f94 58%,#07195e);
+ box-shadow:inset 0 3px 0 #ffffff59,inset 0 -18px 28px -12px #00063c99,inset 0 0 40px #1ed2ff40,0 22px 28px -14px #01063ccc,0 0 30px 2px #22d8ff77}
+html body.mmri-prism-page .report-score::before{content:"";position:absolute;z-index:-1;inset:-24px;border-radius:50%;pointer-events:none;
+ background:conic-gradient(from 210deg,#b9fff0,#27e6c0 18%,#25d5ff 38%,#3b86ff 58%,#2fe3b0 80%,#d6fff6);
+ -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 25px),#000 calc(100% - 24px));mask:radial-gradient(farthest-side,transparent calc(100% - 25px),#000 calc(100% - 24px));
+}
+html body.mmri-prism-page .mmri-questionnaire :is(.mmri-questionnaire__resume,.mmri-questionnaire__network){background:#ffffffe6;border-color:#fffffff2;color:#0b1d4a;box-shadow:inset 0 1px 0 #fff,0 8px 16px -10px #01063c99}
+html body.mmri-prism-page .mmri-questionnaire :is(.mmri-questionnaire__resume,.mmri-questionnaire__network) :is(strong,p,span){color:inherit}
+
+/* ============================================================================
+   DOMAIN THEME (controller: design/domainTheme.ts sets html[data-domain]; absent = neutral sapphire).
+   Small areas (rims, rings, accents) read registered colour tokens that TRANSITION (350-550 ms); shared buttons and the nav pill stay neutral sapphire.
+   Large areas (background light, perimeter halo) are five fixed layers in GlassStage whose OPACITY cross-fades (2 s, cubic-bezier(.22,1,.36,1)): composited,
+   no per-frame repaint, and no muddy mid-colour between complementary hues. Answer-quality colours (--answer-color) are separate and untouched.
+   ============================================================================ */
+@property --dom{syntax:"<color>";inherits:false;initial-value:#5BE3FF}
+@property --btn-a{syntax:"<color>";inherits:false;initial-value:#22B9FF}
+@property --btn-b{syntax:"<color>";inherits:false;initial-value:#007BFA}
+@property --btn-c{syntax:"<color>";inherits:false;initial-value:#0052D2}
+/* html carries only plain TARGET tokens (set once, no animation, so no per-frame whole-tree restyle). The few consumers below copy them into local,
+   non-inherited registered properties and transition those themselves. */
+html{--dom-t:#5BE3FF;--btn-a-t:#22B9FF;--btn-b-t:#007BFA;--btn-c-t:#0052D2}
+html[data-domain="marketing"]{--dom-t:var(--mmri-domain-marketing)}
+html[data-domain="it"]{--dom-t:var(--mmri-domain-it)}
+html[data-domain="finance"]{--dom-t:var(--mmri-domain-finance)}
+html[data-domain="people"]{--dom-t:var(--mmri-domain-people)}
+html[data-domain="operations"]{--dom-t:var(--mmri-domain-operations)}
+/* Shared: copy the plain target tokens into local registered colours so only these elements animate (see DOMAIN THEME). Each element keeps its OWN transition list below. */
+body.mmri-prism-page :is(.mmri-primary-nav a.is-active,.mmri-home2__start,.mmri-shell-primary,.mmri-guide2__nav-btn.is-primary,.mmri-button--primary){--btn-a:var(--btn-a-t);--btn-b:var(--btn-b-t);--btn-c:var(--btn-c-t);--wp-black:linear-gradient(180deg,var(--btn-a),var(--btn-b) 42%,var(--btn-c) 92%,var(--btn-c))}
+body.mmri-prism-page .mmri-home2__start{transition:transform .2s,box-shadow .2s,background-position .9s,--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out}
+body.mmri-prism-page .mmri-shell-primary{transition:transform .2s,box-shadow .2s,border-color .2s,background-color .2s,--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out}
+body.mmri-prism-page .mmri-guide2__nav-btn.is-primary{transition:--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out}
+body.mmri-prism-page .mmri-button--primary{transition:transform .2s,box-shadow .2s,filter .2s,--btn-a .3s ease-in-out,--btn-b .3s ease-in-out,--btn-c .3s ease-in-out}
+body.mmri-prism-page .report-score::before{--dom:var(--dom-t);transition:--dom .45s cubic-bezier(.4,0,.2,1)}
+.crystal-stage__wash{position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;mix-blend-mode:color;transition:opacity 2.2s cubic-bezier(.25,.6,.35,1);
+ background:linear-gradient(150deg,color-mix(in srgb,var(--wash-c) 92%,#fff),var(--wash-c) 50%,color-mix(in srgb,var(--wash-c) 88%,#000))}
+.crystal-stage__wash[data-d="neutral"]{--wash-c:#2f7fe8}
+.crystal-stage__wash[data-d="marketing"]{--wash-c:var(--mmri-domain-marketing)}
+.crystal-stage__wash[data-d="it"]{--wash-c:var(--mmri-domain-it)}
+.crystal-stage__wash[data-d="finance"]{--wash-c:var(--mmri-domain-finance)}
+.crystal-stage__wash[data-d="people"]{--wash-c:var(--mmri-domain-people)}
+.crystal-stage__wash[data-d="operations"]{--wash-c:var(--mmri-domain-operations)}
+html[data-domain="marketing"] .crystal-stage__wash[data-d="marketing"]{opacity:1}
+html[data-domain="it"] .crystal-stage__wash[data-d="it"]{opacity:1}
+html[data-domain="finance"] .crystal-stage__wash[data-d="finance"]{opacity:1}
+html[data-domain="people"] .crystal-stage__wash[data-d="people"]{opacity:1}
+html[data-domain="operations"] .crystal-stage__wash[data-d="operations"]{opacity:1}
+@media (prefers-reduced-motion:reduce){.crystal-stage__wash{transition:none}}
+
+
+/* PERFORMANCE (measured on a real Intel GPU in headful Chrome, report scroll: 170 ms -> see PERFORMANCE_BEFORE_AFTER.md): scrolled content never carries a live backdrop blur
+   (the sheet behind it is a baked opaque image, so the blur only costs raster time and changes nothing visible). */
+body.mmri-prism-page .mmri-shell-main *,body.mmri-prism-page .mmri-shell-main *::before,body.mmri-prism-page .mmri-shell-main *::after{backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* Sheet thickness, glow and edge follow the category colour WITHOUT animating any shadow or gradient: six static rim layers (neutral + five categories) cross-fade by opacity only
+   (animating box-shadow / a registered colour on the page-tall sheet cost 50 ms per frame on a real GPU; opacity costs nothing). */
+body.mmri-prism-page .mmri-shell::before{box-shadow:none}
+/* No separate highlight layer over the sheet: a page-tall translucent overlay on top of the moving scene cost report-scroll p95 33 -> 50 ms; the glass edge is carried by the static rim layers and the scene's own streak shows through. */
+body.mmri-prism-page .mmri-shell::after{display:none}
+@media (max-width:767px){body.mmri-prism-page .mmri-shell::after{inset:8px 6px 8px;border-radius:28px}}
+.mmri-shell-rims{position:absolute;z-index:-1;inset:22px clamp(14px,3vw,48px) 22px;border-radius:40px;pointer-events:none}
+.mmri-shell-rims i{--rc:#5BE3FF;position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity 2.2s cubic-bezier(.22,1,.36,1);
+ box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--rc) 45%,#fff),inset 0 2px 0 rgba(255,255,255,.98),inset 2px 0 0 rgba(255,255,255,.55),inset -2px 0 0 color-mix(in srgb,var(--rc) 65%,#fff),inset 0 -3px 0 color-mix(in srgb,var(--rc) 60%,#000),inset 0 -2px 0 color-mix(in srgb,var(--rc) 22%,#fff),inset 0 -26px 40px -22px color-mix(in srgb,var(--rc) 70%,transparent),
+ 1px 1px 0 color-mix(in srgb,var(--rc) 12%,#fff),2px 2px 0 color-mix(in srgb,var(--rc) 35%,#fff),3px 3px 0 color-mix(in srgb,var(--rc) 62%,#fff),4px 4px 0 var(--rc),5px 5px 0 color-mix(in srgb,var(--rc) 80%,#000),6px 6px 0 color-mix(in srgb,var(--rc) 62%,#000),7px 7px 0 color-mix(in srgb,var(--rc) 48%,#000),
+ 0 2px 3px rgba(3,10,70,.35),0 18px 24px -12px color-mix(in srgb,var(--rc) 45%,#020a40),0 0 0 1px color-mix(in srgb,var(--rc) 55%,#fff),0 0 16px 1px color-mix(in srgb,var(--rc) 55%,transparent)}
+.mmri-shell-rims i[data-d="neutral"]{opacity:1}
+.mmri-shell-rims i[data-d="marketing"]{--rc:var(--mmri-domain-marketing)}.mmri-shell-rims i[data-d="it"]{--rc:var(--mmri-domain-it)}.mmri-shell-rims i[data-d="finance"]{--rc:var(--mmri-domain-finance)}.mmri-shell-rims i[data-d="people"]{--rc:var(--mmri-domain-people)}.mmri-shell-rims i[data-d="operations"]{--rc:var(--mmri-domain-operations)}
+html[data-domain] .mmri-shell-rims i[data-d="neutral"]{opacity:0}
+html[data-domain="marketing"] .mmri-shell-rims i[data-d="marketing"],html[data-domain="it"] .mmri-shell-rims i[data-d="it"],html[data-domain="finance"] .mmri-shell-rims i[data-d="finance"],html[data-domain="people"] .mmri-shell-rims i[data-d="people"],html[data-domain="operations"] .mmri-shell-rims i[data-d="operations"]{opacity:1}
+@media (max-width:767px){.mmri-shell-rims{inset:8px 6px 8px;border-radius:28px}}
+@media (prefers-reduced-motion:reduce){.mmri-shell-rims i{transition-duration:.01ms}}
+/* Category / guide atmosphere is a quiet tint, never brighter than neutral: scenes and fields top out at half strength. */
+
+/* ===== Homepage guide buttons: one clean state model (replaces the hover/focus cascade that left several buttons lit) =====
+   rest  : own hue, liquid glass, slow light glint
+   hover : ONLY the hovered button brightens its edge + glow (pointer devices only); resets the moment the pointer leaves
+   focus-visible: a plain dark ring (never the hover glow, so a button that got focus back after closing its dialog does not look hovered)
+   open  : aria-expanded=true while its dialog is open */
+html:root body.mmri-prism-page .mmri-home2__guide{--gs-rest:inset 0 2px 0 #ffffffd9,inset 0 0 0 1px color-mix(in srgb,var(--g1) 45%,#fff),inset 0 -16px 24px -14px color-mix(in srgb,var(--g1) 70%,#fff),0 0 26px -4px color-mix(in srgb,var(--gg) 55%,transparent),1px 2px 0 color-mix(in srgb,var(--g1) 60%,#fff),3px 5px 0 var(--g2),6px 14px 18px -8px rgba(10,30,130,.55);
+ --gs-hover:inset 0 2px 0 #fff,inset 0 0 0 2px #fff,inset 0 -16px 24px -12px color-mix(in srgb,var(--g1) 85%,#fff),0 0 38px 2px color-mix(in srgb,var(--gg) 85%,transparent),1px 2px 0 color-mix(in srgb,var(--g1) 70%,#fff),3px 5px 0 var(--g2),6px 14px 18px -8px rgba(10,30,130,.55);
+ filter:none;box-shadow:var(--gs-rest);border-color:#ffffffd9;transition:box-shadow .25s ease,border-color .25s ease}
+html:root body.mmri-prism-page .mmri-home2__guide.is-about{--g1:#9fc0ff;--g2:#3f6df0;--gg:#5b8dff}
+html:root body.mmri-prism-page .mmri-home2__guide.is-report{--g1:#cdb6ff;--g2:#7a52ee;--gg:#9d78ff}
+html:root body.mmri-prism-page .mmri-home2__guide.is-howto{--g1:#bfc9ff;--g2:#6c78ec;--gg:#8f9bff}
+@media (hover:hover){html:root body.mmri-prism-page .mmri-home2__guide:hover{box-shadow:var(--gs-hover);border-color:#fff;filter:none}}
+html:root body.mmri-prism-page .mmri-home2__guide:focus-visible:not(:hover){box-shadow:var(--gs-rest);border-color:#ffffffd9;outline:3px solid #0a2358;outline-offset:3px}
+html:root body.mmri-prism-page .mmri-home2__guide[aria-expanded=true]{box-shadow:var(--gs-hover);border-color:#fff}
+html:root body.mmri-prism-page .mmri-home2__guide:not(:hover):not([aria-expanded=true]):not(:focus-visible){box-shadow:var(--gs-rest)}
+
+/* ===== Button system: one personality. Header CTA + hero CTA carry a slow glint; hover = brighter edge ring (no movement); focus = dark ring; weight 600. ===== */
+html:root body.mmri-prism-page :is(.mmri-shell-primary,.mmri-home2__start,.mmri-button){position:relative;overflow:hidden;font-weight:650;letter-spacing:.01em}
+.mmri-btn-glint i{width:22%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7) 50%,transparent);animation-duration:7s;animation-delay:3s}
+html:root body.mmri-prism-page :is(.mmri-shell-primary,.mmri-home2__start):hover:not(:disabled){box-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),0 0 0 3px rgba(255,255,255,.5),0 0 22px rgba(70,140,255,.6),0 8px 16px -8px rgba(0,40,190,.6);transform:none}
+html:root body.mmri-prism-page :is(.mmri-shell-primary,.mmri-home2__start,.mmri-button):focus-visible{outline:3px solid #08205a;outline-offset:3px}
+/* Fonts: Inter Variable everywhere; display weights 800 (hero) / 700 (headings) / 650 (buttons, tabs) / 400-500 (copy). */
+html:root body.mmri-prism-page .mmri-home2__copy h1{font-weight:800;letter-spacing:-.03em}
+html:root body.mmri-prism-page :is(h2,h3){font-weight:700;letter-spacing:-.02em}
+html:root body.mmri-prism-page :is(.mmri-primary-nav a,.mmri-tabs button,.mmri-guide2__tab,.status,.pill){font-weight:600}
+/* Report: restrained sheen on the five strengths, the five weaknesses and the score ring (transform only, small elements, 9-10 s cycles). */
+html:root body.mmri-prism-page .report-finding-column{overflow:hidden}
+html:root body.mmri-prism-page .report-finding-column::before{content:"";position:absolute;top:0;bottom:0;left:0;width:24%;z-index:2;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55) 50%,transparent);transform:translateX(-150%) skewX(-16deg);animation:rp-sheen 9s ease-in-out 1s infinite}
+html:root body.mmri-prism-page .report-finding-column.is-negative::before{animation-delay:5s}
+@keyframes rp-sheen{0%,50%{transform:translateX(-150%) skewX(-16deg)}100%{transform:translateX(560%) skewX(-16deg)}}
+html body.mmri-prism-page .report-score::before{animation:rp-ring 24s linear infinite}
+@keyframes rp-ring{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){html:root body.mmri-prism-page .report-finding-column::before,html body.mmri-prism-page .report-score::before{animation:none}}
+
+/* ===== ONE living background (everything that moves in the scene lives here, behind all glass) =====
+   .crystal-stage (fixed, viewport) : deep sapphire base -> category scenes (cross-fade, opacity only) -> three sparse drifting objects.
+   The glass sheet above is translucent and static: it only reveals this scene. Transform/opacity animation only, periods 18 / 27 / 39 s, continuous easing. */
+.crystal-stage__obj{position:absolute;z-index:3;pointer-events:none;will-change:transform}
+.crystal-stage__obj.is-field{left:-8%;top:-12%;width:62vmax;height:62vmax;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.4),rgba(255,255,255,.12) 55%,transparent);animation:cr-drift-a 27s ease-in-out infinite alternate}
+.crystal-stage__obj.is-plate{right:4%;top:14%;width:36vw;height:50vh;border-radius:7vmin;background:linear-gradient(140deg,rgba(255,255,255,.2),rgba(150,170,255,.1) 55%,rgba(255,150,230,.12));box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),inset 0 2px 0 rgba(255,255,255,.25);animation:cr-drift-b 39s ease-in-out infinite alternate}
+.crystal-stage__obj.is-streak{left:20%;top:-10%;width:16vw;height:120vh;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22) 45%,rgba(255,255,255,.14) 55%,transparent);transform:skewX(-18deg);animation:cr-drift-c 18s ease-in-out infinite alternate}
+@keyframes cr-drift-a{from{transform:translate3d(-1.5%,-1%,0)}to{transform:translate3d(3%,2.4%,0)}}
+@keyframes cr-drift-b{from{transform:translate3d(-1.2vw,.8vh,0) rotate(-1deg)}to{transform:translate3d(1.6vw,-1.2vh,0) rotate(1deg)}}
+@keyframes cr-drift-c{from{transform:translate3d(-6vw,0,0) skewX(-18deg)}to{transform:translate3d(52vw,0,0) skewX(-18deg)}}
+@media(prefers-reduced-motion:reduce){.crystal-stage__obj{animation:none}}
+html.is-hidden .crystal-stage__obj{animation-play-state:paused}
+/* The glass sheet: transparent, stable, reflective. No baked image, no colour blobs, no animation. */
+body.mmri-prism-page{--cr-sheet-fill:linear-gradient(160deg,rgba(238,247,255,.3),rgba(205,224,255,.16) 55%,rgba(216,208,255,.2))}
+@media (max-width:700px){body.mmri-prism-page{--cr-sheet-fill:linear-gradient(160deg,rgba(238,247,255,.5),rgba(205,224,255,.36) 55%,rgba(216,208,255,.38))}}
+
+/* ===== Guide buttons (final): glass face + ONE small specular sweep on hover/focus-visible only; reverses on leave ===== */
+html:root body.mmri-prism-page .mmri-home2__guide .mmri-shell-glint i{animation:none!important;width:26%;transform:translateX(-140%) skewX(-18deg);transition:transform .28s ease-out}
+@media (hover:hover){html:root body.mmri-prism-page .mmri-home2__guide:hover .mmri-shell-glint i{transform:translateX(480%) skewX(-18deg);transition:transform .55s cubic-bezier(.4,0,.2,1)}}
+html:root body.mmri-prism-page .mmri-home2__guide:focus-visible .mmri-shell-glint i{transform:translateX(480%) skewX(-18deg);transition:transform .55s cubic-bezier(.4,0,.2,1)}
+html:root body.mmri-prism-page .mmri-home2__guide.is-about{--g1:#a6d6ff;--g2:#3a86ef;--gg:#4fa0ff}
+html:root body.mmri-prism-page .mmri-home2__guide.is-report{--g1:#bdc9ff;--g2:#6679ee;--gg:#8396ff}
+html:root body.mmri-prism-page .mmri-home2__guide.is-howto{--g1:#cdb8ff;--g2:#7b50ec;--gg:#a07cff}
+/* Header CTA: one visible glint every 12 s (transform only), resting position off-button */
+html:root body.mmri-prism-page .mmri-shell-primary .mmri-btn-glint i,html:root body.mmri-prism-page .mmri-home2__start .mmri-btn-glint i{width:28%;animation:mmri-cta-glint 12s ease-in-out 2s infinite}
+@keyframes mmri-cta-glint{0%,84%{transform:translateX(-150%) skewX(-18deg)}100%{transform:translateX(520%) skewX(-18deg)}}
+@media(prefers-reduced-motion:reduce){html:root body.mmri-prism-page .mmri-btn-glint i{animation:none}}
+
+/* Geometric background system (lines, squares, paths): always drifting, in every theme; transform + opacity only, one composited layer each. */
+.crystal-stage__geo{position:absolute;z-index:3;display:block;pointer-events:none;will-change:transform,opacity;animation:cr-geo var(--t,60s) ease-in-out var(--d,0s) infinite alternate;transform:translate3d(0,0,0) rotate(var(--r0,0deg))}
+.crystal-stage__geo.is-line{height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 30%,rgba(190,230,255,.8) 70%,transparent);box-shadow:0 0 8px rgba(190,230,255,.5)}
+.crystal-stage__geo.is-sq{border:2px solid rgba(255,255,255,.55);border-radius:2.4vmin;background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.04) 60%,rgba(190,170,255,.14));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.crystal-stage__geo.is-path svg{display:block;width:100%;height:100%;overflow:visible}
+.crystal-stage__geo.is-path polyline{fill:none;stroke:rgba(255,255,255,.8);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+@keyframes cr-geo{0%{transform:translate3d(0,0,0) rotate(var(--r0,0deg));opacity:var(--o0,.3)}100%{transform:translate3d(var(--dx,3vw),var(--dy,3vh),0) rotate(var(--r1,0deg));opacity:var(--o1,.6)}}
+@media(prefers-reduced-motion:reduce){.crystal-stage__geo{animation:none}}
+html.is-hidden .crystal-stage__geo{animation-play-state:paused}
+
+/* ===== Report score ring: ONE colour system = the report's category (--report-accent); a bright arc of the same hue travels round it (transform only, 9 s) and the ring breathes (opacity). No score-quality colours. ===== */
+html body.mmri-prism-page .report-score{--ra:var(--report-accent,#49B7FF);--rb:color-mix(in srgb,var(--report-accent,#49B7FF) 45%,#fff);--rc:color-mix(in srgb,var(--report-accent,#49B7FF) 70%,#07194a)}
+html:root body.mmri-prism-page .report-score{box-shadow:inset 0 3px 0 #ffffff59,inset 0 -18px 28px -12px #00063c99,inset 0 0 40px color-mix(in srgb,var(--ra) 25%,transparent),0 22px 28px -14px #01063ccc,0 0 30px 2px color-mix(in srgb,var(--ra) 45%,transparent)}
+html:root body.mmri-prism-page .report-score::before{background:conic-gradient(from 0deg,var(--rc) 0,var(--ra) 14%,var(--rb) 30%,#fff 36%,var(--rb) 42%,var(--ra) 58%,var(--rc) 78%,var(--ra) 100%);animation:rp-ring 9s linear infinite,rp-breathe 4.5s ease-in-out infinite alternate}
+@keyframes rp-ring{to{transform:rotate(360deg)}}
+@keyframes rp-breathe{from{opacity:.82}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){html:root body.mmri-prism-page .report-score::before{animation:none}}
+
+/* Frosted glass: the sheet blurs the living scene behind it (one viewport-sized backdrop blur; content panels carry none). */
+body.mmri-prism-page .mmri-shell::before{-webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%)}
+body.mmri-prism-page{--cr-sheet-fill:linear-gradient(160deg,rgba(238,247,255,.34),rgba(205,224,255,.2) 55%,rgba(216,208,255,.24))}
+
+.crystal-stage__geo.is-shard{background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(190,225,255,.3) 55%,rgba(255,255,255,.12))}
+
+/* ===== Report PDF button = the report's category colour ===== */
+html:root body.mmri-prism-page .report-top-download{background:linear-gradient(180deg,color-mix(in srgb,var(--report-accent,#49B7FF) 55%,#fff),var(--report-accent,#49B7FF) 55%,color-mix(in srgb,var(--report-accent,#49B7FF) 82%,#07194a));color:#07194a;border:1.5px solid rgba(255,255,255,.9);text-shadow:0 1px 0 rgba(255,255,255,.45);box-shadow:inset 0 1.5px 0 #fff,0 8px 16px -8px color-mix(in srgb,var(--report-accent,#49B7FF) 80%,#07194a)}
+html:root body.mmri-prism-page .report-top-download:hover:not(:disabled){box-shadow:inset 0 1.5px 0 #fff,0 0 0 3px rgba(255,255,255,.6),0 0 20px color-mix(in srgb,var(--report-accent,#49B7FF) 80%,transparent)}
+html:root body.mmri-prism-page .report-top-download svg{color:#07194a}
+/* the report is a long reading page: the drifting shard field rests there so scrolling stays smooth (the pattern, tint and light shapes stay alive) */
+.crystal-stage[data-route="report"] .crystal-stage__geo{animation:none}

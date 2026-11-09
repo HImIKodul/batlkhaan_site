@@ -1,0 +1,20 @@
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {spawnSync} from 'node:child_process';import {fileURLToPath} from 'node:url';
+const here=path.dirname(fileURLToPath(import.meta.url));const repo=path.resolve(here,'../..');const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'mmri-step18-'));const bin=path.join(tmp,'bin');const reports=path.join(tmp,'reports');const sets=path.join(tmp,'sets');fs.mkdirSync(bin);fs.mkdirSync(reports);fs.writeFileSync(path.join(reports,'sample.pdf'),'PDF-BYTES');fs.mkdirSync(path.join(reports,'nested'));fs.writeFileSync(path.join(reports,'nested','meta.json'),'{}');
+const exe=(name,body)=>{const p=path.join(bin,name);fs.writeFileSync(p,`#!/usr/bin/env bash\nset -euo pipefail\n${body}\n`);fs.chmodSync(p,0o755);};
+exe('pg_dump',`out=''; for a in "$@"; do case "$a" in --file=*) out="${'${a#--file=}'}";; esac; done; [[ -n "$out" ]] || exit 2; printf 'FAKE-PG-DUMP\\n' > "$out"`);
+exe('pg_restore',`if [[ "${'$'}{1:-}" == '--list' ]]; then [[ -f "${'$'}{2:-}" ]] && { echo 'FAKE TOC'; exit 0; }; fi; printf '%s\\n' "$*" >> "${tmp}/pg_restore.calls"; exit 0`);
+exe('psql',`echo '16.4'`);
+const env={...process.env,PATH:`${bin}:${process.env.PATH}`,DATABASE_URL:'postgresql://runtime:pass@db.example/mmri?sslmode=require',MMRI_REPORT_STORAGE_DIR:reports,BACKUP_SET_DIR:sets,RELEASE_SHA:'release-step18'};
+const run=(cmd,args=[],extra={})=>spawnSync(cmd,args,{cwd:repo,env:{...env,...extra},encoding:'utf8'});
+const cases=[];const add=(name,ok,detail='')=>cases.push({name,ok:Boolean(ok),detail});
+let r=run('bash',['ops/backup-all.sh']);add('coordinated backup succeeds',r.status===0,r.stderr);const setDir=(r.stdout||'').trim().split('\n').at(-1)||'';add('backup set directory created',fs.existsSync(setDir),setDir);
+r=run('bash',['ops/verify-backup-set.sh',setDir]);add('backup set verifies',r.status===0,r.stderr);
+const manifest=fs.readFileSync(path.join(setDir,'BACKUP_SET.manifest'),'utf8');add('manifest binds release',manifest.includes('release_sha=release-step18'));add('manifest binds migration chain',/migration_chain_sha256=[a-f0-9]{64}/.test(manifest));
+// Tampering must be detected.
+const reportName=(manifest.match(/^report_file=(.+)$/m)||[])[1];const reportPath=path.join(setDir,reportName);fs.appendFileSync(reportPath,'tamper');r=run('bash',['ops/verify-backup-set.sh',setDir]);add('tampered backup rejected',r.status!==0);fs.truncateSync(reportPath,fs.statSync(reportPath).size-'tamper'.length);
+// Re-create a clean set for restore drill.
+r=run('bash',['ops/backup-all.sh']);const clean=(r.stdout||'').trim().split('\n').at(-1)||'';const recReports=path.join(tmp,'recovered-reports');
+r=run('bash',['ops/restore-backup-set.sh',clean],{ALLOW_DESTRUCTIVE_RESTORE:'YES',RECOVERY_DATABASE_URL:'postgresql://recovery:pass@recovery.example/mmri_restore?sslmode=require',RECOVERY_REPORT_STORAGE_DIR:recReports});add('isolated recovery set restore succeeds',r.status===0,r.stderr);add('report artifact restored',fs.readFileSync(path.join(recReports,'sample.pdf'),'utf8')==='PDF-BYTES');add('postgres restore invoked',fs.existsSync(path.join(tmp,'pg_restore.calls')));
+r=run('bash',['ops/restore-backup-set.sh',clean],{RECOVERY_DATABASE_URL:'postgresql://recovery:pass@recovery.example/x',RECOVERY_REPORT_STORAGE_DIR:path.join(tmp,'x')});add('destructive restore requires explicit approval',r.status!==0);
+r=run('bash',['ops/restore-postgres.sh',path.join(clean,(fs.readFileSync(path.join(clean,'BACKUP_SET.manifest'),'utf8').match(/^postgres_file=(.+)$/m)||[])[1])],{ALLOW_DESTRUCTIVE_RESTORE:'YES',RECOVERY_DATABASE_URL:'postgresql://recovery:pass@recovery.example/x',NODE_ENV:'production'});add('production database restore needs second explicit approval',r.status!==0);
+const failed=cases.filter(x=>!x.ok);console.log(JSON.stringify({status:failed.length?'FAIL':'PASS',passed:cases.length-failed.length,total:cases.length,failed,cases},null,2));fs.rmSync(tmp,{recursive:true,force:true});if(failed.length)process.exit(1);

@@ -1,0 +1,94 @@
+{
+  "suite": "MMRI Step 10 AI executive report binding smoke",
+  "version": "3.23.0",
+  "total": 17,
+  "passed": 17,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "deterministic fallback validates",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "name": "valid AI narrative publishes",
+      "status": "PASS",
+      "detail": "PASS"
+    },
+    {
+      "name": "valid provider one attempt",
+      "status": "PASS",
+      "detail": "1"
+    },
+    {
+      "name": "unsafe AI narrative falls back",
+      "status": "PASS",
+      "detail": "AI_FALLBACK_USED"
+    },
+    {
+      "name": "unsafe output never published",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "one repair can recover",
+      "status": "PASS",
+      "detail": "PASS"
+    },
+    {
+      "name": "repair attempts exactly two",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "name": "provider exception falls back",
+      "status": "PASS",
+      "detail": "AI_FALLBACK_USED"
+    },
+    {
+      "name": "provider error audited",
+      "status": "PASS",
+      "detail": "provider down"
+    },
+    {
+      "name": "OpenAI provider uses Responses model field",
+      "status": "PASS",
+      "detail": "test-model"
+    },
+    {
+      "name": "OpenAI provider uses strict JSON schema",
+      "status": "PASS",
+      "detail": "{\"type\":\"json_schema\",\"name\":\"mmri_narrative_draft\",\"strict\":true,\"schema\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"schemaVersion\",\"payloadHash\",\"sections\"],\"properties\":{\"schemaVersion\":{\"type\":\"string\",\"enum\":[\"MMRI-NARRATIVE-DRAFT-1.0\"]},\"payloadHash\":{\"type\":\"string\"},\"sections\":{\"type\":\"array\",\"minItems\":4,\"maxItems\":10,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"id\",\"titleMn\",\"claims\"],\"properties\":{\"id\":{\"type\":\"string\",\"enum\":[\"S01\",\"S02\",\"S03\",\"S04\",\"S05\",\"S06\",\"S07\",\"S08\",\"S09\",\"S10\"]},\"titleMn\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":120},\"claims\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":15,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"claimType\",\"textMn\",\"sourceTraceIds\",\"rootFindingId\",\"recommendationId\",\"milestoneId\"],\"properties\":{\"claimType\":{\"type\":\"string\",\"enum\":[\"DESCRIPTIVE_SCORE\",\"CONFIDENCE_STATEMENT\",\"STRENGTH\",\"WEAKNESS\",\"PRIMARY_CAUSE\",\"CONTRIBUTING_CAUSE\",\"POSSIBLE_CAUSE\",\"RECOMMENDATION\",\"ROADMAP\",\"RISK\"]},\"textMn\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":1800},\"sourceTraceIds\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":12,\"items\":{\"type\":\"string\"}},\"rootFindingId\":{\"type\":[\"string\",\"null\"]},\"recommendationId\":{\"type\":[\"string\",\"null\"]},\"milestoneId\":{\"type\":[\"string\",\"null\"]}}}}}}}}}}"
+    },
+    {
+      "name": "OpenAI provider disables response storage",
+      "status": "PASS",
+      "detail": "false"
+    },
+    {
+      "name": "provider pins payload hash locally",
+      "status": "PASS",
+      "detail": "0c556eed9322336721b1cb3117eb38ba0a9964b129a24336210e09f93bb686a4"
+    },
+    {
+      "name": "incomplete triple binding blocks",
+      "status": "PASS",
+      "detail": "[{\"checkId\":\"V21\",\"severity\":\"BLOCK\",\"message\":\"Diagnosis/strategy/plan report binding is incomplete.\"}]"
+    },
+    {
+      "name": "binding validator check V21",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "tampered frozen payload blocked before provider",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "provider receives detached read-only authority",
+      "status": "PASS",
+      "detail": "72"
+    }
+  ]
+}

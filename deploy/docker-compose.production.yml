@@ -1,0 +1,80 @@
+services:
+  migrate:
+    image: ${MMRI_MIGRATE_IMAGE:?set immutable migrate image}
+    restart: "no"
+    env_file: [.env.production]
+    environment:
+      NODE_ENV: production
+    command: ["bash","scripts/connected-production-db-gate.sh"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    volumes:
+      - mmri_report_storage:/var/lib/mmri/report-storage
+
+  api:
+    image: ${MMRI_API_IMAGE:?set immutable api image}
+    restart: unless-stopped
+    init: true
+    stop_signal: SIGTERM
+    stop_grace_period: 50s
+    env_file: [.env.production]
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      TRUST_PROXY: "true"
+      TRUST_PROXY_HOPS: "1"
+      MMRI_API_REPLICA_COUNT: "1"
+      MIGRATION_DATABASE_URL: ""
+      MMRI_REPORT_STORAGE_DIR: /var/lib/mmri/report-storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD","node","-e","fetch('http://127.0.0.1:4000/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    expose: ["4000"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    volumes:
+      - mmri_report_storage:/var/lib/mmri/report-storage
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  web:
+    image: ${MMRI_WEB_IMAGE:?set immutable web image}
+    restart: unless-stopped
+    init: true
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    depends_on:
+      api:
+        condition: service_healthy
+    # Loopback only: TLS is terminated by the host reverse proxy (see DEDICATED_SERVER_SETUP.md); plain HTTP must never be reachable from the network.
+    ports: ["127.0.0.1:8080:8080"]
+    healthcheck:
+      test: ["CMD","wget","-q","-O","-","http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    read_only: true
+    tmpfs: ["/var/cache/nginx","/var/run","/tmp"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  mmri_report_storage:

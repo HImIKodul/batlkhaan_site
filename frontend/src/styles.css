@@ -1,0 +1,334 @@
+/* ============================================================================
+   R16.05 / Step 5 - Semantic typography + information hierarchy
+   Raw legacy sizes below are tokenized in-place. This block defines document
+   defaults and reusable roles; it is not an override stylesheet.
+   ============================================================================ */html{font-family:var(--mmri-font-family);font-optical-sizing:auto;font-feature-settings:var(--mmri-font-feature-numeric);font-synthesis:none;text-rendering:optimizeLegibility}body{font-family:var(--mmri-font-family);font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-body-line);font-weight:var(--mmri-weight-regular);color:var(--mmri-color-text-strong)}h1,h2,h3,h4,h5,h6{font-family:var(--mmri-font-family);color:var(--mmri-color-text-strong);text-wrap:balance}h1{font-size:var(--mmri-type-page-size);line-height:var(--mmri-type-page-line);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display)}h2{font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-heading)}h3,h4{font-size:var(--mmri-type-body-large-size);line-height:var(--mmri-type-body-large-line);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-heading)}p,li,dd,dt{font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-body-line)}small,.meta,.eyebrow,.kicker{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line)}button,input,select,textarea{font:inherit}th{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-meta)}td{font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line)}strong,b{font-weight:var(--mmri-weight-semibold)}.mmri-type-display-public{font-size:var(--mmri-type-display-public-size);line-height:var(--mmri-type-display-public-line);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display)}.mmri-type-display-product{font-size:var(--mmri-type-display-product-size);line-height:var(--mmri-type-display-product-line);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display)}.mmri-type-page{font-size:var(--mmri-type-page-size);line-height:var(--mmri-type-page-line);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display)}.mmri-type-section{font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-heading)}.mmri-type-body-large{font-size:var(--mmri-type-body-large-size);line-height:var(--mmri-type-body-large-line)}.mmri-type-body{font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-body-line)}.mmri-type-compact{font-size:var(--mmri-type-compact-size);line-height:var(--mmri-type-compact-line)}.mmri-type-meta{font-size:var(--mmri-type-meta-size);line-height:var(--mmri-type-meta-line);letter-spacing:var(--mmri-tracking-meta)}.mmri-kpi-number{font-variant-numeric:tabular-nums;font-feature-settings:var(--mmri-font-feature-numeric);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display)}.mmri-reading-copy{max-width:var(--mmri-measure-reading);font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-reading-line)}.mmri-report-copy{max-width:var(--mmri-measure-report);font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-reading-line)}/* R16.04: foundation variables moved to ./design/tokens.css. */*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--mmri-color-text);font-family:var(--mmri-font-family);font-size:var(--mmri-type-body-size);line-height:var(--mmri-type-body-line);font-feature-settings:var(--mmri-font-feature-numeric);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}button,input{font:inherit}button{color:inherit}a{color:inherit}::selection{background:var(--mmri-color-brand-soft);color:var(--mmri-color-text-strong)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--mmri-color-focus);outline-offset:2px}.muted{color:var(--muted)}.small{font-size:var(--mmri-type-compact-size)}.center{text-align:center}.full{width:100%}.eyebrow{color:var(--green);font-weight:var(--mmri-weight-display);font-size:var(--mmri-type-meta-size);letter-spacing:var(--mmri-tracking-meta);text-transform:uppercase;min-height:1px}.lead{color:var(--muted);font-size:var(--mmri-type-body-large-size);line-height:1.65;max-width:680px}.icon{display:block}.brand{font-family:var(--font-heading,var(--font-ui,Inter,system-ui,sans-serif));font-size:var(--mmri-type-page-size);color:var(--deep);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-heading)}.text-action{border:0;background:none;cursor:pointer}.page-container{max-width:var(--page);margin:0 auto;padding:46px 24px 86px}.section-head{display:flex;gap:28px;align-items:flex-end;justify-content:space-between;margin-bottom:28px}.section-head h1{font-size:var(--mmri-type-display-product-size);line-height:1.15;margin:8px 0 8px;letter-spacing:var(--mmri-tracking-heading)}.section-desc{margin:0;max-width:760px}.section-action{display:flex;flex-shrink:0}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 1px 0 rgba(12,23,53,.02)}.pill{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:var(--mmri-type-meta-size);color:var(--muted)}.pill.is-active{background:var(--mint);color:var(--deep);border-color:#B8C9DF}.pill.is-muted{opacity:.65}.status{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:var(--mmri-type-meta-size);font-weight:var(--mmri-weight-display)}.save-state{font-size:var(--mmri-type-compact-size);font-weight:var(--mmri-weight-semibold);color:var(--muted)}.save-state.saved{color:var(--green)}.save-state.error{color:var(--danger)}/* Landing */.landing{padding-top:32px}/* Auth */.auth-page .page-container{padding-top:8vh}.auth-copy .brand{display:block;margin-bottom:70px}.auth-tabs button.active{color:var(--green);border-bottom-color:var(--green);font-weight:var(--mmri-weight-display)}.or{text-align:center;color:var(--muted);font-size:var(--mmri-type-meta-size);margin:14px 0}/* Profile */.profile-steps button.active span,.profile-steps button.done span{background:var(--green);color:white}.profile-steps button.active{color:var(--deep);font-weight:var(--mmri-weight-display)}.option-list.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.choice{min-height:50px;border:1px solid #D8DBE0;background:#fff;border-radius:9px;padding:10px 13px;text-align:left;display:flex;align-items:center;gap:10px;cursor:pointer}.choice:hover{border-color:#A8B8CE}.choice.selected{background:var(--mint-2);border-color:var(--green);box-shadow:inset 0 0 0 1px rgba(21,45,109,.06)}/* Dashboard */.overall-card .eyebrow{text-align:left}.direction-item.active{border-color:#8CA5C8;background:var(--mint-2)}/* Assessment */.assessment-top .brand{text-align:center;cursor:pointer}.assessment-top .text-action{justify-self:end;color:var(--green);font-size:var(--mmri-type-compact-size);font-weight:var(--mmri-weight-display)}.assessment-note .icon{color:var(--green);flex:none}/* Results */.module-nav>.eyebrow{padding:10px}.module-row.active{background:var(--mint);color:var(--deep)}.module-name{font-size:var(--mmri-type-compact-size)}.module-score{text-align:right;display:grid;grid-template-columns:auto auto;align-items:end}.module-score strong{font-size:var(--mmri-type-display-product-size);line-height:.95}.module-score span{font-size:var(--mmri-type-meta-size);color:var(--muted)}.module-score em{grid-column:1/-1;color:var(--green);font-size:var(--mmri-type-meta-size);font-style:normal;font-weight:var(--mmri-weight-display);margin-top:6px}.insight-box.positive{background:var(--mint-2)}.insight-box.positive .box-title{color:var(--green)}.recommendation p{font-size:var(--mmri-type-compact-size);color:var(--muted)}.chev{color:var(--muted)}/* Plan */.stage-tabs button.active{border-color:var(--green);background:var(--mint-2)}.stage-tabs button.active span,.stage-tabs button.done span{background:var(--green);color:#fff}.phase-note .icon{color:var(--green);flex:none}/* Report *//* Comparison */.exec-progress>.card{padding:22px}.progress-hero .eyebrow{color:#A7BEE0}.rank-row.down>span{background:var(--danger-bg)}.rank-row.down strong{color:var(--danger)}.compare-detail-grid>.card{padding:22px}.before-after .icon{margin:auto;color:var(--green)}/* Settings + states */.settings-grid>.card{padding:22px}.settings-links .logout{color:var(--danger)}.state-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.state-icon.neutral{background:var(--soft);color:#7A8088}.state-icon.danger{background:var(--danger-bg);color:var(--danger)}@keyframes spin{to{transform:rotate(360deg)}}/* mobile bottom nav */.bottom-nav{display:none}@media print{.bottom-nav,.report-toolbar{display:none!important}.page-container{max-width:none;padding:0}.report-pages{display:block}.report-page{width:210mm;min-height:297mm;margin:0;box-shadow:none;border:0;page-break-after:always}.report-page:last-child{page-break-after:auto}}
+
+@media (max-width:1020px){:root{--page:940px}.dashboard-grid{grid-template-columns:1fr 1fr}.direction-detail{grid-column:1/-1}.result-layout{grid-template-columns:250px 1fr}.plan-focus{grid-template-columns:1.2fr .8fr}.exec-progress{grid-template-columns:1fr 1fr}.progress-hero{grid-row:span 2}.settings-grid{grid-template-columns:1fr 1fr}.settings-links{grid-column:1/-1}}
+
+@media (max-width:760px){body{padding-bottom:68px}.page-container{padding:28px 16px 82px}.section-head{display:block}.section-head h1{font-size:var(--mmri-type-page-size)}.section-action{margin-top:16px}.result-actions{width:100%}.lead{font-size:var(--mmri-type-body-size)}.auth-page .page-container{padding-top:22px}.auth-grid{display:block;min-height:auto}.auth-copy .brand{margin-bottom:42px}.auth-copy h1{font-size:var(--mmri-type-display-product-size)}.auth-copy .lead,.auth-quote{display:none}.auth-card{margin-top:36px;padding:22px}.profile-top{display:block}.profile-top h1{font-size:var(--mmri-type-page-size)}.profile-top .save-state{display:block;margin-top:10px}.profile-progress{display:block}.profile-steps{grid-template-columns:repeat(5,1fr);gap:3px}.profile-steps:before{display:none}.profile-steps button{font-size:0}.profile-steps button span{width:31px;height:31px;font-size:var(--mmri-type-meta-size)}.profile-count{margin-top:12px;text-align:left}.profile-form{padding:20px 16px}.profile-stage-head h2{font-size:var(--mmri-type-section-size)}.question-index{display:none}.option-list,.option-list.compact{grid-template-columns:1fr}.choice{min-height:52px}.dashboard-grid{display:block}.dashboard-grid>.card{margin-bottom:12px}.overall-card{padding:20px}.direction-list,.direction-detail{padding:18px}.direction-item{grid-template-columns:38px 1fr auto}.mini-findings{grid-template-columns:1fr}.bottom-nav{display:grid;position:fixed;bottom:0;left:0;right:0;z-index:60;height:64px;background:#fff;border-top:1px solid var(--border);grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom)}.bottom-nav button{border:0;background:#fff;color:#7A8087;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:var(--mmri-type-meta-size)}.bottom-nav button.active{color:var(--green)}.bottom-nav .icon{width:19px;height:19px}.assessment-top{height:58px;padding:0 10px}.assessment-top .brand{font-size:var(--mmri-type-section-size)}.assessment-top .text-action{font-size:var(--mmri-type-meta-size)}.assessment-page{padding:24px 16px 50px}.assessment-card{margin-top:28px}.assessment-card h1{font-size:var(--mmri-type-section-size)}.assessment-options.grid-options{grid-template-columns:1fr}.assessment-note{display:none}.assessment-actions{position:sticky;bottom:10px;background:rgba(250,252,251,.92);backdrop-filter:blur(3px);padding-top:12px}.result-layout{display:block}.module-nav{display:flex;overflow-x:auto;gap:6px;padding:8px;margin-bottom:12px;scrollbar-width:none}.module-nav>.eyebrow{display:none}.module-row{min-width:180px;grid-template-columns:25px 1fr 28px;border:1px solid var(--border)}.module-detail{padding:20px 16px}.module-detail h2{font-size:var(--mmri-type-section-size)}.module-score strong{font-size:var(--mmri-type-display-product-size)}.detail-two-col,.cause-reco{grid-template-columns:1fr}.category-title{display:block}.category-row{grid-template-columns:1fr 90px 32px 12px}.category-row>span:first-child{font-size:var(--mmri-type-meta-size)}.plan-overview{grid-template-columns:1fr}.stage-tabs{display:flex;overflow-x:auto;scrollbar-width:none}.stage-tabs button{min-width:125px}.plan-focus{grid-template-columns:1fr}.exec-progress{display:block}.exec-progress>.card{margin-bottom:12px}.trend-card{padding:16px}.trend-head{display:block}.date-compare{width:max-content;margin-top:10px}.compare-detail-grid{grid-template-columns:1fr}.settings-grid{display:block}.settings-grid>.card{margin-bottom:12px}.company-profile{grid-template-columns:52px 1fr}.state-grid{grid-template-columns:1fr}.category-scorebar{display:none}}
+
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation-duration:.001ms!important;animation-iteration-count:1!important}}
+
+/* Live API integration */.inline-error{margin:12px 0;padding:10px 12px;border-radius:9px;background:var(--danger-bg);color:var(--danger);font-size:var(--mmri-type-compact-size);font-weight:var(--mmri-weight-semibold)}.mode-buttons button.selected{background:var(--mint);border-color:#B8C9DF;color:var(--green)}@media (max-width:760px){.assessment-mode-picker{display:block}.mode-buttons{margin-top:12px}.mode-buttons button{flex:1}}
+
+/* =========================================================
+   MMRI Visual Refinement v1.6 - Executive Minimal
+   ========================================================= */:root{
+  --bg:#F4F7F6;
+  --surface:#FFFFFF;
+  --deep:#111B39;
+  --green:#18326C;
+  --green-2:#2C4582;
+  --mint:#E8EDF3;
+  --mint-2:#F4F7F9;
+  --text:#181D25;
+  --muted:#6B7077;
+  --border:#E4E7E9;
+  --soft:#F1F3F4;
+  --shadow:0 18px 48px rgba(17,27,57,.065);
+  --radius:18px;
+  --page:1240px;
+}body{font-size:var(--mmri-type-body-size);letter-spacing:var(--mmri-tracking-compact)}.brand{font-family:var(--mmri-font-family);font-size:var(--mmri-type-section-size);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display)}.page-container{padding-top:42px}.section-head{align-items:center;margin-bottom:30px}.section-head h1{font-size:var(--mmri-type-display-product-size);max-width:760px;margin-top:6px}.section-desc{font-size:var(--mmri-type-body-size);line-height:1.6;max-width:720px}.eyebrow{font-size:var(--mmri-type-meta-size);letter-spacing:var(--mmri-tracking-meta);font-weight:var(--mmri-weight-display)}.card{border-color:rgba(224,228,231,.92);box-shadow:none}.status{padding:5px 9px;font-size:var(--mmri-type-meta-size);letter-spacing:var(--mmri-tracking-compact)}/* Landing: replace decorative radar with an executive product preview */.preview-direction.active{background:var(--mint-2);box-shadow:inset 0 0 0 1px #DCE3EC}.preview-direction.active .preview-direction-icon{background:var(--mint)}/* Auth / profile */.choice{border-radius:11px;min-height:54px}.choice.selected{background:#EDF2F7;box-shadow:inset 3px 0 0 var(--green)}/* Dashboard: five-direction executive composition */.overall-card .eyebrow{text-align:left}.direction-item.active{background:#EAEFF4;border-color:#D3DEE9;box-shadow:inset 3px 0 0 var(--green)}.direction-detail>.muted{max-width:620px;font-size:var(--mmri-type-compact-size);line-height:1.6}/* Assessment: one calm decision at a time *//* Results: executive score first, detail second */.module-nav>.eyebrow{padding:8px 8px 10px}.module-row.active{background:#EAEFF4;box-shadow:inset 3px 0 0 var(--green)}.module-score strong{font-size:var(--mmri-type-display-product-size)}.insight-box.positive{background:#EEF2F7}.recommendation{background:#EEF2F7!important}.recommendation h3{font-size:var(--mmri-type-body-large-size)}/* 365-day plan */.stage-tabs button.active{background:#fff;box-shadow:0 2px 7px rgba(17,27,57,.07)}/* History */.exec-progress>.card{border-radius:18px;padding:24px}.compare-detail-grid>.card{border-radius:18px;padding:24px}/* Report *//* Settings / system states */.settings-grid>.card{border-radius:18px;padding:24px}@media (max-width:1020px){.dashboard-grid{grid-template-columns:1fr 1.25fr}.overall-card{grid-column:1/-1}}
+
+@media (max-width:760px){.page-container{padding:26px 15px 82px}.section-head h1{font-size:var(--mmri-type-page-size)}.section-desc{font-size:var(--mmri-type-compact-size)}.hero-preview{margin-top:34px;padding:17px;border-radius:18px}.preview-head{display:block}.preview-head .status{margin-top:10px}.preview-summary{grid-template-columns:1fr}.preview-summary button{text-align:left;padding:0}.dashboard-grid{display:block}.direction-list,.direction-detail,.overall-card{display:block;margin-bottom:12px}.overall-card .available-note{margin-top:14px;display:inline-flex}.direction-detail{min-height:0}.big-score{font-size:var(--mmri-type-display-public-size);margin-top:28px}.assessment-card h1{font-size:var(--mmri-type-page-size)}.special-options{grid-template-columns:1fr}.assessment-options.grid-options{grid-template-columns:1fr}.assessment-note{display:flex}.result-layout{display:block}.module-detail{padding:21px 17px}.module-nav{background:transparent;border:0}.stage-tabs{border-radius:12px}.stage-tabs button{min-width:118px}.bottom-nav{height:66px;box-shadow:0 -4px 18px rgba(17,27,57,.05)}}
+
+/* =========================================================
+   MMRI Visual Alignment + Motion v1.7
+   Approved direction: Minimal & Clean / Executive
+   ========================================================= */:root{
+  --bg:#F8FAFA;--surface:#fff;--deep:#0F1B3C;--green:#0D286F;--green-2:#253F85;
+  --mint:#E8EEF5;--mint-2:#F3F6FA;--text:#181C23;--muted:#6B7177;--border:#E1E5E9;
+  --soft:#F1F4F5;--warn:#C17416;--warn-bg:#FFF7E9;--danger:#B64D49;--danger-bg:#FFF1F0;
+  --shadow:0 18px 54px rgba(16,28,60,.075);--radius:14px;--page:1220px;
+}body{font-size:var(--mmri-type-body-size);letter-spacing:0;color:var(--text)}.brand{font-family:var(--font-heading,var(--font-ui,Inter,system-ui,sans-serif))!important;font-size:var(--mmri-type-page-size)!important;font-weight:var(--mmri-weight-semibold)!important;letter-spacing:var(--mmri-tracking-heading)!important;color:#11244A}.page-container{padding:38px 24px 90px}.card{border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:0 1px 0 rgba(15,27,60,.018)}.eyebrow{color:var(--green);font-size:var(--mmri-type-meta-size);letter-spacing:var(--mmri-tracking-meta);font-weight:var(--mmri-weight-display)}.section-head{align-items:flex-start;margin-bottom:25px}.section-head h1{font-size:var(--mmri-type-page-size);letter-spacing:var(--mmri-tracking-heading);margin:5px 0 5px;line-height:1.15}.section-desc{font-size:var(--mmri-type-compact-size);line-height:1.55;max-width:720px}.public-login,.profile-chip,.bottom-nav button{transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease}/* Header: match approved flat navigation, not v1.6 pill navigation *//* Motion primitives */.reveal{opacity:0;transform:translateY(16px);transition:opacity .52s cubic-bezier(.2,.75,.25,1),transform .52s cubic-bezier(.2,.75,.25,1);transition-delay:var(--reveal-delay,0ms)}.reveal.is-visible{opacity:1;transform:none}/* Public landing */.landing{padding-top:18px}.preview-direction.active{background:#EDF2F7;box-shadow:inset 3px 0 0 var(--green)}/* Dashboard - approved Overview composition */.dashboard-score-pane .eyebrow{margin-bottom:2px}.dashboard-score-pane .status{margin-top:2px}.dashboard-finding.positive{background:#EEF3F8}/* Assessment - minimal one-question flow *//* Results - approved Category Detail */.module-row.active{background:#EAF0F6;box-shadow:inset 3px 0 0 var(--green)}.module-row.active .module-icon{background:#D7E2F0}.module-name{font-size:var(--mmri-type-meta-size);line-height:1.25}.module-band .status{font-size:var(--mmri-type-meta-size)}.module-score{display:flex;align-items:flex-end;gap:3px}.module-score strong{font-size:var(--mmri-type-display-public-size);color:#141B27}.module-score span{margin-bottom:6px}.recommendation{background:#F1F4F8!important;border:1px solid #DDE4EB!important}.recommendation h3{font-size:var(--mmri-type-compact-size);margin:8px 0 5px}.recommendation p{font-size:var(--mmri-type-meta-size);line-height:1.5}.recommendation small{font-size:var(--mmri-type-meta-size)}/* 365 Plan - approved Focused Phase */.motion-check{width:23px;height:23px;border:1px solid #BFC4CB;border-radius:5px;display:grid;place-items:center;color:#fff;transition:background .18s ease,border-color .18s ease,transform .18s ease}.motion-check.is-active{background:var(--green);border-color:var(--green);animation:choicePop .22s ease-out both}/* History - selected Executive Progress */.history-summary-grid>.card{padding:15px 16px;min-height:190px}.history-icon.positive{background:#E4ECF4;color:var(--green)}.history-icon.neutral{background:#EEF1F3;color:#525961}.up{color:var(--green)!important}.down{color:var(--danger)!important}.direction-change-list .coming{opacity:.55}/* Report: keep selected Executive Summary visual, motion only on screen *//* Profile micro-motion */.profile-steps button.active span{transform:scale(1.06)}/* System states *//* Mobile - selected Minimal & Clean */@media (max-width:760px){.brand{font-size:var(--mmri-type-section-size)!important}.public-nav,.profile-chip>span:last-child{display:none}.profile-chip{padding:0}.profile-avatar{width:32px;height:32px}.public-login{display:none}.page-container{padding:24px 15px 82px}.section-head{display:block;margin-bottom:19px}.section-head h1{font-size:var(--mmri-type-page-size)}.section-action{margin-top:13px}.section-action .result-actions{width:100%}.result-actions{display:grid;grid-template-columns:1fr 1fr}.hero-preview{margin-top:28px}.dashboard-overview-card{grid-template-columns:1fr;padding:16px;gap:10px}.dashboard-score-pane{border-right:0;border-bottom:1px solid var(--border);padding:0 0 15px}.dashboard-finding{padding:14px}.business-direction-grid{grid-template-columns:1fr}.results-next-ribbon,.plan-progress-ribbon,.history-next-ribbon{grid-template-columns:32px 1fr;padding:12px}.assessment-page{padding:19px 16px 74px}.assessment-meta .eyebrow{font-size:var(--mmri-type-meta-size)}.assessment-card{margin-top:27px}.assessment-card h1{font-size:var(--mmri-type-section-size)}.special-options{grid-template-columns:1fr}.assessment-actions{position:sticky;bottom:8px;background:rgba(250,251,251,.93);backdrop-filter:blur(3px);padding:10px 0 0}.approved-category-detail{display:block}.module-nav{position:static;display:flex;overflow-x:auto;gap:5px;padding:7px;border:0;background:transparent;margin:0 -3px 9px;scrollbar-width:none}.overall-nav{min-width:115px;background:#EEF2F7;border-radius:8px;grid-template-columns:28px 1fr;padding:7px}.overall-nav strong{grid-column:2}.overall-nav-icon{width:27px;height:27px}.module-divider,.module-nav-meta{display:none}.module-row{min-width:156px;grid-template-columns:27px 1fr 25px;border:1px solid var(--border);background:#fff}.module-icon{width:27px;height:27px}.module-detail{padding:18px 15px}.module-detail-head h2{font-size:var(--mmri-type-section-size)}.module-score strong{font-size:var(--mmri-type-display-product-size)}.detail-two-col,.cause-reco{grid-template-columns:1fr}.category-row{grid-template-columns:1fr 65px 28px}.coverage-label{display:none}.category-scorebar{display:block!important}.plan-stage-strip{display:flex;overflow-x:auto;gap:7px;scrollbar-width:none;padding-bottom:3px}.approved-focused-phase{grid-template-columns:1fr}.tasks-card,.phase-result{padding:16px!important}.phase-result{margin-top:0}.history-executive-hero{grid-template-columns:1fr}.history-score-card{grid-template-columns:125px 1fr;padding:15px}.history-quote-card{min-height:135px}.history-quote-card blockquote{font-size:var(--mmri-type-body-large-size)}.history-summary-grid{grid-template-columns:1fr}.history-summary-grid>.card{min-height:0}.direction-change-list>div{grid-template-columns:90px 1fr 28px}.trend-chart{overflow-x:auto}.trend-chart svg{min-width:520px}.bottom-nav{height:62px;background:rgba(255,255,255,.97);box-shadow:0 -5px 18px rgba(15,27,60,.045)}.bottom-nav button{font-size:var(--mmri-type-meta-size);position:relative}.bottom-nav button.active:after{content:"";position:absolute;top:0;width:22px;height:2px;border-radius:99px;background:var(--green)}}
+
+@media (max-width:420px){.result-actions{grid-template-columns:1fr}}
+
+@media print{.route-stage,.report-page,.report-bars i b{animation:none!important}.reveal{opacity:1!important;transform:none!important}.bottom-nav,.report-toolbar{display:none!important}.page-container{padding:0}.report-page{box-shadow:none;border:0;page-break-after:always}}
+
+@media (prefers-reduced-motion:reduce){.reveal,.preview-direction,.trend-line-animate,.trend-point,.panel-swap,.question-enter,.category-row,.category-scorebar i,.direction-change-list em{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}}
+
+@keyframes routeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes drawerIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}@keyframes previewRowIn{to{opacity:1;transform:none}}@keyframes processIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes progressGrow{from{width:0}}@keyframes savePulse{from{opacity:.35;transform:scale(.75)}to{opacity:1;transform:scale(1)}}@keyframes panelSwap{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes questionIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}@keyframes choicePop{0%{transform:scale(.8)}70%{transform:scale(1.12)}100%{transform:scale(1)}}@keyframes fadePulse{from{opacity:.65}to{opacity:1}}@keyframes categoryRowIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}@keyframes barGrow{from{width:0}}@keyframes taskIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes trendDraw{to{stroke-dashoffset:0}}@keyframes trendPointIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}@keyframes reportPageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes spin{to{transform:rotate(360deg)}}/* =========================================================
+   MMRI v1.8 - Epic Minimal
+   One message, one action, progressive disclosure.
+   ========================================================= */:root{
+  --bg:#F6F7F4;
+  --surface:#FFFFFF;
+  --deep:#0A1536;
+  --green:#10276D;
+  --green-2:#1C367C;
+  --mint:#E7EDF3;
+  --mint-2:#F2F6F8;
+  --text:#131925;
+  --muted:#696F76;
+  --border:#E2E6E8;
+  --soft:#EFF1F2;
+  --warn:#A9651C;
+  --warn-bg:#FFF7EA;
+  --danger:#A44742;
+  --danger-bg:#FFF1EF;
+  --shadow:0 24px 70px rgba(10,21,54,.075);
+  --radius:14px;
+  --radius-sm:9px;
+  --page:1120px;
+}html{scroll-padding-top:78px}body{color:var(--text);font-size:var(--mmri-type-body-size);line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}button{touch-action:manipulation}button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid rgba(16,39,109,.22);outline-offset:3px}.brand{font-family:var(--font-heading,var(--font-ui,Inter,system-ui,sans-serif));font-size:var(--mmri-type-page-size);font-weight:var(--mmri-weight-semibold);letter-spacing:var(--mmri-tracking-heading);color:var(--deep)}.eyebrow{font-size:var(--mmri-type-meta-size);line-height:1.2;letter-spacing:var(--mmri-tracking-meta);font-weight:var(--mmri-weight-display);color:var(--green)}.lead{font-size:var(--mmri-type-body-large-size);line-height:1.7;color:var(--muted)}.card{border:1px solid var(--border);border-radius:var(--radius);box-shadow:none}.page-container{max-width:var(--page);padding:42px 24px 90px}.section-head{margin-bottom:24px;align-items:flex-end}.section-head h1{font-size:var(--mmri-type-page-size);line-height:1.12;margin:7px 0 7px;letter-spacing:var(--mmri-tracking-display);font-weight:var(--mmri-weight-display)}.section-desc{font-size:var(--mmri-type-compact-size);max-width:690px}.status{font-size:var(--mmri-type-meta-size);padding:5px 9px;font-weight:var(--mmri-weight-display)}/* Header *//* Motion: restrained, purposeful */.reveal{opacity:0;transform:translateY(8px);transition:opacity .42s cubic-bezier(.22,.8,.25,1),transform .42s cubic-bezier(.22,.8,.25,1);transition-delay:var(--reveal-delay,0ms)}.reveal.is-visible{opacity:1;transform:none}.motion-check{transition:background .18s ease,border-color .18s ease,transform .18s ease}.motion-check.is-active{animation:choicePop .2s ease-out both}/* Public landing */.showcase-top .brand{font-size:var(--mmri-type-section-size)}.showcase-direction.active{background:#F2F5F9}.showcase-direction.active .showcase-direction-icon{background:#DFE7F0;color:var(--green)}/* Dashboard: one glance *//* Assessment: one question, zero noise *//* Results: executive first, detail on demand *//* Plan: timeline + focused phase *//* History: executive progress without decoration overload */.up{color:var(--green)!important}.down{color:var(--danger)!important}/* Profile *//* Account *//* Auth */.auth-copy .lead{font-size:var(--mmri-type-body-size)}/* Report *//* API states *//* System state demo still uses shared restrained language *//* Desktop refinements */@media (max-width:1020px){.showcase-score{grid-template-columns:140px 1fr}}
+
+/* Mobile - Minimal & Clean */@media (max-width:760px){body{font-size:var(--mmri-type-compact-size)}.brand{font-size:var(--mmri-type-section-size)}.public-nav,.profile-chip>span:last-child{display:none}.profile-chip{padding:0}.profile-avatar{width:32px;height:32px}.public-login{display:none}.page-container{padding:24px 15px 82px}.section-head{display:block;margin-bottom:18px}.section-head h1{font-size:var(--mmri-type-page-size)}.section-desc{font-size:var(--mmri-type-meta-size)}.section-action{margin-top:12px}.section-action .result-actions{width:100%}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.showcase-window{border-radius:14px}.showcase-score{grid-template-columns:118px 1fr;padding:18px 15px}.showcase-score strong{font-size:var(--mmri-type-display-product-size)}.showcase-summary{padding-left:14px}.showcase-direction{padding:7px 15px}.showcase-footer{padding:0 15px}.process-intro h2{font-size:var(--mmri-type-page-size)}.assessment-top{height:56px;padding:0 9px}.auth-page .page-container{padding-top:20px}.auth-grid{display:block;min-height:auto}.auth-copy .brand{margin-bottom:40px}.auth-copy h1{font-size:var(--mmri-type-display-product-size)}.auth-copy .lead,.auth-quote{display:none}.auth-card{margin-top:32px;padding:20px}.bottom-nav{display:grid;position:fixed;bottom:0;left:0;right:0;z-index:60;height:62px;background:rgba(255,255,255,.97);border-top:1px solid var(--border);grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -7px 20px rgba(10,21,54,.04)}.bottom-nav button{border:0;background:transparent;color:#7A8087;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:var(--mmri-type-meta-size);position:relative}.bottom-nav button.active{color:var(--green)}.bottom-nav button.active:after{content:"";position:absolute;top:0;width:21px;height:2px;border-radius:99px;background:var(--green)}.bottom-nav .icon{width:18px;height:18px}}
+
+@media (max-width:420px){.showcase-score{grid-template-columns:1fr}.showcase-summary{border-left:0;border-top:1px solid var(--border);padding:12px 0 0}}
+
+@media print{body{background:#fff;background-image:none}.route-stage,.reveal,.panel-swap,.question-enter{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}.bottom-nav{display:none!important}.page-container{max-width:none;padding:0}.report-pages{display:block}}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.reveal,.drawer-enter,.panel-swap,.question-enter,.showcase-direction,.trend-line-animate,.trend-point{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}}
+
+@keyframes legacyMotionA{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}@keyframes legacyMotionB{from{opacity:0;transform:translateY(-5px) scale(.99)}to{opacity:1;transform:none}}@keyframes legacyMotionC{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes legacyMotionD{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}/* =========================================================
+   MMRI v1.8 - Legibility & accessibility hardening
+   Preserve minimalism by reducing elements, not text size.
+   ========================================================= */:root{--muted:#5D636A}.eyebrow,.status{font-size:var(--mmri-type-meta-size)}/* Decision-support surfaces: never hide meaning in microtype. *//* Public example remains compact but readable. *//* Executive report: compact enough for two pages, readable enough to use. */@media (max-width:760px){.section-desc{font-size:var(--mmri-type-compact-size)}.bottom-nav button{font-size:var(--mmri-type-meta-size)}.showcase-direction small,.showcase-direction>strong small{font-size:var(--mmri-type-meta-size)}}
+
+/* =========================================================
+   MMRI v1.9 - Radar + Unified Diagnostic Workspace
+   Principles: academic clarity,public demo parity,one flow.
+   ========================================================= */:root{
+ --public-example-deep:#0C1636;--public-example-green:#0B256C;--public-example-green-2:#28458E;--public-example-mint:#E8EEF5;
+ --public-example-ink:#151A23;--public-example-muted:#606870;--public-example-line:#DDE2E7;--public-example-soft:#F4F7F8;
+ --public-example-warm:#F6F4EE;--public-example-shadow:0 22px 60px rgba(12,22,54,.075);
+}.demo-notice{max-width:1220px;margin:0 auto 18px;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #D9E0E8;border-radius:12px;background:#F3F7F9}.demo-notice>span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#DFE7F0;color:var(--public-example-green)}.demo-notice b{font-size:var(--mmri-type-meta-size)}.demo-notice p{font-size:var(--mmri-type-meta-size);color:var(--public-example-muted);margin:2px 0 0;line-height:1.45}/* Header / navigation *//* Home hero *//* System journey *//* Domains *//* Unified diagnostic workspace */.inline-special-answers button.selected{border-color:#8EA2BF;background:#EEF3F8;color:var(--public-example-green)}/* Demo plan / comparison / report */@media (max-width:760px){.demo-notice{grid-template-columns:30px 1fr;padding:11px}.inline-assessment-panel{padding:18px 14px;border-radius:14px}.inline-assessment-head{display:block}.inline-assessment-head .save-state{margin-top:8px}.inline-assessment-head h2{font-size:var(--mmri-type-section-size)}.inline-question>h3{font-size:var(--mmri-type-section-size)}.inline-question footer{display:block}.inline-special-answers{display:grid;grid-template-columns:1fr}.diagnostic-radar-copy,.diagnostic-radar-chart{width:100%}.diagnostic-radar-copy h2{font-size:var(--mmri-type-section-size)}.demo-plan-copy header{grid-template-columns:1fr auto}.demo-plan-copy header>span{grid-column:1/-1}}
+
+@media (prefers-reduced-motion:reduce){}/* =========================================================
+   MMRI v1.10 - Homepage Clean Minimal (Menyan frozen match)
+   Homepage-only freeze candidate. Do not propagate ad hoc.
+   ========================================================= */:root{
+ --mmri-bg:#F7F9FA;--mmri-surface:#FFFFFF;--mmri-soft:#F0F3F7;--mmri-green-950:#04133E;--mmri-green-800:#051A56;--mmri-green-700:#001E67;--mmri-green-600:#052471;--mmri-green-300:#9AA8C3;--mmri-green-200:#C6D3E5;--mmri-green-100:#E8EDF4;--mmri-text:#101522;--mmri-muted:#5E656E;--mmri-border:#DCE1E7;
+}/* Public header *//* Public hero *//* Menyan process section *//* Product/domain section *//* Why MMRI *//* Authenticated home shell *//* Homepage responsive QA *//* =========================================================
+   Company / Organization Profile - Menyan Focus Mode v1.11
+   Frozen homepage tokens are intentionally reused unchanged.
+   ========================================================= */.company-focus-content .eyebrow{font-size:var(--mmri-type-meta-size)}@media (max-width:760px){.company-focus-org{display:none}.company-focus-meta{padding:0 15px;min-height:43px;font-size:var(--mmri-type-meta-size)}.company-focus-meta span:last-child{max-width:48%;text-align:right}.company-focus-content{padding:25px 17px 23px}.company-focus-content h1{font-size:var(--mmri-type-page-size);line-height:1.22;margin-top:8px}.company-example-page{padding:28px 14px 76px}}
+
+@media (max-width:390px){.company-focus-content h1{font-size:var(--mmri-type-section-size)}.company-focus-meta{padding-left:12px;padding-right:12px}}
+
+@media (prefers-reduced-motion:reduce){}@media (max-width:760px){.company-example-top-tag{font-size:var(--mmri-type-meta-size)}.company-example-progress{padding:10px 15px 0}}
+
+/* =========================================================
+   MMRI v1.12 - Unified Diagnostic Workspace
+   Menyan: Questionnaire Insight Focus + Results Insight Focus
+   + Category Detail. Page 3 only; frozen home/company untouched.
+   ========================================================= *//* Active assessment - Menyan Insight Focus *//* Result overview - Menyan Insight Focus *//* Category detail - Menyan Option 2 *//* R15.5 report overflow guards *//* v1.13 - Strategic Priorities / Recommendations *//* v1.14 - 365-Day Plan / Menyan Option 2: Focused Phase *//* v1.15 - Menyan Executive Progress history */.ep-delta.down b{color:#ffd8cf}.ep-delta.up b{color:#D8E8F7}.ep-round-icon.positive{background:#E5EDF4;color:var(--green)}.ep-round-icon.neutral{background:#EEF1F3;color:#565E67}.ep-direction-list .coming{opacity:.58;padding-bottom:2px}.ep-direction-list .coming small{position:absolute;right:0;top:11px;font-size:var(--mmri-type-meta-size);color:var(--muted)}.inline-state.error{margin:0 0 10px;padding:10px 12px;border:1px solid #f0c9c4;background:#fff4f2;border-radius:9px;display:flex;justify-content:space-between;gap:10px;font-size:var(--mmri-type-meta-size);color:#7f3027}.inline-state.error button{border:0;background:transparent;color:#8a2d21;text-decoration:underline;cursor:pointer;font-weight:var(--mmri-weight-semibold)}@media (max-width:900px){.ep-page-header{align-items:flex-start;flex-direction:column;gap:14px}.ep-compare-controls{width:100%}.ep-compare-controls>*{flex:1}.ep-hero-grid{grid-template-columns:1fr}.ep-summary-grid{grid-template-columns:1fr 1fr}.ep-directions-card{grid-column:1/-1}.ep-history-detail-grid{grid-template-columns:1fr}.ep-score-card{grid-template-columns:130px 1fr 1fr}}
+
+@media (max-width:640px){.executive-progress-page{padding-top:19px}.ep-page-header h1{font-size:var(--mmri-type-page-size)}.ep-page-header p{font-size:var(--mmri-type-meta-size)}.ep-compare-controls{display:grid;grid-template-columns:1fr}.ep-date-range{min-width:0}.ep-score-card{grid-template-columns:110px 1fr;padding:16px;min-height:0}.ep-score-copy{border-right:0;padding-right:0}.ep-score-copy>strong{font-size:var(--mmri-type-page-size)}.ep-delta{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.17);padding-top:12px}.ep-quote-card{min-height:150px;padding:20px}.ep-quote-card blockquote{font-size:var(--mmri-type-body-large-size);max-width:250px}.ep-summary-grid{grid-template-columns:1fr}.ep-directions-card{grid-column:auto}.ep-summary-card{min-height:0}.ep-next-step{grid-template-columns:32px 1fr}.ep-direction-list>div{grid-template-columns:100px 1fr 28px}.ep-history-detail-grid{display:block}.ep-assessment-list{margin-top:10px}.ep-trend-card{overflow:hidden}.ep-trend-card .trend-chart{overflow-x:auto}.ep-trend-card svg{min-width:500px}}
+
+@media (prefers-reduced-motion:reduce){.ep-direction-list em{animation:none!important}}
+
+/* =========================================================
+   MMRI Page 7 v1.16 - Executive Summary Report
+   Menyan Option 1: two-page executive hierarchy
+   ========================================================= */.executive-report-title.second{margin-bottom:12px}.executive-report-note>.icon{color:#9b6a21}@media (max-width:760px){.executive-report-toolbar-actions{margin-top:14px;display:grid;grid-template-columns:1fr 1fr}.executive-report-document{gap:14px}.executive-report-page{min-height:auto;padding:24px 18px 48px;border-radius:10px}.executive-report-head{gap:12px}.executive-report-meta{font-size:var(--mmri-type-meta-size)}.executive-report-title{margin-top:20px}.executive-report-title h2{font-size:var(--mmri-type-section-size)}.executive-summary-hero{grid-template-columns:115px 1fr;gap:12px}.executive-summary-copy{padding:14px}.executive-summary-copy>p{font-size:var(--mmri-type-meta-size)}.executive-quality-strip{grid-template-columns:1fr}.executive-purpose-row{grid-template-columns:128px 1fr 26px}.executive-findings-grid{grid-template-columns:1fr}.executive-action-meta{grid-template-columns:1fr}.executive-remeasure{grid-template-columns:32px 1fr}.executive-report-footer{position:static;margin-top:24px;padding-top:9px;left:auto;right:auto;bottom:auto}}
+
+@media (max-width:430px){.executive-report-toolbar-actions{grid-template-columns:1fr}.executive-summary-hero{grid-template-columns:1fr}.executive-score-column{margin-bottom:4px}.executive-purpose-row{grid-template-columns:1fr 70px 24px}.executive-report-head small{display:none}.executive-roadmap-title{display:block}.executive-roadmap-title small{display:block;margin-top:2px}}
+
+@media print{@page{size:A4;margin:0}html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}.bottom-nav,.demo-notice{display:none!important}.page-container.executive-report-page-wrap{max-width:none!important;padding:0!important;margin:0!important}.executive-report-document{display:block;max-width:none;margin:0}.executive-report-page{width:210mm;height:297mm;min-height:297mm;margin:0;padding:13mm 14mm 14mm;border:0!important;box-shadow:none!important;border-radius:0!important;page-break-after:always;break-after:page;animation:none!important}.executive-report-page:last-child{page-break-after:auto;break-after:auto}.executive-report-footer{left:14mm;right:14mm;bottom:8mm}.executive-purpose-row>i b{animation:none!important}}
+
+@media (prefers-reduced-motion:reduce){.executive-report-page,.executive-purpose-row>i b{animation:none!important;transition:none!important}}
+
+/* =========================================================
+   MMRI Account + System States v1.17 - Minimal & Clean
+   ========================================================= *//* v1.18 final accessibility freeze - consistent touch targets *//* v1.19 - three-section information architecture *//* ======================================================================
+   MMRI Professional Typography System - Step 2/25 - v2.0
+   Frozen benchmark: neutral sans-serif, restrained scale, executive density.
+   ====================================================================== *//* R16.04: typography values are sourced from design/tokens.css. */html,body,button,input,select,textarea{font-family:var(--font-ui)}body{font-size:var(--type-body);line-height:var(--type-body-line);font-weight:var(--weight-regular);letter-spacing:0}/* Product headings: no decorative serif, no startup-scale display treatment. */h1,h2,h3,h4,h5,h6,.brand,.auth-quote,.executive-report-brand,.ep-quote-card blockquote{
+  font-family:var(--font-heading)!important;
+  font-style:normal!important;
+}h1{font-weight:var(--weight-semibold);letter-spacing:var(--mmri-tracking-heading)}h2{font-weight:var(--weight-semibold);letter-spacing:var(--mmri-tracking-heading)}h3,h4,h5,h6{font-weight:var(--weight-semibold);letter-spacing:var(--mmri-tracking-heading)}/* Common page hierarchy. */.section-head h1,.profile-top h1,.analysisHead h1{
+  font-size:var(--mmri-type-page-size)!important;
+  line-height:var(--mmri-type-page-line)!important;
+  letter-spacing:var(--mmri-tracking-heading)!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+}.section-head h2,.profile-stage-head h2,.priorityDetail h2,.tasks h2,.planSide h2,.historyDetail h2,.historyScore h2,.question h2,.summary h2{
+  font-size:var(--mmri-type-section-size)!important;
+  line-height:var(--mmri-type-section-line)!important;
+  letter-spacing:var(--mmri-tracking-heading)!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+}.step h3,.summary h3,.detailBlock h3,.reportBox h3{
+  font-size:var(--type-subsection)!important;
+  line-height:var(--type-subsection-line)!important;
+  letter-spacing:var(--mmri-tracking-heading)!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+}/* Public hero remains the only display-scale heading, intentionally restrained. *//* Labels and metadata: sentence case, quiet emphasis, no shouting. */.eyebrow,.executive-report-title>span{
+  font-size:var(--type-meta)!important;
+  line-height:1.35!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+  letter-spacing:var(--mmri-tracking-compact)!important;
+  text-transform:none!important;
+}.small,.helper,.save-state,.profile-count,.section-desc,.sync,.progressLabel,.reportMeta,.executive-report-meta,.executive-report-head small{
+  font-size:var(--type-meta);
+  font-weight:var(--mmri-weight-medium);
+}.lead,.sectionLead,.reportLead{
+  font-size:var(--mmri-type-body-large-size)!important;
+  line-height:var(--mmri-type-body-large-line)!important;
+  font-weight:var(--mmri-weight-regular)!important;
+  letter-spacing:0!important;
+}/* Controls use medium/semi-bold rather than heavy display weights. */.navbtn,.subbtn,.text-action,.choice,.answer,.phase,.priorityItem{
+  font-size:var(--type-button)!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+  letter-spacing:0!important;
+}/* Wordmark: sober and typographic. */.brand,.executive-report-brand,.reportBrand strong{
+  font-family:var(--font-heading)!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+  letter-spacing:var(--mmri-tracking-heading)!important;
+}.brand{font-size:var(--mmri-type-section-size)!important}/* Executive report typography - compact, print-oriented, sans-serif. *//* Numeric emphasis stays precise without becoming gamified. */.scoreCircle strong,.delta,.ep-score-number{
+  font-family:var(--font-heading)!important;
+  font-weight:var(--mmri-weight-semibold)!important;
+  letter-spacing:var(--mmri-tracking-heading)!important;
+}/* Mobile hierarchy preserves the same relationships rather than shrinking randomly. */@media (max-width:767px){:root{--type-page:28px;--type-section:21px;--type-subsection:16px;--type-body:15px;--type-meta:12px}.executive-report-title h2,.reportPage h1{font-size:var(--mmri-type-section-size)!important}.lead,.sectionLead,.reportLead{font-size:var(--mmri-type-body-size)!important;line-height:1.6!important}}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* ======================================================================
+   MMRI Professional Design Token System - Step 3/25 - v2.1
+   Enterprise baseline: quiet surfaces,restrained accent,compact radii,border-led hierarchy,no ornamental gradients or card shadows.
+   ====================================================================== *//* R16.04: canonical token values are sourced from design/tokens.css. */body{color:var(--mmri-color-text)!important}::selection{background:var(--mmri-color-brand-soft);color:var(--mmri-color-text-strong)}/* Shared focus visibility is now owned by the Step-7 component system.
+   This fallback covers still-unmigrated native controls without competing via !important. */:where(button,input,select,textarea,a,summary):focus-visible{
+  outline:3px solid color-mix(in srgb,var(--mmri-focus) 28%,transparent);
+  outline-offset:2px;
+}/* Legacy icon controls remain on the common geometry until their screen migrates. *//* Status and labels are compact markers, not decorative capsules. *//* Primary surfaces - smaller radii, no floating-card look. *//* Small internal surfaces and selectable rows. */.choice,.direction-item,.module-row,.stage-tabs button,.profile-option,.profile-multi-option{
+  border-radius:var(--mmri-radius-control)!important;
+  box-shadow:none!important;
+}/* Selected states use a quiet tint and a precise accent edge. */.direction-item.active,.module-row.active,.stage-tabs button.active,.profile-option.selected,.profile-multi-option.selected{
+  background:var(--mmri-accent-soft)!important;
+  color:var(--mmri-ink)!important;
+  border-color:var(--mmri-accent-line)!important;
+  box-shadow:inset 3px 0 0 var(--mmri-accent)!important;
+}/* Remove ornamental gradients and decorative depth. *//* Professional card hierarchy: borders do the work. *//* Reduce ornamental circles. Keep circles only where they convey progress/state. *//* Roadmaps/timelines use lines and rows, not raised tiles. */.roadmap{background:var(--mmri-color-surface)!important}.roadmap div{box-shadow:none!important;border-radius:var(--mmri-radius-control)!important}/* Reports are paper, not dashboards. *//* Shell-level surfaces inherit the new neutral system without changing IA. *//* Progress and data marks stay thin and exact. *//* Hover should clarify, not float. *//* Error/warning surfaces are restrained and semantic. */.inline-error,.company-focus-error{background:var(--mmri-color-danger-soft)!important;border-color:color-mix(in srgb,var(--mmri-color-danger) 28%,white)!important;color:var(--mmri-color-danger)!important}@media (prefers-reduced-motion:reduce){}/* ======================================================================
+   R16.06 · Step 6/20 - Global application shell and navigation
+   Precision Editorial Analytics: three primary destinations, semantic
+   links, quiet organization identity, accessible account menu, mobile
+   bottom navigation, and one canonical content frame.
+   ====================================================================== *//* Legacy page-owned shells stay hidden while their screens migrate. *//* ======================================================================
+   MMRI Step 5 / v2.3 - Executive Homepage
+   Information-first public landing and restrained authenticated overview.
+   No radar, decorative stats, floating marketing cards, or fake pricing UI.
+   ====================================================================== */#home-pricing-anchor{height:0;overflow:hidden}/* Authenticated homepage: operational overview, not marketing hero. *//* MMRI Step 6 / 25 - professional pricing & payment architecture v2.4 *//* v2.5 - real payment workspace. Restrained, transactional, no decorative checkout chrome. *//* MMRI v2.6 - Billing management *//* =========================================================
+   MMRI Step 9 / v2.7 - Professional Analysis Workspace
+   Presentation hierarchy follows: status -> interpretation ->
+   priorities -> module comparison -> drill-down -> next decision.
+   ========================================================= *//* Step 9 local workflow: professional text tabs, not pills. *//* =========================================================
+   MMRI Step 10 / v2.8 - Focused assessment interface
+   One question at a time; native form semantics; no dashboard
+   chrome around the respondent.
+   ========================================================= *//* ================================================================
+   MMRI Step 11 - Executive Results v2.9.0
+   Document-first diagnostic result. No rings, radar, or metric cards.
+   ================================================================ *//* ================================================================
+   MMRI Step 12 - Strategic Priorities v3.0.0
+   Executive action register. Ranked rows, explicit ownership/status,
+   document-first detail. No recommendation-card grid.
+   ================================================================ *//* Step 13 / v3.1 - professional 365-day implementation register *//* ================================================================
+   MMRI Step 14 - Executive Progress / History v3.2.0
+   Comparison-first, document-style progress view.
+   ================================================================ *//* ======================================================================
+   MMRI Step 15 v3.3.0 - Executive Report
+   A4-first management document. Flat editorial hierarchy; no dashboard
+   cards, score rings, gradients, ornamental motion, or decorative badges.
+   ====================================================================== */@media print{@page{size:A4;margin:0}html,body,#root{margin:0!important;padding:0!important;background:#fff!important}body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.demo-notice{display:none!important}}
+
+/* =========================================================
+   STEP 17 / v3.5 - ACCOUNT + SYSTEM STATES
+   Minimal & Clean,one state = one meaning = one next action.
+   ========================================================= *//* ================================================================
+   MMRI Step 8/11 - Canonical Diagnosis Results Frontend v3.21.0
+   One DiagnosisResultV13 source for executive results.
+   ================================================================ *//* Step 9/11 - immutable diagnosis/strategy/plan provenance *//* R2 local QPay demo */.billing-preview-buttons button.active{border-color:var(--green);background:#EDF2F7;color:var(--green);font-weight:var(--mmri-weight-semibold)}/* R2 questionnaire correction controls *//* R2 demo login *//* R3 - diagnosis hub, separate diagnosis history, radar home *//* R7 · local demo coverage gallery *//* v3.4 company-first experience *//* make the implementation area a true tracking surface *//* screen report: readable at first glance; print remains A4-sized *//* ======================================================================
+   R14 · 3/12 - Homepage hierarchy + dominant radar
+   The authenticated home is a management dashboard for the company.
+   Diagnostic/backend semantics are intentionally untouched.
+   ====================================================================== *//* ======================================================================
+   R14 · 4/12 - Interactive management report
+   Screen report is an application surface, not an A4 document preview.
+   The two-page print representation remains isolated for Step 5/12.
+   ====================================================================== *//* ======================================================================
+   R14 · 5/12 - Two-page printable executive report
+   Print/PDF surface is intentionally independent from the screen report.
+   ====================================================================== */@media print{.demo-notice{display:none!important}}
+
+/* ======================================================================
+   R14 Step 06 / frontend 3.30.0 - Хэрэгжилтийн хяналтын самбар
+   Overview-first implementation workspace. The detailed timeline and
+   action-card redesign remain reserved for Steps 7–8.
+   ====================================================================== *//* ======================================================================
+   R14 Step 07 / frontend 3.31.0 - 365 хоногийн бодит хугацааны шугам
+   Five phases are shown as one continuous management timeline. Selected
+   phase and actual current phase are deliberately distinct states.
+   ====================================================================== *//* =========================================================
+   R14 Step 08 / frontend 3.32.0 - Хэрэгжилтийн ажлын карт
+   Default: management action cards. Secondary: compact list.
+   ========================================================= *//* ======================================================================
+   R14 Step 09 / frontend 3.33.0 - Хэрэгжилтийн шүүлтүүр ба анхаарах урсгал
+   ====================================================================== *//* R15.5 report overflow guards *//* ======================================================================
+   R14 Step 10 / frontend 3.34.0 - Ажил тус бүрийн бодит хэрэгжилтийн хяналт
+   Frozen diagnosis/strategy payload stays immutable; these are mutable
+   operational tracking fields only.
+   ====================================================================== *//* R15 - Public attraction homepage + simplified public journey *//* R15 - animated login/register *//* R15.5 report overflow guards *//* R15.5 report overflow guards *//* R15.1 / frontend 3.38.0 - concise public homepage + whole-business five-area preview *//* R15.2 - whole-business hologram,3-page shell{--area:#1C3D8D;--area-soft:#E9EEF6;--area-line:#BECDE5}.sample-area{grid-template-columns:28px 1fr auto!important;align-items:center!important;gap:7px}.sample-area i{width:28px;height:28px;border-radius:8px;background:var(--area-soft);color:var(--area);display:grid;place-items:center}.sample-area span{font-size:var(--mmri-type-meta-size);font-weight:var(--mmri-weight-display)}.sample-area b{font-size:var(--mmri-type-body-size);color:var(--area)}@media print{.demo-notice{display:none!important}}
+}
+/* ======================================================================
+   R15.3 - histogram home + concise 3-page whole-business report
+   ====================================================================== *//* logged-in homepage *//* concise 3-page report *//* R15.5 report overflow guards */@media print{@page{size:A4;margin:0}html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}.demo-notice{display:none!important}}
+
+/* R15.3: authenticated primary navigation is exactly 3 pages. *//* Print robustness for the 5-column overview. *//* ======================================================================
+   R15.4 / frontend 3.41.0 - spiderweb-first home experience
+   Public order: inspiration + spiderweb -> video -> journey -> result -> payment.
+   Authenticated home uses the same 5-direction spiderweb language.
+   ====================================================================== */:root{--home-ink:#141E3B;--home-muted:#676D78;--home-line:#DCE0E6;--home-soft:#F6F8F9;--home-green:#152C71}/* Hero *//* Video *//* Journey *//* Result explanation *//* Payment *//* Authenticated home *//* ======================================================================
+   R15.5 / frontend 3.42.0 - simplified folded home + 2-page report
+   ====================================================================== */:root{}/* authenticated home *//* report: exactly two pages *//* R15.5 report overflow guards */@media print{@page{size:A4;margin:0}html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}.demo-notice,.inline-error,.api-state{display:none!important}}
+
+/* R15.5 FINAL PRINT OVERRIDE - deterministic two-page A4 report *//* R15.5 PRINT PLAN - compact one-year roadmap rows *//* R15.6 - 3-section product structure,diagnosis states,final report */:root{
+ 
+ 
+}.page-container{max-width:1520px!important;width:min(96vw,1520px)!important}/* contemporary folded sections *//* homepage spiderweb refinement *//* Diagnosis *//* Report */@media (max-width:760px){.page-container{width:94vw!important}}
+
+@media print{body{background:#fff!important}.page-container{display:block!important;width:auto!important;max-width:none!important;margin:0!important;padding:0!important;background:white!important}}
+
+/* R15.7 - modern category motion + report archive */@media print{.no-print{display:none!important}}
+
+/* R15.8 - modern home interaction,access states,report history */:root{}/* R15.9 - modern modal guide, dated plan, payment workspace, focused questions */:root{
+  
+  
+  
+  
+  
+  
+  
+}/* Public home: four large icon-only entry tiles, no inline explanation *//* Explanations are always hidden until selected; opening behaves as a modern modal, not an expanding domain *//* Spider transition refinement *//* Report section map + conclusion */#report-overview,#report-advice,#report-plan,#report-history{scroll-margin-top:174px}/* Payment: clean 5-pass selector + one focused payment workspace *//* Focused diagnosis questions *//* Basic information questions use the same visual language *//* Long Mongolian labels must never clip *//* =========================================================
+   R15.10 - design consolidation
+   Three primary sections · inline public guide · 4/5 report
+   ========================================================= */.page-container{max-width:var(--public-home-max);width:100%;margin-inline:auto;padding-left:clamp(18px,3vw,44px);padding-right:clamp(18px,3vw,44px)}/* Public home *//* Logged-in home *//* Diagnosis *//* Payment *//* Report *//* Question surfaces *//* Prevent clipping */
+
+
+
+@media print{@page{size:A4;margin:12mm}body{background:#fff!important}.no-print{display:none!important}}
+
+/* R15.10 print consolidation: compact,readable combined report *//* =========================================================
+   R15.11 - interaction,diagnosis and qualitative report
+   ========================================================= */:root{--good:#163A7B;--good-bg:#EDF2F8;--bad:#b4443f;--bad-bg:#fff1ef;--warn:#9a6a13;--warn-bg:#fff8e8;--stable:#3569d4;--stable-bg:#eef3ff;--muted-state:#6F767F;--muted-state-bg:#F2F4F5}/* Incomplete spiderweb stays visually whole without pretending missing data is a score. *//* Public home: four controls act like one inline expanding surface. *//* Diagnosis: exactly five clear choices; action always visible. *//* Qualitative professional report */.positive{color:var(--good)!important}.negative{color:var(--bad)!important}.missing{color:#8b7650!important}@media (max-width:860px){}@media (max-width:600px){}@media print{@page{size:A4;margin:11mm}body{background:#fff!important}.no-print{display:none!important}}
+
+/* =========================================================
+   R15.12 - clean modern interaction system
+   Incomplete radar states · restrained motion · numeric history
+   ========================================================= *//* Incomplete radar should visibly remain incomplete without looking broken. *//* Public homepage: quieter, more product-like visual language. *//* Four bottom controls: large, quiet, no toy-like gradients or lift. *//* Real clickable question example inside the public explanation. *//* Logged-in homepage radar stays explicitly incomplete. *//* Diagnosis: exactly five clear choices, one visible action per choice. *//* Question surfaces: simple, spacious, restrained. *//* Report: professional neutral base, semantic color only where it has meaning. *//* Numeric history: numbers only where historical comparison benefits from them. */@media (max-width:860px){}
+
+/* R15.13 STEP 01 - report depth: expose frozen diagnosis facts instead of generic copy *//* ======================================================================
+   R16.04 TRANSITIONAL SCREEN COMPATIBILITY
+   Consolidated from the former structure.css so there is no separate late
+   structural override stylesheet. Do not add new design foundations here.
+   Steps 5–18 delete/replace these screen rules as each surface is rebuilt.
+   ====================================================================== */html,body,#root{min-width:0}body{color:var(--mmri-color-text-strong)!important}button,input,textarea,select{font:inherit}button,article,section,aside,div,nav,header,main{min-width:0}.page-container{width:min(var(--mmri-layout-max),calc(100% - (var(--mmri-page-gutter) * 2)))!important;max-width:var(--mmri-layout-max)!important;margin-inline:auto!important;padding-left:0!important;padding-right:0!important}.page-container h1,.page-container h2,.page-container h3,.page-container p,.page-container li,.page-container dd,.page-container strong{overflow-wrap:break-word}/* Public home: hierarchy first, decoration second. *//* Logged-in home: one primary overview, compact access states. *//* Diagnosis: Marketing is the live primary card; four future cards are secondary. *//* Question surfaces: readable prompt, compact answer choices, less nested-card feel. *//* Report: editorial hierarchy instead of nested cards. *//* General compactness and clarity across secondary workspaces. */.inline-error{border-radius:11px!important;box-shadow:none!important}
+
+@media (max-width:900px){.page-container{width:calc(100% - 32px)!important}}
+@media (max-width:640px){.page-container{width:calc(100% - 28px)!important}}
+/* Payment subsection: no future diagnosis can be purchased before it exists. *//* R16.19 accessibility architecture */.mmri-route-loading{min-height:40vh}#main-content:focus,[data-route-heading]:focus{outline:none}
+
+/* Typography roles (Inter Variable, verified for Mongolian Ө Ү Ё): display 800 / headings 700 tight / controls 600-650 / body 400-500, line-height 1.5, tabular figures for numbers. One system everywhere. */
+html:root body.mmri-prism-page :is(h1,h2,h3,.mmri-brand strong,.hx__name){font-family:var(--mmri-font-family);font-optical-sizing:auto}
+html:root body.mmri-prism-page :is(.report-score strong,.cat-tile__value b,.mmri-kpi-number,.mmri-guide2__metric strong,time,small){font-variant-numeric:tabular-nums}
+html:root body.mmri-prism-page :is(p,li){line-height:1.5}

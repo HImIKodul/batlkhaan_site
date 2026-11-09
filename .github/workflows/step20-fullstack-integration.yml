@@ -1,0 +1,58 @@
+name: MMRI Step 20 Full-Stack Integration
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'scripts/step20-**'
+      - '.github/workflows/step20-fullstack-integration.yml'
+jobs:
+  fullstack:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: mmri
+          POSTGRES_PASSWORD: mmri
+          POSTGRES_DB: mmri_step20
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U mmri -d mmri_step20"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DATABASE_URL: postgresql://mmri:mmri@127.0.0.1:5432/mmri_step20?schema=public
+      MMRI_INTEGRATION_RESET_OK: YES
+      CHROMIUM_BIN: chromium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Require reproducible lockfiles
+        run: |
+          test -f backend/package-lock.json
+          test -f frontend/package-lock.json
+      - name: Install Chromium
+        run: sudo apt-get update && sudo apt-get install -y chromium
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Static Step 20 acceptance
+        run: node scripts/step20-integration-static-acceptance-v3.8.mjs
+      - name: Live Step 20 gate
+        run: bash scripts/step20-live-fullstack-gate.sh
+      - name: Upload audit logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step20-audit
+          path: STEP20_AUDIT

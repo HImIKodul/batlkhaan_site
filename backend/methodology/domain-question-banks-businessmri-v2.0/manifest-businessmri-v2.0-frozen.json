@@ -1,0 +1,33 @@
+{
+  "version": "BUSINESSMRI-4DOMAIN-v2.0-CANONICAL-WORDING",
+  "status": "FROZEN",
+  "date": "2026-10-10",
+  "canonicalContentSHA256": "34337d26022965045515d57030ba1f1d2b01a1df5642c77a87d2890a12acac25",
+  "runtimePolicyLineage": "BUSINESSMRI-4DOMAIN-v1.0-FROZEN Step18/18",
+  "domains": {
+    "HRMRI": {
+      "file": "people-businessmri-v2.0-canonical-frozen.json",
+      "sha256": "1457030cec9c494b403ccb91b46268c708a6b0d0676d42b045d45b7fec7ca4b6",
+      "questions": 12288
+    },
+    "FINMRI": {
+      "file": "finance-businessmri-v2.0-canonical-frozen.json",
+      "sha256": "dba6ec6ba0f578b37cb30f9ee5ab0623f02350adaac9b586a3e09b39b59fe4cf",
+      "questions": 12288
+    },
+    "ISMRI": {
+      "file": "it-businessmri-v2.0-canonical-frozen.json",
+      "sha256": "29c2209cd19067a4aed0cd559d454c29f040d45f9517c6f13a547c80ab2fd9b9",
+      "questions": 12288
+    },
+    "OPMRI": {
+      "file": "operations-businessmri-v2.0-canonical-frozen.json",
+      "sha256": "70b52812668a96db124ea934f0b38d8a9a4406af9fd99320e4c6039d721a7deb",
+      "questions": 12288
+    }
+  },
+  "scoringPolicyChanged": false,
+  "wordingUpdated": true,
+  "idsPreservedByStructuralKey": true,
+  "answerOrderPreserved": true
+}

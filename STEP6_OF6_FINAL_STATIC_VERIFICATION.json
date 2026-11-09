@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "masterRows": 61440,
+  "uniqueQualifiedQuestionIds": 61440,
+  "frontendSamples": 320,
+  "domains": {
+    "MARKETING": {
+      "questions": 12288,
+      "scoringMismatch": 0,
+      "naBad": 0,
+      "dnkBad": 0,
+      "duplicateOptions": 0,
+      "latin": 0,
+      "d26NoEligible": 0,
+      "d31NoEligible": 0
+    },
+    "HRMRI": {
+      "questions": 12288,
+      "scoringMismatch": 0,
+      "naBad": 0,
+      "dnkBad": 0,
+      "duplicateOptions": 0,
+      "latin": 0,
+      "d26NoEligible": 256,
+      "d31NoEligible": 256
+    },
+    "FINMRI": {
+      "questions": 12288,
+      "scoringMismatch": 0,
+      "naBad": 0,
+      "dnkBad": 0,
+      "duplicateOptions": 0,
+      "latin": 0,
+      "d26NoEligible": 256,
+      "d31NoEligible": 256
+    },
+    "ISMRI": {
+      "questions": 12288,
+      "scoringMismatch": 0,
+      "naBad": 0,
+      "dnkBad": 0,
+      "duplicateOptions": 0,
+      "latin": 0,
+      "d26NoEligible": 256,
+      "d31NoEligible": 256
+    },
+    "OPMRI": {
+      "questions": 12288,
+      "scoringMismatch": 0,
+      "naBad": 0,
+      "dnkBad": 0,
+      "duplicateOptions": 0,
+      "latin": 0,
+      "d26NoEligible": 256,
+      "d31NoEligible": 256
+    }
+  },
+  "step5AcceptedMasterSHA256": "4897b0218d51abf0d5aab28a13521b83f98ad5fd859a368aceaaff817abdd75d"
+}

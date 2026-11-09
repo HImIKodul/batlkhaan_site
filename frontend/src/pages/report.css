@@ -1,0 +1,314 @@
+/* Report (screen). Business-document layout: white sheet, rules instead of cards, domain colour only on the active tab.
+   Print/PDF rules live elsewhere (.pdf-*, .report-print-*) and are not affected. */
+.report-v3{max-width:1160px;margin-inline:auto;padding:30px 24px 76px;display:grid;gap:22px}
+.report-v3__top{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:0;padding:18px 24px;border-radius:30px;--glass-blur:4px}
+.report-company span{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mmri-color-text-muted)}
+.report-company h1{margin:4px 0 0;font-size:clamp(26px,3.2vw,36px);line-height:1.15;font-weight:800;color:var(--mmri-color-text-strong);overflow-wrap:anywhere}
+/* PDF button: fixed size, fixed place in the header, no hover/active movement */
+.report-top-download{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;box-sizing:border-box;width:176px;height:46px;padding:0;border:1px solid #cfeaff;border-radius:999px;background:var(--wp-spec) top/100% 50% no-repeat,linear-gradient(180deg,#4FB0FF,#1558F0 72%);color:#fff;font:inherit;font-weight:650;cursor:pointer;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.75),0 0 18px -4px #3b9bff,0 8px 16px -10px rgba(4,20,120,.7);transition:box-shadow .26s ease,border-color .26s ease}
+.report-top-download:active:not(:disabled){box-shadow:var(--wp-bevel),var(--wp-shadow-1)}
+.report-top-download:focus-visible{outline:3px solid #0B0F14;outline-offset:2px;box-shadow:0 0 0 6px #fff}
+.report-top-download:disabled{cursor:progress;opacity:.8}
+.report-top-download svg{flex:none}
+.report-top-download.is-done{background:#E9F6EF;border-color:#7CC8A5;color:var(--wp-ink)}
+.report-top-download.is-failed{background:#FFF3F2;border-color:#E39A94;color:var(--wp-ink)}
+.report-top-download[aria-busy="true"] svg{animation:mmri-spin 1s linear infinite}
+
+/* domain tabs: status badge sits on the top-right corner, outside the tab body */
+.report-domain-switcher{display:flex;flex-wrap:wrap;gap:12px;padding-top:8px}
+.report-domain-switcher>button{position:relative;display:flex;align-items:center;gap:12px;height:64px;min-width:64px;padding:0 7px;border:1px solid rgba(130,145,170,.32);outline:0;border-radius:14px;background:rgba(244,247,252,.85);color:var(--mmri-color-text-strong);font:inherit;cursor:pointer;box-shadow:var(--elevation-1);transition:background var(--motion-fast) ease,border-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease;transform:none}
+.report-domain-switcher>button:hover{border-color:var(--wp-silver2);background:#fff;box-shadow:var(--wp-shadow-1);transform:none}
+.report-domain-switcher>button.is-active{border-color:var(--wp-ink);background:rgba(244,247,252,.85);padding:0 16px 0 7px;box-shadow:var(--elevation-2)}
+.report-domain-switcher>button:focus-visible{outline:3px solid var(--wp-ink);outline-offset:2px}
+.report-domain-switcher__active-copy strong{font-size:14px;font-weight:700;color:var(--mmri-color-text-strong);white-space:nowrap}
+.report-domain-switcher__state{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;width:30px;height:30px;padding:0;background:none;border:0}
+.report-domain-switcher__state svg{width:30px;height:30px}
+/* Selected domain softly tints the whole page; the sheet itself stays solid. */
+
+.report-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px}
+.report-version-strip{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:5px;border:1px solid rgba(130,145,170,.32);border-radius:999px;background:linear-gradient(160deg,rgba(244,247,252,.85),rgba(244,247,252,.85));-webkit-backdrop-filter:blur(3px) saturate(125%);backdrop-filter:blur(3px) saturate(125%);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.4)}
+.report-version-strip>span{margin:0 6px 0 12px;font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--mmri-color-text-muted)}
+.report-version-strip>button{height:36px;padding:0 16px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--mmri-color-text);font:inherit;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;transition:background .3s,color .3s,border-color .3s,box-shadow .3s}
+.report-version-strip>button:hover{background:rgba(244,247,252,.85);color:var(--mmri-color-text-strong)}
+.report-version-strip>button.is-active{background:linear-gradient(180deg,#fff,#E4EAFF);color:#17229A;border-color:#D9DFE8;box-shadow:inset 0 1px 0 #fff,0 6px 16px -8px rgba(20,40,80,.35)}
+
+/* sheet */
+.report-three-pages{display:grid;gap:22px;padding:14px}
+.report-three-page{--report-accent-light:color-mix(in srgb,var(--report-accent) 38%,#fff);padding:34px;border:1px solid var(--wp-silver);outline:0;border-radius:30px;background:var(--wp-spec) top/100% 14% no-repeat,#fff;box-shadow:var(--wp-bevel),0 2px 4px rgba(20,30,50,.06),0 30px 60px -30px rgba(20,40,80,.3);display:grid;gap:26px;min-width:0;color:var(--wp-ink);background:var(--wp-spec) top/100% 12% no-repeat,linear-gradient(180deg,rgba(246,251,255,.92),rgba(214,232,255,.88));border-color:rgba(255,255,255,.95);box-shadow:var(--wp-bevel),inset 0 -3px 0 rgba(90,150,255,.4),1px 1px 0 #D6F2FF,2px 2px 0 #9ED8FF,3px 3px 0 #5FA6EE,4px 4px 0 #3F82DC,5px 5px 0 #2D62BC,0 2px 3px rgba(4,16,90,.3),0 36px 60px -28px rgba(4,20,120,.55),0 0 0 1px rgba(90,200,255,.2)}
+.report-three-page>header{display:flex;gap:16px;align-items:flex-start;padding-bottom:17px;border-bottom:2px solid var(--report-accent);border-bottom-color:transparent;border-image:linear-gradient(90deg,var(--report-accent),#3EDCFF 55%,#8B5CFF) 1}
+.report-three-page>header>span{font-size:28px;line-height:1;font-weight:800;color:color-mix(in srgb,var(--report-accent) 78%,#0B0F14);font-variant-numeric:tabular-nums}
+.report-three-page>header b{display:block;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--mmri-color-text-muted)}
+.report-three-page h2{margin:4px 0 0;font-size:clamp(20px,2.4vw,26px);line-height:1.25;font-weight:800;color:var(--mmri-color-text-strong)}
+.report-page-intro{margin:6px 0 0;color:var(--mmri-color-text-muted)}
+.report-screen-page .report-print-meta{display:none}
+
+/* page 1 */
+.report-score-stage{display:grid;justify-items:center;gap:14px;padding:16px 0 8px}
+.report-score{display:grid;place-items:center;align-content:center;gap:4px;padding:8px 0}
+.report-score span{padding-bottom:4px;border-bottom:2px solid color-mix(in srgb,var(--report-accent,#49B7FF) 70%,#fff);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mmri-color-text)}
+.report-score strong{font-size:clamp(88px,11vw,132px);line-height:.95;font-weight:600;color:var(--mmri-color-text-strong);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.report-score-meta{margin-top:20px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;font-size:13px;color:var(--mmri-color-text-muted);text-align:center}
+.report-score-meta strong{color:color-mix(in srgb,var(--report-accent) 78%,#0B0F14);font-weight:800}
+.report-score-meta span{font-variant-numeric:tabular-nums}
+.report-balance-v3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.report-finding-column.is-empty{align-self:start}
+.report-finding-column>header{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--mmri-color-border)}
+.report-finding-column>header h3{margin:0;font-size:17px;font-weight:800;color:var(--mmri-color-text-strong)}
+.report-finding-column.is-positive li>b{color:#1F7A55}.report-finding-column.is-negative li>b{color:#B42318}
+.report-finding-column.is-positive>header svg{color:var(--mmri-color-success)}
+.report-finding-column.is-negative>header svg{color:var(--mmri-color-danger)}
+.report-finding-column ol{margin:0;padding:0;list-style:none}
+.report-finding-column{min-width:0;padding:16px 18px;border-radius:var(--radius-card);background:#F5F7FA;border:1px solid var(--border-light)}
+
+
+.report-finding-arc{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--mmri-color-border)}
+.report-finding-arc__no{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--mmri-color-surface-strong);font-size:13px;font-weight:800;color:var(--mmri-color-text-strong)}
+.report-finding-column.is-positive .report-finding-arc__no{background:var(--mmri-color-success-soft);color:var(--mmri-color-success)}
+
+.report-finding-arc strong{display:block;font-size:15px;line-height:1.35;color:var(--mmri-color-text-strong);overflow-wrap:anywhere}
+.report-finding-arc p{margin:3px 0 0;font-size:13.5px;line-height:1.5;color:var(--mmri-color-text)}
+.report-finding-arc>b{align-self:start;padding:2px 11px;border-radius:11px;border:1px solid transparent;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.report-finding-arc>b::before{font-size:.62em;margin-right:5px;vertical-align:.12em}
+.report-finding-column.is-positive .report-finding-arc>b::before{content:"▲"}
+.report-finding-column.is-negative .report-finding-arc>b::before{content:"▼"}
+.report-finding-column.is-positive .report-finding-arc>b{color:#1F7A55;background:#F1FAF5;border-color:#22C55E}
+.report-finding-column.is-negative .report-finding-arc>b{color:#B42318;background:#FFF4F3;border-color:#EF4444}
+.report-summary h3{margin:0 0 8px;font-size:17px;font-weight:800;color:var(--mmri-color-text-strong)}
+.report-summary p{margin:0;max-width:none;font-size:16px;line-height:1.7;color:var(--mmri-color-text)}
+
+/* preliminary marker (same wording as Results + PDF) */
+
+.report-prelim-note{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--mmri-color-text-muted)}
+
+/* page 2 */
+.report-purpose-priorities{display:grid}
+.report-purpose-priorities>article{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:18px;align-items:center;padding:17px 16px;border-bottom:1px solid var(--mmri-color-border);background:linear-gradient(90deg,rgba(244,247,252,.85),rgba(244,247,252,.85) 60%)}
+
+.report-purpose-copy h3{margin:0 0 4px;font-size:16.5px;line-height:1.3;color:var(--mmri-color-text-strong)}
+.report-purpose-copy p{margin:0;font-size:14px;line-height:1.55;color:var(--mmri-color-text)}
+.report-purpose-projection{display:grid;grid-template-columns:repeat(2,minmax(58px,auto));align-items:center;gap:8px}
+.report-purpose-score{display:grid;justify-items:center;min-width:56px;padding:6px 8px;border-radius:12px;background:rgba(244,247,252,.85);border:1px solid rgba(130,145,170,.32)}
+.report-purpose-score b{font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.report-purpose-score small{font-size:13px;color:var(--mmri-color-text-muted)}
+.report-purpose-score.is-current b{color:var(--mmri-color-danger)}
+.report-purpose-score.is-target{background:var(--mmri-color-success-soft)}
+.report-purpose-score.is-target b{color:var(--mmri-color-success)}
+.report-purpose-arrow{display:none}
+
+/* page 3: tap-to-complete roadmap, no checkbox; completed = full green outline */
+.report-plan-progress{margin:0;font-size:14px;color:var(--mmri-color-text-muted)}
+.report-plan-progress b{color:var(--mmri-color-text-strong)}
+.report-roadmap-human{display:grid;gap:14px}
+.report-roadmap-card{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:22px;width:100%;padding:19px 20px;border:2px solid var(--mmri-color-border);border-radius:18px;background:rgba(244,247,252,.85);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:border-color var(--mmri-motion-state),background-color var(--mmri-motion-state),box-shadow var(--mmri-motion-state);transform:none}
+
+
+.report-roadmap-card:focus-visible{outline:3px solid var(--mmri-color-focus);outline-offset:2px}
+.report-roadmap-card__time{display:grid;align-content:start;gap:4px}
+.report-roadmap-card__state{justify-self:start;font-size:13px;font-weight:700;color:var(--mmri-color-text-muted)}
+.report-roadmap-card.is-complete .report-roadmap-card__state{color:var(--mmri-color-success)}
+.report-roadmap-card__time>span:nth-child(2){font-size:13px;font-weight:700;color:color-mix(in srgb,var(--report-accent) 78%,#0B0F14);font-variant-numeric:tabular-nums}
+.report-roadmap-card__time h3{margin:0;font-size:17px;line-height:1.3;color:var(--mmri-color-text-strong)}
+.report-roadmap-card__time p{margin:0;font-size:13.5px;line-height:1.5;color:var(--mmri-color-text-muted)}
+.report-roadmap-card__work{display:grid;gap:14px}
+.report-plan-action-copy{padding-top:12px;border-top:1px solid var(--mmri-color-border)}
+.report-plan-action-copy:first-child{padding-top:0;border-top:0}
+.report-plan-action-copy__head{display:flex;gap:10px;align-items:baseline}
+.report-plan-action-copy__head span{flex:none;font-size:13px;font-weight:800;color:var(--mmri-color-accent)}
+.report-plan-action-copy h4{margin:0;font-size:15px;line-height:1.35;color:var(--mmri-color-text-strong)}
+.report-plan-action-copy p{margin:4px 0 0;font-size:13.5px;line-height:1.55;color:var(--mmri-color-text)}
+.report-plan-action-copy__check{display:flex;gap:6px;align-items:flex-start;color:var(--mmri-color-text-muted)!important}
+.report-plan-action-copy__check svg{flex:none;margin-top:3px;color:var(--mmri-color-success)}
+
+/* gate / empty */
+.report-gate{max-width:560px;margin:48px auto;padding:32px;border-radius:36px;text-align:center;display:grid;justify-items:center;gap:12px;}
+.report-gate__icon{display:grid;place-items:center;width:110px;height:110px;color:color-mix(in srgb,var(--report-accent) 78%,#0B0F14)}
+.report-gate h2{margin:0;color:var(--mmri-color-text-strong)}.report-gate p{margin:0;color:var(--mmri-color-text)}
+.report-data-empty{max-width:640px;margin-inline:auto}
+.experience-state{padding:16px;border:1px dashed var(--mmri-color-border-strong);border-radius:10px;color:var(--mmri-color-text-muted)}
+
+@media (max-width:860px){
+ .report-v3{padding:18px 12px 58px}
+ .report-v3__top{flex-wrap:wrap;align-items:flex-start}
+ .report-company{min-width:0}
+  .report-top-download{flex:1 1 100%;width:100%}
+ .report-domain-switcher{gap:10px}
+ .report-version-strip{flex-wrap:wrap;border-radius:22px;padding:6px 8px;justify-content:flex-start}
+ .report-version-strip>span{flex:1 0 100%;margin:2px 6px 0}
+ .report-version-strip>button{flex:none}
+ .report-three-page{padding:24px 18px}
+ .report-balance-v3{grid-template-columns:1fr}
+ .report-roadmap-card{grid-template-columns:1fr;gap:14px}
+ .report-purpose-priorities>article{grid-template-columns:34px minmax(0,1fr);padding:16px 12px}
+ .report-purpose-projection{grid-column:2;justify-self:start}
+}
+@media (max-width:520px){
+ .report-v3{padding-inline:8px}
+ .report-top-download{width:100%;max-width:none}
+ .report-domain-switcher{gap:8px}
+ .report-domain-switcher>button{height:54px;min-width:54px;padding-inline:10px;max-width:calc(100% - 10px)}
+ .report-domain-switcher__active-copy{min-width:0}
+ .report-domain-switcher__active-copy strong{white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+ .report-domain-switcher__icon svg{width:30px;height:30px}
+ .report-version-strip{margin-inline:-2px}
+ .report-score{width:142px;height:142px}
+ .report-score strong{font-size:58px}
+ .report-three-page{padding:20px 14px;border-radius:14px}
+ .report-three-page>header{gap:12px}
+ .report-three-page>header>span{font-size:22px}
+ .report-purpose-priorities>article{grid-template-columns:32px minmax(0,1fr);gap:12px}
+ .report-purpose-projection{grid-template-columns:repeat(2,minmax(54px,1fr));width:min(100%,190px)}
+}
+
+/* Final control-surface polish: controls may be glass; report paper stays solid. */
+.report-top-download:hover:not(:disabled){border-color:#fff;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),0 0 26px -2px #3b9bff,0 10px 18px -10px rgba(4,20,120,.75)}
+@media (max-width:520px){.report-v3__top{padding:14px;border-radius:18px}.report-version-strip{padding:7px}}
+
+/* Step 5/10 - deterministic browser/demo PDF fallback.
+   Production PDFs come from ReportLab; this print surface is deliberately isolated so
+   demo printing never mixes the application shell with the three-page document. */
+.report-print-only{display:none}
+
+@media print{
+ @page{size:A4;margin:0}
+ html,body,#root{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ body.mmri-print-report{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color:#0F2447!important}
+ body.mmri-print-report::before,body.mmri-print-report::after{display:none!important}
+ body.mmri-print-report .mmri-shell-header,
+ body.mmri-print-report .mmri-bottom-nav,
+ body.mmri-print-report .bottom-nav,
+ body.mmri-print-report .demo-notice,
+ body.mmri-print-report .mmri-offline-banner,
+ body.mmri-print-report .mmri-support-alert,
+ body.mmri-print-report .report-web-controls,
+ body.mmri-print-report .report-screen-only,
+ body.mmri-print-report .no-print{display:none!important}
+ body.mmri-print-report .mmri-shell,
+ body.mmri-print-report .mmri-shell-main,
+ body.mmri-print-report .page-container,
+ body.mmri-print-report .report-v3{display:block!important;width:210mm!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;overflow:visible!important}
+ body.mmri-print-report .report-print-only{display:block!important;width:210mm!important;margin:0!important;padding:0!important}
+ body.mmri-print-report .pdf-professional-report{font-family:var(--mmri-font-family,"Noto Sans",Arial,sans-serif)!important;color:#0F2447!important;background:#fff!important}
+ body.mmri-print-report .pdf-report-page{position:relative!important;box-sizing:border-box!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;padding:15mm 14mm 14mm!important;border:1.1mm solid var(--report-accent,#1B63D8)!important;border-radius:0!important;background:#fff!important;color:#0F2447!important;box-shadow:none!important;overflow:hidden!important;break-after:page!important;page-break-after:always!important}
+ body.mmri-print-report .pdf-report-page:last-child{break-after:auto!important;page-break-after:auto!important}
+ body.mmri-print-report .pdf-report-header{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12mm!important;padding-bottom:4mm!important;border-bottom:.35mm solid color-mix(in srgb,var(--report-accent,#1B63D8) 34%,#D6DBE3)!important}
+ body.mmri-print-report .pdf-report-header>div{display:grid!important;gap:1mm!important}
+ body.mmri-print-report .pdf-report-header>div:last-child{text-align:right!important;justify-items:end!important}
+ body.mmri-print-report .pdf-report-header strong{font-size:9pt!important;letter-spacing:.08em!important;color:#0D276D!important}
+ body.mmri-print-report .pdf-report-header b{font-size:8.5pt!important;color:var(--report-accent,#1B63D8)!important}
+ body.mmri-print-report .pdf-report-header span{font-size:7pt!important;color:#646C7C!important}
+ body.mmri-print-report .pdf-report-footer{position:absolute!important;left:14mm!important;right:14mm!important;bottom:7mm!important;display:grid!important;grid-template-columns:1fr auto 1fr!important;gap:5mm!important;align-items:center!important;padding-top:2.7mm!important;border-top:.25mm solid #DCE0E7!important;font-size:6.8pt!important;color:#6A717E!important}
+ body.mmri-print-report .pdf-report-footer span:nth-child(2){text-align:center!important}
+ body.mmri-print-report .pdf-report-footer span:last-child{text-align:right!important;overflow-wrap:anywhere!important}
+ body.mmri-print-report .pdf-report-title{display:grid!important;gap:1mm!important;margin:7mm 0 5mm!important}
+ body.mmri-print-report .pdf-report-title>p,
+ body.mmri-print-report .pdf-section-title>p{margin:0!important;font-size:7.5pt!important;font-weight:800!important;letter-spacing:.12em!important;color:var(--report-accent,#1B63D8)!important}
+ body.mmri-print-report .pdf-report-title h1{margin:0!important;font-size:21pt!important;line-height:1.12!important;color:#0F2447!important}
+ body.mmri-print-report .pdf-report-title>div{display:flex!important;gap:4mm!important;font-size:8pt!important;color:#5F6878!important}
+ body.mmri-print-report .pdf-executive-grid{display:grid!important;grid-template-columns:39mm minmax(0,1fr)!important;gap:5mm!important;align-items:stretch!important;margin:0 0 5mm!important}
+ body.mmri-print-report .pdf-score-block{display:grid!important;place-items:center!important;align-content:center!important;gap:2mm!important;min-height:39mm!important;border:.45mm solid var(--report-accent,#1B63D8)!important;border-radius:6mm!important;background:color-mix(in srgb,var(--report-accent,#1B63D8) 6%,#fff)!important}
+ body.mmri-print-report .pdf-score-block small{font-size:6.8pt!important;font-weight:800!important;letter-spacing:.08em!important;color:#5F6878!important}
+ body.mmri-print-report .pdf-score-block strong{font-size:31pt!important;line-height:1!important;color:var(--report-accent,#1B63D8)!important}
+ body.mmri-print-report .pdf-executive-summary{padding:4mm 4.5mm!important;border-radius:4mm!important;background:#F4F6F8!important}
+ body.mmri-print-report .pdf-executive-summary h2{margin:0 0 2mm!important;font-size:11pt!important;color:#0F2447!important}
+ body.mmri-print-report .pdf-executive-summary p{margin:0!important;font-size:7.7pt!important;line-height:1.48!important;color:#343D55!important}
+ body.mmri-print-report .pdf-summary-findings{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6mm!important}
+ body.mmri-print-report .pdf-summary-findings>div{min-width:0!important}
+ body.mmri-print-report .pdf-summary-findings h3{margin:0 0 2.5mm!important;padding-bottom:2mm!important;border-bottom:.35mm solid #DCE0E7!important;font-size:10pt!important;color:#0F2447!important}
+ body.mmri-print-report .pdf-summary-finding{display:grid!important;grid-template-columns:7mm minmax(0,1fr) 9mm!important;gap:2mm!important;align-items:center!important;min-height:10mm!important;padding:2.1mm 0!important;border-bottom:.22mm solid #E6E9EE!important}
+ body.mmri-print-report .pdf-summary-finding span{display:grid!important;place-items:center!important;width:6mm!important;height:6mm!important;border-radius:2mm!important;font-size:7pt!important;font-weight:800!important;background:#EDF1F6!important;color:#1B63D8!important}
+ body.mmri-print-report .pdf-summary-finding.is-negative span{background:#fff0ee!important;color:#b4443f!important}
+ body.mmri-print-report .pdf-summary-finding strong{font-size:7.6pt!important;line-height:1.28!important;color:#0F2447!important;overflow-wrap:anywhere!important}
+ body.mmri-print-report .pdf-summary-finding b{text-align:right!important;font-size:9.5pt!important;color:#1B63D8!important}
+ body.mmri-print-report .pdf-summary-finding.is-negative b{color:#b4443f!important}
+ body.mmri-print-report .pdf-section-title{display:grid!important;gap:1mm!important;margin:8mm 0 5mm!important}
+ body.mmri-print-report .pdf-section-title h2{margin:0!important;font-size:16pt!important;line-height:1.2!important;color:#0F2447!important}
+ body.mmri-print-report .pdf-priority-list{display:grid!important;gap:2.8mm!important}
+ body.mmri-print-report .pdf-priority-list>article{display:grid!important;grid-template-columns:8mm minmax(0,1fr) 31mm!important;gap:3mm!important;align-items:center!important;min-height:31mm!important;padding:3.4mm 4mm!important;border:.3mm solid #DCE0E7!important;border-left:1.1mm solid var(--report-accent,#1B63D8)!important;border-radius:3mm!important;background:#fff!important}
+ body.mmri-print-report .pdf-priority-list>article>span{display:grid!important;place-items:center!important;width:7mm!important;height:7mm!important;border-radius:2mm!important;background:#b4443f!important;color:#fff!important;font-size:7.5pt!important;font-weight:800!important}
+ body.mmri-print-report .pdf-priority-list>article>div{min-width:0!important}
+ body.mmri-print-report .pdf-priority-list strong{display:block!important;margin-bottom:1mm!important;font-size:9.2pt!important;line-height:1.25!important;color:#0F2447!important;overflow-wrap:anywhere!important}
+ body.mmri-print-report .pdf-priority-list p{margin:0!important;font-size:7.2pt!important;line-height:1.38!important;color:#4E5769!important}
+ body.mmri-print-report .pdf-priority-list>article>b{display:grid!important;grid-template-columns:auto auto!important;gap:1mm 2mm!important;align-items:baseline!important;padding:2.5mm!important;border-radius:2.5mm!important;background:#F4F6F8!important;font-size:10pt!important;color:#0F2447!important;font-variant-numeric:tabular-nums!important}
+ body.mmri-print-report .pdf-priority-list>article>b small{font-size:6.2pt!important;font-weight:700!important;color:#676F7E!important}
+ body.mmri-print-report .pdf-roadmap-compact{display:grid!important;gap:2.5mm!important}
+ body.mmri-print-report .pdf-roadmap-compact>article{display:grid!important;grid-template-columns:42mm minmax(0,1fr)!important;gap:3mm!important;padding:3mm 3.5mm!important;border:.3mm solid #DCE0E7!important;border-left:1.1mm solid var(--report-accent,#1B63D8)!important;border-radius:3mm!important;background:#fff!important}
+ body.mmri-print-report .pdf-roadmap-compact>article>header{display:grid!important;align-content:start!important;gap:1.2mm!important;padding-right:2mm!important;border-right:.25mm solid #E3E6EC!important}
+ body.mmri-print-report .pdf-roadmap-compact>article>header span{font-size:6.7pt!important;font-weight:800!important;color:var(--report-accent,#1B63D8)!important}
+ body.mmri-print-report .pdf-roadmap-compact>article>header strong{font-size:8.4pt!important;line-height:1.25!important;color:#0F2447!important}
+ body.mmri-print-report .pdf-roadmap-compact>article>div{min-width:0!important;padding:0 0 1.5mm!important}
+ body.mmri-print-report .pdf-roadmap-compact>article>div:last-child{padding-bottom:0!important}
+ body.mmri-print-report .pdf-roadmap-compact b{display:block!important;font-size:7.6pt!important;line-height:1.25!important;color:#0F2447!important;overflow-wrap:anywhere!important}
+ body.mmri-print-report .pdf-roadmap-compact p{margin:.8mm 0 0!important;font-size:6.7pt!important;line-height:1.3!important;color:#4E5769!important}
+ body.mmri-print-report .pdf-roadmap-compact small{display:block!important;margin-top:.5mm!important;font-size:6.2pt!important;line-height:1.25!important;color:#6B7280!important}
+}
+
+
+/* Step 8/10 - keep five domain controls reachable without squeezing them. */
+@media (max-width:860px){
+  .report-domain-switcher{flex-wrap:wrap;padding:10px 4px 6px}
+  .report-domain-switcher>button{flex:0 0 auto;min-height:56px}
+  .report-version-strip{overscroll-behavior-inline:contain;scroll-snap-type:x proximity}
+  .report-version-strip>button{scroll-snap-align:start;min-height:44px}
+}
+@media (max-width:520px){
+  .report-v3{padding-inline:14px}
+  .report-top-download{width:min(100%,208px);min-height:48px}
+}
+
+/* Category = colour only: the switcher chip is the family gradient (no icon). */
+.report-domain-switcher__icon{flex:none;display:block;width:48px;height:48px;border-radius:10px;border:1px solid rgba(130,145,170,.32);background:linear-gradient(160deg,var(--domain-secondary,var(--domain-accent)),var(--domain-primary,var(--domain-accent)));box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.report-version-strip>button b{margin-right:6px;font-weight:800;font-variant-numeric:tabular-nums}
+.report-version-strip>button small{margin-left:8px;padding:2px 8px;border-radius:999px;background:rgba(244,247,252,.85);font-size:12.5px;font-weight:700;letter-spacing:.03em}
+.report-version-strip>button.is-active small{background:#EEF2FB}
+.report-version-strip>button.is-retake{border:1px dashed var(--wp-silver2);color:var(--wp-ink)}
+.report-version-strip>button.is-retake:hover{border-style:solid;background:#fff;box-shadow:var(--wp-shadow-1)}
+
+/* ---- Crystal finish for the on-screen report (colour, rim, light only; layout and markup are the original). The PDF markup is separate and never glass. ---- */
+
+
+.report-v3 .report-score{position:relative;isolation:isolate;min-width:min(100%,230px);aspect-ratio:1;align-content:center;border-radius:50%;color:#fff;background:radial-gradient(circle at 34% 24%,#2B4FC4,#0E2380 62%,#091660);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -14px 22px -10px rgba(0,10,80,.7),0 0 0 6px rgba(255,255,255,.92),0 0 34px 4px rgba(62,200,255,.6),0 26px 34px -16px rgba(4,20,120,.7)}
+.report-v3 .report-score strong{color:#fff;font-size:clamp(64px,7vw,88px)}
+.report-v3 .report-score span{color:rgba(235,245,255,.95);border-bottom-color:rgba(255,255,255,.6)}
+.report-v3 .report-finding-column{border-color:rgba(255,255,255,.95);box-shadow:inset 0 2px 0 #fff,0 18px 30px -22px rgba(10,40,150,.55)}
+.report-finding-column.is-positive{box-shadow:inset 3px 0 0 var(--mmri-color-success);background:linear-gradient(170deg,#E3FAEF,#CDEFE0)}
+.report-finding-column.is-negative{box-shadow:inset 3px 0 0 var(--mmri-color-danger);background:linear-gradient(170deg,#FFE9F1,#F9D4E6)}
+.report-purpose-priorities article{border:1px solid rgba(255,255,255,.95);background:linear-gradient(170deg,#EAF3FF,#D9E9FF);box-shadow:inset 0 2px 0 #fff,0 14px 24px -18px rgba(10,50,200,.55)}
+.report-purpose-number{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:var(--mmri-color-danger);color:#fff;font-weight:800;background:radial-gradient(circle at 32% 26%,#CC3550,#9B1229 75%);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 14px rgba(255,90,120,.55)}
+.report-v3 .report-roadmap-card{border-color:rgba(255,255,255,.95);background:linear-gradient(170deg,#EDF4FF,#DDEBFF);box-shadow:inset 0 2px 0 #fff,0 14px 24px -18px rgba(10,50,200,.5)}
+.report-roadmap-card:hover{border-color:color-mix(in srgb,var(--report-accent) 42%,var(--mmri-color-border));background:rgba(244,247,252,.85);box-shadow:none;transform:none;border-color:#fff;background:linear-gradient(170deg,#F2F8FF,#E3EFFF);box-shadow:inset 0 2px 0 #fff,0 18px 28px -16px rgba(10,50,200,.6),0 0 24px -6px rgba(62,190,255,.55)}
+.report-roadmap-card.is-complete{border-color:var(--mmri-color-success);background:#E9F6EF;box-shadow:0 0 0 1px var(--mmri-color-success);border-color:#fff;background:linear-gradient(170deg,#E3FAEF,#CDEFE0);box-shadow:inset 0 2px 0 #fff,0 0 0 2px var(--mmri-color-success)}
+.report-finding-column.is-negative .report-finding-arc__no{background:var(--mmri-color-danger-soft);color:var(--mmri-color-danger);color:#8E1B12}
+.report-finding-column.is-positive .report-finding-arc__no,.report-finding-column.is-negative .report-finding-arc__no{background:#fff;box-shadow:inset 0 0 0 1px rgba(16,37,75,.12)}
+.report-v3 .report-finding-column.is-positive .report-finding-arc__no{color:#0B5A3C}
+.report-prelim-tag{font-style:normal;font-weight:500;font-size:13px;color:var(--mmri-color-text-muted);white-space:nowrap;color:var(--wp-ink2)}
+
+/* ===== Mobile web report (<= 640px): a dedicated reading layout, not the desktop page squeezed. Outer chrome is flattened so cards get the full phone width; ====
+   strengths / weaknesses / priorities / roadmap are single-column cards with the name and meaning at full width and the score as a badge under the title. Web view only: the PDF is untouched. */
+@media (max-width:640px){
+ html:root body.mmri-prism-page .report-v3{padding:8px 6px 96px}
+ html:root body.mmri-prism-page .report-three-pages{padding:0;gap:14px}
+ html:root body.mmri-prism-page .report-three-page{padding:16px 10px 18px;border-radius:20px}
+ html:root body.mmri-prism-page .report-three-page>header{gap:10px}
+ html:root body.mmri-prism-page .report-top-download{width:100%;max-width:none;min-height:50px}
+ /* score ring: always a true circle, readable number, shine kept (transform-only) */
+ html:root body.mmri-prism-page .report-score-stage{padding:22px 0 6px}
+ html:root body.mmri-prism-page .report-v3 .report-score{width:min(200px,56vw);height:min(200px,56vw);min-width:0;aspect-ratio:1}
+ html:root body.mmri-prism-page .report-score strong{font-size:min(72px,20vw)}
+ html:root body.mmri-prism-page .report-score::before{inset:-14px}
+ html:root body.mmri-prism-page .report-score-meta{text-align:center;padding-inline:6px}
+ /* strengths / weaknesses */
+ html:root body.mmri-prism-page .report-balance-v3{grid-template-columns:1fr;gap:14px}
+ html:root body.mmri-prism-page .report-finding-column{padding:12px 10px 14px;border-radius:18px}
+ html:root body.mmri-prism-page .report-finding-arc{grid-template-columns:26px minmax(0,1fr);column-gap:10px;row-gap:6px;padding:12px 0}
+ html:root body.mmri-prism-page .report-finding-arc>b{grid-column:2;justify-self:start;font-size:18px;padding:1px 10px;border-radius:10px}
+ html:root body.mmri-prism-page .report-finding-arc strong{font-size:15.5px;line-height:1.35}
+ html:root body.mmri-prism-page .report-finding-arc p{font-size:14px;line-height:1.5}
+ /* five priorities */
+ html:root body.mmri-prism-page .report-purpose-priorities>article{grid-template-columns:30px minmax(0,1fr);gap:8px 10px;padding:12px 10px}
+ html:root body.mmri-prism-page .report-purpose-projection{grid-column:1/-1;justify-self:stretch;width:100%;grid-template-columns:1fr 1fr}
+ html:root body.mmri-prism-page .report-purpose-copy h3{font-size:16px}
+ html:root body.mmri-prism-page .report-purpose-copy p{font-size:14px;line-height:1.5}
+ /* 12-month plan: one card per period, full width */
+ html:root body.mmri-prism-page .report-roadmap-card{grid-template-columns:1fr;gap:10px;padding:14px 12px;border-radius:16px}
+ html:root body.mmri-prism-page .report-summary{padding-inline:2px}
+}

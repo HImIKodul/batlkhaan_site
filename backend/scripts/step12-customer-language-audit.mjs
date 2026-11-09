@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=path.resolve(process.cwd(),'..');
+const p=path.join(process.cwd(),'methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json');
+const b=JSON.parse(fs.readFileSync(p,'utf8'));
+const hits=[];
+const test=(where,v)=>{if(typeof v==='string'&&/[A-Za-z]/.test(v))hits.push({path:where,text:v});};
+const c=b.contracts;
+const comp=c['MMRI_FINAL_Recommendation_Engine_Contract.json'].composition;
+comp.categoryObjectives.forEach((x,i)=>{test(`recommendation/categoryObjectives/${i}/name`,x.name);test(`recommendation/categoryObjectives/${i}/objective`,x.objective)});
+comp.cellInterventions.forEach((x,i)=>['title','action','deliverable','kpi'].forEach(k=>test(`recommendation/cellInterventions/${i}/${k}`,x[k])));
+c['MMRI_FINAL_365_Day_Action_Plan_Contract.json'].interventionSchedule.forEach((x,i)=>['title','milestoneTemplate','deliverable','kpi'].forEach(k=>test(`actionPlan/interventionSchedule/${i}/${k}`,x[k])));
+c['MMRI_FINAL_Report_Contract.json'].format.sections.forEach((x,i)=>test(`report/sections/${i}/name`,x.name));
+const report={schema:'mmri.step12.customer_language.audit.v1',status:hits.length?'FAIL':'PASS',hitCount:hits.length,scope:'Actual customer-visible recommendation, 365-day action-plan and report section text.',hits};
+fs.writeFileSync(path.join(root,'STEP12_CUSTOMER_LANGUAGE_AUDIT.json'),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify(report,null,2));
+if(hits.length) process.exit(2);

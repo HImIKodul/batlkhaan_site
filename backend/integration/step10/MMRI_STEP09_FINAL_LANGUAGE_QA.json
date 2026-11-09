@@ -1,0 +1,49 @@
+{
+  "step": "9/12",
+  "date": "2026-10-16",
+  "status": "PASS_FINAL_MONGOLIAN_LANGUAGE_QA",
+  "rows": 61440,
+  "uniqueQuestionIds": 61440,
+  "customerFacingLatinFields": 0,
+  "doubleSpaces": 0,
+  "doublePunctuation": 0,
+  "emDashInQuestionsOrAnswers": 0,
+  "blankQuestions": 0,
+  "questionsMissingQuestionMark": 0,
+  "answerCountMismatch": 0,
+  "duplicateAnswerRows": 0,
+  "answerMissingTerminalPunctuation": 0,
+  "languagePolishRowsChanged": 2816,
+  "languagePolishPatternFamilies": 11,
+  "localizedCategoryLabels": 320,
+  "localizedDimensionLabels": 240,
+  "prohibitedTransliterationHits": {},
+  "acceptedStandardizedLoanwords": {
+    "менежмент": 49152,
+    "аудит": 192,
+    "систем": 8446,
+    "стратеги": 7296,
+    "брэнд": 1728,
+    "дижитал": 5048,
+    "автомат": 2471
+  },
+  "genericContextDependentQuestionRows": 6144,
+  "contextRule": "DisplayContext must be shown as a separate context line whenever the question uses a generic reference such as 'энэ чиглэл'; never concatenate it with an em dash.",
+  "categoriesPerDomain": {
+    "FINMRI": 64,
+    "HRMRI": 64,
+    "ISMRI": 64,
+    "MARKETING": 64,
+    "OPMRI": 64
+  },
+  "dimensionsPerDomain": {
+    "FINMRI": 48,
+    "HRMRI": 48,
+    "ISMRI": 48,
+    "MARKETING": 48,
+    "OPMRI": 48
+  },
+  "productionApproved": false,
+  "pending": "Step 10 integration into the frozen system ZIP, Step 11 full runtime regression, Step 12 final freeze/package.",
+  "verifiedMasterSHA256": "f767d26f5888ff27696d40fc7305a5bc58d3cc6bbe3558e1b12bf91f394fb671"
+}

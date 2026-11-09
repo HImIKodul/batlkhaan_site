@@ -1,0 +1,135 @@
+{
+  "schema": "mmri.step11.billing_retake.static.v1",
+  "status": "FAIL",
+  "checksPassed": 23,
+  "checksTotal": 24,
+  "failed": [
+    {
+      "name": "landing_states_retake_300k",
+      "pass": false,
+      "detail": ""
+    }
+  ],
+  "checks": [
+    {
+      "name": "diagnostic_plan_exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "retake_plan_exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "retake_requires_prior_completed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "same_entitlement_claim_path",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "entitlement_consumed_once",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "payment_required_when_enforced",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "assessment_creation_claims_entitlement",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "qpay_get_callback_route",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "qpay_post_callback_route",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mock_pay_route_present",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mock_pay_disabled_in_production",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "qpay_verifies_payment",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "partial_payment_rejected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "callback_token_hashed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "provider_metadata_allowlist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "retake_default_300k_backend",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostic_300k_backend_env",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "retake_300k_start",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "frontend_diagnostic_300k",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "hub_checks_retake_entitlement",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "hub_checks_first_entitlement",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "billing_page_selects_retake",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "landing_states_retake_300k",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "no_subscription_plan",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

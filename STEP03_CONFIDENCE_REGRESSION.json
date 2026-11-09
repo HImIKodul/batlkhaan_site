@@ -1,0 +1,346 @@
+{
+  "schema": "mmri.step03_of15.confidence.regression.v1",
+  "status": "PASS",
+  "checksPassed": 48,
+  "checksTotal": 48,
+  "failures": [],
+  "scenarios": {
+    "numeric": {
+      "r1": 0.418,
+      "r2": 0.4235,
+      "r3": 0.5096,
+      "r4": 0.5335,
+      "c1": 0.4179999999999999,
+      "c2": 0.664477,
+      "c3": 0.8354595208,
+      "c4": 0.9232418664532
+    },
+    "ordinary": {
+      "one": {
+        "status": "DIRECT_PROVISIONAL",
+        "confidence": 0.4179999999999999
+      },
+      "two": {
+        "status": "DIRECT_PROVISIONAL",
+        "confidence": 0.664477
+      },
+      "three": {
+        "status": "DIRECT_FINAL",
+        "confidence": 0.8354595208,
+        "lockReason": "THREE_DIRECT_CONFIDENCE_GATED"
+      }
+    },
+    "lowAuthority": {
+      "status": "REVIEW_REQUIRED",
+      "confidence": 0.7552158994432001,
+      "maxAuthority": 0.4
+    },
+    "conflict": {
+      "q3Outlier": {
+        "status": "REVIEW_REQUIRED",
+        "confidence": 0.65,
+        "rules": [
+          "H01"
+        ]
+      },
+      "q2Outlier": {
+        "status": "DIRECT_FINAL",
+        "confidence": 0.8354595208,
+        "lock": true,
+        "reason": "Q3_VERIFIED_2_OF_3_CONFLICT_RESOLUTION"
+      },
+      "fourResolved": {
+        "status": "DIRECT_FINAL",
+        "lock": true,
+        "reason": "Q3_VERIFIED_3_OF_4_CONFLICT_RESOLUTION"
+      }
+    },
+    "critical": {
+      "good": {
+        "status": "DIRECT_FINAL",
+        "lock": true
+      },
+      "q3Dnk": {
+        "status": "REVIEW_REQUIRED",
+        "lock": false
+      },
+      "q3Outlier": {
+        "status": "REVIEW_REQUIRED",
+        "confidence": 0.65,
+        "lock": false
+      }
+    },
+    "naDnk": {
+      "dnk": {
+        "status": "UNRESOLVED",
+        "confidence": 0
+      },
+      "na1": {
+        "status": "GATHERING",
+        "naConfidence": 0.4179999999999999
+      },
+      "na3": {
+        "status": "NOT_APPLICABLE",
+        "naConfidence": 0.8354595208
+      },
+      "conflict": {
+        "status": "REVIEW_REQUIRED",
+        "naConfidence": 0.8354595208,
+        "rules": [
+          "V13_NA_SCORE_CONFLICT",
+          "H03"
+        ]
+      }
+    },
+    "authority": {
+      "baseOwner": 0.65,
+      "undeclared": 0.65,
+      "declared": 0.9,
+      "scopedOut": 0.65,
+      "externalBase": 0.5,
+      "externalDeclared": 0.5
+    }
+  },
+  "checks": [
+    {
+      "name": "path1_reliability_authority_095",
+      "pass": true,
+      "detail": 0.418
+    },
+    {
+      "name": "path2_reliability_authority_095",
+      "pass": true,
+      "detail": 0.4235
+    },
+    {
+      "name": "path3_reliability_authority_095",
+      "pass": true,
+      "detail": 0.5096
+    },
+    {
+      "name": "one_answer_confidence_about_0418",
+      "pass": true,
+      "detail": 0.4179999999999999
+    },
+    {
+      "name": "one_answer_below_lock",
+      "pass": true,
+      "detail": 0.4179999999999999
+    },
+    {
+      "name": "two_answer_confidence_about_0664",
+      "pass": true,
+      "detail": 0.664477
+    },
+    {
+      "name": "two_answers_below_lock",
+      "pass": true,
+      "detail": 0.664477
+    },
+    {
+      "name": "three_answer_confidence_above_080",
+      "pass": true,
+      "detail": 0.8354595208
+    },
+    {
+      "name": "three_answer_confidence_about_0835",
+      "pass": true,
+      "detail": 0.8354595208
+    },
+    {
+      "name": "four_answer_confidence_above_three",
+      "pass": true,
+      "detail": "0.8354595208->0.9232418664532"
+    },
+    {
+      "name": "ordinary_one_not_locked",
+      "pass": true,
+      "detail": "DIRECT_PROVISIONAL"
+    },
+    {
+      "name": "ordinary_two_not_locked",
+      "pass": true,
+      "detail": "DIRECT_PROVISIONAL"
+    },
+    {
+      "name": "ordinary_three_locked",
+      "pass": true,
+      "detail": "DIRECT_FINAL"
+    },
+    {
+      "name": "ordinary_three_direct_final",
+      "pass": true,
+      "detail": "DIRECT_FINAL"
+    },
+    {
+      "name": "ordinary_lock_reason_three",
+      "pass": true,
+      "detail": "THREE_DIRECT_CONFIDENCE_GATED"
+    },
+    {
+      "name": "low_authority_not_locked",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "low_authority_max_below_075",
+      "pass": true,
+      "detail": 0.4
+    },
+    {
+      "name": "q3_outlier_not_locked",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "q3_outlier_review_required",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "q3_outlier_confidence_capped_065",
+      "pass": true,
+      "detail": 0.65
+    },
+    {
+      "name": "q3_outlier_h01",
+      "pass": true,
+      "detail": "[\"H01\"]"
+    },
+    {
+      "name": "q2_outlier_q3_cluster_can_lock",
+      "pass": true,
+      "detail": "DIRECT_FINAL"
+    },
+    {
+      "name": "q2_outlier_verified_reason",
+      "pass": true,
+      "detail": "Q3_VERIFIED_2_OF_3_CONFLICT_RESOLUTION"
+    },
+    {
+      "name": "four_answer_verified_cluster_lock",
+      "pass": true,
+      "detail": "DIRECT_FINAL"
+    },
+    {
+      "name": "four_answer_verified_reason",
+      "pass": true,
+      "detail": "Q3_VERIFIED_3_OF_4_CONFLICT_RESOLUTION"
+    },
+    {
+      "name": "critical_good_q3_locks",
+      "pass": true,
+      "detail": "DIRECT_FINAL"
+    },
+    {
+      "name": "critical_q3_dnk_cannot_lock",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "critical_q3_outlier_cannot_lock",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "critical_q3_outlier_cap",
+      "pass": true,
+      "detail": 0.65
+    },
+    {
+      "name": "critical_C41_q3_locks",
+      "pass": true,
+      "detail": "DIRECT_FINAL:0.8354595208"
+    },
+    {
+      "name": "critical_C43_q3_locks",
+      "pass": true,
+      "detail": "DIRECT_FINAL:0.8354595208"
+    },
+    {
+      "name": "critical_C44_q3_locks",
+      "pass": true,
+      "detail": "DIRECT_FINAL:0.8354595208"
+    },
+    {
+      "name": "all_dnk_no_score",
+      "pass": true,
+      "detail": "null"
+    },
+    {
+      "name": "all_dnk_no_confidence",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "one_na_not_confirmed",
+      "pass": true,
+      "detail": "GATHERING"
+    },
+    {
+      "name": "one_na_confidence_not_one",
+      "pass": true,
+      "detail": 0.4179999999999999
+    },
+    {
+      "name": "three_na_confirmed",
+      "pass": true,
+      "detail": "NOT_APPLICABLE"
+    },
+    {
+      "name": "three_na_confidence_ge_080",
+      "pass": true,
+      "detail": 0.8354595208
+    },
+    {
+      "name": "na_scored_conflict_review",
+      "pass": true,
+      "detail": "REVIEW_REQUIRED"
+    },
+    {
+      "name": "na_scored_conflict_rule",
+      "pass": true,
+      "detail": "[\"V13_NA_SCORE_CONFLICT\",\"H03\"]"
+    },
+    {
+      "name": "na_scored_confidence_not_constant_one",
+      "pass": true,
+      "detail": 0.8354595208
+    },
+    {
+      "name": "owner_base_low_example",
+      "pass": true,
+      "detail": 0.65
+    },
+    {
+      "name": "undeclared_no_override",
+      "pass": true,
+      "detail": "0.65/0.65"
+    },
+    {
+      "name": "declared_owner_override_090",
+      "pass": true,
+      "detail": 0.9
+    },
+    {
+      "name": "owner_override_cap_090",
+      "pass": true,
+      "detail": 0.9
+    },
+    {
+      "name": "scoped_out_no_override",
+      "pass": true,
+      "detail": "0.65/0.65"
+    },
+    {
+      "name": "external_partner_no_override",
+      "pass": true,
+      "detail": "0.5/0.5"
+    },
+    {
+      "name": "source_kind_diversity_no_bonus",
+      "pass": true,
+      "detail": "0.784/0.784"
+    }
+  ]
+}

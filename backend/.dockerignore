@@ -1,0 +1,16 @@
+# Keep secrets, local state and build output out of the Docker build context.
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.qa-credentials.local
+*.log
+report-storage
+.mock-mailbox
+.git
+*.dump
+*.pem
+*.key
+backups
+.qa-credentials*

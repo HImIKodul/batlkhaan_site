@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "dist-strategy",
+    "rootDir": "src"
+  },
+  "include": [
+    "src/engine/**/*.ts",
+    "src/strategy/**/*.ts",
+    "src/diagnosis/**/*.ts",
+    "src/report/**/*.ts",
+    "src/lib/bundle-types.ts",
+    "src/lib/question-scoring.ts"
+  ]
+}

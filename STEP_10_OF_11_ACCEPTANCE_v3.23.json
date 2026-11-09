@@ -1,0 +1,304 @@
+{
+  "suite": "MMRI Step 10 AI executive report acceptance",
+  "version": "3.23.0",
+  "total": 59,
+  "passed": 59,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "backend version >= 3.23.0",
+      "status": "PASS",
+      "detail": "3.31.0"
+    },
+    {
+      "name": "frontend version >= 3.23.0",
+      "status": "PASS",
+      "detail": "3.81.4"
+    },
+    {
+      "name": "file backend/src/report/binding.ts",
+      "status": "PASS",
+      "detail": "backend/src/report/binding.ts"
+    },
+    {
+      "name": "file backend/src/report/ai-prompt.ts",
+      "status": "PASS",
+      "detail": "backend/src/report/ai-prompt.ts"
+    },
+    {
+      "name": "file backend/src/report/openai-narrative-provider.ts",
+      "status": "PASS",
+      "detail": "backend/src/report/openai-narrative-provider.ts"
+    },
+    {
+      "name": "file backend/src/api/ai-report-provider.ts",
+      "status": "PASS",
+      "detail": "backend/src/api/ai-report-provider.ts"
+    },
+    {
+      "name": "file backend/prisma/migrations/20260909103000_step10_ai_report_binding/migration.sql",
+      "status": "PASS",
+      "detail": "backend/prisma/migrations/20260909103000_step10_ai_report_binding/migration.sql"
+    },
+    {
+      "name": "file backend/src/verify-ai-report-binding.ts",
+      "status": "PASS",
+      "detail": "backend/src/verify-ai-report-binding.ts"
+    },
+    {
+      "name": "payload type strategyHash: string",
+      "status": "PASS",
+      "detail": "strategyHash: string"
+    },
+    {
+      "name": "payload type planHash: string",
+      "status": "PASS",
+      "detail": "planHash: string"
+    },
+    {
+      "name": "payload type bindingHash: string",
+      "status": "PASS",
+      "detail": "bindingHash: string"
+    },
+    {
+      "name": "payload supports current v1.3",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "payload builder strategyHash: input.strategyHash",
+      "status": "PASS",
+      "detail": "strategyHash: input.strategyHash"
+    },
+    {
+      "name": "payload builder planHash: input.planHash",
+      "status": "PASS",
+      "detail": "planHash: input.planHash"
+    },
+    {
+      "name": "payload builder bindingHash: input.bindingHash",
+      "status": "PASS",
+      "detail": "bindingHash: input.bindingHash"
+    },
+    {
+      "name": "coordinator catches provider failure",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "one repair maximum",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "deterministic fallback mandatory",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "prompt guard Do not calculate",
+      "status": "PASS",
+      "detail": "Do not calculate"
+    },
+    {
+      "name": "prompt guard Do not browse",
+      "status": "PASS",
+      "detail": "Do not browse"
+    },
+    {
+      "name": "prompt guard Do not reveal internal formulas",
+      "status": "PASS",
+      "detail": "Do not reveal internal formulas"
+    },
+    {
+      "name": "prompt guard chain-of-thought",
+      "status": "PASS",
+      "detail": "chain-of-thought"
+    },
+    {
+      "name": "prompt guard diagnosisResultHash + strategyHash + planHash",
+      "status": "PASS",
+      "detail": "diagnosisResultHash + strategyHash + planHash"
+    },
+    {
+      "name": "structured output schema",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "OpenAI response storage disabled",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Responses endpoint default",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "provider does not trust payload hash from model",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "ReportSnapshot field strategyHash",
+      "status": "PASS",
+      "detail": "strategyHash"
+    },
+    {
+      "name": "ReportSnapshot field planHash",
+      "status": "PASS",
+      "detail": "planHash"
+    },
+    {
+      "name": "ReportSnapshot field bindingHash",
+      "status": "PASS",
+      "detail": "bindingHash"
+    },
+    {
+      "name": "ReportSnapshot field narrativeHash",
+      "status": "PASS",
+      "detail": "narrativeHash"
+    },
+    {
+      "name": "ReportSnapshot field modelIdentifier",
+      "status": "PASS",
+      "detail": "modelIdentifier"
+    },
+    {
+      "name": "ReportSnapshot field modelConfig",
+      "status": "PASS",
+      "detail": "modelConfig"
+    },
+    {
+      "name": "ReportSnapshot field promptVersion",
+      "status": "PASS",
+      "detail": "promptVersion"
+    },
+    {
+      "name": "ReportSnapshot field validatorVersion",
+      "status": "PASS",
+      "detail": "validatorVersion"
+    },
+    {
+      "name": "ReportSnapshot field generationAttemptCount",
+      "status": "PASS",
+      "detail": "generationAttemptCount"
+    },
+    {
+      "name": "ReportSnapshot field providerError",
+      "status": "PASS",
+      "detail": "providerError"
+    },
+    {
+      "name": "report uses current V4 snapshot ID",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "report computes binding SHA",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "existing lineage checks all three hashes",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "payload SHA reverified",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "published narrative immutable reuse",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "published manual overwrite blocked",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "narrative SHA persisted",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "AI audit persisted",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "validator binding V21",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "existing 20 validation rules retained",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "app wires configured provider",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "provider mode documented",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "AI required switch documented",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "model configured by env",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "frontend report contract diagnosisResultHash:string",
+      "status": "PASS",
+      "detail": "diagnosisResultHash:string"
+    },
+    {
+      "name": "frontend report contract strategyHash:string",
+      "status": "PASS",
+      "detail": "strategyHash:string"
+    },
+    {
+      "name": "frontend report contract planHash:string",
+      "status": "PASS",
+      "detail": "planHash:string"
+    },
+    {
+      "name": "frontend report contract bindingHash:string",
+      "status": "PASS",
+      "detail": "bindingHash:string"
+    },
+    {
+      "name": "frontend uses S10 narrative",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Step10 smoke script registered",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Step10 verify script registered",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "DB verifier registered",
+      "status": "PASS",
+      "detail": ""
+    }
+  ]
+}

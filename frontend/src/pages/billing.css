@@ -1,0 +1,65 @@
+/* Billing: per-domain payment page. Accent comes from --billing-accent (domain colour). */
+.billing-domain-page{width:min(960px,calc(100% - 32px));max-width:960px;margin-inline:auto;display:grid;gap:var(--mmri-space-4);padding:var(--mmri-space-6) 0 var(--mmri-space-16)}
+.billing-domain-back{justify-self:start;display:inline-flex;align-items:center;gap:var(--mmri-space-2);min-height:44px;padding:0 16px 0 6px;border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-pill);background:var(--mmri-glass-control-bg);color:var(--mmri-color-text-strong);font:inherit;font-weight:600;cursor:pointer;box-shadow:var(--mmri-glass-highlight),0 2px 8px rgba(20,50,110,.08);transition:box-shadow var(--mmri-motion-state)}
+.billing-domain-back:hover{box-shadow:var(--mmri-glass-highlight),0 4px 14px rgba(20,50,110,.14)}
+.billing-domain-back:focus-visible{outline:3px solid var(--mmri-color-focus);outline-offset:2px}
+.billing-domain-back__icon{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--mmri-color-brand-soft)}
+.billing-domain-page>header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--mmri-space-4);padding:var(--mmri-space-6);background:var(--mmri-glass-bg);border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-focal);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow);-webkit-backdrop-filter:var(--mmri-glass-blur);backdrop-filter:var(--mmri-glass-blur);border-top:3px solid var(--billing-accent,var(--mmri-color-brand))}
+.billing-domain-icon{width:var(--mmri-domain-icon-size-large);height:var(--mmri-domain-icon-size-large);border-radius:var(--radius-card);border:1px solid rgba(130,145,170,.32);background:linear-gradient(168deg,color-mix(in srgb,var(--billing-accent) 55%,#fff),var(--billing-accent) 60%,color-mix(in srgb,var(--billing-accent) 60%,#000));box-shadow:inset 0 2px 0 rgba(255,255,255,.7),var(--elev-object)}
+.billing-domain-page>header span{font-size:var(--mmri-type-meta-size);letter-spacing:.12em;font-weight:700;color:var(--mmri-color-text-muted)}
+.billing-domain-page>header h1{margin:2px 0 4px;font-size:clamp(26px,3vw,34px);line-height:1.15;font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display);color:var(--mmri-color-text-strong)}
+.billing-domain-page>header p{margin:0;color:var(--mmri-color-text-muted);line-height:var(--mmri-type-compact-line)}
+.billing-domain-page>header>strong{font-size:clamp(24px,3vw,32px);font-weight:var(--mmri-weight-display);color:var(--mmri-color-text-strong);font-feature-settings:var(--mmri-font-feature-numeric);white-space:nowrap}
+.billing-domain-error{display:flex;align-items:center;gap:var(--mmri-space-2);padding:var(--mmri-space-3) var(--mmri-space-4);border:1px solid color-mix(in srgb,var(--mmri-color-danger) 30%,#D9DFE8);border-radius:var(--mmri-radius-control);background:var(--mmri-color-danger-soft);color:var(--mmri-color-danger)}
+.billing-domain-layout{display:block}
+.billing-domain-main{padding:var(--mmri-space-8);background:var(--mmri-glass-bg-strong);border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-focal);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow-lift);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong)}
+.billing-domain-start,.billing-domain-success{display:grid;justify-items:center;gap:var(--mmri-space-3);padding:var(--mmri-space-10) var(--mmri-space-4);text-align:center}
+.billing-domain-start>svg,.billing-domain-success>svg{color:var(--mmri-color-accent)}
+.billing-domain-start h2,.billing-domain-success h2{margin:0;font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);color:var(--mmri-color-text-strong)}
+.billing-domain-start p,.billing-domain-success p{margin:0;max-width:52ch;color:var(--mmri-color-text-muted);line-height:var(--mmri-type-body-line)}
+.billing-payment-console{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:var(--mmri-space-8);align-items:center}
+.billing-domain-qr>div{padding:16px;background:#fff;border:2px solid var(--billing-accent,var(--mmri-color-brand));border-radius:22px;box-shadow:0 18px 38px rgba(20,50,110,.12),inset 0 1px 0 rgba(255,255,255,.9)}
+.billing-domain-qr__unavailable{display:grid;gap:8px;align-content:center;justify-items:start;min-height:180px;padding:6px;color:var(--mmri-color-text-strong)}.billing-domain-qr__unavailable b{font-size:16px}.billing-domain-qr__unavailable span{font-size:14px;line-height:1.5;color:var(--mmri-color-text-muted)}.billing-domain-qr__unavailable a{font-weight:700;color:var(--mmri-color-accent)}
+.billing-domain-qr img,.billing-domain-qr__placeholder{display:block;width:100%;height:auto;aspect-ratio:1}
+.billing-payment-console__copy{display:grid;justify-items:start;gap:var(--mmri-space-3)}
+.billing-payment-console__copy>span{font-size:var(--mmri-type-meta-size);letter-spacing:.12em;font-weight:700;color:var(--mmri-color-text-muted)}
+.billing-payment-console__copy h2{margin:0;font-size:clamp(32px,4vw,44px);font-weight:var(--mmri-weight-display);letter-spacing:var(--mmri-tracking-display);color:var(--mmri-color-text-strong);font-feature-settings:var(--mmri-font-feature-numeric)}
+.billing-payment-console__copy p{margin:0;color:var(--mmri-color-text);line-height:var(--mmri-type-body-line)}
+.billing-domain-actions{display:grid;gap:var(--mmri-space-2);width:min(100%,320px)}
+.billing-success-modal{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:var(--mmri-color-overlay-scrim);-webkit-backdrop-filter:blur(3px) saturate(120%);backdrop-filter:blur(3px) saturate(120%)}
+.billing-success-modal>div{position:relative;display:grid;justify-items:center;gap:var(--mmri-space-3);width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;padding:var(--mmri-space-8);text-align:center;background:var(--mmri-glass-bg-overlay);border:1px solid var(--mmri-glass-border);border-radius:var(--mmri-radius-focal);box-shadow:var(--mmri-glass-highlight),var(--mmri-shadow-dialog);-webkit-backdrop-filter:var(--mmri-glass-blur-strong);backdrop-filter:var(--mmri-glass-blur-strong)}
+.billing-success-modal h2{margin:0;font-size:var(--mmri-type-section-size);line-height:var(--mmri-type-section-line);color:var(--mmri-color-text-strong)}
+.billing-success-modal p{margin:0;color:var(--mmri-color-text-muted)}
+.billing-success-modal__mark{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--mmri-color-success-soft);color:var(--mmri-color-success)}
+@media (max-width:767px){
+ .billing-domain-page{padding-block:var(--mmri-space-4) var(--mmri-space-12)}
+ .billing-domain-page>header{grid-template-columns:auto minmax(0,1fr);padding:var(--mmri-space-4)}
+ .billing-domain-icon{width:56px;height:56px}
+ .billing-domain-page>header>strong{grid-column:1/-1}
+ .billing-domain-main{padding:var(--mmri-space-4)}
+ .billing-payment-console{grid-template-columns:1fr;gap:var(--mmri-space-6)}
+ .billing-domain-qr{max-width:280px;justify-self:center;width:100%}
+ .billing-domain-actions{width:100%}
+}
+
+@media (max-width:767px){
+ .billing-domain-back{min-height:var(--mmri-touch-target-min)}
+}
+
+/* Step 6/10 - explicit payment state hierarchy. */
+.billing-domain-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 2px}
+.billing-domain-flow>div{position:relative;display:flex;align-items:center;gap:10px;min-height:48px;padding:9px 13px;border:1px solid var(--mmri-glass-border);border-radius:var(--mmri-radius-control);background:rgba(244,247,252,.85);color:var(--mmri-color-text-muted);box-shadow:var(--mmri-glass-highlight)}
+.billing-domain-flow b{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:rgba(244,247,252,.85);color:var(--mmri-color-text-muted);font-size:13px;font-variant-numeric:tabular-nums}
+.billing-domain-flow span{font-size:var(--mmri-type-compact-size);font-weight:var(--mmri-weight-semibold)}
+.billing-domain-flow>div.is-current{border-color:var(--wp-silver2);background:color-mix(in srgb,var(--billing-accent) 12%,#fff);color:var(--wp-ink);box-shadow:var(--wp-bevel),var(--wp-shadow-1)}
+.billing-domain-flow>div.is-current b{background:var(--wp-ink);color:#fff}
+.billing-domain-flow>div.is-done{color:var(--mmri-color-success);background:rgba(74,222,155,.12)}
+.billing-domain-flow>div.is-done b{background:var(--mmri-color-success);color:#053D2B}
+.billing-success-modal__close{position:absolute;top:14px;right:14px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--mmri-glass-border);border-radius:50%;background:var(--mmri-glass-control-bg);color:var(--mmri-color-text-muted);cursor:pointer;box-shadow:var(--mmri-glass-highlight)}
+.billing-success-modal__close:hover{color:var(--mmri-color-text-strong);border-color:var(--mmri-color-border-strong)}
+.billing-success-modal__close:focus-visible{outline:3px solid var(--mmri-color-focus);outline-offset:2px}
+@media (max-width:560px){.billing-domain-flow{grid-template-columns:1fr}.billing-domain-flow>div{min-height:44px}.billing-domain-page>header>strong{font-size:26px}}
+
+
+/* Step 8/10 - dialog/small-screen safety. */
+@media (pointer:coarse){.billing-success-modal__close{width:48px;height:48px}.billing-domain-back{min-height:48px}}

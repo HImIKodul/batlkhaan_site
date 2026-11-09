@@ -1,0 +1,155 @@
+/* Profile (company editor + onboarding), Settings, payment history.
+   Panels use the shared liquid-glass material (.lg .lg--soft from components/glass.css). */
+.technical-settings,.account-payment-history,.company-detail-editor,.profile-onboarding,.profile-login-required{width:min(960px,calc(100% - 32px));max-width:960px;margin-inline:auto;display:grid;gap:18px;padding:22px 0 40px}
+.technical-settings>header,.account-payment-history>header,.company-detail-editor>header{display:flex;align-items:center;gap:18px;padding:2px}
+.technical-settings>header>span,.account-payment-history>header>span,.company-detail-editor>header>span{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:22px;color:var(--mmri-color-text-strong);background:linear-gradient(155deg,rgba(244,247,252,.85),rgba(244,247,252,.85));border:1px solid rgba(130,145,170,.32);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),0 10px 24px rgba(8,22,42,.3)}
+.company-detail-editor>header>span.profile-avatar{font-size:22px;font-weight:800;letter-spacing:.02em;background:linear-gradient(155deg,#7FA6FF,#7A55E0);border-radius:50%}
+.technical-settings>header b,.account-payment-history>header b,.company-detail-editor>header b{display:block;font-size:var(--mmri-type-meta-size);letter-spacing:.12em;color:var(--mmri-color-text-muted)}
+.technical-settings h1,.account-payment-history h1,.company-detail-editor h1,.profile-onboarding h1,.profile-login-required h1{margin:2px 0 4px;font-size:clamp(26px,3vw,32px);line-height:1.15;font-weight:800;letter-spacing:-.02em;color:var(--mmri-color-text-strong)}
+.technical-settings>header p,.account-payment-history>header p,.company-detail-editor>header p,.profile-onboarding>header p,.profile-login-required p{margin:0;color:var(--mmri-color-text);font-size:var(--mmri-type-body-size);line-height:1.5}
+.company-detail-editor>header .mmri-badge{margin-top:8px}
+
+/* panels */
+.technical-settings__group,.technical-settings__account,.company-detail-editor__name,.company-detail-editor__grid,.profile-company-card,.profile-question-card,.profile-login-required{padding:22px 24px;border-radius:30px}
+.technical-settings__group h2,.technical-settings__account h2{margin:0 0 4px;font-size:18px;font-weight:750;color:var(--mmri-color-text-strong)}
+.technical-settings__group>p{margin:0 0 16px;color:var(--mmri-color-text-muted);font-size:14px}
+
+/* settings: text size (segmented) + account list */
+.font-preview{font-weight:800;line-height:1}.font-preview.is-small{font-size:16px}.font-preview.is-normal{font-size:22px}.font-preview.is-large{font-size:30px}
+.technical-settings__account{display:grid;gap:14px}
+.technical-settings__account ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.technical-settings__account li a{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid rgba(130,145,170,.32);border-radius:20px;background:rgba(244,247,252,.85);color:var(--mmri-color-text-strong);text-decoration:none;transition:background .3s,border-color .3s}
+.technical-settings__account li a:hover{background:#fff;border-color:var(--wp-silver2);box-shadow:var(--wp-shadow-1)}
+.technical-settings__account li a:focus-visible{outline:3px solid #0B0F14;outline-offset:2px}
+.technical-settings__account li a>span:first-child{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:15px;background:rgba(244,247,252,.85);border:1px solid rgba(130,145,170,.32)}
+.technical-settings__account li a>span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}
+.technical-settings__account b{color:var(--mmri-color-text-strong)}.technical-settings__account small{color:var(--mmri-color-text-muted);font-size:13px}
+.technical-settings__account>.mmri-button{justify-self:start}
+
+/* payment history */
+.account-payment-history>section{display:grid;gap:12px}
+.account-payment-history>section>article{--glass-bg-strong:color-mix(in srgb,var(--domain-primary,#4D8BFF) 26%,rgba(255,255,255,.12));--glass-bg:rgba(255,255,255,.06);display:grid;grid-template-columns:448px repeat(3,minmax(0,1fr));align-items:center;gap:16px;padding:14px 22px 14px 16px;border-radius:26px}
+.account-payment-history>section>article:hover{--glass-bg-strong:color-mix(in srgb,var(--domain-primary,#4D8BFF) 34%,rgba(255,255,255,.16));border-color:rgba(130,145,170,.32)}
+.payment-history-area{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center}
+.payment-history-icon{grid-row:span 2;display:grid;place-items:center;width:56px;height:56px;border-radius:18px;background:linear-gradient(155deg,color-mix(in srgb,var(--domain-primary,#4D8BFF) 90%,transparent),color-mix(in srgb,var(--domain-secondary,var(--domain-primary,#4D8BFF)) 70%,transparent));border:1px solid rgba(130,145,170,.32);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.6),0 8px 18px rgba(8,22,42,.3)}
+.payment-history-icon svg{width:40px;height:40px}
+.payment-history-area strong{color:var(--mmri-color-text-strong);font-size:16px}
+.payment-history-area span:not(.payment-history-icon),.payment-history-date small,.payment-history-amount small{color:var(--mmri-color-text-muted);font-size:var(--mmri-type-meta-size)}
+.payment-history-date,.payment-history-amount{display:grid;gap:2px}
+.payment-history-date b,.payment-history-amount b{color:var(--mmri-color-text-strong);font-weight:700;font-variant-numeric:tabular-nums}
+.payment-history-amount b{font-size:17px}
+.account-payment-history>section>article .mmri-badge{justify-self:end;border:1px solid rgba(130,145,170,.32);font-weight:700}
+
+/* company editor */
+.company-detail-editor__name{display:grid;gap:8px;overflow:visible}
+.profile-onboarding .profile-company-card{overflow:visible}
+.company-detail-editor__name small{color:var(--mmri-color-text-muted)}
+.company-detail-editor__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+.company-detail-editor__grid>label{display:grid;gap:10px;align-content:start;padding:14px;border:1px solid rgba(130,145,170,.32);border-radius:20px;background:rgba(244,247,252,.85)}
+.company-detail-editor__grid>label>span{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.4;font-weight:650;color:var(--mmri-color-text)}
+.company-detail-editor__number{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--wp-mist);color:var(--wp-ink);font-size:13px}
+.company-detail-editor__bar{position:sticky;bottom:14px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 12px 22px;border-radius:999px}
+.company-detail-editor__bar>span{color:var(--mmri-color-success);font-weight:700}
+.profile-question-card>footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* onboarding */
+.profile-onboarding{max-width:760px}
+.profile-onboarding>header{display:grid;gap:6px}
+.profile-onboarding>header>span{font-size:var(--mmri-type-meta-size);letter-spacing:.12em;font-weight:700;color:var(--mmri-color-text-muted)}
+.profile-company-card{display:grid;gap:16px}
+.business-name-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;align-items:start}
+.business-name-fields__form{position:relative}
+.business-name-fields__menu{max-height:280px;padding:6px;border-radius:18px}
+.business-name-fields__menu button{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr) auto;align-items:center;gap:4px 12px;width:100%;min-height:42px;padding:8px 12px;border-radius:12px;text-align:left;transition:background-color var(--wp-dur,.2s) ease,box-shadow var(--wp-dur,.2s) ease}
+.business-name-fields__menu button b{font-size:15px;font-weight:700;letter-spacing:.01em}
+.business-name-fields__menu button span{min-width:0;font-size:13px;line-height:1.3;color:var(--wp-ink3,#5B6B7E);text-align:left}
+.business-name-fields__menu button i{font-style:normal;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:999px;color:var(--wp-ink2,#344457);background:rgba(173,209,238,.35);border:1px solid rgba(173,209,238,.7)}
+.business-name-fields__menu button.is-active{background:rgba(173,209,238,.28);box-shadow:inset 0 0 0 1px rgba(127,166,255,.35)}
+.business-name-fields__menu button.is-selected b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-radius:50%;background:#2FA67A;vertical-align:middle}
+.business-name-fields__preview{margin:8px 2px 0;font-size:13px;color:var(--wp-ink3,#5B6B7E)}.business-name-fields__preview strong{color:var(--wp-ink,#162333)}
+.business-name-fields__empty{margin:0;padding:10px 12px;color:var(--mmri-color-text-faint)}
+.profile-question-jump{display:flex;flex-wrap:wrap;gap:6px}
+.profile-question-jump button{min-width:34px;height:34px;padding:0 8px;border:1px solid var(--mmri-glass-border);border-radius:10px;background:rgba(244,247,252,.85);color:inherit;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.profile-question-jump button.is-done{background:color-mix(in srgb,var(--mmri-color-success) 28%,transparent)}
+.profile-question-jump button.is-skipped{border-style:dashed}
+.profile-question-jump button.is-current{border-color:#D9DFE8;box-shadow:var(--mmri-focus-ring)}
+.profile-question-later{margin:0;font-size:13px;line-height:1.5;color:var(--mmri-color-text-muted)}
+.profile-question-later button{padding:0;border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer}
+.diagnosis-profile-gate{display:flex;align-items:center;justify-content:space-between;gap:12px}
+@media (max-width:560px){.business-name-fields{grid-template-columns:1fr}.profile-question-card>footer{flex-wrap:wrap}}
+.profile-question-card{display:grid;gap:16px}
+.profile-question-card h2{margin:0;font-size:clamp(19px,2.2vw,24px);line-height:1.3;color:var(--mmri-color-text-strong)}
+.profile-question-progress{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;font-weight:650;color:var(--mmri-color-text-muted)}
+.profile-login-required{justify-items:start;margin-top:64px;max-width:560px}
+
+/* choice select (shared) */
+.mmri-choice-select{position:relative}
+.mmri-choice-select__trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:var(--mmri-control-height-touch);padding:8px 14px;border:1px solid var(--mmri-glass-border);border-radius:16px;background:#fff;color:var(--mmri-color-text-strong);font:inherit;text-align:left;cursor:pointer;-webkit-backdrop-filter:var(--mmri-glass-control-blur);backdrop-filter:var(--mmri-glass-control-blur);transition:border-color .3s,box-shadow .3s}
+.mmri-choice-select__trigger:hover{border-color:rgba(130,145,170,.32)}
+.mmri-choice-select__trigger:focus-visible,.mmri-choice-select.is-open .mmri-choice-select__trigger{outline:none;border-color:#D9DFE8;box-shadow:var(--mmri-focus-ring)}
+.mmri-choice-select__chevron{color:var(--mmri-color-text-strong)}
+.mmri-choice-select__menu{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);max-height:280px;overflow:auto;padding:6px;border:1px solid var(--mmri-glass-border);border-radius:20px;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow-lift)}
+.mmri-choice-select__menu.is-up{top:auto;bottom:calc(100% + 6px)}
+/* A panel that holds an OPEN dropdown must not clip it (panels are overflow:hidden for their rounded sheen). */
+:is(.lg,.content-surface):has(.mmri-choice-select.is-open){overflow:visible}
+.mmri-choice-select__menu button{display:flex;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;border:0;border-radius:14px;background:transparent;color:var(--mmri-color-text-strong);font:inherit;text-align:left;cursor:pointer}
+.mmri-choice-select__menu button:hover,.mmri-choice-select__menu button:focus-visible{outline:none;background:rgba(244,247,252,.85)}
+.mmri-choice-select__menu button.is-selected{background:rgba(244,247,252,.85);font-weight:700}
+
+@media (min-width:1011px){
+ .payment-history-date,.payment-history-amount{position:relative;left:75px}
+}
+@media (min-width:768px) and (max-width:1010px){
+ .account-payment-history>section>article{grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(110px,1fr))}
+}
+@media (max-width:767px){
+ .technical-settings,.account-payment-history,.company-detail-editor,.profile-onboarding,.profile-login-required{gap:14px;padding-block:14px 32px}
+ .technical-settings>header>span,.account-payment-history>header>span,.company-detail-editor>header>span{width:52px;height:52px;border-radius:18px}
+ .technical-settings__group,.technical-settings__account,.company-detail-editor__name,.company-detail-editor__grid,.profile-company-card,.profile-question-card{padding:16px;border-radius:24px}
+ .company-detail-editor__grid{grid-template-columns:1fr}
+ .company-detail-editor__bar{bottom:calc(var(--mmri-bottom-nav-height) + 10px)}
+ .account-payment-history>section>article{grid-template-columns:1fr 1fr;gap:10px 14px;padding:14px}
+ .account-payment-history>section>article>.payment-history-area{grid-column:1/-1}
+}
+
+.payment-history-swatch{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(168deg,var(--domain-secondary,#999),var(--domain-primary,#666) 60%,var(--domain-deep,#444) 130%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6)}
+
+/* legal documents (privacy policy, terms): readable column, draft status always visible */
+.legal-doc{display:grid;gap:18px;max-width:880px;margin-inline:auto;padding-block:8px 28px}
+.legal-doc__head{display:flex;gap:16px;align-items:center}
+.legal-doc__head>span{display:grid;place-items:center;flex:none;width:58px;height:58px;border-radius:18px;color:var(--wp-ink,#162333);border:1px solid rgba(255,255,255,.9);background:var(--hg-l2,rgba(255,255,255,.8));box-shadow:var(--hg-bevel),var(--hg-shadow-1)}
+.legal-doc__head b{font-size:13px;letter-spacing:.14em;color:var(--wp-ink3,#566683)}
+.legal-doc__head h1{margin:2px 0;font-size:clamp(26px,4vw,36px);letter-spacing:-.015em;color:var(--wp-ink,#162333)}
+.legal-doc__head p{margin:0;color:var(--wp-ink3,#566683);font-size:14px}
+.legal-doc__banner{display:grid;gap:4px;padding:14px 18px;border-radius:18px;border:1px solid #F0DDA8;background:linear-gradient(90deg,#FFF8E1,#FFFDF5);color:#6B5311;line-height:1.5}
+.legal-doc__banner strong{font-size:14px;letter-spacing:.02em}.legal-doc__banner span{font-size:13.5px}
+.legal-doc__body{display:grid;gap:6px;padding:clamp(18px,3vw,32px)}
+.legal-doc__intro{margin:0 0 10px;font-size:16.5px;line-height:1.65;color:var(--wp-ink,#162333)}
+.legal-doc__block{padding-top:14px;border-top:1px solid rgba(190,205,222,.6)}
+.legal-doc__block h2{margin:0 0 8px;font-size:18px;color:var(--wp-ink,#162333)}
+.legal-doc__block p,.legal-doc__block li{font-size:15px;line-height:1.65;color:var(--wp-ink2,#33435A)}
+.legal-doc__block p{margin:0 0 8px}.legal-doc__block ul{margin:0 0 8px;padding-left:22px;display:grid;gap:5px}
+.legal-doc__block p.legal-doc__pending{padding:8px 12px;border-radius:12px;background:rgba(240,200,106,.16);color:#6B5311;font-size:14px}
+.legal-doc__decisions{background:rgba(127,166,255,.08);border-radius:18px;padding:16px 18px;border-top:0}
+.legal-doc__links{display:flex;flex-wrap:wrap;gap:10px}.legal-doc__links a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;font-weight:600;color:var(--wp-ink,#162333);text-decoration:none;border:1px solid var(--wp-silver2,#BFC7E0);background:var(--hg-l1,rgba(255,255,255,.7));box-shadow:var(--hg-bevel),var(--hg-shadow-1)}
+/* account data page */
+.account-data{display:grid;gap:16px;max-width:820px;margin-inline:auto;padding-block:8px 28px}
+.account-data>header{display:flex;gap:16px;align-items:center}.account-data>header>span{display:grid;place-items:center;flex:none;width:58px;height:58px;border-radius:18px;color:var(--wp-ink,#162333);border:1px solid rgba(255,255,255,.9);background:var(--hg-l2,rgba(255,255,255,.8));box-shadow:var(--hg-bevel),var(--hg-shadow-1)}
+.account-data>header b{font-size:13px;letter-spacing:.14em;color:var(--wp-ink3,#566683)}.account-data>header h1{margin:2px 0;font-size:clamp(24px,3.6vw,32px);color:var(--wp-ink,#162333)}.account-data>header p{margin:0;color:var(--wp-ink2,#33435A)}
+.account-data__card{display:grid;gap:12px;padding:clamp(16px,2.6vw,26px)}
+.account-data__card h2{margin:0;font-size:18px;color:var(--wp-ink,#162333)}.account-data__card p{margin:0;line-height:1.6;color:var(--wp-ink2,#33435A)}.account-data__card small{color:var(--wp-ink3,#566683)}
+.account-data__card form{display:grid;gap:12px;max-width:520px}
+.account-data__links{display:flex;flex-wrap:wrap;gap:10px 22px;margin:0;padding:0;list-style:none}.account-data__links a{font-weight:600;color:var(--wp-ink,#162333);text-underline-offset:3px;min-height:44px;display:inline-flex;align-items:center}
+.account-data__actions{display:flex;flex-wrap:wrap;gap:10px}
+.account-data__card.account-data__danger{border-color:rgba(217,83,79,.35);background-image:linear-gradient(90deg,rgba(217,83,79,.07),transparent 40%)}
+@media (max-width:560px){.account-data__actions>*{width:100%}.legal-doc__head,.account-data>header{align-items:flex-start}}
+
+/* Company members: stack rows on narrow screens so role and action stay reachable */
+.account-data .mmri-table caption{text-align:left}
+@media (max-width:640px){.account-data .mmri-table thead{display:none}.account-data .mmri-table,.account-data .mmri-table tbody,.account-data .mmri-table tr,.account-data .mmri-table td{display:block;width:100%}.account-data .mmri-table tr{padding:10px 0}.account-data .mmri-table td{padding:4px 12px;border:0}}
+
+/* Company info / profile (reference 15): tinted periwinkle glass tiles instead of white slabs. The field controls inside stay light (inner fill + navy text) so input contrast is unchanged. */
+body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-editor__name,.profile-question-card,.profile-company-card){
+ background:radial-gradient(80% 60% at 8% 0,rgba(255,255,255,.55),transparent 62%),linear-gradient(150deg,rgba(168,200,255,.5),rgba(122,156,246,.34) 58%,rgba(160,142,246,.36));
+ border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -14px 24px -18px rgba(70,100,220,.55),0 14px 26px -16px rgba(20,48,150,.5)}
+body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-editor__name) :is(span,small){color:#0b2358}

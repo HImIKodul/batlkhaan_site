@@ -1,0 +1,34 @@
+/* Login / register. Glass card over a clean green wash. */
+.auth{position:relative;min-height:100vh;background:transparent;padding-block:var(--mmri-space-6);overflow:hidden}.auth::before{content:"";position:absolute;pointer-events:none;inset:10% auto auto 55%;width:min(560px,62vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 36%,rgba(255,255,255,.76),rgba(134,171,224,.17) 48%,transparent 72%);filter:blur(24px);opacity:.9}
+.auth__brand{display:inline-flex;align-items:center;min-height:44px;margin:0 var(--mmri-gutter-desktop);font-weight:800;font-size:15px;letter-spacing:.035em;color:var(--mmri-color-accent);text-decoration:none}
+.auth__layout{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,440px);gap:var(--mmri-space-16);align-items:center;min-height:calc(100vh - 140px)}
+.auth__message h1 em{display:block;margin-top:var(--mmri-space-2);font-style:normal;color:var(--mmri-color-accent)}
+.auth__card{position:relative;padding:var(--mmri-space-8);display:grid;gap:var(--mmri-space-6);border:1px solid var(--border-glass);border-radius:var(--radius-surface);color:var(--mmri-color-text-strong);background:var(--surface-glass-strong);-webkit-backdrop-filter:blur(16px) saturate(130%);backdrop-filter:blur(16px) saturate(130%);box-shadow:var(--highlight-glass),var(--elevation-3);animation:mmri-rise var(--motion-reveal) var(--ease-smooth) .08s both}
+.auth__message h1{margin:0;color:var(--mmri-color-text-strong);font-weight:700;letter-spacing:-.035em;font-size:clamp(34px,4.6vw,60px);line-height:1.06;text-shadow:0 1px 3px rgba(4,14,34,.5),0 6px 28px rgba(4,14,34,.55);animation:mmri-rise var(--motion-reveal) var(--ease-smooth) both}
+.auth__proof li{animation:mmri-rise var(--motion-reveal) var(--ease-smooth) both;display:grid;gap:4px;min-height:86px;padding:16px 18px;border:1px solid var(--mmri-glass-border);outline:1px solid var(--mmri-glass-edge);outline-offset:-1px;border-radius:var(--mmri-radius-surface);background:rgba(255,255,255,.52);box-shadow:var(--mmri-glass-highlight),0 8px 24px rgba(15,36,71,.07);-webkit-backdrop-filter:blur(3px) saturate(130%);backdrop-filter:blur(3px) saturate(130%)}
+.auth__proof li:nth-child(1){animation-delay:.14s}.auth__proof li:nth-child(2){animation-delay:.2s}.auth__proof li:nth-child(3){animation-delay:.26s}
+.auth__form{display:grid;gap:var(--mmri-space-4)}
+.auth__demo{justify-self:center;border:0;background:none;color:var(--mmri-color-text-muted);font:inherit;font-size:var(--mmri-type-meta-size);text-decoration:underline;cursor:pointer}
+.auth__plan{display:flex;align-items:center;justify-content:space-between;gap:16px;justify-self:center;width:100%;padding:11px 14px;border:1px solid var(--mmri-glass-border);border-radius:var(--mmri-radius-control);background:rgba(242,245,250,.72);color:var(--mmri-color-text)}
+@media (max-width:900px){.auth__layout{grid-template-columns:1fr;gap:var(--mmri-space-8);min-height:0;padding-top:var(--mmri-space-8)}.auth__brand{margin-inline:var(--mmri-gutter-mobile)}.auth__card{padding:var(--mmri-space-6)}}
+
+/* Step 6/10 - authentication clarity and compact value proof. */
+.auth__proof{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:28px 0 0;padding:0;list-style:none;max-width:620px}
+.auth__proof b{font-size:clamp(19px,2vw,24px);line-height:1;color:var(--mmri-color-accent);font-variant-numeric:tabular-nums}
+.auth__proof span{font-size:var(--mmri-type-meta-size);line-height:1.35;color:var(--mmri-color-text-muted)}
+.auth__hint{display:block;margin-top:6px;color:var(--mmri-color-text-muted);font-size:var(--mmri-type-meta-size)}
+.auth__plan span{font-size:var(--mmri-type-meta-size)}
+.auth__plan b{color:var(--mmri-color-accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:900px){.auth__proof{max-width:none}.auth__message h1{max-width:760px}}
+@media (max-width:560px){.auth__proof{grid-template-columns:1fr 1fr}.auth__proof li:last-child{grid-column:1/-1}.auth__proof li{min-height:72px;padding:13px 14px}}
+
+
+/* password recovery + legal links on the sign-in card */
+.auth__layout--single{display:grid;place-items:center;grid-template-columns:minmax(0,520px)}
+.auth__card-title{margin:0 0 14px;font-size:clamp(22px,3vw,28px);font-weight:650;letter-spacing:-.01em;color:var(--wp-ink,#162333)}
+.auth__lead{margin:0 0 4px;color:var(--wp-ink2,#33435A);line-height:1.5}
+.auth__forgot,.auth__back{align-self:flex-start;display:inline-flex;align-items:center;min-height:44px;padding:0 2px;font-size:14.5px;font-weight:600;color:var(--wp-ink2,#33435A);text-decoration:underline;text-underline-offset:3px}
+.auth__forgot:hover,.auth__back:hover{color:var(--wp-ink,#162333)}
+.auth__done .mmri-button{justify-content:center;width:100%;margin-top:10px;text-decoration:none}
+.auth__done{display:grid;gap:10px;color:var(--wp-ink2,#33435A);line-height:1.55}.auth__done p{margin:0}
+.auth__legal{margin:2px 0 0;font-size:13px;line-height:1.5;color:var(--wp-ink3,#566683)}.auth__legal a{color:var(--wp-ink2,#33435A);font-weight:600;text-underline-offset:3px}.auth__legal small{display:block;opacity:.85}
