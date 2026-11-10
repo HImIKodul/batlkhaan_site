@@ -27,6 +27,14 @@ if [[ "$NODE_MAJOR" -lt 22 ]]; then
   exit 1
 fi
 
+# Database password: reuse the one in an existing backend/.env, otherwise generate a random one (never the old default).
+if [[ -z "${MMRI_LOCAL_PG_PASSWORD:-}" && -f "$BACKEND/.env" ]]; then
+  MMRI_LOCAL_PG_PASSWORD="$(sed -nE 's#^DATABASE_URL="?postgres(ql)?://[^:]+:([^@]+)@.*#\2#p' "$BACKEND/.env" | head -1)"
+fi
+if [[ -z "${MMRI_LOCAL_PG_PASSWORD:-}" ]]; then
+  MMRI_LOCAL_PG_PASSWORD="$(openssl rand -hex 16 2>/dev/null || date +%s%N | sha256sum | cut -c1-32)"
+fi
+export MMRI_LOCAL_PG_PASSWORD
 echo "[1/13] Starting local PostgreSQL on localhost:55432..."
 docker compose -f "$COMPOSE" -p mmri-v3-local up -d postgres
 
@@ -55,7 +63,7 @@ if [[ ! -f "$BACKEND/.env" ]]; then
   PEPPER="$(rand_secret)"
   AUDIT_SALT="$(rand_secret)"
   cat > "$BACKEND/.env" <<EOF
-DATABASE_URL="postgresql://mmri:mmri@127.0.0.1:55432/mmri?schema=public"
+DATABASE_URL="postgresql://mmri:${MMRI_LOCAL_PG_PASSWORD}@127.0.0.1:55432/mmri?schema=public"
 NODE_ENV="development"
 PORT=4000
 MMRI_TARGET_METHODOLOGY_VERSION="3.0.3"

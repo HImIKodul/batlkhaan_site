@@ -1,17 +1,24 @@
-/* WS-A regression: MMRI-16 (concurrent refresh), MMRI-19 (logout kills access token).
-   Live test. Env: API (default http://127.0.0.1:4111), PGLETTER (default a). Uses the synthetic QA login in the private clone.
-   Usage: node scripts/qa-wsa-session-regression.mjs */
-import fs from 'node:fs';import {execFileSync} from 'node:child_process';
-const H='/home/kirby/Downloads/MMRI_FUNCTIONAL_REPAIR/harness';
-const B=(process.env.API||'http://127.0.0.1:4111')+'/api/v1';const ORIGIN=new URL(process.env.API||'http://127.0.0.1:4111');ORIGIN.port=String(Number(ORIGIN.port)+100);
-const creds=Object.fromEntries(fs.readFileSync(H+'/creds-qa.local','utf8').split('\n').filter(l=>l.includes('=')).map(l=>[l.slice(0,l.indexOf('=')),l.slice(l.indexOf('=')+1)]));
-const sql=q=>execFileSync(H+'/psql.sh',[process.env.PGLETTER||'a','-At','-c',q],{encoding:'utf8'}).trim();
+/* WS-A regression: MMRI-16 (concurrent refresh with the same cookie, grace window, replay detection), MMRI-19 (logout kills the access token, other devices survive).
+   Self-contained: it registers its own synthetic user and needs no external harness files.
+   Env: API=<api base, with or without /api/v1> (ISOLATED API started with AUTH_IP_RATE_LIMIT raised, e.g. 5000: the suite performs ~15 logins)
+        PGDATABASE=<scratch database used by that API>   ORIGIN=<an origin the API allows, default http://127.0.0.1:5310>
+   Refuses the shared dev API (:4000), production hosts and protected databases.
+   Usage: API=http://127.0.0.1:4310 PGDATABASE=mmri_final2 node scripts/qa-wsa-session-regression.mjs */
+import crypto from 'node:crypto';import {execFileSync} from 'node:child_process';
+const API0=(process.env.API||'').replace(/\/api\/v1\/?$/,'').replace(/\/$/,'');const DB=process.env.PGDATABASE;
+if(!API0||!DB)throw new Error('set API and PGDATABASE (isolated stack)');
+if(/businessmri\.mn/i.test(API0)||/:4000$/.test(API0))throw new Error('refusing shared/production API');
+if(DB==='mmri'||/^(mmri_v2_qa|mmri_codexfix|mmri_design_test|postgres)$/.test(DB))throw new Error('refusing protected database '+DB);
+const B=API0+'/api/v1';const ORIGIN=new URL(process.env.ORIGIN||'http://127.0.0.1:5310');
+const sql=q=>execFileSync('docker',['exec','mmri-v3-local-postgres-1','psql','-U','mmri','-d',DB,'-At','-c',q],{encoding:'utf8'}).trim();
+const creds={email:`wsa.${Date.now()}.${crypto.randomBytes(3).toString('hex')}@example.test`,password:'Wsa-Session-Pass-12345!'};
 let fail=0;const rec=(n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+n+(d?' | '+d:''))};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function call(method,path,{token,cookie,body}={}){const h={origin:ORIGIN.origin,'content-type':'application/json'};if(token)h.authorization='Bearer '+token;if(cookie)h.cookie=cookie;
   const r=await fetch(B+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});let j=null;try{j=await r.json()}catch{}
   const sc=r.headers.get('set-cookie');return {status:r.status,j,cookie:sc?sc.split(';')[0]:null,token:j?.data?.accessToken}}
 const login=()=>call('POST','/auth/login',{body:{email:creds.email,password:creds.password}});
+const reg=await call('POST','/auth/register',{body:{email:creds.email,password:creds.password,displayName:'WSA session test'}});if(reg.status!==201){console.log('FAIL setup: synthetic user could not be registered, status '+reg.status);process.exit(1)}
 const refresh=cookie=>call('POST','/auth/refresh',{cookie});
 const me=token=>call('GET','/auth/me',{token});
 

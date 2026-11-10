@@ -3,7 +3,8 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: mmri
-      POSTGRES_PASSWORD: mmri
+      # Only used when the volume is first initialised. START_LOCAL.sh generates a random value; the fallback exists for old checkouts.
+      POSTGRES_PASSWORD: ${MMRI_LOCAL_PG_PASSWORD:-mmri}
       POSTGRES_DB: mmri
     ports:
       # Loopback only: never publish the development database on the LAN (default credentials, real-looking data).

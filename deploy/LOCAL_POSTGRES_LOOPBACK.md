@@ -1,5 +1,9 @@
 # Local development PostgreSQL: loopback-only binding
 
+**STATUS: APPLIED on 2026-11-10 (Option B + password rotation).** The container `mmri-v3-local-postgres-1` was recreated from `docker-compose.local.yml` (project `mmri-v3-local`, same named volume, data intact: 322 users / 30 migrations) and now publishes only `127.0.0.1:55432`. The role `mmri` has a new random password stored in `~/.mmri_local_pg_password` (mode 600, outside every repository); `backend/.env`, the design-workspace `backend/.env` and the legacy harness `dburl.base` were updated, originals saved (mode 600) in `~/BUSINESSMRI_DB_BACKUPS/env_backups/`. Verified from the host: old password rejected, new password accepted over 127.0.0.1, connection to the LAN address refused. Not changed: the protected old source's `backend/.env` (it now holds a stale password), and the second role `mmri_qa2` (QA stack) whose configuration was lost with `/tmp` in the crash. New installs: `START_LOCAL.sh` generates a random password and passes it to compose via `MMRI_LOCAL_PG_PASSWORD`.
+
+Rollback of the rotation only: `ALTER USER mmri PASSWORD '<old>'` and restore the saved env files; rollback of the binding: recreate the container with `-p 55432:5432` (not recommended).
+
 **Problem (found 2026-11-09):** the development container `mmri-v3-local-postgres-1` publishes `0.0.0.0:55432`, uses the default password `mmri`, `listen_addresses='*'` and `pg_hba: host all all all scram-sha-256`. Anything on the same network that can reach the laptop can try to log in to a database that holds real-looking customer data. It was created from a compose file that no longer exists (`/home/kirby/MMRI_TEST_20_20/...`); `docker-compose.local.yml` in this repository now binds `127.0.0.1:55432`.
 This does not affect production (Windows server): there PostgreSQL must listen on loopback only (see `deploy/WINDOWS_SERVER_DEPLOYMENT.md`).
 

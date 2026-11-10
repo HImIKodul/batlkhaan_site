@@ -29,6 +29,15 @@ const r2=await call(API,'POST','/auth/refresh',{cookie:u.cookie,body:{}});
 t('S4','re-using the just-rotated cookie within the grace window is tolerated (concurrent tabs), not treated as theft',r2.s===200,String(r2.s));
 const lateOk=await call(API,'POST','/auth/refresh',{cookie:cookieOf(r2)||c1,body:{}});
 t('S4b','the family is still alive after the tolerated reuse',lateOk.s===200,String(lateOk.s));
+// S4c/S4d: concurrency beyond two tabs
+{const cu=await newUser(API,'conc');const many=await Promise.all(Array.from({length:10},()=>call(API,'POST','/auth/refresh',{cookie:cu.cookie,body:{}})));
+ t('S4c','10 simultaneous refreshes with the SAME cookie all succeed (no spurious 401/500, no theft false-positive)',many.every(r=>r.s===200),many.map(r=>r.s).join(','));
+ const child=many.map(cookieOf).find(Boolean);const alive=await call(API,'POST','/auth/refresh',{cookie:child,body:{}});
+ t('S4d','after the burst the session is alive: a newest cookie still refreshes',alive.s===200,String(alive.s));
+ const rl=await newUser(API,'race');const race=await Promise.all([call(API,'POST','/auth/refresh',{cookie:rl.cookie,body:{}}),call(API,'POST','/auth/logout',{tok:rl.tok,cookie:rl.cookie,body:{}}),call(API,'POST','/auth/refresh',{cookie:rl.cookie,body:{}})]);
+ const rt=race.filter(r=>r.d?.accessToken).map(r=>r.d.accessToken);await sleep(300);
+ const after=await Promise.all([...rt.map(x=>call(API,'GET','/auth/me',{tok:x})),call(API,'GET','/auth/me',{tok:rl.tok})]);
+ t('S4e','refresh racing a logout: no 5xx, and after the dust settles NO token of that session is usable',race.every(r=>r.s<500)&&after.every(r=>r.s===401),`race ${race.map(r=>r.s).join(',')} / me ${after.map(r=>r.s).join(',')}`);}
 await sleep(11500);
 const replay=await call(API,'POST','/auth/refresh',{cookie:u.cookie,body:{}});
 t('S5','replaying the original rotated cookie AFTER the grace window is rejected (401)',replay.s===401,String(replay.s));
