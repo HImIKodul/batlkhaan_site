@@ -1,12 +1,12 @@
 import React,{useState} from 'react';
-import { adminApi,fmt,DOMAIN_MN,type AdminMe } from './adminApi';
+import { adminApi,fmt,DOMAIN_MN,actionMn,type AdminMe } from './adminApi';
+import { DOMAIN_ORDER } from '../data/domainOrder';
 import { Page,Empty,Err,Loading,useAsync,adminHref } from './AdminApp';
 import { Badge,ConfirmDialog } from './AdminUi';
 
 /* "Оношилгооны эрх": for one company, five domains, each either open / used / none. An administrator can GRANT one free diagnosis (no invoice, no revenue,
    a separate origin in the database) or REVOKE an unused administrator grant. Paid access is shown but can never be changed here. */
-const DOMAINS=['marketing','it','finance','people','operations'];
-const ACTION_MN:Record<string,string>={ADMIN_ENTITLEMENT_GRANTED:'Эрх олгосон',ADMIN_ENTITLEMENT_REVOKED:'Эрх цуцалсан'};
+const DOMAINS:readonly string[]=DOMAIN_ORDER;
 
 function Picker(){
  const [q,setQ]=useState('');const [applied,setApplied]=useState('');
@@ -37,7 +37,7 @@ function CompanyAccess({companyId}:{companyId:string}){
   </section>})}</div>}
   <details className="adm-card adm-fold"><summary><h2>Түүх</h2></summary>{data.history.length===0&&ents.length===0?<Empty text="Түүх алга."/>:<ul className="adm-activity">
    {ents.map((e:any)=><li key={e.id}><span>{fmt(e.createdAt)}</span> {dn(e.domainCode)} · {e.origin==='ADMIN_GRANT'?'админ олгосон':'төлбөртэй'} · {e.status==='ACTIVE'?'нээлттэй':e.status==='CONSUMED'?'ашиглагдсан':e.status==='REVOKED'?'цуцлагдсан':'дууссан'}{e.revokeReason?` · ${e.revokeReason}`:''}</li>)}
-   {data.history.map((h:any,i:number)=><li key={'h'+i}><span>{fmt(h.createdAt)}</span> {ACTION_MN[h.action]??h.action}{h.outcome==='SUCCESS'?'':' (амжилтгүй)'}{h.metadata?.reason?` · ${h.metadata.reason}`:''}</li>)}</ul>}</details>
+   {data.history.map((h:any,i:number)=><li key={'h'+i}><span>{fmt(h.createdAt)}</span> {actionMn(h.action)}{h.outcome==='SUCCESS'?'':' (амжилтгүй)'}{h.metadata?.reason?` · ${h.metadata.reason}`:''}</li>)}</ul>}</details>
   {dlg?.kind==='grant'&&<ConfirmDialog title={`«${dn(dlg.domain)}» чиглэлийн эрх олгох уу?`} confirmLabel="Эрх олгох" onCancel={()=>setDlg(null)}
    onConfirm={async reason=>{await adminApi.post(`/companies/${companyId}/entitlements/grant`,{domainCode:dlg.domain,reason});setDlg(null);setMsg(`«${dn(dlg.domain)}» чиглэлийн нэг удаагийн эрх олгогдлоо.`);reload()}}>
    <ul><li><b>{cname}</b> компани энэ чиглэлийн оношилгоог нэг удаа шууд эхлүүлж чадна.</li><li>Төлбөрийн бичилт үүсэхгүй, орлого болохгүй.</li><li>Хэн, яагаад олгосон нь хадгалагдана.</li></ul></ConfirmDialog>}

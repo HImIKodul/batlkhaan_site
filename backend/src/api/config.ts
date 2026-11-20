@@ -33,11 +33,18 @@ export interface ApiConfig {
   shutdownDrainMs: number;
   shutdownForceTimeoutMs: number;
   reportStorageDir: string;
-  /** "mock" writes messages to a local file (development and tests only). "disabled" sends nothing. No real mail provider is implemented yet. */
+  /** "mock" writes messages to a local file (development and tests only). "disabled" sends nothing. "resend" uses the HTTPS email API. */
   adminSessionIdleMinutes: number;
   /** Rollout flag: when true, newly completed assessments need administrator approval before the customer sees the report. */
   reportReviewRequired: boolean;
-  mailProvider: "mock" | "disabled";
+  mailProvider: "mock" | "disabled" | "resend" | "gmail";
+  /** Gmail API credentials (OAuth refresh token of the existing business mailbox). Present only when GMAIL_* are set. */
+  gmail?: { clientId: string; clientSecret: string; refreshToken: string; user: string };
+  /** Support inbox source: off | mock (file based, QA) | gmail. */
+  supportMailProvider: "off" | "mock" | "gmail";
+  resendApiKey?: string;
+  mailFrom?: string;
+  mailRequestTimeoutMs?: number;
   mockMailDir: string;
   publicAppUrl: string;
   passwordResetTtlMinutes: number;
@@ -132,6 +139,8 @@ function assertProductionDatabaseUrl(environment:string){
   if(!url.hostname||["localhost","127.0.0.1","::1"].includes(url.hostname))throw new Error("DATABASE_URL must not point to a local database in production");
   const ssl=(url.searchParams.get("sslmode")??"").toLowerCase();
   if(!["require","verify-ca","verify-full"].includes(ssl))throw new Error("DATABASE_URL must require TLS with sslmode=require, verify-ca or verify-full in production");
+  /* Verified against the Prisma 6.15 engine: sslmode=verify-ca/verify-full are accepted but the server certificate is NOT verified; only sslaccept=strict is (sslcert=<CA file> supplies a private CA). */
+  if((url.searchParams.get("sslaccept")??"").toLowerCase()!=="strict")throw new Error("DATABASE_URL must set sslaccept=strict in production so the database certificate is actually verified (use sslcert=<CA file> for a private CA)");
   const username=decodeURIComponent(url.username||"").toLowerCase();
   if(!username)throw new Error("DATABASE_URL must include a runtime database user");
   if(["postgres","root","admin","administrator"].includes(username))throw new Error("DATABASE_URL must use a least-privilege runtime database user, not a database administrator");
@@ -171,10 +180,25 @@ export function loadApiConfig(): ApiConfig {
     .split(",").map(x => x.trim()).filter(Boolean).map(normalizeOrigin);
   /* LOCAL DEVELOPMENT ONLY: the Vite dev/preview servers may run on 5173-5176 (the next free port when 5173 is taken). Never added in production. */
   if(environment!=="production")for(const port of [5173,5174,5175,5176])for(const host of ["localhost","127.0.0.1"]){const o=`http://${host}:${port}`;if(!origins.includes(o))origins.push(o);}
-  const mailProvider=((process.env.MMRI_MAIL_PROVIDER??(environment==="production"?"disabled":"mock")).trim().toLowerCase()) as "mock"|"disabled";
-  if(!["mock","disabled"].includes(mailProvider))throw new Error("MMRI_MAIL_PROVIDER must be mock or disabled (no real mail provider is implemented yet)");
+  const mailProvider=((process.env.MMRI_MAIL_PROVIDER??(environment==="production"?"disabled":"mock")).trim().toLowerCase()) as "mock"|"disabled"|"resend"|"gmail";
+  if(!["mock","disabled","resend","gmail"].includes(mailProvider))throw new Error("MMRI_MAIL_PROVIDER must be mock, disabled, resend or gmail");
+  const gm={clientId:(process.env.GMAIL_CLIENT_ID??"").trim(),clientSecret:(process.env.GMAIL_CLIENT_SECRET??"").trim(),refreshToken:(process.env.GMAIL_REFRESH_TOKEN??"").trim(),user:(process.env.GMAIL_USER??"").trim().toLowerCase()};
+  const gmailReady=Boolean(gm.clientId&&gm.clientSecret&&gm.refreshToken&&/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(gm.user)&&![gm.clientId,gm.clientSecret,gm.refreshToken].some(v=>/[\r\n\s]/.test(v)));
+  const supportMailProvider=((process.env.MMRI_SUPPORT_MAIL_PROVIDER??"off").trim().toLowerCase()) as "off"|"mock"|"gmail";
+  if(!["off","mock","gmail"].includes(supportMailProvider))throw new Error("MMRI_SUPPORT_MAIL_PROVIDER must be off, mock or gmail");
+  if((mailProvider==="gmail"||supportMailProvider==="gmail")&&!gmailReady)throw new Error("gmail requires GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN and GMAIL_USER");
+  if(environment==="production"&&supportMailProvider==="mock")throw new Error("MMRI_SUPPORT_MAIL_PROVIDER=mock is forbidden in production");
+  const resendApiKey=(process.env.RESEND_API_KEY??"").trim();
+  const mailFrom=(process.env.MMRI_MAIL_FROM??"").trim();
+  const mailRequestTimeoutMs=intEnv("MMRI_MAIL_REQUEST_TIMEOUT_MS",5000,1000,15000);
+  if(mailProvider==="resend"&&(!resendApiKey||/[\r\n]/.test(resendApiKey)||! /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(mailFrom)))throw new Error("resend requires RESEND_API_KEY and a plain sender address in MMRI_MAIL_FROM");
   if(environment==="production"&&mailProvider==="mock")throw new Error("MMRI_MAIL_PROVIDER=mock is forbidden in production");
-  const publicAppUrl=cleanBaseUrl(process.env.MMRI_PUBLIC_APP_URL??origins[0]??"http://localhost:5173");
+  const publicAppUrl=cleanBaseUrl((process.env.MMRI_PUBLIC_APP_URL??"").trim()||origins[0]||"http://localhost:5173");
+  if(mailProvider==="resend"){
+    let publicUrl: URL;
+    try { publicUrl=new URL(publicAppUrl); } catch { throw new Error("MMRI_PUBLIC_APP_URL must be an absolute URL"); }
+    if(!["http:","https:"].includes(publicUrl.protocol)||publicUrl.username||publicUrl.password||publicUrl.search||publicUrl.hash||(environment==="production"&&publicUrl.protocol!=="https:"))throw new Error("MMRI_PUBLIC_APP_URL must be a clean public HTTPS URL in production");
+  }
   const passwordResetTtlMinutes=intEnv("MMRI_PASSWORD_RESET_TTL_MINUTES",30,5,120);
   const mockMailDir=(process.env.MMRI_MOCK_MAIL_DIR??"").trim()||new URL("../../.mock-mailbox",import.meta.url).pathname;
   const billingProvider=((process.env.MMRI_BILLING_PROVIDER??(environment==="production"?"qpay":"mock")).trim().toLowerCase()) as BillingProviderMode;
@@ -275,6 +299,11 @@ export function loadApiConfig(): ApiConfig {
     adminSessionIdleMinutes:intEnv("MMRI_ADMIN_SESSION_IDLE_MINUTES",30,5,120),
     reportReviewRequired:boolEnv("MMRI_REPORT_REVIEW_REQUIRED",false),
     mailProvider,
+    gmail:gmailReady?gm:undefined,
+    supportMailProvider,
+    resendApiKey,
+    mailFrom,
+    mailRequestTimeoutMs,
     mockMailDir,
     publicAppUrl,
     passwordResetTtlMinutes,

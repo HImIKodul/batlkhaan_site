@@ -1,3 +1,4 @@
+import { DOMAIN_ORDER } from '../data/domainOrder';
 import { useEffect } from 'react';
 
 /**
@@ -8,7 +9,7 @@ import { useEffect } from 'react';
  * The attribute is deliberately NOT cleared on unmount: the outgoing page's cleanup and the incoming page's effect run in the same
  * commit, so the browser never paints an intermediate neutral frame and the colours blend instead of flashing.
  */
-export const DOMAIN_IDS = ['marketing', 'it', 'finance', 'people', 'operations'] as const;
+export const DOMAIN_IDS = DOMAIN_ORDER;
 const IDS: readonly string[] = DOMAIN_IDS;
 
 export function setDomainTheme(id: string | null | undefined) {

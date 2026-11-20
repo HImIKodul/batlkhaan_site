@@ -1,14 +1,15 @@
+import {registerVerifiedFixture} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* Browser regression (Playwright + Chrome) for password recovery, legal pages and the account data section, on the production build.
    Needs: API :4000 (development, MMRI_MAIL_PROVIDER=mock), preview :4173, PW=<path to playwright-core>. Creates its own throw-away accounts. */
 import {createRequire} from 'module';const require=createRequire(import.meta.url);const {chromium}=require(process.env.PW);import fs from 'fs';import crypto from 'crypto';import path from 'path';
-const BASE=process.env.BASE||'http://127.0.0.1:4173/';const API='http://localhost:4000/api/v1';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const BOX=path.join(process.env.HOME,'MMRI_STEP10_FINAL_WORKING/backend/.mock-mailbox/outbox.jsonl');
+const BASE=process.env.BASE||'http://127.0.0.1:4173/';const API=process.env.API;if(!API)throw new Error('Explicit isolated API required');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+if(!process.env.MMRI_MOCK_MAIL_DIR)throw new Error('Explicit isolated MMRI_MOCK_MAIL_DIR required');const BOX=path.join(process.env.MMRI_MOCK_MAIL_DIR,'outbox.jsonl');
 const res=[];const t=(id,n,ok,d='')=>{res.push({id,n,ok:!!ok,d});console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+d:''))};
 const mails=()=>fs.existsSync(BOX)?fs.readFileSync(BOX,'utf8').trim().split('\n').filter(Boolean).map(l=>JSON.parse(l)):[];
 const axeSrc=fs.readFileSync(process.env.AXE||path.join(path.dirname(require.resolve(process.env.PW)),'../axe-core/axe.min.js'),'utf8');
-const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
-const mk=async(vp)=>{const c=await b.newContext({viewport:vp,acceptDownloads:true});await c.route('**/api/**',r=>r.continue({headers:{...r.request().headers(),origin:'http://localhost:5173'}}));return c};
-const reg=async(label)=>{const email=`ui.${label}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';const r=await fetch(API+'/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:pw,displayName:'UI '+label})});return {email,pw,tok:(await r.json()).data.accessToken}};
+const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',chromiumSandbox:true});
+const mk=async(vp)=>{const c=await b.newContext({viewport:vp,acceptDownloads:true});await c.route('**/api/**',r=>r.continue({headers:{...r.request().headers(),origin:process.env.ORIGIN||new URL(BASE).origin}}));return c};
+const reg=async(label)=>{const email=`ui.${label}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';const r=await registerVerifiedFixture(API,{email,password:pw,displayName:'UI '+label});return {email,pw,tok:(await r.json()).data.accessToken}};
 const overflow=p=>p.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
 const axe=async p=>{await p.evaluate(axeSrc);return p.evaluate(async()=>(await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}})).violations.map(v=>v.id+':'+v.nodes.length))};
 const u=await reg('flow');
@@ -16,11 +17,11 @@ const u=await reg('flow');
  await p.goto(BASE+'#/login');await p.reload();await sleep(900);
  t('U01','login page offers "Нууц үгээ мартсан уу?" and legal links',await p.getByText('Нууц үгээ мартсан уу?').count()===1&&await p.locator('a[href="#/privacy"]').count()>=1&&await p.locator('a[href="#/terms"]').count()>=1);
  await p.getByText('Нууц үгээ мартсан уу?').click();await sleep(800);t('U02','forgot-password page opens',p.url().includes('#/forgot-password')&&await p.locator('h1').innerText()==='Нууц үг сэргээх');
- await p.fill('input[type=email]',u.email);await p.getByRole('button',{name:'Холбоос илгээх'}).click();await sleep(1200);
- t('U03','request shows the neutral confirmation (30 minutes, one time)',(await p.locator('.auth__done').innerText()).includes('30 минут'));
- const mail=mails().filter(m=>m.to===u.email).pop();const token=(mail?.text.match(/token=([A-Za-z0-9_-]{43})/)||[])[1];t('U04','a mock e-mail with a reset link was written (no real e-mail sent)',!!token&&mail.text.includes('#/reset-password?token='));
+ await p.fill('input[type=email]',u.email);const sent=p.waitForResponse(r=>r.url().endsWith('/password-reset/request'));await p.getByRole('button',{name:'Холбоос илгээх'}).click();await sent;await sleep(100);
+ t('U03','request shows the neutral confirmation (30 minutes, one time)',(await p.locator('.auth__done').innerText()).includes('зөвхөн нэг удаа'));
+ const mail=mails().filter(m=>m.to===u.email&&m.kind==='PASSWORD_RESET').pop();const token=(mail?.text.match(/token=([A-Za-z0-9_-]{43})/)||[])[1];t('U04','a mock e-mail with a reset link was written (no real e-mail sent)',!!token&&mail.text.includes('#/reset-password?token='));
  // unknown address gets the same text
- await p.goto(BASE+'#/forgot-password');await p.reload();await sleep(900);await p.fill('input[type=email]',`nobody.${Date.now()}@mmri.test`);await p.getByRole('button',{name:'Холбоос илгээх'}).click();await sleep(1200);t('U05','an unknown address gets the same confirmation (no enumeration)',(await p.locator('.auth__done').innerText()).includes('30 минут'));
+ await p.goto(BASE+'#/forgot-password');await p.reload();await sleep(900);await p.fill('input[type=email]',`nobody.${Date.now()}@mmri.test`);const sentUnknown=p.waitForResponse(r=>r.url().endsWith('/password-reset/request'));await p.getByRole('button',{name:'Холбоос илгээх'}).click();await sentUnknown;await sleep(100);t('U05','an unknown address gets the same confirmation (no enumeration)',(await p.locator('.auth__done').innerText()).includes('зөвхөн нэг удаа'));
  // reset page
  await p.goto(BASE+'#/reset-password?token='+token);await p.reload();await sleep(900);const np=crypto.randomBytes(12).toString('base64url')+'Zz9!';
  const inputs=p.locator('input[type=password]');await inputs.nth(0).fill(np);await inputs.nth(1).fill(np+'x');const btnDisabled=await p.getByRole('button',{name:'Нууц үг солих'}).isDisabled();

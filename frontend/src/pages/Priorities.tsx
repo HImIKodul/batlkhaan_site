@@ -51,7 +51,7 @@ function PriorityRegister({items,selected,onSelect,demo=false}:{items:ViewItem[]
  const item=items[selected]??items[0];if(!item)return null;
  return <div className="priority-register">
   <section className="priority-register-table" aria-label="Тэргүүлэх арга хэмжээний жагсаалт">
-   <header className="priority-register-head"><span>№</span><span>Тэргүүлэх арга хэмжээ</span><span>Одоо / зорилт</span><span>Зөвлөмжит хариуцагч</span><span>Ажлын төлөв</span></header>
+   <header className="priority-register-head"><span>№</span><span>Тэргүүлэх арга хэмжээ</span><span>Одоо / зорилт</span><span>Зөвлөмж болгосон хариуцагч</span><span>Ажлын төлөв</span></header>
    {items.slice(0,5).map((x,i)=><button type="button" key={x.id} className={selected===i?'active':''} onClick={()=>onSelect(i)} aria-pressed={selected===i}>
     <span className="priority-register-rank">{String(i+1).padStart(2,'0')}</span>
     <span className="priority-register-title"><small>{x.category} · {bandLabel[x.band]??x.band}</small><strong>{x.title}</strong></span>
@@ -70,11 +70,11 @@ function PriorityRegister({items,selected,onSelect,demo=false}:{items:ViewItem[]
    <dl className="priority-advisory-facts">
     <div><dt>Ач холбогдол</dt><dd>{bandLabel[item.band]??item.band}</dd></div>
     <div><dt>Одоо / зорилт</dt><dd>Одоо {scoreText(item.score)} · Зорилт {scoreText(item.target)}</dd></div>
-    <div><dt>Зөвлөмжит хариуцагч</dt><dd>{item.owner}</dd></div>
+    <div><dt>Зөвлөмж болгосон хариуцагч</dt><dd>{item.owner}</dd></div>
     <div><dt>Ажлын төлөв</dt><dd>{planStateLabel[item.planState]}{item.horizon!=='-'?` · ${item.horizon}`:''}</dd></div><div><dt>Хамрах хүрээ</dt><dd>{item.scopeCount>1?`${item.scopeCount} чиглэл`:'1 чиглэл'}</dd></div>
    </dl>
 
-   <section className="priority-advisory-section"><span>Зөвлөмжит арга хэмжээ</span><p>{item.action}</p></section>
+   <section className="priority-advisory-section"><span>Зөвлөмж болгосон арга хэмжээ</span><p>{item.action}</p></section>
    <div className="priority-advisory-outcomes">
     <section><span>Гарах үр дүн</span><p>{item.deliverable}</p></section>
     <section><span>Хэмжих үзүүлэлт</span><p>{item.kpi}</p></section>
@@ -90,7 +90,7 @@ function DemoPriorities(){
  const [selected,setSelected]=useState(0);
  return <AppShell route="priorities"><PageContainer className="priorities">
   <DemoNotice title="Тэргүүлэх асуудлын жишээ"/>
-  <SectionHeader eyebrow="Тэргүүлэх асуудал" title="Шийдвэр гаргах дараалал" description="Оношилгооноос хамгийн өндөр ач холбогдолтой тав хүртэлх арга хэмжээг нэг дарааллаар харуулна. Доорх нь дэлгэцийн жишээ өгөгдөл." action={<Button onClick={()=>go('login')}>Бодит үнэлгээ эхлүүлэх</Button>}/>
+  <SectionHeader eyebrow="Тэргүүлэх асуудал" title="Шийдвэр гаргах дараалал" description="Оношилгооноос гарсан хамгийн чухал таван хүртэлх ажлыг дарааллаар нь харуулна. Доорх нь жишээ мэдээлэл." action={<Button onClick={()=>go('login')}>Бодит үнэлгээ эхлүүлэх</Button>}/>
   <Reveal><PriorityRegister items={demoPriorities.map(x=>({...x,scopeCount:1,source:x as any}))} selected={selected} onSelect={setSelected} demo/></Reveal>
   <Reveal delay={70}><section className="priority-evidence"><header><span>Шийдвэрийн өмнөх нягтлал</span><h2>Нэмэлт нотолгоо шаардлагатай зүйл</h2></header><div><strong>Өрсөлдөөний байршуулалтын нотолгоог шинэчлэх</strong><p>Сүүлийн үеийн ялалт, алдагдлын мэдээлэл болон хэрэглэгчийн сонголтын шалтгааныг нягтална.</p><span>Өндөр ач холбогдол</span></div></section></Reveal>
  </PageContainer></AppShell>
@@ -104,13 +104,13 @@ function PrivatePriorities(){
  const items=useMemo<ViewItem[]>(()=>{if(!recs||!results)return[];const included=new Set(plan?.plan.includedRecommendationIds??[]);return recs.executionActions.slice(0,5).map(r=>{const scopeCats=new Set((r.affectedScopes??[{categoryId:r.categoryId}]).map(s=>s.categoryId));const milestones=(plan?.plan.milestones??[]).filter(m=>m.recommendationId===r.id);const first=milestones[0];const horizon=first?plan?.plan.horizons.find(h=>h.id===first.horizon)?.name??first.horizon:'-';const inPlan=included.has(r.id);return{id:r.id,category:`${results.categories.find(c=>c.id===r.categoryId)?.nameMn??'Чиглэл'}${scopeCats.size>1?` +${scopeCats.size-1} чиглэл`:''}`,title:mnText(r.titleMn,'Тэргүүлэх арга хэмжээ'),objective:mnText(r.objectiveMn,'Зорилго бүрдээгүй'),action:mnText(r.actionMn,'Хэрэгжүүлэх алхам бүрдээгүй'),deliverable:mnText(r.deliverableMn,'Гарах үр дүн бүрдээгүй'),kpi:mnText(r.kpiMn,'Хэмжих үзүүлэлт бүрдээгүй'),score:r.currentCellScore,target:r.targetCellScore,band:r.priorityBand,effort:r.effortLevel,owner:roleLabel[r.ownerRoleId]??'Хариуцагчийг төлөвлөгөөнд баталгаажуулна',planState:planStateFrom(milestones,inPlan),horizon:String(horizon??'-'),scopeCount:scopeCats.size,source:r}})},[recs,results,plan]);
  const selectedRec=items[selected]?.source as Recommendation|undefined;const finding=selectedRec?results?.rootCauses?.selected.find(f=>f.id===selectedRec.findingId):undefined;
  if(loading)return <AppShell route="priorities"><PageContainer><LoadingState variant="dashboard" label="Тэргүүлэх чиглэлүүдийг бэлтгэж байна..."/></PageContainer></AppShell>;
- if(error&&!recs)return <AppShell route="priorities"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
+ if(error&&!recs){const waiting=/хянагдаж байна/.test(error);return <AppShell route="priorities"><PageContainer><ErrorState message={error} title={waiting?'Тайлан хянагдаж байна':undefined} onRetry={waiting?undefined:load}/></PageContainer></AppShell>}
  if(!assessment)return <AppShell route="priorities"><PageContainer><LoadingState variant="dashboard" label="Оношилгооны хэсэг рүү шилжүүлж байна..."/></PageContainer></AppShell>;
  if(!isTerminal(assessment.status))return <AppShell route="priorities"><PageContainer><EmptyState title="Оношилгоо үргэлжилж байна" description="Тэргүүлэх чиглэлүүд эцсийн үнэлгээ бүрдсэний дараа эрэмбэлэгдэнэ." action={<Button onClick={()=>go('assessment')}>Оношилгоогоо үргэлжлүүлэх</Button>}/></PageContainer></AppShell>;
  if(!items.length)return <AppShell route="priorities"><PageContainer><EmptyState title="Тэргүүлэх арга хэмжээ бүрдээгүй байна" description="Оношилгооны өгөгдөлд тулгуурласан хэрэгжүүлэх зөвлөмж одоогоор алга." action={<Button onClick={()=>go('results')}>Оношилгооны үр дүн</Button>}/></PageContainer></AppShell>;
  const evidence=recs?.evidenceActions??[];
  return <AppShell route="priorities"><PageContainer className="priorities">
-  <SectionHeader eyebrow="Тэргүүлэх асуудал" title="Шийдвэр гаргах дараалал" description="Тэргүүлэх арга хэмжээ бүр тухайн баталгаажсан оношилгооны үр дүнтэй холбоотой. Оношийг дахин тооцоололгүйгээр хэрэгжүүлэх дарааллыг харуулна." action={<Button variant="secondary" onClick={()=>go('results')}>Оношилгооны үр дүн</Button>}/>
+  <SectionHeader eyebrow="Тэргүүлэх асуудал" title="Шийдвэр гаргах дараалал" description="Эдгээр ажил бүр баталгаажсан оношилгооны үр дүнтэй холбоотой. Оноог дахин тооцохгүйгээр хэрэгжүүлэх дарааллыг харуулна." action={<Button variant="secondary" onClick={()=>go('results')}>Оношилгооны үр дүн</Button>}/>
   <Reveal><section className="priority-register-summary"><div><strong>{items.length}</strong><span>тэргүүлэх арга хэмжээ</span></div><div><strong>{items.filter(x=>x.planState!=='NOT_INCLUDED').length}</strong><span>сонгосон арга хэмжээ</span></div><p>Энд зөвхөн шийдвэр гаргахад шаардлагатай эрэмбэлсэн арга хэмжээг харуулна. Үндсэн зөвлөмж, оношилгооны эх өгөгдөл тогтвортой хадгалагдана.</p></section></Reveal>
   <Reveal delay={45}><PriorityRegister items={items} selected={selected} onSelect={setSelected}/></Reveal>
   {finding&&<Reveal delay={75}><section className="priority-hypothesis"><span>Суурь шалтгааны таамаглал</span><h2>Энэ арга хэмжээ нь оношилгоогоор тодорсон суурь хүчин зүйлтэй холбоотой.</h2><p>Энэ нь шууд батлагдсан шалтгаан биш. Оношилгоогоор дэмжигдсэн таамаглал тул хэрэгжүүлэхийн өмнө шаардлагатай мэдээллийг нягтална.</p></section></Reveal>}

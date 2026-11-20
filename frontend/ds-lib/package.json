@@ -2,7 +2,7 @@
   "name": "@mmri/ui",
   "version": "1.0.0",
   "private": true,
-  "description": "MMRI (BusinessMMRI.mn) UI components: liquid-glass design system",
+  "description": "MMRI (BusinessMRI.mn) UI components: liquid-glass design system",
   "type": "module",
   "main": "./dist/index.es.js",
   "module": "./dist/index.es.js",

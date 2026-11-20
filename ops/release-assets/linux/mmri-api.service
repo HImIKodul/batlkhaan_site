@@ -1,0 +1,20 @@
+# Linux alternative (systemd). Tested only in structure here; the staging rehearsal started the same compiled command directly.
+[Unit]
+Description=BusinessMRI API
+After=network.target postgresql.service
+[Service]
+User=mmri
+Group=mmri
+WorkingDirectory=/opt/businessmri/backend
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=3072
+ExecStart=/usr/bin/node dist/api/server.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=40
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/mmri
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { recordImportFailure } from "./lib/import-failure-log.js";
 import { prisma } from "./db.js";
 import type { MethodologyBundle } from "./lib/bundle-types.js";
 import { validateBundle } from "./lib/validate-bundle-core.js";
@@ -107,9 +108,14 @@ const counts = {
 };
 
 const runId = `import:${version}:${bundleSha256.slice(0,16)}`;
+// Progress marker only used to make a failure report precise; it never influences what is written.
+let stage = "version";
 
 try {
-  await prisma.methodologyVersion.create({
+  // Phase 2.5: the whole import is ONE transaction. A fault at any step rolls back every row (no partial VALIDATING
+  // version is left behind); activation (the optional update below) commits together with the data it activates.
+  await prisma.$transaction(async tx => {
+  await tx.methodologyVersion.create({
     data: {
       id: vId,
       domainCode: bundle.domainCode ?? "marketing",
@@ -123,51 +129,53 @@ try {
       generatedAtUtc: bundle.generatedAtUtc ? new Date(bundle.generatedAtUtc) : null
     }
   });
-  await prisma.importRun.create({ data: { id: runId, methodologyVersionId: vId, bundleSha256, status: "RUNNING" } });
+  await tx.importRun.create({ data: { id: runId, methodologyVersionId: vId, bundleSha256, status: "RUNNING" } });
 
-  await prisma.module.createMany({ data: moduleOrder.map((name, i) => {
+  stage = "structure";
+  await tx.module.createMany({ data: moduleOrder.map((name, i) => {
     const code = moduleCodeByName.get(name)!;
     const category = bundle.categories.find(c => c.Module === name)!;
     return { id: moduleId(version, code), methodologyVersionId: vId, code, nameMn: name, weightPct: category["Module weight %"], orderIndex: i+1 };
   }) });
 
-  await prisma.category.createMany({ data: bundle.categories.map((c, i) => {
+  await tx.category.createMany({ data: bundle.categories.map((c, i) => {
     const mCode = moduleCodeByName.get(c.Module)!;
     return { id: categoryId(version,c.ID), methodologyVersionId: vId, moduleId: moduleId(version,mCode), externalId: c.ID, nameMn: c.Category, moduleWeightPct: c["Module weight %"], categoryWeightPct: c["Category weight %"], orderIndex: i+1 };
   }) });
 
-  await prisma.cellTemplate.createMany({ data: bundle.cellTemplates.map((c, i) => ({
+  await tx.cellTemplate.createMany({ data: bundle.cellTemplates.map((c, i) => ({
     id: cellTemplateId(version,c.ID), methodologyVersionId: vId, externalId: c.ID, nameMn: c["Diagnostic cell"], groupMn: c.Group, roleMn: c.Role,
     weightPct: c["Weight %"], naPolicy: c.ID === "C01" ? "CATEGORY_GATE" : conditionalCellIds.has(c.ID) ? "CONDITIONAL" : "DISALLOWED",
     sourceNaEligibility: c["N/A eligible"], orderIndex: i+1
   })) });
 
-  await prisma.diagnosticCell.createMany({ data: bundle.cellInstances.map(c => ({
+  await tx.diagnosticCell.createMany({ data: bundle.cellInstances.map(c => ({
     id: diagnosticCellId(version,c.categoryId,c.cellId), methodologyVersionId: vId, categoryId: categoryId(version,c.categoryId), cellTemplateId: cellTemplateId(version,c.cellId),
     externalId: c.cellInstanceId, weightPctOverride: c.weightPctOverride ?? null, directQuestionCount: c.directQuestionCount, independentSourceKinds: c.independentSourceKinds,
     minThreePathConfidenceAtAuthority075: c.minimumThreePathConfidenceAtAuthority075, preferredRoleCode: c.preferredRole, preferredAuthority: c.preferredAuthority, coverageStatus: c.coverageStatus
   })) });
 
   for (const role of roleContract.roles) {
-    await prisma.respondentRole.create({ data: { id: roleId(version,role.id), methodologyVersionId: vId, externalId: role.id, code: role.code, labelMn: role.label, scopeMn: role.scope } });
+    await tx.respondentRole.create({ data: { id: roleId(version,role.id), methodologyVersionId: vId, externalId: role.id, code: role.code, labelMn: role.label, scopeMn: role.scope } });
   }
 
   for (const p of purposeContract.purposes) {
-    await prisma.purposeDefinition.create({ data: { id: purposeId(version,p.id), methodologyVersionId: vId, externalId: p.id, code: p.code, labelMn: p.label, orderIndex: Number(p.id.replace("P","")) } });
+    await tx.purposeDefinition.create({ data: { id: purposeId(version,p.id), methodologyVersionId: vId, externalId: p.id, code: p.code, labelMn: p.label, orderIndex: Number(p.id.replace("P","")) } });
   }
 
-  await prisma.scoringProfile.createMany({ data: Object.entries(scoringContract.profiles).map(([code, definition]) => ({ id: `${version}:SCORING:${code}`, methodologyVersionId: vId, code, definition: definition as any })) });
+  await tx.scoringProfile.createMany({ data: Object.entries(scoringContract.profiles).map(([code, definition]) => ({ id: `${version}:SCORING:${code}`, methodologyVersionId: vId, code, definition: definition as any })) });
 
-  await prisma.methodologyContract.createMany({ data: Object.entries(bundle.contracts).map(([sourceName, definition]) => ({
+  await tx.methodologyContract.createMany({ data: Object.entries(bundle.contracts).map(([sourceName, definition]) => ({
     id: `${version}:CONTRACT:${sha256Text(sourceName).slice(0,20)}`, methodologyVersionId: vId, sourceName, contractVersion: String((definition as any).version ?? "UNKNOWN"), sha256: bundle.sourceManifest[sourceName]?.sha256 ?? null, definition: definition as any
   })) });
 
-  await prisma.sourceManifestEntry.createMany({ data: Object.entries(bundle.sourceManifest).map(([sourceName, m]) => ({
+  await tx.sourceManifestEntry.createMany({ data: Object.entries(bundle.sourceManifest).map(([sourceName, m]) => ({
     id: `${version}:MANIFEST:${sha256Text(sourceName).slice(0,20)}`, methodologyVersionId: vId, sourceName, sourceVersion: m.version, sha256: m.sha256, chunkCount: Number(m.chunks), sizeValue: Number(m.size), role: m.role
   })) });
 
+  stage = "questions";
   for (const chunk of chunked(bundle.questions, 500)) {
-    await prisma.question.createMany({ data: chunk.map(q => {
+    await tx.question.createMany({ data: chunk.map(q => {
       const scored = q.explicitOptions ?? scoringForQuestion(q.cellId,q.optionsMn);
       const profileCodes = q.scoringProfileCode ? [q.scoringProfileCode] : [...new Set((scored as any[]).map(x => x.scoringProfileCode))];
       if (profileCodes.length !== 1 || !profileCodes[0]) throw new Error(`Could not resolve a single scoring profile for ${q.questionId}`);
@@ -184,21 +192,22 @@ try {
       const scored = q.explicitOptions ?? scoringForQuestion(q.cellId,q.optionsMn);
       return q.optionsMn.map((labelMn, i) => ({ id: `${questionId(version,q.questionId)}:O${i+1}`, questionId: questionId(version,q.questionId), optionIndex: i+1, labelMn, score: scored[i].score, state: scored[i].state }));
     });
-    await prisma.questionOption.createMany({ data: optionRows });
+    await tx.questionOption.createMany({ data: optionRows });
 
     const secondaryRows = chunk.flatMap(q => q.secondaryTargets.map((t, i) => ({
       id: `${questionId(version,q.questionId)}:S${i+1}`, questionId: questionId(version,q.questionId), targetCellId: diagnosticCellId(version,q.categoryId,t.targetCell), coefficient: t.coefficient, relationCode: t.relation
     })));
-    if (secondaryRows.length) await prisma.questionSecondaryTarget.createMany({ data: secondaryRows });
+    if (secondaryRows.length) await tx.questionSecondaryTarget.createMany({ data: secondaryRows });
   }
 
   for (const [i, pq] of bundle.profileQuestions.entries()) {
     const pId = profileQuestionId(version,pq.id);
-    await prisma.profileQuestion.create({ data: { id: pId, methodologyVersionId: vId, externalId: pq.id, textMn: pq.questionMn, questionType: pq.type ?? null, orderIndex: i+1 } });
-    if (pq.optionsMn.length) await prisma.profileQuestionOption.createMany({ data: pq.optionsMn.map((labelMn, idx) => ({ id: `${pId}:O${idx+1}`, profileQuestionId: pId, optionIndex: idx+1, labelMn })) });
+    await tx.profileQuestion.create({ data: { id: pId, methodologyVersionId: vId, externalId: pq.id, textMn: pq.questionMn, questionType: pq.type ?? null, orderIndex: i+1 } });
+    if (pq.optionsMn.length) await tx.profileQuestionOption.createMany({ data: pq.optionsMn.map((labelMn, idx) => ({ id: `${pId}:O${idx+1}`, profileQuestionId: pId, optionIndex: idx+1, labelMn })) });
   }
 
-  await prisma.authorityRouting.createMany({ data: roleContract.routing.map((r: any) => ({
+  stage = "contracts-and-mappings";
+  await tx.authorityRouting.createMany({ data: roleContract.routing.map((r: any) => ({
     id: `${version}:AUTH:${r.category}:${r.cell}`, diagnosticCellId: diagnosticCellId(version,r.category,r.cell), preferredRoleId: roleId(version,r.preferredRole), preferredAuthority: Number(r.preferredAuthority),
     backupRoles: { roles: String(r.backupRoles).split(",").map((s:string)=>s.trim()).filter(Boolean), authority: String(r.backupAuthority) }
   })) });
@@ -211,9 +220,9 @@ try {
       id: `${version}:CP:${c.ID}:${p.id}`, categoryId: categoryId(version,c.ID), purposeId: purposeId(version,p.id), coefficient: Number(mapping.relevance[p.id]), rationale: mapping.rationale ?? null
     });
   }
-  await prisma.categoryPurposeMapping.createMany({ data: cpRows });
+  await tx.categoryPurposeMapping.createMany({ data: cpRows });
 
-  await prisma.categoryDependency.createMany({ data: rootContract.categoryGraph.edges.map((e:any) => ({
+  await tx.categoryDependency.createMany({ data: rootContract.categoryGraph.edges.map((e:any) => ({
     id: `${version}:CATDEP:${e.id}`, methodologyVersionId: vId, externalId: e.id, prerequisiteCategoryId: categoryId(version,e.prerequisite), dependentCategoryId: categoryId(version,e.dependent), strength: Number(e.strength), dependencyType: e.type, rationale: e.rationale
   })) });
 
@@ -223,12 +232,13 @@ try {
       cellDepRows.push({ id: `${version}:CELLDEP:${c.ID}:${e.id}`, methodologyVersionId: vId, externalId: e.id, prerequisiteCellId: diagnosticCellId(version,c.ID,e.prerequisite), dependentCellId: diagnosticCellId(version,c.ID,e.dependent), strength: Number(e.strength), dependencyType: e.type, rationale: e.rationale });
     }
   }
-  for (const chunk of chunked(cellDepRows, 500)) await prisma.cellDependency.createMany({ data: chunk });
+  for (const chunk of chunked(cellDepRows, 500)) await tx.cellDependency.createMany({ data: chunk });
 
   if (bundle.runtimePolicy) {
     const runtime = bundle.runtimePolicy;
 
-    await prisma.runtimeScorePattern.createMany({ data: runtime.scorePatterns.map(p => ({
+    stage = "runtime-policy";
+    await tx.runtimeScorePattern.createMany({ data: runtime.scorePatterns.map(p => ({
       id: `${version}:RSP:${p.code}`,
       methodologyVersionId: vId,
       code: p.code,
@@ -238,7 +248,7 @@ try {
     })) });
 
     for (const chunk of chunked(runtime.rules, 100)) {
-      await prisma.runtimeRuleDefinition.createMany({ data: chunk.map(r => ({
+      await tx.runtimeRuleDefinition.createMany({ data: chunk.map(r => ({
         id: `${version}:RR:${r.ruleId}`,
         methodologyVersionId: vId,
         ruleId: r.ruleId,
@@ -248,7 +258,7 @@ try {
     }
 
     for (const chunk of chunked(runtime.questionPolicies, 500)) {
-      await prisma.questionRuntimePolicy.createMany({ data: chunk.map(p => ({
+      await tx.questionRuntimePolicy.createMany({ data: chunk.map(p => ({
         id: `${version}:QRP:${p.questionId}`,
         methodologyVersionId: vId,
         questionId: questionId(version,p.questionId),
@@ -271,7 +281,7 @@ try {
     }
 
     for (const chunk of chunked(runtime.cellPolicies, 500)) {
-      await prisma.cellRuntimePolicy.createMany({ data: chunk.map(p => {
+      await tx.cellRuntimePolicy.createMany({ data: chunk.map(p => {
         const [categoryExternalId, cellExternalId] = p.cellExternalId.split(":");
         if (!categoryExternalId || !cellExternalId) throw new Error(`Invalid runtime cell external ID ${p.cellExternalId}`);
         return {
@@ -294,15 +304,24 @@ try {
     }
   }
 
+  stage = "finalize";
   if (autoActivateBaseline || integrationActivate) {
-    await prisma.methodologyVersion.update({ where: { id: vId }, data: { status: "ACTIVE", activatedAt: new Date() } });
+    await tx.methodologyVersion.update({ where: { id: vId }, data: { status: "ACTIVE", activatedAt: new Date() } });
   }
-  await prisma.importRun.update({ where: { id: runId }, data: { status: "PASS", finishedAt: new Date(), counts } });
+  await tx.importRun.update({ where: { id: runId }, data: { status: "PASS", finishedAt: new Date(), counts } });
+  }, { timeout: Number(process.env.MMRI_IMPORT_TX_TIMEOUT_MS ?? 30 * 60 * 1000), maxWait: 60_000 });
   if (integrationActivate) console.log(`Imported MMRI methodology ${version} and activated it ONLY for the disposable integration database.`);
   else if (autoActivateBaseline) console.log(`Imported baseline MMRI methodology ${version} successfully and activated it.`);
   else console.log(`Imported immutable candidate MMRI methodology ${version} successfully in VALIDATING state. Governed production activation remains required.`);
   console.log(counts);
 } catch (error) {
+  // The transaction rolled back, so no import_runs row can exist (it references the rolled-back methodology version).
+  // The failure is therefore recorded OUTSIDE the transaction in an append-only JSONL file; this can never mask the import error.
+  // Bounded: a hung or unusable log target must never delay or replace the original import error.
+  await Promise.race([
+    recordImportFailure({ runId, version, bundleSha256, stage, error }),
+    new Promise<void>(resolve => setTimeout(resolve, 5000).unref())
+  ]).catch(() => undefined);
   await prisma.importRun.updateMany({ where: { id: runId }, data: { status: "FAIL", finishedAt: new Date(), errorMessage: error instanceof Error ? error.stack ?? error.message : String(error) } }).catch(() => undefined);
   throw error;
 } finally {

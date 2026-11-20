@@ -114,7 +114,12 @@ check('legacy styles.css remains bounded',(F/'styles.css').stat().st_size < 7000
 runtime_vars={
  '--answer-color','--area-accent','--glyph-ink','--sr-disc','--sr-ring','--billing-accent','--enter-delay','--glyph-a',
  '--domain-accent','--v','--w','--arw','--o','--r','--mx','--my','--public-home-max',
- '--report-accent','--reveal-delay','--score-color'
+ '--report-accent','--reveal-delay',
+ # Added 2026-11-10 after the hero/glass work, each with code evidence that it is set per element in TSX (inline style) and not defined in any stylesheet:
+ '--d','--t','--o0','--o1','--r0','--r1',   # frontend/src/components/GlassStage.tsx: crystal-stage__geo style={{'--d','--t','--o0','--o1','--r0','--r1',...}}
+ '--i','--jx','--jy',                        # frontend/src/components/HeroCrystal.tsx: hx__slab style={{'--i','--jx','--jy',...}}
+ '--gi'                                      # frontend/src/pages/Landing.tsx: mmri-shell-glint style={{'--gi':gi}}
+ # Removed: --score-color (no longer referenced by any stylesheet), --hx-hole / --rim-c / --rim-d (belonged to dead rules for a class and a component that are never rendered).
 }
 undefined=set(all_refs)-all_defs
 check('undefined CSS vars are only runtime-injected vars',undefined<=runtime_vars,', '.join(sorted(undefined-runtime_vars)))
@@ -146,7 +151,8 @@ check('guide safe-area lives in canonical rule','env(safe-area-inset-bottom)' in
 check('auth brand late override was folded into base rule','font-size:15px;letter-spacing:.035em' in login and 'font-size:20px;letter-spacing:.14em' not in login)
 check('billing modal has one canonical overlay rule',billing.count('.billing-success-modal{')==1)
 check('account setup-preview control is removed (onboarding shows no example questions)','.profile-setup-preview' not in account)
-check('report download visual override was folded into base rule','border:1px solid var(--wp-silver2)' in report and 'border:1px solid rgba(255,255,255,.35)' not in report)
+base_dl=re.findall(r'(?m)^\.report-top-download\{([^}]*)\}',report)  # the PDF control is styled by exactly one base rule (stable geometry, no hover movement) ...
+check('report download control has ONE base rule that owns its border and no late visual override',len(base_dl)==1 and 'border:1px solid' in base_dl[0] and 'border:1px solid rgba(255,255,255,.35)' not in report)
 check('priority score late flex override is gone','display:flex;align-items:baseline;gap:5px' not in priorities and 'grid-template-columns:1fr 1fr' in priorities)
 
 print(f'STEP 09 CSS REGRESSION GATE: {len(passed)}/{len(passed)+len(failed)} PASS')

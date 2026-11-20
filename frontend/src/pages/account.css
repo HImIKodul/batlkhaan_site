@@ -152,4 +152,4 @@
 body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-editor__name,.profile-question-card,.profile-company-card){
  background:radial-gradient(80% 60% at 8% 0,rgba(255,255,255,.55),transparent 62%),linear-gradient(150deg,rgba(168,200,255,.5),rgba(122,156,246,.34) 58%,rgba(160,142,246,.36));
  border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -14px 24px -18px rgba(70,100,220,.55),0 14px 26px -16px rgba(20,48,150,.5)}
-body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-editor__name) :is(span,small){color:#0b2358}
+body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-editor__name) :is(span,small){color:var(--mmri-color-text)}

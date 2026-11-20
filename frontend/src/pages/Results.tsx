@@ -2,11 +2,11 @@ import React,{useEffect,useMemo,useState} from 'react';
 import { AppShell,PageContainer,go } from '../components/AppShell';
 import { Button } from '../components/UI';
 import { Icon } from '../components/Icon';
-import { EmptyState,ErrorState,LoadingState } from '../components/ApiState';
+import { EmptyState,ErrorState,LoadingState,SkeletonHost,QuestionnaireSkeletonBody } from '../components/ApiState';
 import { DemoNotice } from '../components/DemoNotice';
 import { AssessmentInline } from '../components/AssessmentInline';
 import { api,resolveBoundAssessmentId,session } from '../api/client';
-import type { AssessmentProgress,AssessmentSummary,CategoryResult,DiagnosisStrength,DiagnosisWeakCell,ModuleResult,OutcomePriorityResult,PurposeResult,ResultsPayload,RootFinding } from '../api/types';
+import type { AnswerBreakdown,AssessmentProgress,AssessmentSummary,CategoryResult,DiagnosisStrength,DiagnosisWeakCell,ModuleResult,OutcomePriorityResult,PurposeResult,ResultsPayload,RootFinding } from '../api/types';
 import { displayScore,isTerminal,pct01 } from '../api/types';
 import { demoModules } from '../data/demo';
 import { mnText, rootClassMn } from '../content/mongolian';
@@ -28,17 +28,20 @@ const rankCapabilities=(items:CategoryResult[])=>items.filter(c=>displayScore(c)
 const capabilitiesOf=(d:ResultsPayload|null)=>d?.capabilities??d?.categories??[];
 const outcomesOf=(d:ResultsPayload|null)=>d?.businessOutcomes??d?.purposes??[];
 const prioritiesOf=(d:ResultsPayload|null)=>d?.businessOutcomePriorities??d?.outcomePriorities??[];
-const scoreStatement=(n:number|null)=>n==null?'Оношилгооны үнэлгээ бүрдээгүй байна.':n>=80?'Тухайн чиглэлийн удирдлагын тогтолцоо өндөр төлөвшилтэй байна. Дараагийн анхаарал нь тогтвортой ахиц, нарийвчилсан сайжруулалт байна.':n>=65?'Тухайн чиглэлийн суурь тогтолцоо ажиллаж байгаа боловч хэд хэдэн сул чадавх нийт гүйцэтгэлийг хязгаарлаж байна.':n>=50?'Тухайн чиглэлийн тогтолцоо хэсэгчлэн ажиллаж байгаа бөгөөд удирдлага, хэмжилт, хэрэгжилтийн жигд байдлыг бэхжүүлэх шаардлагатай байна.':'Тухайн чиглэлийн суурь тогтолцоонд олон сул хэсэг байгаа тул хамгийн өндөр ач холбогдолтой асуудлуудыг дарааллаар бэхжүүлэх шаардлагатай байна.';
+const scoreStatement=(n:number|null)=>n==null?'Оношилгооны үнэлгээ бүрдээгүй байна.':n>=80?'Тухайн чиглэлийн удирдлагын тогтолцоо өндөр төлөвшилтэй байна. Дараагийн анхаарал нь тогтвортой ахиц, нарийвчилсан сайжруулалт байна.':n>=65?'Суурь нь хангалттай боловч хэд хэдэн сул талаас болж нийт дүн хязгаарлагдаж байна.':n>=50?'Суурь нь хэсэгчлэн ажиллаж байна. Удирдлага, хэмжилт, хэрэгжилтийг тогтвортой болгох хэрэгтэй.':'Суурь нь олон сул талтай байна. Хамгийн чухал асуудлуудаас эхлэн дарааллаар засна уу.';
 const rootCauseLabel=(value:string)=>rootClassMn(value);
 
-function ResultHeader({overall,coverage,confidence,statusText,answered,contradictions,result}:{overall:number|null;coverage:number|null;confidence:number|null;statusText:string;answered?:number;contradictions?:number;result:ResultsPayload|null}){
+function ResultHeader({overall,coverage,confidence,statusText,answered,breakdown,contradictions,result}:{overall:number|null;coverage:number|null;confidence:number|null;statusText:string;answered?:number;breakdown?:AnswerBreakdown;contradictions?:number;result:ResultsPayload|null}){
+ // The stored confidence is the mean confidence of the cells that were actually valued; it ignores every unanswered cell, so it can read 100% at a few percent coverage.
+ // A reliability grade is therefore shown only for an official result; a quick/provisional estimate is labelled as such and its coverage is shown beside it.
+ const official=result?.metricType==='OFFICIAL_OVERALL_SCORE';
  return <section className="result-document-head">
   <div className="result-score-block"><span>{metricLabel(result)}</span><div><strong>{fmt(overall)}</strong></div><p>{result?.overall.band||band(overall)}</p></div>
   <dl className="result-meta">
    <div><dt>Мэдээллийн хамралт</dt><dd>{coverage==null?'-':`${coverage}%`}</dd></div>
-   <div><dt>Үнэлгээний найдвартай байдал</dt><dd>{reliabilityLabel(confidence)}</dd></div>
+   <div><dt>Үнэлгээний найдвартай байдал</dt><dd>{official?reliabilityLabel(confidence):'Баталгаажаагүй · урьдчилсан'}</dd></div>
    <div><dt>Оношилгооны төлөв</dt><dd>{statusText}</dd></div>
-   <div><dt>Бүртгэгдсэн хариулт</dt><dd>{answered??'-'}</dd></div>
+   <div><dt>Бүртгэгдсэн хариулт</dt><dd>{answered??'-'}{breakdown?` · оноонд нөлөөлсөн ${breakdown.evidenceBearing}`:''}</dd></div>
   </dl>
   {contradictions? <p className="result-review-note"><strong>{contradictions}</strong> зөрүүтэй нотолгоо нягтруулах шаардлагатай.</p>:null}
  </section>
@@ -59,7 +62,7 @@ function ExecutiveSummary({overall,data}:{overall:number|null;data:ResultsPayloa
  </section>
 }
 
-const PRELIM_NOTE='Урьдчилсан гэж тэмдэглэсэн чадавхыг одоогийн хариултын бодит оноогоор эрэмбэлсэн бөгөөд нэмэлт нотолгоо бүрдэх тусам баталгаажна.';
+const PRELIM_NOTE='«Урьдчилсан» гэсэн тэмдэгтэй чадавхыг одоогийн хариултаар эрэмбэлсэн. Нэмэлт мэдээлэл орох тусам эцэслэгдэнэ.';
 function CapabilityFindings({title,items,empty,kind}:{title:string;items:DiagnosisStrength[];empty:string;kind:'strength'|'weakness'}){
  const visible=items.slice(0,5);
  return <section className={`result-ranked result-ranked--${kind}`}>
@@ -69,16 +72,18 @@ function CapabilityFindings({title,items,empty,kind}:{title:string;items:Diagnos
  </section>
 }
 
-function EvidenceQuality({data}:{data:ResultsPayload}){
- const e=data.evidence; const q=data.quality;
+function EvidenceQuality({data,breakdown}:{data:ResultsPayload;breakdown?:AnswerBreakdown}){
+ const e=data.evidence; const q=data.quality; const d=data.evidenceDisclosure;
  if(!e&&!q)return null;
  const metrics=e?[
   ['Мэдээлэлтэй үзүүлэлт',e.knownCells,`/${e.applicableCells}`],['Түгжигдсэн',e.lockedCells,''],['Баталгаажсан',e.validatedCells,''],['Тооцоолсон',e.estimatedCells,''],
-  ['Мэдээлэлгүй',e.unknownCells,''],['Хамаарахгүй',e.notApplicableCells,''],['Нягтлах',e.reviewRequiredCells,''],['Зөрчил',e.contradictionCells,'']
+  ['Мэдээлэлгүй',e.unknownCells,''],['Хамаарахгүй',e.notApplicableCells,''],['Нягтлах',e.reviewRequiredCells,''],['Зөрчил',e.contradictionCells,''],
+  ...(breakdown?[['«Мэдэхгүй» гэсэн хариулт',breakdown.doNotKnow,'']]:[])
  ]:[];
  return <section className="result-evidence">
   <header><div><div className="result-section-label">Нотолгооны чанар</div><h2>Онооноос тусдаа найдвартай байдал ба мэдээллийн хамралт</h2></div><p>Мэдээллийн бүрэн байдал, баталгаажуулалтын төлөвийг оноотой хольж тайлбарлахгүй.</p></header>
   {metrics.length?<div className="result-evidence-grid">{metrics.map(([label,value,suffix])=><div key={String(label)}><span>{label}</span><strong>{String(value)}{suffix}</strong></div>)}</div>:null}
+  {d?<div className="result-quality-warnings" role="note"><strong>{d.resultStatus.labelMn}</strong><ul>{d.warningsMn.map((w,i)=><li key={i}>{w}</li>)}</ul><p>{d.confidence.noteMn}</p></div>:null}
   {q?.warnings?.length?<div className="result-quality-warnings" role="note"><strong>Нягтлах тэмдэглэл</strong><ul>{q.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></div>:null}
  </section>
 }
@@ -146,14 +151,14 @@ function TerminalResults({assessment,progress,data,selected,setSelected}:{assess
  const module=data.modules[selected]??null; const moduleCapabilities=module?capabilities.filter(c=>c.moduleId?c.moduleId===module.id:module.categoryIds.includes(c.id)):[];
  const outcomes=outcomesOf(data); const priorities=prioritiesOf(data); const area=businessAreaById(assessment.domainCode); const provisional=isProvisionalResult(data);
  const statusText=data.resultStatus==='REVIEW_REQUIRED'?'Дууссан · нягтлах шаардлагатай':assessment.status==='EXHAUSTED'?'Дууссан · боломжит мэдээлэл дууссан':data.resultStatus==='OFFICIAL'?'Дууссан · албан ёсны':data.resultStatus==='QUICK_ESTIMATE'?'Дууссан · урьдчилсан':'Дууссан';
- const intro=provisional?'Одоогийн хариултад тулгуурласан урьдчилсан үр дүнг шийдвэр гаргахад ойлгомжтой дарааллаар харуулна.':'Оношилгооны баталгаажсан үр дүнг удирдлагын шийдвэрийн дарааллаар харуулна.';
+ const intro=provisional?'Одоогийн хариултад үндэслэсэн урьдчилсан үр дүн.':'Оношилгооны баталгаажсан үр дүн.';
  return <>
   <header className="result-page-title"><div><span>{area.name}</span><h1>Оношилгооны үр дүн</h1><p>{intro}</p></div><div><Button variant="secondary" onClick={()=>go('report')}>Тайлан нээх</Button><Button onClick={()=>go('priorities')}>Тэргүүлэх асуудал</Button></div></header>
   {provisional&&<aside className="result-provisional-banner" role="note"><strong>Урьдчилсан үр дүн</strong><span>Нэмэлт нотолгоо бүрдэхэд зөвхөн “Урьдчилсан” тэмдэгтэй чадавхын байрлал өөрчлөгдөж болно.</span></aside>}
-  <ResultHeader overall={overall} coverage={coverage} confidence={confidence} statusText={statusText} answered={progress?.answeredQuestions} contradictions={data.quality?.openContradictions??data.openContradictions} result={data}/>
+  <ResultHeader overall={overall} coverage={coverage} confidence={confidence} statusText={statusText} answered={progress?.answeredQuestions} breakdown={progress?.answerBreakdown} contradictions={data.quality?.openContradictions??data.openContradictions} result={data}/>
   <ExecutiveSummary overall={overall} data={data}/>
   <section className="result-findings-grid"><CapabilityFindings kind="strength" title="5 давуу тал" items={strengths} empty="Давуу талын мэдээлэл бүрдээгүй байна."/><CapabilityFindings kind="weakness" title="5 сул тал" items={weaknesses} empty="Сул талын мэдээлэл бүрдээгүй байна."/></section>
-  <EvidenceQuality data={data}/>
+  <EvidenceQuality data={data} breakdown={progress?.answerBreakdown}/>
   <OutcomeView outcomes={outcomes} priorities={priorities} provisional={provisional}/>
   {data.modules?.length?<ModuleComparison modules={data.modules} overall={overall} selected={selected} onSelect={setSelected} areaName={area.name}/>:<p className="result-empty">Бүрэлдэхүүний үнэлгээ бүрдээгүй байна.</p>}
   {module?<ModuleDetail module={module} capabilities={moduleCapabilities} data={data}/>:null}
@@ -212,6 +217,7 @@ export default function Results(){
  const [selected,setSelected]=useState(0);
  const [loading,setLoading]=useState(loggedIn&&!testMode);
  const [error,setError]=useState('');
+ const [pendingReview,setPendingReview]=useState('');
 
  const resolveAssessmentId=resolveBoundAssessmentId;
  const refreshSnapshot=async(id:string)=>{
@@ -222,16 +228,17 @@ export default function Results(){
    setData(result);
   }else setData(null);
  };
- const load=async()=>{if(!loggedIn||testMode)return;setLoading(true);setError('');try{const id=await resolveAssessmentId();if(!id){setAssessment(null);setData(null);go('analysis');return}await refreshSnapshot(id)}catch(e:any){if(e?.status===404){session.assessmentId=null;go('analysis');return}setError(e?.code==='REPORT_PENDING_REVIEW'?`Тайлан хянагдаж байна. ${e.message}`:(e?.message||'Оношилгооны мэдээллийг ачаалж чадсангүй.'))}finally{setLoading(false)}};
+ const load=async()=>{if(!loggedIn||testMode)return;setLoading(true);setError('');setPendingReview('');try{const id=await resolveAssessmentId();if(!id){setAssessment(null);setData(null);go('analysis');return}await refreshSnapshot(id)}catch(e:any){if(e?.status===404){session.assessmentId=null;go('analysis');return}if(e?.code==='REPORT_PENDING_REVIEW'){setPendingReview(e.message||'Тайлан шинжээчийн хяналтад байна.');return}setError(e?.message||'Оношилгооны мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
  const refreshQuiet=async()=>{const id=session.assessmentId;if(!id)return;try{await refreshSnapshot(id)}catch{/* question surface owns answer errors */}};
  useEffect(()=>{if(!testMode)void load()},[testMode]);
  useEffect(()=>{if(data&&selected>=data.modules.length)setSelected(0)},[data,selected]);
 
  if(testMode)return <TestQuestionnaire areaId={testArea}/>;
  if(!loggedIn)return <DemoResults/>;
- if(loading)return <AppShell route="results"><PageContainer><LoadingState variant="dashboard" label="Шинжилгээний орчныг бэлтгэж байна..."/></PageContainer></AppShell>;
+ if(loading)return <AppShell route="results"><PageContainer><section className="mmri-questionnaire mmri-skel"><SkeletonHost label="Шинжилгээний орчныг бэлтгэж байна..."><QuestionnaireSkeletonBody/></SkeletonHost></section></PageContainer></AppShell>;
+ if(pendingReview)return <AppShell route="results"><PageContainer><section className="result-pending" role="status" aria-live="polite"><strong>Тайлан хянагдаж байна</strong><br/>{pendingReview}<p><a href="#/report">Тайлан хуудас руу очих</a> · <a href="#/analysis">Оношилгоо руу буцах</a></p></section></PageContainer></AppShell>;
  if(error&&!assessment)return <AppShell route="results"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
- if(!assessment)return <AppShell route="results"><PageContainer><LoadingState variant="dashboard" label="Оношилгооны хэсэг рүү шилжүүлж байна..."/></PageContainer></AppShell>;
+ if(!assessment)return <AppShell route="results"><PageContainer><section className="mmri-questionnaire mmri-skel"><SkeletonHost label="Оношилгооны хэсэг рүү шилжүүлж байна..."><QuestionnaireSkeletonBody/></SkeletonHost></section></PageContainer></AppShell>;
 
  const terminal=isTerminal(assessment.status);
  if(terminal&&data)return <AppShell route="results"><PageContainer className="result-workspace" data-result-domain={assessment.domainCode}><TerminalResults assessment={assessment} progress={progress} data={data} selected={selected} setSelected={setSelected}/>{error&&<div className="inline-error" role="alert">{error}</div>}</PageContainer></AppShell>;

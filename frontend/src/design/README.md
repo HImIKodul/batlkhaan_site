@@ -1,6 +1,6 @@
 # MMRI canonical design foundation
 
-`tokens.css` is the rendering authority for the BusinessMMRI green/white design system. `tokens.ts` mirrors the same values for TypeScript/SVG consumers. They must stay synchronized.
+`tokens.css` is the rendering authority for the BusinessMRI.mn green/white design system. `tokens.ts` mirrors the same values for TypeScript/SVG consumers. They must stay synchronized.
 
 Use the canonical token families instead of introducing page-local visual systems:
 

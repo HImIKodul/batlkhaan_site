@@ -1,4 +1,6 @@
 import type { MethodologyDefinition, RuntimeSnapshot } from "../engine/types.js";
+import { readPolicyFlags } from "../engine/policy-flags.js";
+import { buildEvidenceDisclosure } from "./evidence-disclosure.js";
 import type { StrategyResult } from "../strategy/types.js";
 import type {
   DiagnosisCapabilityResult, DiagnosisEvidenceSummary, DiagnosisMetricType, DiagnosisModuleResult,
@@ -58,6 +60,8 @@ export interface BuildDiagnosisResultInput {
   snapshot: RuntimeSnapshot;
   strategy: StrategyResult;
   purposeLabels: Record<string,string>;
+  /** Phase 2.7: explicit override for tests; default reads the (OFF-by-default) policy flags. */
+  policyFlags?: ReturnType<typeof readPolicyFlags>;
 }
 
 export function buildDiagnosisResultV13(input: BuildDiagnosisResultInput): DiagnosisResultV13 {
@@ -209,6 +213,8 @@ export function buildDiagnosisResultV13(input: BuildDiagnosisResultInput): Diagn
     outcomeGuardrail:{causalFinancialLiftClaimAllowed:false,roiPredictionAllowed:false,meaning:"Ranks diagnostic gaps using locked methodology weights and five-business-outcome relevance. It does not predict causal financial lift or ROI."},
     quality:{openContradictions:snapshot.contradictions.length,hardContradictions,reviewRequiredCells:evidence.reviewRequiredCells,incompleteCoverage:(snapshot.overall.coverage??0)<1,quickLimitReached:input.routingState==="QUICK_LIMIT_REACHED",requiresReview:overallMetric.resultStatus==="REVIEW_REQUIRED"||evidence.reviewRequiredCells>0||hardContradictions>0,officialResultAvailable:overallMetric.resultStatus==="OFFICIAL",quickEstimate:overallMetric.resultStatus==="QUICK_ESTIMATE",warnings},
     trace:{methodologyVersion:methodology.version,methodologyBundleSha256:input.methodologyBundleSha256,runtimeSnapshotHash:input.runtimeSnapshotHash,generatedAt:input.generatedAt,versions:{scoring:methodology.contracts.scoring.version,confidence:methodology.contracts.confidence.version,aggregation:snapshot.overall.aggregationVersion,outcomePriority:"OUTCOME_PRIORITY_V13",rootCause:strategy.rootCause.version,recommendation:strategy.recommendations.version,actionPlan:strategy.actionPlan.version,report:methodology.contracts.report.version,aiGeneration:methodology.contracts.aiGeneration.version}},
-    categories:capabilities,purposes:businessOutcomes,outcomePriorities:businessOutcomePriorities,openContradictions:snapshot.contradictions.length
+    categories:capabilities,purposes:businessOutcomes,outcomePriorities:businessOutcomePriorities,openContradictions:snapshot.contradictions.length,
+    // B3 (flag ON only): the key is ABSENT when OFF so frozen result JSON/hash is unchanged.
+    ...((input.policyFlags ?? readPolicyFlags()).b3 && methodology.engineKind === "BUSINESSMRI_V2" ? { evidenceDisclosure: buildEvidenceDisclosure(methodology, snapshot) } : {})
   };
 }

@@ -10,8 +10,8 @@ export async function authenticate(authorization: string | undefined, config: Ap
   const match = /^Bearer\s+(.+)$/i.exec(authorization ?? "");
   if (!match) throw unauthorized();
   const claims = verifyAccessToken(match[1], config);
-  const user = await prisma.user.findUnique({ where: { id: claims.sub }, select: { id:true,email:true,status:true,tokenVersion:true } });
-  if (!user || user.status !== "ACTIVE" || user.tokenVersion !== claims.tv) throw unauthorized("Session is no longer valid");
+  const user = await prisma.user.findUnique({ where: { id: claims.sub }, select: { id:true,email:true,status:true,tokenVersion:true,emailVerificationRequired:true,emailVerifiedAt:true,erasedAt:true } });
+  if (!user || user.status !== "ACTIVE" || user.tokenVersion !== claims.tv || user.erasedAt || (user.emailVerificationRequired && !user.emailVerifiedAt)) throw unauthorized("Session is no longer valid");
   // MMRI-19: an access token is bound to its login's refresh-session family. Logout (or family revocation) revokes every
   // row of the family, so the token dies immediately instead of living until expiry. One indexed lookup (familyId index).
   // Tokens without `fid` were issued before this change and expire on their own within the access TTL.

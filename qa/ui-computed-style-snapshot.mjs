@@ -38,7 +38,8 @@ async function snap(p,key){
     return out;
   });
 }
-for(const [label,vp] of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
+const VPS=(process.env.VIEWPORTS||'desktop:1280x900,mobile:390x844').split(',').map(x=>{const [n,d]=x.split(':');const [w,h]=d.split('x');return [n,{width:+w,height:+h}]});
+for(const [label,vp] of VPS){
   const ctx=await b.newContext({viewport:vp,reducedMotion:'reduce'});const p=await ctx.newPage();
   await p.addInitScript(css=>{const s=document.createElement('style');s.textContent=css;document.documentElement.appendChild(s);new MutationObserver(()=>{if(!s.isConnected)document.documentElement.appendChild(s)}).observe(document.documentElement,{childList:true})},FREEZE);
   await p.goto(BASE+'#/');await sleep(1800);await snap(p,label+':home');

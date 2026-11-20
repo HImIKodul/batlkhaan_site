@@ -1,4 +1,6 @@
-import type { CellSnapshot, DirectEvidence, MethodologyDefinition, RuntimeSnapshot } from "./types.js";
+import type { CellSnapshot, ContradictionFinding, DirectEvidence, MethodologyDefinition, RuntimeSnapshot } from "./types.js";
+import { readPolicyFlags, type B1Mode, type PolicyFlags } from "./policy-flags.js";
+import { judgeContradiction } from "./v2-policy.js";
 import { canConfirmNa, directConfidence } from "./confidence.js";
 import { calculateAggregateSnapshots } from "./scoring.js";
 import { mapKey } from "./utils.js";
@@ -13,10 +15,13 @@ import { mapKey } from "./utils.js";
  */
 export function calculateBusinessMriRuntimeSnapshot(
   definition: MethodologyDefinition,
-  evidence: DirectEvidence[]
+  evidence: DirectEvidence[],
+  flagsOverride?: PolicyFlags
 ): RuntimeSnapshot {
   const runtime = definition.runtimePolicy;
   if (!runtime?.enabled) throw new Error("BusinessMRI runtime policy is not loaded");
+  // Phase 2.7: unapproved policies (B1/B2) are OFF unless explicitly enabled (policy-flags.ts); OFF = the code paths below are byte-for-byte the previous behaviour.
+  const flags = flagsOverride ?? readPolicyFlags();
 
   const byCell = new Map<string, DirectEvidence[]>();
   for (const item of evidence) {
@@ -28,24 +33,39 @@ export function calculateBusinessMriRuntimeSnapshot(
 
   const cells = new Map<string, CellSnapshot>();
   for (const category of definition.categories) {
+    // B2: scored evidence in the same capability (non-gate cells). Evaluated only when the flag is ON; OFF keeps the historical constant `false`.
+    const categoryHasScored = flags.b2 && definition.cells.some(c => c.id !== "C01" &&
+      (byCell.get(mapKey(category.id, c.id)) ?? []).some(item => item.state === "SCORED" && item.score !== null && runtime.questionById.get(item.questionId)?.scoreEligible));
     for (const cell of definition.cells) {
       const direct = (byCell.get(mapKey(category.id, cell.id)) ?? []).slice().sort((a, b) => a.path - b.path);
       cells.set(
         mapKey(category.id, cell.id),
         cell.id === "C01"
-          ? applicabilityCell(definition, category.id, direct)
-          : maturityCell(definition, category.id, cell.id, direct)
+          ? applicabilityCell(definition, category.id, direct, categoryHasScored)
+          : maturityCell(definition, category.id, cell.id, direct, flags.b1)
       );
     }
   }
 
-  return { cells, contradictions: [], ...calculateAggregateSnapshots(definition, cells) };
+  const contradictions: ContradictionFinding[] = [];
+  if (flags.b1 !== "OFF" || flags.b2) {
+    for (const c of cells.values()) {
+      if (!c.hasHardContradiction) continue;
+      const gate = c.cellId === "C01";
+      contradictions.push({
+        ruleId: gate ? "H02" : "H01", type: "HARD", flag: gate ? "SCOPE_CONTRADICTION" : "DIRECT_CONTRADICTION", categoryId: c.categoryId, affectedCellIds: [c.cellId],
+        reason: gate ? "Applicability gate claims N/A while scored evidence exists in the same capability (frozen clause requiresNoApplicableScoredConflict)." : `Same-cell scored answers contradict each other (${flags.b1}).`
+      });
+    }
+  }
+  return { cells, contradictions, ...calculateAggregateSnapshots(definition, cells) };
 }
 
 function applicabilityCell(
   definition: MethodologyDefinition,
   categoryId: string,
-  directEvidence: DirectEvidence[]
+  directEvidence: DirectEvidence[],
+  scoredConflict = false
 ): CellSnapshot {
   // BusinessMRI bundles encode the affirmative C01 choice as UNAVAILABLE
   // because C01 is context-only. Therefore applicability must be derived from
@@ -68,9 +88,17 @@ function applicabilityCell(
     claimCount: naClaims.length,
     sourceKindCount,
     claimConfidence: naConfidence,
-    hasScoredConflict: false
+    hasScoredConflict: scoredConflict
   });
   const applicable = positiveClaims.length > 0;
+  if (scoredConflict && positiveClaims.length === 0 && canConfirmNa(definition.contracts, { claimCount: naClaims.length, sourceKindCount, claimConfidence: naConfidence, hasScoredConflict: false })) {
+    // B2 (flag ON only): enough N/A claims, but scored evidence exists in the same capability => NOT a confirmed exclusion; stays applicable and is flagged for review.
+    return { ...base({
+      categoryId, cellId: "C01", directEvidence, status: "REVIEW_REQUIRED", confidenceState: "UNKNOWN", applicabilityRelevance: null, directConfidence: 0, effectiveConfidence: 0,
+      naClaimCount: naClaims.length, naClaimConfidence: naConfidence, locked: false, lockReason: null, evidenceCount: directEvidence.length, exhausted,
+      maxAcceptedAuthority: directEvidence.length ? Math.max(...directEvidence.map(item => item.authority)) : 0
+    }), hasHardContradiction: true, hardContradictionRuleIds: ["H02"] };
+  }
 
   return base({
     categoryId,
@@ -115,7 +143,8 @@ function maturityCell(
   definition: MethodologyDefinition,
   categoryId: string,
   cellId: string,
-  directEvidence: DirectEvidence[]
+  directEvidence: DirectEvidence[],
+  b1: B1Mode = "OFF"
 ): CellSnapshot {
   const runtime = definition.runtimePolicy!;
   const cellDef = definition.cells.find(cell => cell.id === cellId)!;
@@ -170,6 +199,20 @@ function maturityCell(
       evidenceCount: directEvidence.length,
       exhausted
     });
+  }
+
+  // B1 (flag ON only): unresolved same-cell contradiction => REVIEW_REQUIRED, not locked, confidence capped; mean score and all evidence are kept (frozen contract: autoChangeScore=false, autoDeleteEvidence=false).
+  if (b1 !== "OFF" && score !== null) {
+    const verdict = judgeContradiction(definition, scored, b1);
+    if (verdict.hard) {
+      const cap = Number(definition.contracts.contradiction.effects.hard.confidenceCap ?? 0.65);
+      return { ...base({
+        categoryId, cellId, directEvidence, status: "REVIEW_REQUIRED", confidenceState: "ESTIMATED", directScore: score, effectiveScore: score,
+        directConfidence: cap, effectiveConfidence: cap, directAnswerCount: scored.length, independentSourceKinds: new Set(scored.map(item => item.sourceKind)).size,
+        maxAcceptedAuthority: Math.max(...scored.map(item => item.authority)), naClaimCount: naClaims.length, naClaimConfidence: naConfidence, locked: false, lockReason: null,
+        scoreDispersion: verdict.spreadPoints, clusterSize: scored.length, evidenceCount: directEvidence.length, exhausted
+      }), hasHardContradiction: true, hardContradictionRuleIds: ["H01"] };
+    }
   }
 
   return base({

@@ -9,7 +9,7 @@ import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation
 import { REPORT_AREA_KEY,isTestBusiness } from '../data/experience';
 import { DOMAIN_IDS } from '../design/domainTheme';
 
-export type RouteName='home'|'login'|'billing'|'analysis'|'profile'|'assessment'|'results'|'priorities'|'report'|'settings'|'states'|'forgot'|'reset'|'privacy'|'terms';
+export type RouteName='home'|'login'|'billing'|'analysis'|'profile'|'assessment'|'results'|'priorities'|'report'|'settings'|'states'|'forgot'|'reset'|'verify'|'privacy'|'terms';
 
 const analysisRoutes=new Set<RouteName>(['analysis','assessment','results','priorities']);
 const primaryNav:[RouteName,string][]=[['home','Нүүр'],['analysis','Оношилгоо'],['report','Тайлан']];
@@ -33,6 +33,7 @@ export function routeHref(route:RouteName){
  if(route==='assessment')return '#/questions';
  if(route==='results')return '#/results';
  if(route==='forgot')return '#/forgot-password';
+ if(route==='verify')return '#/verify-email';
  if(route==='reset')return '#/reset-password';
  if(route==='privacy')return '#/privacy';
  if(route==='terms')return '#/terms';
@@ -64,17 +65,23 @@ function navIcon(route:RouteName){
  return 'file';
 }
 
-type ShellNotice={id:string;kind:'payment'|'report';title:string;detail:string;time:string;areaId?:BusinessAreaId};
+type ShellNotice={id:string;kind:'payment'|'report'|'assessment'|'account';title:string;detail:string;time:string;areaId?:BusinessAreaId;/* server mode only */read?:boolean;destination?:RouteName};
+const noticeKindOf=(type:string):ShellNotice['kind']=>type==='PAYMENT_CONFIRMED'?'payment':type.startsWith('REPORT_')?'report':type==='ASSESSMENT_COMPLETED'?'assessment':'account';
+const noticeKindLabel:Record<ShellNotice['kind'],string>={payment:'Төлбөр',report:'Тайлан',assessment:'Оношилгоо',account:'Бүртгэл'};
+const noticeIconName=(kind:ShellNotice['kind'])=>kind==='report'?'file':kind==='assessment'?'chart':'check';
+/* Only the two original colour classes exist in the stylesheet; the new kinds reuse them. */
+const noticeIconTone=(kind:ShellNotice['kind'])=>kind==='report'||kind==='assessment'?'report':'payment';
 function sameNotices(a:ShellNotice[],b:ShellNotice[]){
  if(a.length!==b.length)return false;
- return a.every((row,index)=>{const next=b[index];return !!next&&row.id===next.id&&row.kind===next.kind&&row.title===next.title&&row.detail===next.detail&&row.time===next.time&&row.areaId===next.areaId});
+ return a.every((row,index)=>{const next=b[index];return !!next&&row.id===next.id&&row.kind===next.kind&&row.title===next.title&&row.detail===next.detail&&row.time===next.time&&row.areaId===next.areaId&&row.read===next.read&&row.destination===next.destination});
 }
 function noticeTime(value?:string|null){const d=value?new Date(value):new Date();if(Number.isNaN(d.getTime()))return '';const p=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
 
-/* The backend exposes no notification API: notices are derived from billing + assessments. Read/dismissed state is therefore
-   a per-browser preference (localStorage), keyed by company, and only hides/marks items locally. */
+/* Notices come from the server (`/notifications`) when it reports the feature active: read/dismissed state then lives in the database and follows the account.
+   Only when the server answers 404 NOTIFICATIONS_DISABLED does the shell fall back to the previous behaviour: notices derived from billing + assessments with
+   a per-browser read/dismissed preference (localStorage, keyed by company). */
 type NoticeState={read:string[];dismissed:string[]};
-const noticeStateKey=()=>`mmri.notices.${session.companyId||'anon'}`;
+const noticeStateKey=()=>`mmri.notices.${session.userId||'anon'}.${session.companyId||'anon'}`;
 function loadNoticeState():NoticeState{
  try{const v=JSON.parse(localStorage.getItem(noticeStateKey())||'null');if(v&&Array.isArray(v.read)&&Array.isArray(v.dismissed))return {read:v.read.slice(-200),dismissed:v.dismissed.slice(-200)}}catch{/* unavailable storage */}
  return {read:[],dismissed:[]};
@@ -92,13 +99,30 @@ export function ShellHeader({route}:{route:RouteName}){
  const [notices,setNotices]=useState<ShellNotice[]>([]);
  const [noticesReady,setNoticesReady]=useState(false);
  const [noticeState,setNoticeState]=useState<NoticeState>(()=>loadNoticeState());
+ const noticeKey=noticeStateKey();
+ useEffect(()=>{setNoticeState(loadNoticeState())},[noticeKey]);
+ const [serverMode,setServerMode]=useState(false);
+ const refreshRef=useRef<()=>void>(()=>{});
  const updateNoticeState=(fn:(s:NoticeState)=>NoticeState)=>setNoticeState(cur=>{const next=fn(cur);saveNoticeState(next);return next});
 
- const visibleNotices=notices.filter(n=>!noticeState.dismissed.includes(n.id));
- const unreadCount=visibleNotices.filter(n=>!noticeState.read.includes(n.id)).length;
- const renderNotice=(item:ShellNotice)=>{const unread=!noticeState.read.includes(item.id);return <div key={item.id} className={`mmri-notification-item${unread?' is-unread':' is-read'}`}>
-        <a href={item.kind==='report'?'#/report':'#/analysis'} onClick={()=>{if(item.kind==='report'&&item.areaId)sessionStorage.setItem(REPORT_AREA_KEY,item.areaId);updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,item.id]))}));setNoticeOpen(false)}}><span className={`mmri-notification-icon is-${item.kind}`}><Icon name={item.kind==='report'?'file':'check'} size={18}/></span><div><em className="mmri-notification-kind">{item.kind==='report'?'Тайлан':'Төлбөр'}</em><strong>{item.title}{unread&&<i className="mmri-notification-dot"><span className="mmri-visually-hidden"> (уншаагүй)</span></i>}</strong><p>{item.detail}</p><small><Icon name="clock" size={13}/>{item.time}</small></div></a>
-        <div className="mmri-notification-item__actions">{unread&&<button type="button" aria-label={`${item.title} - уншсан болгох`} onClick={()=>updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,item.id]))}))}>Уншсан</button>}<button type="button" aria-label={`${item.title} - арилгах`} onClick={()=>updateNoticeState(s=>({...s,dismissed:Array.from(new Set([...s.dismissed,item.id]))}))}><Icon name="close" size={16}/></button></div>
+ const isRead=(n:ShellNotice)=>serverMode?n.read===true:noticeState.read.includes(n.id);
+ /* Stable order: server list keeps the server's newest-first order; the local fallback sorts by time then id. Read/dismiss never reorders. */
+ const visibleNotices=serverMode?notices:notices.filter(n=>!noticeState.dismissed.includes(n.id)).slice().sort((x,y)=>(y.time||'').localeCompare(x.time||'')||y.id.localeCompare(x.id));
+ const unreadCount=visibleNotices.filter(n=>!isRead(n)).length;
+ /* Server mode: optimistic update, then the server call; any failure re-reads the authoritative state. */
+ const serverAction=(apply:(rows:ShellNotice[])=>ShellNotice[],call:()=>Promise<unknown>)=>{setNotices(apply);void call().catch(()=>{}).finally(()=>refreshRef.current())};
+ const markRead=(item:ShellNotice)=>serverMode?serverAction(rows=>rows.map(r=>r.id===item.id?{...r,read:true}:r),()=>api.markNotificationRead(item.id,session.companyId)):updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,item.id]))}));
+ const dismissNotice=(item:ShellNotice)=>serverMode?serverAction(rows=>rows.filter(r=>r.id!==item.id),()=>api.dismissNotification(item.id,session.companyId)):updateNoticeState(s=>({...s,dismissed:Array.from(new Set([...s.dismissed,item.id]))}));
+ const markAllRead=()=>serverMode?serverAction(rows=>rows.map(r=>({...r,read:true})),()=>api.markAllNotificationsRead(session.companyId)):updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,...visibleNotices.map(n=>n.id)]))}));
+ const clearAllNotices=()=>serverMode?serverAction(()=>[],async()=>{for(const n of visibleNotices)await api.dismissNotification(n.id,session.companyId)}):updateNoticeState(s=>({...s,dismissed:Array.from(new Set([...s.dismissed,...visibleNotices.map(n=>n.id)]))}));
+ const openNotice=(item:ShellNotice)=>{
+  const areaId=item.areaId;
+  if(areaId)sessionStorage.setItem(REPORT_AREA_KEY,areaId);
+  markRead(item);setNoticeOpen(false);
+ };
+ const renderNotice=(item:ShellNotice)=>{const unread=!isRead(item);return <div key={item.id} className={`mmri-notification-item${unread?' is-unread':' is-read'}`}>
+        <a href={serverMode&&item.destination?routeHref(item.destination):item.kind==='report'?'#/report':'#/analysis'} onClick={()=>openNotice(item)}><span className={`mmri-notification-icon is-${noticeIconTone(item.kind)}`}><Icon name={noticeIconName(item.kind)} size={18}/></span><div><em className="mmri-notification-kind">{noticeKindLabel[item.kind]}</em><strong>{item.title}{unread&&<i className="mmri-notification-dot"><span className="mmri-visually-hidden"> (уншаагүй)</span></i>}</strong><p>{item.detail}</p><small><Icon name="clock" size={13}/>{item.time}</small></div></a>
+        <button type="button" className="mmri-notification-dismiss" aria-label={`${item.title} - арилгах`} onClick={()=>dismissNotice(item)}><Icon name="close" size={14}/></button>
        </div>};
  const [logoutBusy,setLogoutBusy]=useState(false);
  const [companyName,setCompanyName]=useState(()=>session.companyName||'');
@@ -157,10 +181,10 @@ export function ShellHeader({route}:{route:RouteName}){
   if(!loggedIn)return;
   let live=true;
   let timer:number|null=null;
-  const publish=(rows:ShellNotice[])=>{
+  const publish=(rows:ShellNotice[],fromServer=false)=>{
    if(!live)return;
    setNotices(current=>sameNotices(current,rows)?current:rows);
-   setNoticeState(loadNoticeState());
+   if(!fromServer)setNoticeState(loadNoticeState());
    setNoticesReady(true);
   };
   const run=async()=>{
@@ -171,7 +195,19 @@ export function ShellHeader({route}:{route:RouteName}){
      {id:'demo-paid',kind:'payment',title:'Төлбөр баталгаажсан',detail:'Маркетингийн менежментийн оношилгооны эрх нээгдсэн.',time:'Өнөөдөр · 07:41',areaId:'marketing'},
     ]);return;
    }
-   const companyId=session.companyId;if(!companyId){if(live)setNoticesReady(true);return;}
+   const companyId=session.companyId;
+   /* Authoritative path: the server notification list. 404 NOTIFICATIONS_DISABLED => fall through to the previous local behaviour. */
+   try{
+    const sv=await api.listNotifications(companyId);
+    if(!live)return;
+    setServerMode(true);
+    publish(sv.items.map(n=>({id:n.id,kind:noticeKindOf(n.type),title:n.title,detail:n.message,time:noticeTime(n.createdAt),areaId:(n.payload?.domainCode&&domainThemeIds.has(n.payload.domainCode as BusinessAreaId)?n.payload.domainCode as BusinessAreaId:undefined),read:n.readAt!==null,destination:n.destination as RouteName})),true);
+    return;
+   }catch(error:any){
+    if(!(error?.status===404&&error?.code==='NOTIFICATIONS_DISABLED')){if(live)setNoticesReady(true);return}
+    if(live)setServerMode(false);
+   }
+   if(!companyId){if(live)setNoticesReady(true);return;}
    try{
     const [billing,assessments]=await Promise.all([api.getBillingStatus(companyId),api.listAssessments(companyId)]);
     const rows:ShellNotice[]=[];
@@ -185,6 +221,7 @@ export function ShellHeader({route}:{route:RouteName}){
   };
   const schedule=()=>{if(timer!==null)window.clearInterval(timer);timer=window.setInterval(()=>void run(),30000)};
   const resume=()=>{if(document.visibilityState==='visible'&&navigator.onLine!==false)void run()};
+  refreshRef.current=()=>void run();
   void run();schedule();
   document.addEventListener('visibilitychange',resume);
   window.addEventListener('online',resume);
@@ -224,10 +261,9 @@ export function ShellHeader({route}:{route:RouteName}){
  return <header className={`mmri-shell-header ${loggedIn?'is-authenticated':'is-public'}`} ref={headerRef}>
   <div className="mmri-shell-inner">
    <span className="mmri-shell-glint" aria-hidden="true"><i/></span>
-   <a className="mmri-brand" href="#/" onClick={closeMenus} aria-label="BUSINESSMRI.MN - Нүүр">
-    <span className="mmri-brand-mark" aria-hidden="true"><Icon name="logo" size={22}/></span>
+   <a className="mmri-brand" href="#/" onClick={closeMenus} aria-label="BusinessMRI.mn - Нүүр">
     <span className="mmri-brand-copy">
-     <strong>BUSINESSMRI.MN</strong>
+     <strong>BusinessMRI</strong>
     </span>
    </a>
 
@@ -244,7 +280,7 @@ export function ShellHeader({route}:{route:RouteName}){
       <button type="button" ref={notificationButtonRef} className="mmri-notification-trigger" aria-haspopup="dialog" aria-expanded={noticeOpen} aria-controls="mmri-notification-panel" aria-label={`Мэдэгдэл${unreadCount?` - ${unreadCount} шинэ`:''}`} onClick={()=>{setNoticeOpen(v=>!v);setAccountOpen(false)}}><Icon name="bell" size={30}/>{unreadCount>0&&<span>{unreadCount>9?'9+':unreadCount}</span>}</button>
       {noticeOpen&&<div ref={notificationPanelRef} id="mmri-notification-panel" className="mmri-notification-panel" role="dialog" aria-labelledby="mmri-notification-title" tabIndex={-1} aria-busy={!noticesReady||undefined}>
        <header><span className="mmri-notification-badge" aria-hidden="true"><Icon name="bell" size={22}/></span><div><strong id="mmri-notification-title">Мэдэгдэл</strong><small>{!noticesReady?'Шалгаж байна…':visibleNotices.length?`${unreadCount} уншаагүй · ${visibleNotices.length} нийт`:'Шинэ мэдээлэл алга'}</small></div><button type="button" className="mmri-notification-close" aria-label="Мэдэгдлийг хаах" onClick={()=>{setNoticeOpen(false);notificationButtonRef.current?.focus()}}><Icon name="close" size={18}/></button></header>
-       {visibleNotices.length>0&&<div className="mmri-notification-tools"><button type="button" disabled={unreadCount===0} onClick={()=>updateNoticeState(s=>({...s,read:Array.from(new Set([...s.read,...visibleNotices.map(n=>n.id)]))}))}>Бүгдийг уншсан болгох</button><button type="button" onClick={()=>updateNoticeState(s=>({...s,dismissed:Array.from(new Set([...s.dismissed,...visibleNotices.map(n=>n.id)]))}))}>Бүгдийг арилгах</button></div>}
+       {visibleNotices.length>0&&<div className="mmri-notification-tools"><button type="button" disabled={unreadCount===0} onClick={markAllRead}>Бүгдийг уншсан болгох</button><button type="button" onClick={clearAllNotices}>Бүгдийг арилгах</button></div>}
        <div className="mmri-notification-list">{!noticesReady?<div className="mmri-notification-loading" role="status" aria-live="polite" aria-atomic="true"><span className="mmri-visually-hidden">Мэдэгдлийг шалгаж байна.</span>{[0,1,2].map(i=><span key={i} className="mmri-notification-loading__row" aria-hidden="true"><i/><b/><em/></span>)}</div>:visibleNotices.length?(()=>{const fresh=visibleNotices.filter(n=>!noticeState.read.includes(n.id));const older=visibleNotices.filter(n=>noticeState.read.includes(n.id));return <>{fresh.length>0&&<section className="mmri-notification-group" aria-label="Шинэ"><h3>Шинэ</h3>{fresh.map(renderNotice)}</section>}{older.length>0&&<section className="mmri-notification-group" aria-label="Өмнөх"><h3>Өмнөх</h3>{older.map(renderNotice)}</section>}</>})():<div className="mmri-notification-empty"><span aria-hidden="true"><i/><Icon name="bell" size={26}/></span><strong>Шинэ мэдэгдэл алга</strong><p>Төлбөр баталгаажих, оношилгоо дуусах, тайлан бэлэн болох үед энд харагдана.</p></div>}</div></div>}
      </div>
      <div className="mmri-account" ref={accountRef}>

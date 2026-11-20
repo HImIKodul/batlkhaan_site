@@ -106,3 +106,13 @@ backend/integration/step6/MMRI_STEP6_OF_7_QUESTION_ID_RECONCILIATION.csv
 RECENT_CHANGE_SUMMARY.txt
 UNCOMMITTED_CHANGES.patch
 STEP11_AUDIT/STEP11_GATE_SUMMARY.tsv
+
+# Local recovery patches and binary file lists remain on disk, outside deliverable source.
+CODEX_PROGRESS/**/*.patch
+CODEX_PROGRESS/**/git-files.bin
+CODEX_PROGRESS/**/*.tgz
+CODEX_PROGRESS/**/private/
+CODEX_PROGRESS/**/design-diffs/
+ops/acceptance/__pycache__/
+CODEX_PROGRESS/**/cleanup-recovery/
+CODEX_PROGRESS/**/clean-source/

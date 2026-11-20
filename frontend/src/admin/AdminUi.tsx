@@ -3,7 +3,7 @@ import React,{useEffect,useRef,useState} from 'react';
 /* Shared building blocks for the simple SUPER_ADMIN screens. */
 export const ROLE_MN:Record<string,string>={OWNER:'Эзэмшигч',ADMIN:'Админ',ASSESSOR:'Үнэлэгч',CONSULTANT:'Зөвлөх',VIEWER:'Харагч'};
 export const USER_STATUS_MN:Record<string,string>={ACTIVE:'Идэвхтэй',DISABLED:'Идэвхгүй'};
-export const SIGNIN_MN:Record<string,string>={LOGIN_SUCCESS:'Нэвтэрсэн',LOGIN_FAILURE:'Нэвтрэх оролдлого амжилтгүй',REGISTER:'Бүртгүүлсэн',LOGOUT:'Гарсан',PASSWORD_RESET:'Нууц үг сэргээсэн',PASSWORD_RESET_REQUESTED:'Нууц үг сэргээх хүсэлт'};
+export const SIGNIN_MN:Record<string,string>={LOGIN_SUCCESS:'Нэвтэрсэн',LOGIN_FAILURE:'Нэвтэрч чадсангүй',REGISTER:'Бүртгүүлсэн',LOGOUT:'Гарсан',PASSWORD_RESET:'Нууц үг сэргээсэн',PASSWORD_RESET_REQUESTED:'Нууц үг сэргээх хүсэлт'};
 export const Badge=({tone,children}:{tone:'ok'|'bad'|'warn'|'mute';children:React.ReactNode})=><span className={`adm-badge adm-badge--${tone}`}>{children}</span>;
 
 /** Short confirmation: says what will happen, asks for a written reason (kept in the audit trail), and only then calls the server. */

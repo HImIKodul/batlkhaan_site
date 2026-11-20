@@ -4,7 +4,9 @@ import { access, chmod, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } 
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { prisma } from "../db.js";
-import { buildReportPdfSource, reportPdfSourceHash, assertPdfBuffer, sha256Buffer, MMRI_PDF_GENERATOR_VERSION } from "../report/pdf-artifact.js";
+import { buildReportPdfSource, reportPdfSourceHash, assertPdfBuffer, sha256Buffer, MMRI_PDF_GENERATOR_VERSION, generatorVersionFor } from "../report/pdf-artifact.js";
+import { readPolicyFlags } from "../engine/policy-flags.js";
+import { ApiError } from "../api/errors.js";
 import type { FrozenReportPayload, NarrativeDraft } from "../report/types.js";
 
 const MAX_PDF_BYTES=50*1024*1024;
@@ -17,12 +19,14 @@ function resolveStorageKey(key:string){
   if(abs===root||!abs.startsWith(root+path.sep))throw new Error("Report artifact path escapes storage root");
   return abs;
 }
-function pdfFileName(payload:FrozenReportPayload){return `MMRI-${safeSegment(payload.assessmentId,"assessment id")}.pdf`;}
+function pdfFileName(payload:FrozenReportPayload){return `BusinessMRI.mn-${safeSegment(payload.assessmentId,"assessment id")}.pdf`;}
 
 async function runPdfRenderer(sourcePath:string,pdfPath:string){
   const timeoutMs=boundedEnvInt("MMRI_PDF_RENDER_TIMEOUT_MS",45_000,5_000,120_000);
   const python=String(process.env.MMRI_PDF_PYTHON_PATH||"python3").trim()||"python3";
   const renderer=path.resolve(process.env.MMRI_PDF_RENDERER_SCRIPT||path.join(process.cwd(),"pdf_renderer","render_report_pdf.py"));
+  if(readPolicyFlags().b4&&!/b4_proposed/.test(path.basename(renderer)))throw new Error("B4 placeholders require the proposed renderer (render_report_pdf_b4_proposed.py); refusing to render with the approved renderer");
+  if(!readPolicyFlags().b4&&/b4_proposed/.test(path.basename(renderer)))throw new Error("The proposed B4 renderer is configured but the B4 flag is OFF; refusing");
   await access(renderer);
   await new Promise<void>((resolve,reject)=>{
     const rendererEnv:NodeJS.ProcessEnv={PATH:process.env.PATH||"/usr/local/bin:/usr/bin:/bin",HOME:process.env.HOME||"/tmp",LANG:process.env.LANG||"C.UTF-8",LC_ALL:process.env.LC_ALL||process.env.LANG||"C.UTF-8",PYTHONIOENCODING:"utf-8"};
@@ -67,7 +71,9 @@ export class ReportPdfArtifactService {
     // (older generator/source schema or a superseded narrative). It is never served: it is
     // re-rendered from the published report and atomically replaced.
     const stale=Boolean(existing&&existing.sourceHash!==sourceHash);
-    if(existing&&!stale&&!force&&existing.generatorVersion===MMRI_PDF_GENERATOR_VERSION){
+    // B7 (flag ON only): a stored historical PDF is never regenerated just because the generator version changed; an operator must opt in explicitly.
+    const b7=readPolicyFlags().b7,upgradeAllowed=process.env.MMRI_PDF_ALLOW_GENERATOR_UPGRADE==="YES";
+    if(existing&&!stale&&!force&&(existing.generatorVersion===generatorVersionFor()||(b7&&!upgradeAllowed))){
       const verified=await this.verifyExisting(existing,payload).catch(()=>null);if(verified)return verified;
     }
     return this.renderAndStore(reportSnapshotId,payload,sourceHash,source,existing??null,stale);
@@ -93,20 +99,24 @@ export class ReportPdfArtifactService {
       await runPdfRenderer(sourcePath,tmpPdf);
       const buffer=await readFile(tmpPdf);assertPdfBuffer(buffer);if(buffer.length>MAX_PDF_BYTES)throw new Error("Generated PDF exceeds 50 MB safety limit");
       const contentHash=sha256Buffer(buffer);
-      if(existing&&existing.sourceHash===sourceHash&&existing.generatorVersion===MMRI_PDF_GENERATOR_VERSION&&existing.contentHash!==contentHash)throw new Error("PDF regeneration is not byte-deterministic for the same frozen report and generator version");
+      if(existing&&existing.sourceHash===sourceHash&&existing.generatorVersion===generatorVersionFor()&&existing.contentHash!==contentHash)throw new Error("PDF regeneration is not byte-deterministic for the same frozen report and generator version");
       const relDir=path.posix.join("pdf",safeSegment(payload.assessmentId,"assessment id"));
-      const storageKey=path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}.pdf`);
+      const b7=readPolicyFlags().b7;
+      // B7 (flag ON only): generator version + content hash are part of the identity, so a different PDF can never share a path.
+      const storageKey=b7?path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}-${safeSegment(generatorVersionFor().replace(/[^A-Za-z0-9_-]/g,"_"),"generator version")}-${contentHash.slice(0,16)}.pdf`):path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}.pdf`);
       const finalPath=resolveStorageKey(storageKey);await mkdir(path.dirname(finalPath),{recursive:true,mode:0o700});
+      // B7 (flag ON only): write-once. An existing file at this identity-derived path must already be byte-identical; anything else is a conflict, never an overwrite.
+      if(b7){const present=await readFile(finalPath).catch(()=>null);if(present&&sha256Buffer(present)!==contentHash)throw new ApiError(409,"IMMUTABLE_ARTIFACT_CONFLICT","Энэ тайлангийн хадгалагдсан PDF өөр агуулгатай тул дарж бичихгүй.");}
       const staged=path.join(path.dirname(finalPath),`.${path.basename(finalPath)}.${randomUUID()}.tmp`);
       await writeFile(staged,buffer,{mode:0o600});await chmod(staged,0o600);await rename(staged,finalPath);
       const now=new Date();
       let row:any;
       try{
-        row=await (prisma as any).reportArtifact.upsert({where:{reportSnapshotId_kind:{reportSnapshotId,kind:"PDF"}},create:{reportSnapshotId,kind:"PDF",mimeType:"application/pdf",storageKey,sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:MMRI_PDF_GENERATOR_VERSION,verifiedAt:now},update:{storageKey,sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:MMRI_PDF_GENERATOR_VERSION,generatedAt:now,verifiedAt:now}});
+        row=await (prisma as any).reportArtifact.upsert({where:{reportSnapshotId_kind:{reportSnapshotId,kind:"PDF"}},create:{reportSnapshotId,kind:"PDF",mimeType:"application/pdf",storageKey,sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:generatorVersionFor(),verifiedAt:now},update:{storageKey,sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:generatorVersionFor(),generatedAt:now,verifiedAt:now}});
       }catch(error){await rm(finalPath,{force:true}).catch(()=>undefined);throw error;}
-      if(existing&&existing.storageKey!==storageKey)await rm(resolveStorageKey(existing.storageKey),{force:true}).catch(()=>undefined);
-      await prisma.auditEvent.create({data:{assessmentId:payload.assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportArtifact",entityId:row.id,payload:{artifactOperation:existing?"REGENERATED":"GENERATED",staleReplaced:stale,...(stale?{previousSourceHash:existing.sourceHash,previousGeneratorVersion:existing.generatorVersion}:{}),reportSnapshotId,sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:MMRI_PDF_GENERATOR_VERSION,storageKey}}});
-      return {reportSnapshotId,storageKey,absolutePath:finalPath,filename:pdfFileName(payload),mimeType:"application/pdf",sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:MMRI_PDF_GENERATOR_VERSION,generatedAt:row.generatedAt,verifiedAt:row.verifiedAt};
+      if(!b7)if(existing&&existing.storageKey!==storageKey)await rm(resolveStorageKey(existing.storageKey),{force:true}).catch(()=>undefined);
+      await prisma.auditEvent.create({data:{assessmentId:payload.assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportArtifact",entityId:row.id,payload:{artifactOperation:existing?"REGENERATED":"GENERATED",...(b7&&existing?{previousStorageKey:existing.storageKey,previousContentHash:existing.contentHash,previousGeneratorVersion:existing.generatorVersion}:{}),staleReplaced:stale,...(stale?{previousSourceHash:existing.sourceHash,previousGeneratorVersion:existing.generatorVersion}:{}),reportSnapshotId,sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:generatorVersionFor(),storageKey}}});
+      return {reportSnapshotId,storageKey,absolutePath:finalPath,filename:pdfFileName(payload),mimeType:"application/pdf",sourceHash,contentHash,sizeBytes:buffer.length,generatorVersion:generatorVersionFor(),generatedAt:row.generatedAt,verifiedAt:row.verifiedAt};
     }finally{await rm(tmp,{recursive:true,force:true}).catch(()=>undefined);}
   }
 

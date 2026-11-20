@@ -3,7 +3,7 @@
    Usage: PGDATABASE=<test db> DATABASE_URL=<test db url> MMRI_MOCK_MAIL_DIR=<dir> node scripts/qa-admin-reset-sessions-regression.mjs */
 import crypto from 'crypto';import fs from 'fs';import path from 'path';
 import {call,sql,totp,provision,adminLogin} from './lib/admin-qa.mjs';
-if(!process.env.PGDATABASE||process.env.PGDATABASE==='mmri'||!/codexfix|test/.test(process.env.PGDATABASE)){console.error('Refusing to run: PGDATABASE must name an isolated test database');process.exit(2)}
+if(!process.env.PGDATABASE||process.env.PGDATABASE==='mmri'||!(/codexfix|test/.test(process.env.PGDATABASE)||/^mmri_acceptance_flow_[0-9]{14}$/.test(process.env.PGDATABASE))){console.error('Refusing to run: PGDATABASE must name an isolated test database');process.exit(2)}
 let fail=0;const rec=(n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+n+(d?' | '+d:''))};const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const cc=(m,p,tok,body)=>call(m,p,{tok,body});
 const other=provision('SUPER_ADMIN','pwr-other'),S=(await adminLogin(other)).d.token;
@@ -24,5 +24,5 @@ rec('H06-3 MFA is preserved: the old password no longer works; the new password 
 const noTotp=await call('POST','/admin/auth/login',{body:{email:adm.email,password:newPw}});rec('H06-4 the new password alone (without TOTP) cannot sign in',noTotp.s===401);
 rec('H06-5 the revocation is stored server-side (admin_sessions.revokedAt set), not only dropped in the browser',Number(sql(`select count(*) from admin_sessions s join admin_accounts a on a.id=s."adminId" join users u on u.id=a."userId" where u.email='${adm.email}' and s."revokedAt" is not null`))>=2);
 
-sql(`update admin_accounts set status='DISABLED',"disabledAt"=now() where "userId" in (select id from users where email like 'admin.qa.%')`);sql(`update admin_sessions set "revokedAt"=now() where "adminId" in (select a.id from admin_accounts a join users u on u.id=a."userId" where u.email like 'admin.qa.%')`);
+sql(`update admin_accounts set status='DISABLED',"disabledAt"=now() where "userId" in (select id from users where email in (${[other,adm].map(a=>"'"+a.email.replace(/'/g,"''")+"'").join(',')}))`);sql(`update admin_sessions set "revokedAt"=now() where "adminId" in (select a.id from admin_accounts a join users u on u.id=a."userId" where u.email in (${[other,adm].map(a=>"'"+a.email.replace(/'/g,"''")+"'").join(',')}))`);
 console.log(fail?`FAILED ${fail}`:'ALL PASS');process.exit(fail?1:0);

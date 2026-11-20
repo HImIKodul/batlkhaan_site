@@ -14,6 +14,7 @@ import {
 } from "../methodology-target.js";
 import { methodologyTargetForDomain, normalizeDomainCode, type DomainCode } from "../domain-methodology.js";
 import { enqueueReviewInTx } from "./report-review-policy.js";
+import { customerNotifications } from "../api/notifications/notification-service.js";
 import { ACTIVE_ASSESSMENT_STATUSES, RESULT_TERMINAL_ASSESSMENT_STATUSES, canMutateRespondents, isResultTerminalAssessmentStatus } from "./assessment-lifecycle.js";
 import { LONG_TX } from "../lib/tx-options.js";
 
@@ -358,11 +359,20 @@ export class PrismaAssessmentEngine {
         await tx.auditEvent.create({ data: { assessmentId, eventType: "STATE_SNAPSHOT_FROZEN", entityType: "AssessmentStateSnapshot", entityId: payloadHash, payload: { payloadHash, kind: assessment.mode === "QUICK" ? "QUICK_RESULT" : "FULL_RESULT" } } });
         await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, overall: snapshot.overall } } });
         await enqueueReviewInTx(tx, assessmentId);
+        await customerNotifications.assessmentTerminalInTx(tx, assessmentId);
       }
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ANSWER_CREATED", entityType: "Answer", entityId: answer.id, payload: { questionExternalId, optionIndex, authority, clientRequestId } } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "EVIDENCE_CREATED", entityType: "Answer", entityId: answer.id, payload: { primaryCell: question.cellId, secondaryTargetCount: question.secondaryTargets.length } } });
       return { ...acknowledgement, overall: snapshot.overall, category: snapshot.categories.get(question.categoryId), modules: Object.fromEntries(snapshot.modules), purposes: Object.fromEntries(snapshot.purposes), outcomePriorities: Object.fromEntries(snapshot.outcomePriorities), cellPersistence } as any;
-    }, LONG_TX);
+    }, LONG_TX).catch(async (error: unknown) => {
+      // Two requests that both passed the optimistic checks race on the unique indexes (Answer / AnswerEvent). The database correctly refuses the loser,
+      // but that surfaced as a masked HTTP 500. An identical retry (same clientRequestId + payload) is idempotent; anything else is a clean 409.
+      const code = (error as { code?: string } | null)?.code;
+      if (code !== "P2002" && code !== "P2034") throw error;
+      const prior = await prisma.answerEvent.findUnique({ where: { assessmentId_clientRequestId: { assessmentId, clientRequestId } } });
+      if (prior && prior.acknowledgement && prior.questionIssueId === questionIssueId && prior.questionId === expectedDbQuestionId && prior.optionIndex === optionIndex && (prior.respondentId ?? null) === (respondentId ?? null)) return prior.acknowledgement as any;
+      throw conflict("This question was answered by a concurrent request; reload the questionnaire and continue.");
+    });
   }
 
   async rewindPreviousAnswer(assessmentId: string, guard: PersistenceWriteGuard) {
@@ -614,6 +624,7 @@ export class PrismaAssessmentEngine {
       }
       await tx.auditEvent.create({ data: { assessmentId, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessmentId, payload: { routingState: decision.state, explicitCompletionRequest: true, assessmentRevision: nextRevision } } });
       await enqueueReviewInTx(tx, assessmentId);
+        await customerNotifications.assessmentTerminalInTx(tx, assessmentId);
       return { completed: true, reason: decision.stopReason, routingState: decision.state, status: nextStatus, assessmentRevision: nextRevision };
     }, LONG_TX);
   }
@@ -740,6 +751,7 @@ async function finalizeTerminalWithoutOpenQuestion(
   }
   await tx.auditEvent.create({ data: { assessmentId: assessment.id, eventType: "ASSESSMENT_COMPLETED", entityType: "Assessment", entityId: assessment.id, payload: { routingState: decision.state, lifecycleAutoFinalized: true, initialStart, assessmentRevision: nextRevision, overall: snapshot.overall } } });
   await enqueueReviewInTx(tx, assessment.id);
+  await customerNotifications.assessmentTerminalInTx(tx, assessment.id);
   return { status: nextStatus, assessmentRevision: nextRevision, eventSequence: nextEventSequence };
 }
 

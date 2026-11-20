@@ -5,7 +5,8 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../src/db.js";
 import { BillingService } from "../src/billing/billing-service.js";
 
-if (!/mmri_codexfix/.test(process.env.DATABASE_URL ?? "")) { console.error("Refusing to run: DATABASE_URL is not the isolated test database"); process.exit(2); }
+const target=new URL(process.env.DATABASE_URL ?? "postgresql://invalid/invalid");
+if (process.env.MMRI_CRITICAL_DB_TESTS !== "YES" || !["/mmri_codexfix_release_20261110", "/mmri_qa_launch"].includes(target.pathname) || !["127.0.0.1","localhost"].includes(target.hostname) || target.port !== "55432") { console.error("Refusing to run: DATABASE_URL is not the isolated test database"); process.exit(2); }
 let fail = 0; const rec = (n: string, ok: boolean, d = "") => { if (!ok) fail++; console.log((ok ? "PASS " : "FAIL ") + n + (d ? " | " + d : "")); };
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -20,7 +21,7 @@ class FakeQPay {
   async createInvoice(): Promise<any> { throw new Error("not used"); }
   async checkInvoicePayment(_id: string, expected: number): Promise<any> {
     this.checkCalls++; if (this.failCheck) throw new Error("provider down");
-    return this.paid ? { paid: true, paidAmountMnt: this.paidAmount === 300000 ? expected : this.paidAmount, paymentId: `fakepay_${this.pid}`, raw: { fake: true } } : { paid: false, paidAmountMnt: 0, paymentId: null, raw: { fake: true } };
+    return this.paid ? { paid: true, paidAmountMnt: this.paidAmount === 300000 ? expected : this.paidAmount, paymentId: `fakepay_${this.pid}`, transactions: [{id:`fakepay_${this.pid}`,amountMnt:this.paidAmount === 300000 ? expected : this.paidAmount}], raw: { fake: true } } : { paid: false, paidAmountMnt: 0, paymentId: null, raw: { fake: true } };
   }
   pid = randomUUID().replace(/-/g, "");
   async cancelInvoice(): Promise<void> { this.cancelCalls++; if (this.payOnCancel) this.paid = true; if (this.cancelDelayMs) await sleep(this.cancelDelayMs); }
@@ -84,8 +85,25 @@ try {
   { const s = svcWith(new FakeQPay()); const inv = await makeInvoice("MOCK", "CREATED");
     const r = await s.reconcileInvoice(inv.id).then(() => "no-error", (e: any) => code(e));
     rec("M01-5 a mock/manual invoice cannot be reconciled automatically (clear 409, still unpaid)", r === "AUTOMATIC_RECONCILIATION_UNAVAILABLE" && (await prisma.billingInvoice.findUnique({ where: { id: inv.id } }))?.status === "CREATED", String(r)); }
+  // B7 overlapping sets are distinct aggregate references but share one transaction.
+  { const shared=`overlap_${randomUUID()}`;const i1=await makeInvoice("QPAY","PENDING","finance"),i2=await makeInvoice("QPAY","PENDING","it");
+    const s=svcWith(new FakeQPay());const verify=(suffix:string)=>({paid:true,paidAmountMnt:300000,paymentId:`set_${suffix}_${randomUUID()}`,transactions:[{id:shared,amountMnt:150000},{id:`unique_${suffix}_${randomUUID()}`,amountMnt:150000}],raw:{}});
+    const outcomes=await Promise.allSettled([(s as any).activatePaidInvoice(i1.id,verify("a")),(s as any).activatePaidInvoice(i2.id,verify("b"))]);
+    rec("H07-7 overlapping sets on different domains have exactly one winner",outcomes.filter(x=>x.status==="fulfilled").length===1&&outcomes.filter(x=>x.status==="rejected").every((x:any)=>x.reason.code==="PAYMENT_ALREADY_USED"));
+    rec("H07-8 losing overlap creates no entitlement or partial ledger",(await ents(i1.id))+(await ents(i2.id))===1&&await prisma.billingPaymentTransaction.count({where:{invoiceId:{in:[i1.id,i2.id]}}})===2);
+  }
+  // B8 consumed/refunded entitlements never revive when a confirmation is replayed.
+  { const f=new FakeQPay();f.paid=true;const s=svcWith(f);const inv=await makeInvoice("QPAY","PENDING","people");await s.reconcileInvoice(inv.id);
+    await prisma.companyEntitlement.update({where:{sourceInvoiceId:inv.id},data:{status:"CONSUMED",assessmentsUsed:1}});
+    await s.reconcileInvoice(inv.id);let ent=await prisma.companyEntitlement.findUnique({where:{sourceInvoiceId:inv.id}});
+    rec("H07-9 reconciliation preserves consumed entitlement",ent?.status==="CONSUMED"&&ent.assessmentsUsed===1);
+    await s.recordConfirmedRefund(inv.id,`refund_${randomUUID()}`,"Synthetic refund regression");await s.reconcileInvoice(inv.id);
+    ent=await prisma.companyEntitlement.findUnique({where:{sourceInvoiceId:inv.id}});
+    rec("H07-10 refund reconciliation preserves revoked entitlement and payment ownership",ent?.status==="REVOKED"&&await prisma.billingPaymentTransaction.count({where:{invoiceId:inv.id}})===1);
+  }
 } finally {
   await prisma.companyEntitlement.deleteMany({ where: { sourceInvoiceId: { in: created } } });
+  await prisma.billingPaymentTransaction.deleteMany({where:{invoiceId:{in:created}}});
   await prisma.billingInvoice.deleteMany({ where: { id: { in: created } } });
   await prisma.$disconnect();
 }

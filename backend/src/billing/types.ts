@@ -22,6 +22,7 @@ export interface ProviderPaymentResult {
   paid:boolean;
   paidAmountMnt:number;
   paymentId:string|null;
+  transactions?:Array<{id:string;amountMnt:number}>;
   raw:unknown;
 }
 

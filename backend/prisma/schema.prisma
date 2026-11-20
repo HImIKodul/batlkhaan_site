@@ -765,6 +765,9 @@ model User {
   status       UserStatus @default(ACTIVE)
   tokenVersion Int        @default(1)
   lastLoginAt  DateTime?
+  /// Legacy accounts remain compatible; all new public registrations require ownership verification.
+  emailVerificationRequired Boolean @default(false)
+  emailVerifiedAt DateTime?
   /// Set when the account was erased at the user's request (personal data removed; payment/audit rows are retained, see docs/DATA_LIFECYCLE.md).
   erasedAt     DateTime?
   createdAt    DateTime   @default(now())
@@ -787,6 +790,8 @@ model User {
   paymentDisputes              PaymentDispute[]
   supportCaseEvents            SupportCaseEvent[]
   supportCases                 SupportCase[]
+  supportMailThreads           SupportMailThread[]
+  customerNotifications        CustomerNotification[]
 
   @@index([status])
   @@map("users")
@@ -815,6 +820,7 @@ model PasswordResetToken {
   id            String    @id @default(cuid())
   userId        String
   tokenHash     String    @unique
+  purpose       String    @default("PASSWORD_RESET")
   expiresAt     DateTime
   usedAt        DateTime?
   requestIpHash String?
@@ -885,6 +891,7 @@ model Company {
   paymentDisputes  PaymentDispute[]
   reportReviews    ReportReview[]
   supportCases     SupportCase[]
+  customerNotifications CustomerNotification[]
 
   @@map("companies")
 }
@@ -924,6 +931,7 @@ model BillingInvoice {
   createdBy       User                @relation("BillingInvoiceCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
   entitlement     CompanyEntitlement?
   paymentDisputes PaymentDispute[]
+  paymentTransactions BillingPaymentTransaction[]
 
   @@index([companyId, createdAt])
   @@index([companyId, domainCode, status])
@@ -1980,6 +1988,9 @@ model ReportReview {
   updatedAt             DateTime                 @default(now()) @updatedAt
   approvedRevision      Int?
   approvedNarrativeHash String?
+  /// Edit lock (raw SQL in review-service.ts): one administrator edits a report at a time; expires without heartbeat.
+  lockedByAdminId       String?
+  lockExpiresAt         DateTime?
   revisions             ReportReviewRevision[]
   suggestions           ReportReviewSuggestion[]
   approvedBy            AdminAccount?            @relation("report_reviews_approvedByAdminIdToadmin_accounts", fields: [approvedByAdminId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -2148,4 +2159,101 @@ model AdminAuditEvent {
   @@index([createdAt(sort: Desc)], map: "admin_audit_events_created_idx")
   @@index([adminId, createdAt], map: "admin_audit_events_admin_idx")
   @@map("admin_audit_events")
+}
+
+/// Each provider transaction belongs to exactly one invoice, including after refund.
+model BillingPaymentTransaction {
+  id String @id @default(cuid())
+  provider PaymentProvider
+  transactionId String
+  invoiceId String
+  amountMnt Int
+  createdAt DateTime @default(now())
+  invoice BillingInvoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  @@unique([provider, transactionId])
+  @@index([invoiceId])
+  @@map("billing_payment_transactions")
+}
+
+/// Server-side customer notifications. One row per recipient and event; read/dismissed state lives here, not in the browser.
+/// `destination` is a route name from a fixed list (enforced by a CHECK); `payload` carries ids the client needs to open it.
+model CustomerNotification {
+  id          String    @id @default(cuid())
+  userId      String
+  companyId   String?
+  type        String
+  title       String
+  message     String
+  destination String
+  payload     Json?
+  eventRef    String?
+  dedupeKey   String
+  createdAt   DateTime  @default(now())
+  readAt      DateTime?
+  dismissedAt DateTime?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, dedupeKey], map: "customer_notifications_userId_dedupeKey_key")
+  @@index([userId, createdAt(sort: Desc), id(sort: Desc)], map: "customer_notifications_user_created_idx")
+  @@index([companyId], map: "customer_notifications_company_idx")
+  @@map("customer_notifications")
+}
+
+/// Exactly-once claim for one lifecycle e-mail (see src/api/mail/lifecycle-mail.ts). sentAt is set only after the mail provider accepted the message.
+model MailDispatchMark {
+  dedupeKey     String    @id
+  kind          String
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now())
+  sentAt        DateTime?
+  lastError     String?
+  createdAt     DateTime  @default(now())
+
+  @@index([sentAt, nextAttemptAt], map: "mail_dispatch_marks_due_idx")
+  @@map("mail_dispatch_marks")
+}
+
+/// Support mailbox (Gmail) import. Accessed through raw SQL in src/api/mail/support-mail-service.ts.
+model SupportMailThread {
+  id               String               @id
+  gmailThreadId    String               @unique
+  subject          String
+  fromAddress      String
+  fromName         String?
+  status           String               @default("OPEN")
+  userId           String?
+  lastMessageAt    DateTime
+  lastInboundAt    DateTime?
+  lastOutboundAt   DateTime?
+  handledAt        DateTime?
+  handledByAdminId String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @default(now())
+  user             User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages         SupportMailMessage[]
+
+  @@index([status, lastMessageAt])
+  @@map("support_mail_threads")
+}
+
+model SupportMailMessage {
+  id             String            @id
+  threadId       String
+  gmailMessageId String            @unique
+  direction      String
+  fromAddress    String
+  toAddress      String?
+  subject        String?
+  bodyText       String
+  rfcMessageId   String?
+  sentAt         DateTime
+  attachments    Int               @default(0)
+  adminId        String?
+  createdAt      DateTime          @default(now())
+  thread         SupportMailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, sentAt])
+  @@map("support_mail_messages")
 }

@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* Live-API regression for defects found in the 2026-11-05 validation. Needs the API on :4000 with billing provider "mock" (local dev only).
    QA-INVOICE-RACE  : 6 parallel invoice requests for the same company/domain/plan must resolve to ONE open invoice (was 6).
    QA-MALFORMED-URL : malformed percent-encoding in a path must give 400, never 500.
@@ -8,7 +9,7 @@ const B=MMRI_API_GUARD(process.env.API||'http://localhost:4000');let tok;
 const call=async(m,p,b)=>{const r=await fetch(B+p,{method:m,headers:{'content-type':'application/json',...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});let j=null;try{j=await r.json()}catch{}return {s:r.status,d:j?.data}};
 let fail=0;const rec=(n,ok,d)=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+n+' | '+d)};
 const pw=crypto.randomBytes(14).toString('base64url')+'Aa1!';
-tok=(await call('POST','/api/v1/auth/register',{email:`qa.reg.${Date.now()}@mmri.test`,password:pw,displayName:'QA'})).d.accessToken;
+tok=(await (await registerVerifiedFixture(B+'/api/v1',{email:`qa.reg.${Date.now()}@mmri.test`,password:pw,displayName:'QA'})).json()).data.accessToken;
 const co=(await call('POST','/api/v1/companies',{name:'QA Regression ХХК'})).d.id;
 const rs=await Promise.all(Array.from({length:6},()=>call('POST',`/api/v1/companies/${co}/billing/invoices`,{planCode:'DIAGNOSTIC',domainCode:'finance'})));
 const ids=new Set(rs.filter(x=>x.s===200||x.s===201).map(x=>x.d?.id));

@@ -2,14 +2,13 @@
    Needs an ISOLATED API and database (the shared helpers refuse :4000 and `mmri`):
      API=http://127.0.0.1:4200/api/v1 PGDATABASE=mmri_v2_qa node scripts/qa-admin-accounts-regression.mjs
    Provisions throw-away admins through the real CLI and throw-away customers through the real register endpoint. */
-import {call,sql,totp,provision,adminLogin,rndPw} from './lib/admin-qa.mjs';
+import {call,sql,totp,provision,adminLogin,rndPw,customer} from './lib/admin-qa.mjs';
 import crypto from 'crypto';
 let fail=0;const rec=(n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+n+(d?' | '+d:''))};
 const sup=provision('SUPER_ADMIN','acc-super'),rev=provision('REPORT_REVIEWER','acc-rev'),bil=provision('BILLING_REVIEWER','acc-bil');
 const tok={};for(const [k,a] of [['sup',sup],['rev',rev],['bil',bil]]){const r=await adminLogin(a);if(r.s!==200)throw new Error('admin login failed for '+k);tok[k]=r.d.token}
 const reauth=async()=>{await new Promise(r=>setTimeout(r,31000));return call('POST','/admin/auth/reauth',{tok:tok.sup,body:{password:sup.password,totpCode:totp(sup.secret,0)}})};
-const mkCustomer=async(label)=>{const email=`cu.acc.${label}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@mmri.test`,password=rndPw();
- const r=await call('POST','/auth/register',{body:{email,password,displayName:'QA '+label}});const co=await call('POST','/companies',{tok:r.d.accessToken,body:{name:'QA Acc '+label+' '+Date.now()}});return {email,password,tok:r.d.accessToken,id:r.d.user.id,companyId:co.d.id}};
+const mkCustomer=async(label)=>{const c=await customer('accounts-'+label);const co=await call('POST','/companies',{tok:c.tok,body:{name:'QA Acc '+label+' '+Date.now()}});if(co.s!==201)throw new Error('fixture company creation failed');return {...c,companyId:co.d.id}};
 const A=await mkCustomer('a'),B=await mkCustomer('b');
 const supUserId=sql(`select u.id from users u where u.email='${sup.email}'`);
 
@@ -51,7 +50,7 @@ const onAdmin=await call('POST',`/admin/users/${supUserId}/email`,{tok:tok.sup,b
 rec('ACC-14 an administrator account cannot be re-addressed through this menu (409 ADMIN_ACCOUNT_PROTECTED)',onAdmin.s===409&&onAdmin.e?.code==='ADMIN_ACCOUNT_PROTECTED');
 const okMail=await call('POST',ep,{tok:tok.sup,body:{newEmail:newA,confirmNewEmail:newA,reason:'automated regression check'}});
 rec('ACC-15 valid change succeeds',okMail.s===200&&okMail.d.email===newA);
-rec('ACC-16 the user\'s existing access token and old address stop working; the new address signs in',(await call('GET','/auth/me',{tok:A.tok})).s===401&&(await call('POST','/auth/login',{body:{email:A.email,password:A.password}})).s===401&&(await call('POST','/auth/login',{body:{email:newA,password:A.password}})).s===200);
+rec('ACC-16 old access and both addresses cannot sign in until new mailbox ownership is proved',(await call('GET','/auth/me',{tok:A.tok})).s===401&&(await call('POST','/auth/login',{body:{email:A.email,password:A.password}})).s===401&&(await call('POST','/auth/login',{body:{email:newA,password:A.password}})).s===401&&sql(`select "emailVerificationRequired" and "emailVerifiedAt" is null from users where id='${A.id}'`)==='t');
 const audMail=sql(`select metadata::text from admin_audit_events where action='ADMIN_USER_EMAIL_CHANGED' and outcome='SUCCESS' and "targetId"='${A.id}' order by "createdAt" desc limit 1`);
 rec('ACC-17 audit row has actor, target, reason and MASKED addresses only',audMail.includes('automated regression check')&&!audMail.includes(newA)&&!audMail.includes(A.email)&&sql(`select "adminId" is not null from admin_audit_events where action='ADMIN_USER_EMAIL_CHANGED' and outcome='SUCCESS' and "targetId"='${A.id}' limit 1`)==='t');
 rec('ACC-18 the refused attempts were audited as FAILURE',Number(sql(`select count(*) from admin_audit_events where action='ADMIN_USER_EMAIL_CHANGED' and outcome='FAILURE' and "targetId"='${A.id}'`))>=4);

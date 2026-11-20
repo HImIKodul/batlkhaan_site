@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* Authorization and tenant-isolation MATRIX generated from the real route table (136 routes: 88 customer + 48 admin).
    For every route it checks: (1) no credentials, (2) forged/garbage/wrong-secret/alg=none tokens, (3) a customer of ANOTHER company acting on company A's real ids,
    (4) a customer token on every admin route. PASS = 401/403/404; WARN = 400/409/422 (request validated before authorization, nothing changed);
@@ -19,21 +20,23 @@ for(const f of walk(apiDir)){const t=fs.readFileSync(f,'utf8');
 const uniq=[...new Map(routes.map(r=>[r.method+' '+r.path,r])).values()].map(r=>({...r,path:r.path.replace(/^\/api\/v1/,'')}));
 const admin=uniq.filter(r=>r.path.startsWith('/admin')),customer=uniq.filter(r=>!r.path.startsWith('/admin'));
 // ---- routes that are PUBLIC by design (no 401 expected without credentials) ----
-const PUBLIC=new Set(['GET /live','GET /health','GET /ready','GET /metrics','POST /auth/register','POST /auth/login','POST /auth/refresh','POST /auth/logout','POST /auth/password-reset/request','POST /auth/password-reset/confirm','GET /billing/qpay/callback/:invoiceId','POST /billing/qpay/callback/:invoiceId','GET /billing/plans','GET /methodology/current/profile-questions','GET /methodology/current/respondent-roles','POST /admin/auth/login','POST /admin/auth/reauth-public']);
+const PUBLIC=new Set(['GET /live','GET /health','GET /ready','GET /metrics','POST /auth/register','POST /auth/login','POST /auth/refresh','POST /auth/logout','POST /auth/password-reset/request','POST /auth/password-reset/confirm','POST /auth/email-verification/request','POST /auth/email-verification/confirm','GET /billing/qpay/callback/:invoiceId','POST /billing/qpay/callback/:invoiceId','GET /billing/plans','GET /methodology/current/profile-questions','GET /methodology/current/respondent-roles','POST /admin/auth/login','POST /admin/auth/reauth-public']);
 // ---- fixtures ----
 const one=q=>sql(q).split('\n')[0];
 const companyA=one(`select c.id from companies c join assessments a on a."companyId"=c.id group by c.id order by count(*) desc limit 1`);
 const F={companyId:companyA,
-  assessmentId:one(`select id from assessments where "companyId"='${companyA}' and status='COMPLETED' order by "createdAt" desc limit 1`),
+  assessmentId:one(`select a.id from assessments a left join report_reviews r on r."assessmentId"=a.id where a."companyId"='${companyA}' and a.status in ('COMPLETED','COMPLETED_WITH_REVIEW','EXHAUSTED') order by (r.status='PUBLISHED') desc nulls last,a."createdAt" desc limit 1`),
   invoiceId:one(`select id from billing_invoices where "companyId"='${companyA}' order by "createdAt" desc limit 1`),
   userId:one(`select "userId" from company_memberships where "companyId"='${companyA}' limit 1`),
   milestoneId:(()=>{try{return one(`select id from action_plan_milestones limit 1`)}catch{return 'unknown-milestone'}})()||'unknown-milestone',
   studyId:'x-study',proposalId:'x-proposal',enrollmentId:'x-enrollment',id:'x-id',sid:'x-sid',n:'1'};
 const fill=p=>p.replace(/:([A-Za-z]+)/g,(_,k)=>F[k]??'x');
 const snapshot=()=>({c:sql(`select md5(string_agg(t::text,'|' order by id)) from companies t where id='${companyA}'`),a:sql(`select md5(string_agg(t::text,'|' order by id)) from assessments t where "companyId"='${companyA}'`),i:sql(`select md5(string_agg(t::text,'|' order by id)) from billing_invoices t where "companyId"='${companyA}'`),e:sql(`select md5(string_agg(t::text,'|' order by id)) from company_entitlements t where "companyId"='${companyA}'`),m:sql(`select md5(string_agg(t::text,'|' order by "userId"::text) ) from company_memberships t where "companyId"='${companyA}'`)});
+if(!F.companyId||!F.assessmentId||!F.invoiceId||!F.userId||F.milestoneId==='unknown-milestone')throw new Error('Real victim company, completed assessment, invoice, owner and milestone fixtures are required; refusing empty-ID acceptance');
+if(!process.env.OWNER_EMAIL||!process.env.OWNER_PASSWORD)throw new Error('Owner positive-control credentials required; refusing negative-only acceptance');
 let before=snapshot();
 async function req(method,p,{tok,body,h={}}={}){try{const r=await fetch(API+p,{method,headers:{'content-type':'application/json',origin:ORIGIN,...(tok?{authorization:tok}:{}),...h},body:['GET','HEAD'].includes(method)?undefined:JSON.stringify(body??{}),signal:AbortSignal.timeout(20000)});const t=await r.text();return{s:r.status,t}}catch(e){return{s:0,t:String(e)}}}
-async function mkUser(tag){const email=`authz.${tag}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@example.test`;const pw='Authz-Test-Pass-12345!';const r=await req('POST','/auth/register',{body:{email,password:pw,displayName:'Authz '+tag}});const j=JSON.parse(r.t);const tok=(j.data??j).accessToken;const co=await req('POST','/companies',{tok:'Bearer '+tok,body:{name:'Authz '+tag+' ХХК'}});return{tok:'Bearer '+tok,email,companyId:(JSON.parse(co.t).data??JSON.parse(co.t)).id}}
+async function mkUser(tag){const email=`authz.${tag}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@example.test`;const pw='Authz-Test-Pass-12345!';const r=await registerVerifiedFixture(API,{email,password:pw,displayName:'Authz '+tag},{origin:ORIGIN});const j=await r.json();const tok=j.data.accessToken;const co=await req('POST','/companies',{tok:'Bearer '+tok,body:{name:'Authz '+tag+' ХХК'}});return{tok:'Bearer '+tok,email,companyId:(JSON.parse(co.t).data??JSON.parse(co.t)).id}}
 let fail=0,warn=0,pass=0;const rows=[];
 const rec=(kind,route,status,verdict,note='')=>{rows.push({kind,route,status,verdict,note});if(verdict==='FAIL'){fail++;console.log('FAIL',kind,route,status,note)}else if(verdict==='WARN'){warn++}else pass++};
 const upgrade=(kind,route,note)=>{const r=rows.find(x=>x.kind===kind&&x.route===route&&x.verdict==='WARN');if(r){r.verdict='PASS';r.note=note;warn--;pass++}};

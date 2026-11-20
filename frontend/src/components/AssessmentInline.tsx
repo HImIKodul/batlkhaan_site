@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import { Button,ProgressBar,RadioGroup,SaveStatus,StatusBadge } from './UI';
-import { SkeletonScreen } from './ApiState';
+import { SkeletonHost,QuestionnaireSkeletonBody } from './ApiState';
 import { go } from './AppShell';
 import { api,session } from '../api/client';
 import type { AssessmentProgress,PublicQuestion,RoutingPayload } from '../api/types';
@@ -86,7 +86,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    const currentProgress=await api.getProgress(id);
    setProgress(currentProgress);
    if(['COMPLETED','COMPLETED_WITH_REVIEW','EXHAUSTED'].includes(a.status)){setQuestion(null);setRoutingMeta(null);setResumed(false);await onCompleted();return}
-   if(!['IN_PROGRESS','PAUSED'].includes(a.status)){setQuestion(null);setActionError(`Оношилгоог энэ төлвөөс үргэлжлүүлэх боломжгүй байна: ${a.status}`);return}
+   if(!['IN_PROGRESS','PAUSED'].includes(a.status)){setQuestion(null);setActionError(`Энэ оношилгоог үргэлжлүүлэх боломжгүй байна.`);return}
    let routing=await api.resumeAssessment(id,a.assessmentRevision);
    if(!routing.nextQuestion&&!terminalRouting.has(routing.state))routing=await api.nextQuestion(id);
    setResumed(a.status==='PAUSED'||(a.answeredQuestions??0)>0);
@@ -153,10 +153,15 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  const layout=useMemo(()=>buildAnswerLayout(options),[options]);
  const main=layout.main.map(x=>x.option);
  const special=layout.special.map(x=>x.option);
- const answered=progress?.answeredQuestions??0;
+ /* Uncertain ("don't know", state DNK) answers are not counted in the DISPLAYED question number or progress. The set is kept per assessment in this browser; nothing sent to or stored by the server changes. */
+ const uncertainKey=`mmri.uncertain.${session.assessmentId||'none'}`;
+ const [uncertainIds,setUncertainIds]=useState<string[]>(()=>{try{const v=JSON.parse(localStorage.getItem(`mmri.uncertain.${session.assessmentId||'none'}`)||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string'):[]}catch{return[]}});
+ const writeUncertain=(ids:string[])=>{setUncertainIds(ids);try{localStorage.setItem(uncertainKey,JSON.stringify(ids))}catch{/* storage unavailable: numbering simply falls back to the server count */}};
+ const serverAnswered=progress?.answeredQuestions??0;
+ const answered=Math.max(0,serverAnswered-uncertainIds.length);
  const questionNo=answered+1;
  const questionUpper=progress?.quick?.hardMaximum??null;
- const area=domainCode; const modeText=progress?.mode==='FULL'?'Бүрэн оношилгоо':area==='it'?'Мэдээллийн технологийн менежментийн оношилгоо':area==='finance'?'Санхүүгийн менежментийн оношилгоо':area==='people'?'Хүний нөөцийн менежментийн оношилгоо':area==='operations'?'Үйлдвэрлэл ба үйл ажиллагааны менежментийн оношилгоо':'Маркетингийн менежментийн оношилгоо';
+ const area=domainCode; const modeText=progress?.mode==='FULL'?'Бүрэн оношилгоо':area==='it'?'Мэдээллийн технологи':area==='finance'?'Санхүү':area==='people'?'Хүний нөөц':area==='operations'?'Үйлдвэрлэл, үйл ажиллагаа':'Маркетинг';
  const expectedByArea:Record<string,number>={it:280,marketing:280,finance:280,people:280,operations:280};
  const expectedTotal=Math.max(1,questionUpper??expectedByArea[area]??280);
  const countProgress=Math.max(0,Math.min(99,Math.round((answered/expectedTotal)*100)));
@@ -181,12 +186,13 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
   if(online)void saveDraftNow(null);
  };
  const goBack=async()=>{
-  if(!session.assessmentId||!routingMeta||busy||answered<=0||!online)return;
+  if(!session.assessmentId||!routingMeta||busy||serverAnswered<=0||!online)return;
   if(draftTimer.current)window.clearTimeout(draftTimer.current);
   setRewinding(true);setActionError('');setDraftError('');
   try{
    const r=await api.previousAnswer(session.assessmentId,routingMeta.assessmentRevision);
    setResumed(false);
+   {const reopened=r?.nextQuestion?.id;if(reopened&&uncertainIds.includes(reopened))writeUncertain(uncertainIds.filter(x=>x!==reopened))}
    handleRouting(r);
    setProgress(await api.getProgress(session.assessmentId));
   }catch(e:any){setActionError(e?.message||'Өмнөх хариултыг засахаар нээж чадсангүй.')}
@@ -206,6 +212,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    }catch(e:any){setActionError(e?.message||'Хариултыг серверт хадгалж чадсангүй.');return}
    submitRequestRef.current=null;
    clearLocalDraft(assessmentId);
+   if(String(question.options?.find((o:any)=>o.optionIndex===answer)?.state||'').toUpperCase()==='DNK'&&!uncertainIds.includes(question.id))writeUncertain([...uncertainIds,question.id]);
    setResumed(false);
    const ended=handleRouting(out.routing);
    try{setProgress(await api.getProgress(assessmentId))}catch{/* accepted answer is already durable; a later load refreshes progress */}
@@ -228,7 +235,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
   finally{setPausing(false)}
  };
 
- if(loading)return <section className="mmri-questionnaire mmri-questionnaire--loading" aria-label={modeText}><SkeletonScreen variant="questionnaire" label="Дараагийн асуултыг бэлтгэж байна" description="Таны өмнөх хариулт болон оношилгооны явцыг сэргээж байна."/></section>;
+ if(loading)return <section className="mmri-questionnaire mmri-questionnaire--loading mmri-skel" aria-label={modeText}><SkeletonHost label="Дараагийн асуултыг бэлтгэж байна. Таны өмнөх хариулт болон оношилгооны явцыг сэргээж байна."><QuestionnaireSkeletonBody/></SkeletonHost></section>;
 
  if(!question)return <section className="mmri-questionnaire" aria-label={modeText}><div className="mmri-questionnaire__empty"><StatusBadge tone={actionError?'danger':'neutral'}>{actionError?'Ачаалж чадсангүй':'Асуулт хүлээгдэж байна'}</StatusBadge><h2>{actionError||'Одоогоор нээлттэй асуулт алга.'}</h2><p>Оношилгооны төлөвийг дахин шалгаж үргэлжлүүлнэ үү.</p><Button variant="secondary" onClick={load}>Дахин шалгах</Button></div></section>;
 
@@ -244,30 +251,26 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    <ProgressBar value={sessionProgress} label={`Оношилгооны явц ${sessionProgress} хувь`}/>
   </header>
 
-  {resumed&&<div className="mmri-questionnaire__resume" role="status"><span aria-hidden="true">✓</span><div><strong>Өмнөх явцаас үргэлжлүүллээ</strong><p>Өмнө хадгалсан хариултууд хэвээр байна.</p></div></div>}
   {!online&&<div className="mmri-questionnaire__network" role="alert"><strong>Интернет холболт тасарсан байна.</strong><span>Одоогийн сонголтыг серверт илгээх боломжгүй. Холболт сэргэх хүртэл энэ хуудсыг хаахгүй байгаарай.</span></div>}
 
   <form className="mmri-questionnaire__form" key={question.id} onSubmit={(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();void submit()}}>
    <div className="mmri-questionnaire__question-head">
-    {question.contextMn&&<span className="mmri-questionnaire__context">{question.contextMn}</span>}
-    <span className="mmri-questionnaire__eyebrow">Хамгийн ойр хариултыг сонгоно уу.</span>
     <h1 ref={questionTitleRef} tabIndex={-1}>{displaySentence(question.textMn)}</h1>
    </div>
 
    <div className="mmri-questionnaire__answers">
     <RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Хариултын үндсэн сонголтууд" className="is-ordered-scale" onDeselect={clearChoice} options={layout.main.map((x,i)=>{const o=x.option;const neutralMain=x.role==='neutral-main';const t=x.quality===null?null:answerToneAtQuality(x.quality);return {value:o.optionIndex,label:displaySentence(o.labelMn),className:neutralMain?'is-neutral-tone':'has-score-tone',style:t?({'--answer-color':t.color,'--answer-soft':t.soft,'--answer-mix':t.mix,'--answer-deep':t.deep} as React.CSSProperties):undefined}})}/>
-    {special.length>0&&<div className="mmri-questionnaire__special">{main.length>0&&<span>Хэрэв дээрх сонголтуудаас тодорхой хариулах боломжгүй бол доорхоос сонгоно уу:</span>}<RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Нэмэлт хариултын сонголтууд" onDeselect={clearChoice} options={special.map(o=>({value:o.optionIndex,label:displaySentence(o.labelMn),className:'is-neutral-tone'}))}/></div>}
+    {special.length>0&&<div className="mmri-questionnaire__special"><RadioGroup name={`answer-${question.id}`} value={answer} onValueChange={choose} label="Нэмэлт хариултын сонголтууд" onDeselect={clearChoice} options={special.map(o=>{const dnk=String((o as any).state||'').toUpperCase()==='DNK';const t=dnk?null:answerToneAtQuality(0);return {value:o.optionIndex,label:displaySentence(o.labelMn),className:dnk?'is-neutral-tone is-uncertain':'is-negative-tone',style:t?({'--answer-color':t.color,'--answer-soft':t.soft,'--answer-mix':t.mix,'--answer-deep':t.deep} as React.CSSProperties):undefined}})}/></div>}
    </div>
 
    <div className="mmri-questionnaire__save-line" role="status" aria-live="polite" aria-atomic="true">
     {!online?<span>Интернет холболт алга. Сонголт энэ төхөөрөмж дээр хадгалагдаж, холболт сэргэмэгц автоматаар илгээгдэнэ.</span>:draftState==='error'?<><span>Хадгалахад алдаа гарлаа. Таны сонголт энэ хуудсан дээр хэвээр байна.</span><button type="button" className="mmri-questionnaire__retry" onClick={()=>void saveDraftNow(answer)}>Дахин оролдох</button></>:draftState==='saving'?<span>Хадгалж байна</span>:<span className="mmri-visually-hidden">{answer===null?'Хариулт сонгоогүй байна.':'Сонголт автоматаар хадгалагдана.'}</span>}
-    <button type="button" className="mmri-questionnaire__clear" disabled={answer===null||busy} onClick={clearChoice}>Сонголтыг буцаах</button>
    </div>
 
-   {actionError&&<div className="mmri-questionnaire__error" role="alert" aria-live="assertive"><svg className="mmri-questionnaire__error-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M12 10v4.5M12 17.6v.1" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg><div><strong>{actionError}</strong>{answer!==null&&!/ачаал/.test(actionError)&&<span>Таны сонголт энэ хуудсан дээр хэвээр байна. «Үргэлжлүүлэх» товчийг дахин дарна уу.</span>}</div></div>}
+   {actionError&&<div className="mmri-questionnaire__error" role="alert" aria-live="assertive"><svg className="mmri-questionnaire__error-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M12 10v4.5M12 17.6v.1" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg><div><strong>{actionError}</strong>{answer!==null&&!/ачаал/.test(actionError)&&<span>Таны сонголт хэвээр байна.</span>}</div><button type="button" className="mmri-questionnaire__reload" disabled={busy} onClick={()=>void load()}>Шинэчлэх</button></div>}
 
    <footer className="mmri-questionnaire__actions">
-    <Button type="button" variant="ghost" className="is-back" disabled={busy||answered<=0||!online} loading={rewinding} onClick={()=>void goBack()}>‹ Буцах</Button>
+    <Button type="button" variant="ghost" className="is-back" disabled={busy||serverAnswered<=0||!online} loading={rewinding} onClick={()=>void goBack()}>‹ Буцах</Button>
     <Button type="submit" size="touch" className="is-next" disabled={answer===null||busy||!online} loading={submitting}>Үргэлжлүүлэх ›</Button>
    </footer>
   </form>

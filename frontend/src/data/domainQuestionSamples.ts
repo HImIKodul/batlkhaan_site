@@ -1896,7 +1896,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Байгууллагын нийт өгөгдлийн засаглал ба өгөгдөл хариуцагчийн тогтолцоо",
+      "topic": "Байгууллагын нийт өгөгдлийн удирдлага ба өгөгдөл хариуцагчийн тогтолцоо",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -2312,7 +2312,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Хяналтын самбар ба тайлагналын засаглал",
+      "topic": "Хяналтын самбар ба тайлагналын удирдлага",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -2624,7 +2624,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Бага кодтой эсвэл кодгүй хөгжүүлэлт",
+      "topic": "Код бичихгүйгээр эсвэл бага кодоор программ бүтээх",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -2676,7 +2676,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Үүлэн үйлчилгээ ба программын үйлчилгээний багцын засаглал",
+      "topic": "Үүлэн болон программын үйлчилгээний удирдлага",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -2884,7 +2884,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Мэдээллийн аюулгүй байдлын засаглал",
+      "topic": "Мэдээллийн аюулгүй байдлын удирдлага",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -2988,7 +2988,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Өгөгдөл хамгаалалт ба нууцлалын засаглал",
+      "topic": "Өгөгдөл хамгаалалт ба нууцлалын удирдлага",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -3456,7 +3456,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Байгууллагын хиймэл оюуны хариуцлагатай засаглал ба загварын амьдралын мөчлөг",
+      "topic": "Байгууллагын хиймэл оюуны хариуцлагатай удирдлага ба загварын амьдралын мөчлөг",
       "source": "Мэдээллийн технологийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -3640,7 +3640,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Мөнгөн хөрөнгө, санхүүжилтийн засаглал ба банк, кассын хяналт",
+      "topic": "Мөнгөн хөрөнгө, санхүүжилтийн удирдлага ба банк, кассын хяналт",
       "source": "Санхүүгийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -4212,7 +4212,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Капитал хуваарилалтын засаглал",
+      "topic": "Капитал хуваарилалтын удирдлага",
       "source": "Санхүүгийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -4524,7 +4524,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Санхүүгийн эрсдэлийн засаглал",
+      "topic": "Санхүүгийн эрсдэлийн удирдлага",
       "source": "Санхүүгийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -6606,7 +6606,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Хүний нөөцийн бодлого ба засаглал",
+      "topic": "Хүний нөөцийн бодлого ба удирдлага",
       "source": "Хүний нөөцийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -6632,7 +6632,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Хүний нөөцийн өгөгдлийн засаглал",
+      "topic": "Хүний нөөцийн өгөгдлийн удирдлага",
       "source": "Хүний нөөцийн асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -7024,7 +7024,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Хөгжүүлэлтийн засаглал ба санааг шүүх урсгал",
+      "topic": "Хөгжүүлэлтийн удирдлага ба санааг шүүх урсгал",
       "source": "Үйл ажиллагааны асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [
@@ -8220,7 +8220,7 @@ export const testQuestionSets:Record<BusinessAreaId,TestQuestion[]> = {
         "Үгүй, хийдэггүй.",
         "Мэдэхгүй, баттай хариулж чадахгүй."
       ],
-      "topic": "Үйл ажиллагааны эрсдэлийн засаглал",
+      "topic": "Үйл ажиллагааны эрсдэлийн удирдлага",
       "source": "Үйл ажиллагааны асуултын сан",
       "role": "CORE_DIRECT",
       "scores": [

@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 import { basicInfoQuestions, basicToLegacy, legacyToBasic } from '../../frontend/src/data/basicInfoQuestions.ts';
 // Onboarding (20 company-profile questions) persistence, isolation and validation against an ISOLATED backend with synthetic users only.
 // Usage: API=http://127.0.0.1:4310/api/v1 ORIGIN=http://127.0.0.1:5310 npx tsx scripts/qa-onboarding-save-regression.ts
@@ -11,7 +12,7 @@ async function call(token:string,method:string,path:string,body?:any,extra:any={
 const D=(r:any)=>r.body?.data??r.body;
 const canon=(o:any)=>JSON.stringify(Object.keys(o).sort().map(k=>[k,o[k]]));
 async function mk(tag:string){const email=`m_${tag}_${Date.now()}_${Math.random().toString(36).slice(2,6)}@example.test`;const pw='Matrix-Pass-12345!';
- const reg=await call('','POST','/auth/register',{email,password:pw,displayName:'Synthetic '+tag});const token=D(reg).accessToken;
+ const reg=await registerVerifiedFixture(API,{email,password:pw,displayName:'Synthetic '+tag},{origin:ORIGIN});const token=(await reg.json()).data.accessToken;
  const co=await call(token,'POST','/companies',{name:'Synthetic '+tag+' ХХК'});return {email,pw,token,cid:D(co).id};}
 const answers=(f:(i:number)=>number)=>Object.fromEntries(basicInfoQuestions.map((q,i)=>[q.id,[Math.min(f(i),q.options.length)]])) as Record<string,number[]>;
 const payload=(a:Record<string,number[]>)=>({profileAnswers:basicToLegacy(a),basicInfoAnswers:basicInfoQuestions.map(q=>({questionId:q.id,optionIndexes:a[q.id]}))});

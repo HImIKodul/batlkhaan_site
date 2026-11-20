@@ -1,5 +1,9 @@
 import "dotenv/config";
 import crypto from "node:crypto";
+import os from "node:os";
+import path from "node:path";
+import {downloadAndVerifyApiPdf} from "./lib/actual-pdf-acceptance.mjs";
+import {registerVerifiedFixture} from "./lib/verified-test-registration.mjs";
 import { prisma } from "../dist/db.js";
 
 /* SAFETY GUARD: this gate creates users, companies and mock-paid diagnoses and talks to the database directly. It used to default to the live :4000 API and to
@@ -66,6 +70,7 @@ async function cleanup(){
   try{
     if(companyId){
       await prisma.companyEntitlement.deleteMany({where:{companyId}});
+      await prisma.billingPaymentTransaction.deleteMany({where:{invoice:{companyId}}});
       await prisma.billingInvoice.deleteMany({where:{companyId}});
       await prisma.company.deleteMany({where:{id:companyId}});
       notes.push(`company:${companyId}`);
@@ -99,10 +104,11 @@ async function main(){
   assert(retake?.amountMnt===300000,"RETAKE price is not 300000 MNT");
   assert(diagnostic?.provider==="MOCK"||diagnostic?.testMode===true,"Billing catalog is not in mock/test mode");
 
-  const reg=await request("/auth/register",{method:"POST",token:"",body:{email,password,displayName:"Task 12 Final Gate"}});
-  userId=String(reg.data?.user?.id||""); accessToken=String(reg.data?.accessToken||""); refreshCookie=cookieOnly(reg.res.headers.get("set-cookie"));
-  assert(Boolean(userId&&accessToken),"Fresh registration did not return user/access token");
-  assert(Boolean(refreshCookie),"Fresh registration did not return refresh cookie");
+  const loginResponse=await registerVerifiedFixture(BASE,{email,password,displayName:"Task 12 Final Gate"});
+  const verified=(await loginResponse.json()).data;
+  userId=String(verified?.user?.id||"");accessToken=String(verified?.accessToken||"");refreshCookie=cookieOnly(loginResponse.headers.get("set-cookie"));
+  assert(Boolean(userId&&accessToken),"Verified registration/login did not return user/access token");
+  assert(Boolean(refreshCookie),"Verified login did not return refresh cookie");
   const me=(await request("/auth/me")).data;
   assert(me.id===userId&&me.email===email,"/auth/me does not match fresh account");
 
@@ -218,8 +224,9 @@ async function main(){
 
   const pdfChunks=(payload.roadmap||[]).flatMap(row=>Array.from({length:Math.ceil((row.milestones||[]).length/4)},(_,i)=>(row.milestones||[]).slice(i*4,(i+1)*4))).flat();
   assert(pdfChunks.length===milestones.length,"PDF pagination model loses roadmap milestones");
-  const pdfPages=3+(payload.roadmap||[]).reduce((n,row)=>n+Math.ceil((row.milestones||[]).length/4),0);
-  assert(pdfPages>=4,"PDF page model is unexpectedly short");
+  const actualPdf=await downloadAndVerifyApiPdf({base:BASE,assessmentId,token:accessToken,score:results.overall.score,domain:domainCode,out:process.env.MMRI_TASK12_PDF_OUT||path.join(os.tmpdir(),tag)});
+  const pdfPages=actualPdf.pages;
+  assert(pdfPages===3,"Actual API PDF must contain exactly three pages");
 
   await request("/auth/logout",{method:"POST",token:"",cookie:refreshCookie});
   const relogin=await request("/auth/login",{method:"POST",token:"",body:{email,password}});
@@ -257,7 +264,7 @@ if(mainError||cleanupError)process.exitCode=1;
 else{
   console.log("==========================================");
   console.log("MMRI FUNCTIONAL TASK 12/12: PASS");
-  console.log("FRESH USER -> REAL REPORT -> PDF MODEL: VERIFIED");
+  console.log("FRESH USER -> REAL REPORT -> ACTUAL THREE-PAGE PDF: VERIFIED");
   console.log("LOGOUT / LOGIN PERSISTENCE: VERIFIED");
   console.log("DISPOSABLE TEST DATA CLEANUP: VERIFIED");
   console.log("==========================================");

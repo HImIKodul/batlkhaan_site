@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* Live regression for data export and erasure. Needs the API on :4000 (development, mock billing) and the local Postgres container.
    Uses only identities it creates itself; it never touches existing users, companies or assessments (checked by a before/after count). */
 import crypto from 'crypto';import {execFileSync} from 'child_process';
@@ -6,7 +7,7 @@ const sql=q=>execFileSync('docker',['exec','mmri-v3-local-postgres-1','psql','-U
 const W=crypto.randomUUID();
 const call=async(m,p,tok,b)=>{const r=await fetch(B+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const t=await r.text();let j=null;try{j=JSON.parse(t)}catch{}return {s:r.status,j,d:j?.data,e:j?.error,h:r.headers,raw:t}};
 const pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';
-async function makeUser(label){const email=`lc.${label}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@mmri.test`;const r=await call('POST','/auth/register',null,{email,password:pw,displayName:'LC '+label});return {email,tok:r.d.accessToken,id:r.d.user.id}}
+async function makeUser(label){const email=`lc.${label}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@mmri.test`;const r=await registerVerifiedFixture(B,{email,password:pw,displayName:'LC '+label});const data=(await r.json()).data;return {email,tok:data.accessToken,id:data.user.id}}
 async function makeCompanyWithAssessment(u,name){
  const co=(await call('POST','/companies',u.tok,{name})).d.id;const pq=(await call('GET','/methodology/current/profile-questions',u.tok)).d;
  await call('PUT',`/companies/${co}/profile-answers`,u.tok,{profileAnswers:pq.slice(0,20).map(q=>({questionId:q.id,optionIndexes:[q.options[0].optionIndex]})),basicInfoAnswers:Array.from({length:20},(_,i)=>({questionId:'B'+String(i+1).padStart(2,'0'),optionIndexes:[1]}))});
@@ -55,7 +56,7 @@ const login=await call('POST','/auth/login',null,{email:A.email,password:pw}),me
 rec('LC-18 the erased account can no longer sign in and its old access token is dead',login.s===401&&me.s===401,`${login.s}/${me.s}`);
 rec('LC-19 e-mail and name are anonymised, status disabled; the invoice it created is retained',sql(`select (email like 'erased+%@erased.invalid')||'|'||("displayName" is null)||'|'||status||'|'||("erasedAt" is not null) from users where id='${A.id}'`)==='true|true|DISABLED|true'&&cnt('billing_invoices','companyId',ca.co)===1);
 rec('LC-20 no refresh session or reset token survives; audit events are retained',cnt('refresh_sessions','userId',A.id)===0&&cnt('password_reset_tokens','userId',A.id)===0&&Number(sql(`select count(*) from auth_audit_events where "userId"='${A.id}'`))>=3);
-rec('LC-21 the same e-mail address can register again as a new account',(await call('POST','/auth/register',null,{email:A.email,password:pw})).s===201);
+rec('LC-21 the same e-mail address can register again as a new account',(await call('POST','/auth/register',null,{email:A.email,password:pw})).s===202);
 const totalAfter=sql(`select count(*) from assessments where "createdAt"<now()-interval '1 minute'`);
 rec('LC-22 no pre-existing assessment was removed by this test',totalBefore===totalAfter,`${totalBefore} -> ${totalAfter}`);
 console.log(fail?`FAILED ${fail}`:'ALL PASS');process.exit(fail?1:0);

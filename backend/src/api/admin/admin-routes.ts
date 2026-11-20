@@ -6,12 +6,14 @@ import type { Router, RouteContext } from "../http/router.js";
 import type { MemoryRateLimiter } from "../http/rate-limit.js";
 import { json, ok } from "../http/respond.js";
 import { AdminService, type AdminPrincipal, type Permission } from "./admin-service.js";
-import { OPEN_STATUSES, ReviewService } from "./review-service.js";
+import { OPEN_STATUSES, REVIEW_HOURS, ReviewService } from "./review-service.js";
 import { hashAuditValue } from "../auth/crypto.js";
 import { registerAccountRoutes } from "./account-routes.js";
+import { scanReport } from "./review-scan.js";
+import type { SupportMailService } from "../mail/support-mail-service.js";
 
 export interface AdminDeps {
-  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
+  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
   readJson: (req: IncomingMessage, limit: number) => Promise<any>; clientIp: (req: IncomingMessage) => string; fingerprint: (req: IncomingMessage) => { ip?: string; userAgent?: string };
 }
 const A = "/api/v1/admin";
@@ -20,14 +22,22 @@ const DISPUTE_STATUSES = ["OPEN", "UNDER_REVIEW", "MORE_INFORMATION_REQUIRED", "
 const clean = (v: unknown, max: number) => String(v ?? "").replace(/\s*[—―]\s*/g, " - ").trim().slice(0, max);
 
 export function registerAdminRoutes(d: AdminDeps) {
-  const { router, config, admin, reviews } = d;
+  const { router, config, admin, reviews, supportMail, queriesResults } = d;
   type H = (ctx: RouteContext, p: AdminPrincipal, fp: { ip?: string; userAgent?: string }, body: any) => Promise<void>;
   const route = (method: string, path: string, permission: Permission | null, handler: H, opts: { sensitive?: boolean; body?: boolean } = {}) => router.add(method, A + path, async ctx => {
     const fp = d.fingerprint(ctx.req); d.ipLimiter.check(`admin:api:${fp.ip}`);
     const p = await admin.authenticate(ctx.req.headers.authorization);
     if (permission) await admin.requirePermission(p, permission, fp, { sensitive: opts.sensitive });
     const body = method === "GET" || opts.body === false ? {} : await d.readJson(ctx.req, config.requestBodyLimitBytes);
-    await handler(ctx, p, fp, body);
+    // Persist authorization before any mutation. If audit storage is unavailable no
+    // mutation runs; a failed completion audit still leaves the durable intent.
+    const mutation=method!=="GET";
+    if(mutation)await admin.audit(p.adminId,"ADMIN_MUTATION_AUTHORIZED","SUCCESS",fp,{type:"ROUTE",id:ctx.params.id??path},{method,path});
+    try{await handler(ctx, p, fp, body)}catch(error){
+      if(mutation)await admin.audit(p.adminId,"ADMIN_MUTATION_FAILED","FAILURE",fp,{type:"ROUTE",id:ctx.params.id??path},{method,path});
+      throw error;
+    }
+    if(mutation)await admin.audit(p.adminId,"ADMIN_MUTATION_COMPLETED","SUCCESS",fp,{type:"ROUTE",id:ctx.params.id??path},{method,path});
   }, false);
   const aud = (p: AdminPrincipal, fp: any, action: string, type: string, id: string, meta?: Record<string, unknown>) => admin.audit(p.adminId, action, "SUCCESS", fp, { type, id }, meta);
 
@@ -54,7 +64,16 @@ export function registerAdminRoutes(d: AdminDeps) {
         overdue: await prisma.reportReview.count({ where: { status: { in: OPEN_STATUSES as any }, deadlineAt: { lt: now } } }), published: n("PUBLISHED") };
     }
     if (can("payments.read")) data.payments = { openRequests: await prisma.paymentDispute.count({ where: { status: { in: ["OPEN", "UNDER_REVIEW", "MORE_INFORMATION_REQUIRED"] } } }) };
-    data.support = { open: await prisma.supportCase.count({ where: { status: { in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"] } } }) };
+    const mailCounts = await supportMail.openCount().catch(() => ({ open: 0, unanswered: 0 }));
+    data.support = { open: await prisma.supportCase.count({ where: { status: { in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"] } } }), mailOpen: mailCounts.open, mailUnanswered: mailCounts.unanswered, mailConnected: supportMail.status().connected };
+    if (can("companies.read") || can("accounts.manage")) {
+      const [users, companies, active, pending, done, inProgress] = await Promise.all([
+        prisma.user.count({ where: { erasedAt: null } }), prisma.company.count({ where: { erasedAt: null } }), prisma.user.count({ where: { erasedAt: null, status: "ACTIVE" } }),
+        prisma.user.count({ where: { erasedAt: null, emailVerificationRequired: true, emailVerifiedAt: null } }),
+        prisma.assessment.count({ where: { status: { in: ["COMPLETED", "COMPLETED_WITH_REVIEW"] } } }), prisma.assessment.count({ where: { status: { in: ["IN_PROGRESS", "PAUSED", "READY_FOR_COMPLETION", "PROCESSING", "PROFILE_PENDING"] } } })]);
+      data.business = { customers: users, companies, activeAccounts: active, pendingAccounts: pending, completedDiagnoses: done, diagnosesInProgress: inProgress };
+    }
+    if (can("payments.read")) { const [paid, pendingInv] = await Promise.all([prisma.billingInvoice.count({ where: { status: "PAID" } }), prisma.billingInvoice.count({ where: { status: { in: ["CREATED", "PENDING"] } } })]); data.payments = { ...(data.payments ?? {}), paidInvoices: paid, pendingInvoices: pendingInv }; }
     const recent = await prisma.adminAuditEvent.findMany({ where: { action: { notIn: ["ADMIN_LOGIN", "ADMIN_REAUTH", "ADMIN_LOGOUT", "PERMISSION_DENIED"] } }, orderBy: { createdAt: "desc" }, take: 8, select: { action: true, targetType: true, targetId: true, outcome: true, createdAt: true } });
     data.recentActivity = recent; data.generatedAt = now; ok(c.res, data);
   });
@@ -63,12 +82,13 @@ export function registerAdminRoutes(d: AdminDeps) {
   route("GET", "/reviews", "reports.read", async (c) => {
     const q = c.query; const { page, pageSize, skip } = pageOf(q); const where: any = {};
     if (q.get("status")) where.status = q.get("status"); if (q.get("domain")) where.domainCode = q.get("domain");
+    if (q.get("returned") === "1") { where.status = "IN_REVIEW"; where.remindersSent = { path: ["returnedAt"], string_starts_with: "2" }; }
     if (q.get("overdue") === "1") { where.status = { in: OPEN_STATUSES }; where.deadlineAt = { lt: new Date() }; }
     if (q.get("q")) { const cs = await prisma.company.findMany({ where: { name: { contains: String(q.get("q")), mode: "insensitive" } }, select: { id: true }, take: 200 }); where.OR = [{ companyId: { in: cs.map(x => x.id) } }, { id: { startsWith: String(q.get("q")) } }, { assessmentId: { startsWith: String(q.get("q")) } }]; }
     const sort = q.get("sort") === "submitted" ? { submittedAt: "desc" as const } : { deadlineAt: "asc" as const };
     const [total, rows] = await Promise.all([prisma.reportReview.count({ where }), prisma.reportReview.findMany({ where, orderBy: sort, skip, take: pageSize })]);
     const companies = await prisma.company.findMany({ where: { id: { in: rows.map(r => r.companyId) } }, select: { id: true, name: true } }); const cm = new Map(companies.map(x => [x.id, x.name]));
-    ok(c.res, { page, pageSize, total, items: rows.map(r => ({ id: r.id, assessmentId: r.assessmentId, companyId: r.companyId, company: cm.get(r.companyId) ?? "", domain: r.domainCode, status: r.status, submittedAt: r.submittedAt, deadlineAt: r.deadlineAt, overdue: OPEN_STATUSES.includes(r.status as any) && r.deadlineAt < new Date(), assignedAdminId: r.assignedAdminId, revision: r.currentRevision, publishedAt: r.publishedAt })) });
+    ok(c.res, { page, pageSize, total, items: rows.map(r => ({ id: r.id, assessmentId: r.assessmentId, companyId: r.companyId, company: cm.get(r.companyId) ?? "", domain: r.domainCode, status: r.status, submittedAt: r.submittedAt, deadlineAt: r.deadlineAt, approvedAt: r.approvedAt, returned: r.status === "IN_REVIEW" && Boolean((r.remindersSent as any)?.returnedAt), overdue: OPEN_STATUSES.includes(r.status as any) && r.deadlineAt < new Date(), assignedAdminId: r.assignedAdminId, revision: r.currentRevision, publishedAt: r.publishedAt })) });
   });
   route("GET", "/reviews/:id", "reports.read", async (c, p, fp) => {
     const r: any = await prisma.reportReview.findUnique({ where: { id: c.params.id } }); if (!r) throw notFound("Хяналтын даалгавар олдсонгүй.");
@@ -78,17 +98,51 @@ export function registerAdminRoutes(d: AdminDeps) {
       prisma.assessment.findUnique({ where: { id: r.assessmentId }, select: { overallOfficialScore: true, overallPartialScore: true, coverage: true, completedAt: true, status: true, methodologyVersion: { select: { version: true } } } })]);
     const validation = rev ? await reviews.validate(r.assessmentId, rev.narrative as any).catch(() => null) : null;
     await aud(p, fp, "REPORT_REVIEW_VIEWED", "REVIEW", r.id);
-    ok(c.res, { review: r, company, assessment: a ? { score: a.overallOfficialScore ?? a.overallPartialScore, coverage: a.coverage, completedAt: a.completedAt, methodologyVersion: a.methodologyVersion.version } : null, claims: rev ? reviews.claimsOf(rev.narrative as any) : [], revision: rev?.revision ?? 0, revisions, suggestions, validation, aiMode: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase() === "openai" ? "PROVIDER_CONFIGURED_NOT_APPROVED_FOR_ASSIST" : "MOCK" });
+    ok(c.res, { review: r, lock: await reviews.lockInfo(r.id, p.adminId), company, assessment: a ? { score: a.overallOfficialScore ?? a.overallPartialScore, coverage: a.coverage, completedAt: a.completedAt, methodologyVersion: a.methodologyVersion.version } : null, claims: rev ? reviews.claimsOf(rev.narrative as any) : [], revision: rev?.revision ?? 0, revisions, suggestions, validation, aiMode: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase() === "openai" ? "PROVIDER_CONFIGURED_NOT_APPROVED_FOR_ASSIST" : "MOCK" });
   });
   route("GET", "/reviews/:id/revisions/:n", "reports.read", async (c) => { const rev = await prisma.reportReviewRevision.findUnique({ where: { reviewId_revision: { reviewId: c.params.id, revision: Number(c.params.n) } } }); if (!rev) throw notFound("Хувилбар олдсонгүй."); ok(c.res, { revision: rev.revision, source: rev.source, reason: rev.reason, createdAt: rev.createdAt, claims: reviews.claimsOf(rev.narrative as any) }); });
   route("GET", "/reviews/:id/evidence", "reports.read", async (c, p, fp) => { await aud(p, fp, "EVIDENCE_VIEWED", "REVIEW", c.params.id); ok(c.res, await reviews.evidence(c.params.id, { categoryId: c.query.get("capability") ?? undefined, state: c.query.get("state") ?? undefined, finding: c.query.get("finding") ?? undefined, q: c.query.get("q") ?? undefined })); });
+  route("POST", "/reviews/:id/lock", "reports.edit", async (c, p) => { ok(c.res, await reviews.acquireLock(c.params.id, p.adminId)); }, { body: false });
+  route("POST", "/reviews/:id/unlock", "reports.edit", async (c, p) => { await reviews.releaseLock(c.params.id, p.adminId); ok(c.res, { released: true }); }, { body: false });
+  route("GET", "/reviews/:id/report-view", "reports.read", async (c, p) => { const v = await reviews.reportView(c.params.id, { results: id => queriesResults(id) }); ok(c.res, { ...v, lock: await reviews.lockInfo(c.params.id, p.adminId) }); });
+  route("POST", "/reviews/:id/scan", "reports.edit", async (c) => {
+    const rev = await reviews.latestRevision(c.params.id); const claims = reviews.claimsOf(rev.narrative as any).map(x => ({ claimId: x.claimId, sectionId: x.sectionId, text: x.text }));
+    const res = await scanReport(claims, await reviews.scanContext(c.params.id));
+    // Findings on calculated / mandatory-disclosure claims stay visible (they are real observations) but carry no text proposal: those claims are not editable.
+    const editable = new Map(reviews.claimsOf(rev.narrative as any).map(x => [x.claimId, x.editable]));
+    for (const f of res.findings) if (f.claimId && editable.get(f.claimId) === false) { delete (f as any).suggestion; f.message += " (Тооцоолсон эсвэл заавал оруулах хэсэг: энд засахгүй.)"; }
+    ok(c.res, { revision: rev.revision, ...res });
+  }, { body: false });
   route("POST", "/reviews/:id/claim", "reports.edit", async (c, p, fp) => { await reviews.claim(c.params.id, p.adminId, p.role); await aud(p, fp, "REVIEW_CLAIMED", "REVIEW", c.params.id); ok(c.res, { claimed: true }); }, { body: false });
   route("PUT", "/reviews/:id/draft", "reports.edit", async (c, p, fp, b) => { const out = await reviews.saveEdits(c.params.id, p.adminId, p.role, Number(b.baseRevision), Array.isArray(b.edits) ? b.edits.slice(0, 60) : [], clean(b.reason, 500)); await aud(p, fp, "REPORT_EDITED", "REVIEW", c.params.id, { revision: out.revision, changed: out.changedClaims.length }); ok(c.res, out); });
   route("POST", "/reviews/:id/restore", "reports.edit", async (c, p, fp, b) => { const out = await reviews.restore(c.params.id, p.adminId, p.role, Number(b.baseRevision), Number(b.revision)); await aud(p, fp, "REPORT_RESTORED", "REVIEW", c.params.id, { from: b.revision, revision: out.revision }); ok(c.res, out); });
+  // ----- visual editor: annotations on the three PDF pages (saved as ordinary append-only revisions) -----
+  route("GET", "/reviews/:id/editor", "reports.read", async (c) => { ok(c.res, await reviews.editorState(c.params.id)); });
+  route("GET", "/reviews/:id/editor/revisions/:n/annotations", "reports.read", async (c) => { ok(c.res, await reviews.annotationsOfRevision(c.params.id, Number(c.params.n))); });
+  route("GET", "/reviews/:id/editor/page/:n", "reports.read", async (c) => {
+    const n = Number(c.params.n); if (!Number.isInteger(n) || n < 1 || n > 3) throw new ApiError(400, "BAD_REQUEST", "Хуудасны дугаар 1-3 байх ёстой.");
+    const rawRev = c.query.get("revision"); const revision = rawRev === null ? undefined : Number(rawRev); if (revision !== undefined && (!Number.isInteger(revision) || revision < 1)) throw new ApiError(400, "BAD_REQUEST", "Хувилбар буруу байна.");
+    const pages = await reviews.previewPages(c.params.id, { annotated: c.query.get("annotated") === "1", revision });
+    c.res.writeHead(200, { "content-type": "image/png", "content-length": pages[n - 1].length, "cache-control": "no-store" }); c.res.end(pages[n - 1]);
+  });
+  route("POST", "/reviews/:id/editor/preview", "reports.edit", async (c, p, fp, b) => {
+    d.ipLimiter.check(`admin:editor-preview:${p.adminId}`);
+    const pages = await reviews.previewPages(c.params.id, { annotated: true, annotations: b.annotations ?? { version: 1, items: [] } });
+    ok(c.res, { pages: pages.map(x => "data:image/png;base64," + x.toString("base64")) });
+  });
+  route("PUT", "/reviews/:id/annotations", "reports.edit", async (c, p, fp, b) => {
+    const out = await reviews.saveAnnotations(c.params.id, p.adminId, p.role, Number(b.baseRevision), b.annotations, clean(b.reason, 500));
+    await aud(p, fp, "REPORT_ANNOTATED", "REVIEW", c.params.id, { revision: out.revision, annotations: out.annotationCount }); ok(c.res, out);
+  });
   route("POST", "/reviews/:id/ready", "reports.edit", async (c, p, fp) => { await reviews.markReady(c.params.id, p.adminId, p.role); await aud(p, fp, "REVIEW_MARKED_READY", "REVIEW", c.params.id); ok(c.res, { status: "READY_FOR_APPROVAL" }); }, { body: false });
   route("POST", "/reviews/:id/return", "reports.edit", async (c, p, fp) => { await reviews.returnToReview(c.params.id, p.adminId, p.role); await aud(p, fp, "REVIEW_RETURNED", "REVIEW", c.params.id); ok(c.res, { status: "IN_REVIEW" }); }, { body: false });
   route("POST", "/reviews/:id/regenerate-draft", "reports.edit", async (c, p, fp) => { const r = await prisma.reportReview.findUnique({ where: { id: c.params.id } }); if (!r || r.status !== "GENERATION_FAILED") throw new ApiError(409, "INVALID_STATE", "Зөвхөн амжилтгүй болсон төсөл дахин үүснэ."); void reviews.generateDraft(r.id); await aud(p, fp, "DRAFT_REGENERATION_STARTED", "REVIEW", r.id); ok(c.res, { started: true }); }, { body: false });
-  route("POST", "/reviews/:id/approve", "reports.approve", async (c, p, fp, b) => { await reviews.approve(c.params.id, p.adminId, Number(b.baseRevision)); await aud(p, fp, "REPORT_APPROVED", "REVIEW", c.params.id, { revision: b.baseRevision }); ok(c.res, { status: "APPROVED" }); }, { sensitive: true });
+  route("POST", "/reviews/:id/approve", "reports.approve", async (c, p, fp, b) => { const out = await reviews.approveAndRelease(c.params.id, p.adminId, p.role, Number(b.baseRevision)); if (out.approvedNow) await aud(p, fp, "REPORT_APPROVED", "REVIEW", c.params.id, { revision: b.baseRevision }); if (!out.alreadyPublished) await aud(p, fp, "REPORT_PUBLISHED", "REVIEW", c.params.id, { publishedRevision: out.publishedRevision }); // Send the release e-mail now instead of waiting for the next maintenance pass, then report the real delivery state (never claim more than happened).
+    if (!out.alreadyPublished) await reviews.afterMaintenance?.().catch(() => undefined);
+    const rv: any = await prisma.reportReview.findUnique({ where: { id: c.params.id }, select: { assessmentId: true } });
+    const notes = rv ? await prisma.customerNotification.findMany({ where: { type: "REPORT_RELEASED", payload: { path: ["assessmentId"], equals: rv.assessmentId } }, select: { id: true } }) : [];
+    const mailed = notes.length ? await prisma.mailDispatchMark.count({ where: { dedupeKey: { in: notes.map(n => `CN:${n.id}`) }, sentAt: { not: null } } }) : 0;
+    ok(c.res, { ...out, delivery: { notifications: notes.length, email: config.mailProvider === "disabled" || (process.env.MMRI_CUSTOMER_EMAILS ?? "off").toLowerCase() !== "on" ? "NOT_CONFIGURED" : mailed > 0 ? "SENT" : "PENDING", mailProvider: config.mailProvider } }); }, { sensitive: true });
   route("POST", "/reviews/:id/publish", "reports.publish", async (c, p, fp) => { const out = await reviews.publish(c.params.id, p.adminId); await aud(p, fp, "REPORT_PUBLISHED", "REVIEW", c.params.id, out); ok(c.res, { status: "PUBLISHED", ...out }); }, { sensitive: true, body: false });
   route("POST", "/reviews/:id/ai/suggest", "reports.edit", async (c, p, fp, b) => { d.ipLimiter.check(`admin:ai:${p.adminId}`); const out = await reviews.suggest(c.params.id, p.adminId, Array.isArray(b.claimIds) ? b.claimIds.slice(0, 20) : undefined); await aud(p, fp, "AI_SUGGESTIONS_REQUESTED", "REVIEW", c.params.id, { source: out.source, created: out.created }); ok(c.res, out); });
   route("POST", "/reviews/:id/ai/suggestions/:sid/apply", "reports.edit", async (c, p, fp, b) => { const out = await reviews.decideSuggestion(c.params.id, c.params.sid, p.adminId, p.role, "apply", b.baseRevision === undefined ? undefined : Number(b.baseRevision)); await aud(p, fp, "AI_SUGGESTION_APPLIED", "REVIEW", c.params.id, { suggestion: c.params.sid }); ok(c.res, out); });
@@ -163,6 +217,13 @@ export function registerAdminRoutes(d: AdminDeps) {
   route("POST", "/notifications/:id/read", "notifications.read", async (c, p) => { await prisma.adminNotificationRead.upsert({ where: { adminId_notificationId: { adminId: p.adminId, notificationId: c.params.id } }, create: { adminId: p.adminId, notificationId: c.params.id }, update: {} }); ok(c.res, { read: true }); }, { body: false });
   route("POST", "/notifications/read-all", "notifications.read", async (c, p) => { const ids = await prisma.adminNotification.findMany({ where: { reads: { none: { adminId: p.adminId } } }, select: { id: true } }); await prisma.adminNotificationRead.createMany({ data: ids.map(x => ({ adminId: p.adminId, notificationId: x.id })), skipDuplicates: true }); ok(c.res, { marked: ids.length }); }, { body: false });
 
+  // ----- support mailbox (Gmail / mock): conversations imported from the business mailbox -----
+  route("GET", "/support-mail/status", "support.manage", async (c) => { ok(c.res, supportMail.status()); });
+  route("POST", "/support-mail/sync", "support.manage", async (c, p, fp) => { const r = await supportMail.sync(true); await aud(p, fp, "SUPPORT_MAIL_SYNC", "SUPPORT_MAIL", "sync", { imported: r.imported }); ok(c.res, r); }, { body: false });
+  route("GET", "/support-mail", "support.manage", async (c) => { const { page, pageSize } = pageOf(c.query); await supportMail.sync(false); const out = await supportMail.list({ status: c.query.get("status") ?? undefined, search: (c.query.get("q") ?? "").trim() || undefined, unanswered: c.query.get("unanswered") === "1", page, pageSize }); ok(c.res, { page, pageSize, ...out, status: supportMail.status() }); });
+  route("GET", "/support-mail/:id", "support.manage", async (c) => { ok(c.res, await supportMail.get(c.params.id)); });
+  route("POST", "/support-mail/:id/reply", "support.manage", async (c, p, fp, b) => { const r = await supportMail.reply(c.params.id, p.adminId, String(b.text ?? "")); await aud(p, fp, "SUPPORT_MAIL_REPLY", "SUPPORT_MAIL", c.params.id); ok(c.res, r); });
+  route("POST", "/support-mail/:id/handled", "support.manage", async (c, p, fp, b) => { await supportMail.setHandled(c.params.id, p.adminId, b.handled !== false); await aud(p, fp, b.handled === false ? "SUPPORT_MAIL_REOPENED" : "SUPPORT_MAIL_HANDLED", "SUPPORT_MAIL", c.params.id); ok(c.res, { handled: b.handled !== false }); });
   // ----- support cases -----
   route("GET", "/support", "support.manage", async (c) => { const { page, pageSize, skip } = pageOf(c.query); const where: any = {}; if (c.query.get("status")) where.status = c.query.get("status"); const [total, rows] = await Promise.all([prisma.supportCase.count({ where }), prisma.supportCase.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize })]); ok(c.res, { page, pageSize, total, items: rows }); });
   route("GET", "/support/:id", "support.manage", async (c) => { const s = await prisma.supportCase.findUnique({ where: { id: c.params.id }, include: { events: { orderBy: { createdAt: "asc" } } } }); if (!s) throw notFound("Хүсэлт олдсонгүй."); ok(c.res, s); });
@@ -177,12 +238,12 @@ export function registerAdminRoutes(d: AdminDeps) {
     const [g, failed, published] = await Promise.all([prisma.reportReview.groupBy({ by: ["status"], _count: { _all: true } }), prisma.reportReview.count({ where: { status: "GENERATION_FAILED" } }), prisma.reportReview.findMany({ where: { status: "PUBLISHED", publishedAt: { not: null } }, orderBy: { publishedAt: "desc" }, take: 50, select: { submittedAt: true, publishedAt: true } })]);
     const hours = published.map(x => (x.publishedAt!.getTime() - x.submittedAt.getTime()) / 3_600_000); const avg = hours.length ? hours.reduce((a, b) => a + b, 0) / hours.length : null;
     let db = "ok"; try { await prisma.$queryRaw`select 1`; } catch { db = "down"; }
-    ok(c.res, { database: db, queue: Object.fromEntries(g.map(x => [x.status, x._count._all])), generationFailed: failed, averageReviewHours: avg === null ? null : Math.round(avg * 10) / 10, sampleSize: hours.length, aiProvider: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase(), emailDelivery: "NOT_AVAILABLE" });
+    ok(c.res, { database: db, queue: Object.fromEntries(g.map(x => [x.status, x._count._all])), generationFailed: failed, averageReviewHours: avg === null ? null : Math.round(avg * 10) / 10, sampleSize: hours.length, aiProvider: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase(), emailDelivery: config.mailProvider==="resend"?"RESEND_CONFIGURED_NOT_VERIFIED":config.mailProvider==="mock"?"MOCK_LOCAL_ONLY":"DISABLED" });
   });
   route("GET", "/audit", "audit.read", async (c) => { const { page, pageSize, skip } = pageOf(c.query); const where: any = c.query.get("action") ? { action: { contains: c.query.get("action") } } : {}; const [total, rows] = await Promise.all([prisma.adminAuditEvent.count({ where }), prisma.adminAuditEvent.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize })]); ok(c.res, { page, pageSize, total, items: rows }); });
   route("GET", "/settings", "admins.manage", async (c) => {
     const admins = await prisma.adminAccount.findMany({ orderBy: { createdAt: "asc" } }); const users = await prisma.user.findMany({ where: { id: { in: admins.map(a => a.userId) } }, select: { id: true, email: true } }); const um = new Map(users.map(u => [u.id, u.email]));
-    ok(c.res, { admins: admins.map(a => ({ id: a.id, email: um.get(a.userId), role: a.role, status: a.status, createdAt: a.createdAt })), reportReviewRequired: config.reportReviewRequired, reviewHours: 48, aiProvider: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase(), aiKeyConfigured: Boolean((process.env.OPENAI_API_KEY ?? "").trim()), emailDelivery: "NOT_AVAILABLE", adminProvisioning: "CLI only: npm run admin:bootstrap" });
+    ok(c.res, { admins: admins.map(a => ({ id: a.id, email: um.get(a.userId), role: a.role, status: a.status, createdAt: a.createdAt })), reportReviewRequired: config.reportReviewRequired, reviewHours: REVIEW_HOURS, aiProvider: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase(), aiKeyConfigured: Boolean((process.env.OPENAI_API_KEY ?? "").trim()), emailDelivery: config.mailProvider==="resend"?"RESEND_CONFIGURED_NOT_VERIFIED":config.mailProvider==="mock"?"MOCK_LOCAL_ONLY":"DISABLED", adminProvisioning: "CLI only: npm run admin:bootstrap" });
   });
   route("POST", "/admins/:id/disable", "admins.manage", async (c, p, fp) => {
     const a = await admin.disableAdmin(c.params.id, p.adminId, { enforceNotSelf: true });

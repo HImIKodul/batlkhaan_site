@@ -199,6 +199,8 @@ export interface DiagnosisResultV13 {
     meaning: string;
   };
   quality: DiagnosisQuality;
+  /** Phase 2.7 proposal (B3); present only when the B3 flag is ON. */
+  evidenceDisclosure?: import("./evidence-disclosure.js").EvidenceDisclosure;
   trace: DiagnosisTrace;
 
   // Backward-compatible aliases for existing Results / Comparison clients.

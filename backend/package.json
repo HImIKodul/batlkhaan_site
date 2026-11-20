@@ -177,7 +177,10 @@
     "admin:reset-mfa": "tsx src/admin-cli.ts reset-mfa",
     "admin:disable": "tsx src/admin-cli.ts disable",
     "admin:enable": "tsx src/admin-cli.ts enable",
-    "admin:list": "tsx src/admin-cli.ts list"
+    "admin:list": "tsx src/admin-cli.ts list",
+    "test:critical": "vitest run tests --maxWorkers=1 --no-file-parallelism",
+    "qa:critical:auth": "node --import tsx scripts/qa-critical-auth-postgres.ts",
+    "qa:critical:billing": "node --import tsx scripts/qa-billing-race-regression.ts"
   },
   "dependencies": {
     "@prisma/client": "6.15.0",

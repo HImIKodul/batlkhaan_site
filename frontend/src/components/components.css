@@ -85,3 +85,71 @@
 .mmri-skeleton__sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 main.mmri-route-loading{min-height:100dvh;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(ellipse at 50% 0,#fff,#EEF2F8 70%)}
 .mmri-skeleton{width:100%}
+/* skeleton shapes: neutral, softly shimmering glass placeholders laid out like the real screens (no white blocks) */
+.mmri-skeleton{display:grid;gap:18px;padding:6px 2px}
+.mmri-skeleton__card{display:grid;gap:12px;padding:18px 4px;border:0;border-top:1px solid rgba(6,25,74,.14);border-radius:0;background:none}
+.mmri-skeleton__line,.mmri-skeleton__score,.mmri-skeleton__head-action,.mmri-skeleton__progress,.mmri-skeleton__tile,.mmri-skeleton__icon,.mmri-skeleton__field>span,.mmri-skeleton__button{display:block;border-radius:10px;background:linear-gradient(100deg,rgba(255,255,255,.16) 30%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.16) 70%) 0 0/220% 100%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);animation:mmri-shimmer 1.8s linear infinite}
+.mmri-skeleton__line{height:14px;width:100%}
+.mmri-skeleton__line.is-kicker{width:150px;height:10px}
+.mmri-skeleton__line.is-title{width:min(420px,60%);height:30px;border-radius:12px}
+.mmri-skeleton__line.is-subtitle{width:min(240px,40%)}
+.mmri-skeleton__line.is-small{width:90px}
+.mmri-skeleton__line.is-medium{width:62%}
+.mmri-skeleton__line.is-short{width:38%}
+.mmri-skeleton__line.is-wide{width:92%}
+.mmri-skeleton__tile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.mmri-skeleton__tile{height:150px;border-radius:18px}
+.mmri-skeleton__head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.mmri-skeleton__head>div{display:grid;gap:10px;flex:1}
+.mmri-skeleton__head-action{width:120px;height:40px;border-radius:999px}
+.mmri-skeleton__progress{height:6px;width:100%;border-radius:6px}
+@keyframes mmri-shimmer{to{background-position:-220% 0}}
+@media (prefers-reduced-motion:reduce){.mmri-skeleton__line,.mmri-skeleton__score,.mmri-skeleton__head-action,.mmri-skeleton__progress,.mmri-skeleton__tile,.mmri-skeleton__icon,.mmri-skeleton__field>span,.mmri-skeleton__button{animation:none}}
+
+/* report skeleton: the real report classes carry the layout; .mmri-sk only turns content into placeholder (transparent text keeps the real width/height) */
+.mmri-skeleton--report{display:block;padding:0}
+html:root body.mmri-prism-page .report-v3 .report-skeleton .mmri-sk{color:transparent;-webkit-text-fill-color:transparent;text-shadow:none;border-radius:8px;border-color:transparent;min-height:calc(var(--n,1)*1lh);background:linear-gradient(100deg,rgba(255,255,255,.16) 30%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.16) 70%) 0 0/220% 100%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);animation:mmri-shimmer 1.8s linear infinite;width:fit-content;max-width:100%}
+html:root body.mmri-prism-page .report-v3 .report-skeleton :is(.report-finding-arc strong,.report-finding-arc p,.report-purpose-copy :is(h3,p),.report-roadmap-card__time p,.report-plan-action-copy :is(h4,p),.report-summary p){width:var(--w,100%)}
+html:root body.mmri-prism-page .report-v3 .report-skeleton .report-finding-arc strong{width:62%}html:root body.mmri-prism-page .report-v3 .report-skeleton .report-purpose-copy h3{width:48%}html:root body.mmri-prism-page .report-v3 .report-skeleton .report-plan-action-copy__head h4{width:55%}html:root body.mmri-prism-page .report-v3 .report-skeleton .report-plan-action-copy__check{width:70%}
+html:root body.mmri-prism-page .report-v3 .report-skeleton html:root body.mmri-prism-page .report-v3 .report-skeleton__summary{--n:9;width:100%}
+html:root body.mmri-prism-page .report-v3 .report-skeleton .report-score{color:transparent;-webkit-text-fill-color:transparent;border:0;background:linear-gradient(100deg,rgba(255,255,255,.16) 30%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.16) 70%) 0 0/220% 100%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);animation:mmri-shimmer 1.8s linear infinite}
+html:root body.mmri-prism-page .report-v3 .report-skeleton :is(.report-score,.mmri-sk)::before,html:root body.mmri-prism-page .report-v3 .report-skeleton :is(.report-score,.mmri-sk)::after{display:none}
+html:root body.mmri-prism-page .report-v3 .report-skeleton :is(.report-finding-arc__no,.report-purpose-number){width:auto}
+html:root body.mmri-prism-page .report-v3 .report-skeleton .report-status-badge{display:inline-flex}
+@media (max-width:640px){
+ html:root body.mmri-prism-page .report-v3 .report-skeleton html:root body.mmri-prism-page .report-v3 .report-skeleton__summary{--n:34}
+ html:root body.mmri-prism-page .report-v3 .report-skeleton .report-purpose-copy p{min-height:calc(10*1lh)}
+ html:root body.mmri-prism-page .report-v3 .report-skeleton .report-finding-arc p{min-height:calc(4*1lh)}
+ html:root body.mmri-prism-page .report-v3 .report-skeleton .report-plan-action-copy p:nth-of-type(1){min-height:calc(9*1lh)}
+ html:root body.mmri-prism-page .report-v3 .report-skeleton .report-plan-action-copy p:nth-of-type(2){min-height:calc(4*1lh)}
+ html:root body.mmri-prism-page .report-v3 .report-skeleton .report-roadmap-card:first-child .report-plan-action-copy p:nth-of-type(1){min-height:calc(6*1lh)}
+ html:root body.mmri-prism-page .report-v3 .report-skeleton .report-roadmap-card:first-child .report-plan-action-copy p:nth-of-type(2){min-height:calc(3*1lh)}
+}
+@media (prefers-reduced-motion:reduce){html:root body.mmri-prism-page .report-v3 .report-skeleton .mmri-sk,html:root body.mmri-prism-page .report-v3 .report-skeleton .report-score{animation:none}}
+
+/* section skeletons (hub, questionnaire, history, billing, profile): placeholder look shared with the report skeleton; layout comes from the real classes */
+.mmri-skeleton--hub,.mmri-skeleton--history,.mmri-skeleton--profile,.mmri-skeleton--billing,.mmri-skeleton--questionnaire,.mmri-skeleton--questionnaire>div{display:contents}
+html:root body.mmri-prism-page .mmri-skel .mmri-sk{display:block;color:transparent;-webkit-text-fill-color:transparent;text-shadow:none;border-color:transparent;border-radius:8px;min-height:calc(var(--n,1)*1lh);background:linear-gradient(100deg,rgba(255,255,255,.16) 30%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.16) 70%) 0 0/220% 100%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);animation:mmri-shimmer 1.8s linear infinite;width:fit-content;max-width:100%}
+html:root body.mmri-prism-page .mmri-skel .mmri-sk::before,html:root body.mmri-prism-page .mmri-skel .mmri-sk::after{display:none}
+html:root body.mmri-prism-page .mmri-skel :is(.mmri-questionnaire__actions,.billing-domain-flow) .mmri-sk{width:auto}
+html:root body.mmri-prism-page .mmri-skel .mmri-skel__progress{display:block;width:100%;height:6px;min-height:0;border-radius:6px}
+html:root body.mmri-prism-page .mmri-skel .mmri-skel__answers{display:block;width:100%;min-height:240px;border-radius:16px}
+html:root body.mmri-prism-page .mmri-skel .mmri-sk.payment-history-icon,html:root body.mmri-prism-page .mmri-skel .profile-avatar.mmri-sk,html:root body.mmri-prism-page .mmri-skel .billing-domain-icon.mmri-sk{border-radius:50%}
+html:root body.mmri-prism-page .mmri-skel button.diagnosis-square.cat-tile{--c:#fff;animation:none;pointer-events:none;cursor:default;filter:none;border:1.5px solid rgba(255,255,255,.55);background:linear-gradient(100deg,rgba(255,255,255,.16) 30%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.16) 70%) 0 0/220% 100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 14px 30px -18px rgba(2,10,90,.5)}
+html:root body.mmri-prism-page .mmri-skel button.diagnosis-square.cat-tile::before,html:root body.mmri-prism-page .mmri-skel button.diagnosis-square.cat-tile::after,html:root body.mmri-prism-page .mmri-skel .cat-tile__name::before{display:none}
+@media (prefers-reduced-motion:reduce){html:root body.mmri-prism-page .mmri-skel .mmri-sk,html:root body.mmri-prism-page .mmri-skel button.diagnosis-square.cat-tile{animation:none}}
+
+/* home skeleton: five stacked plates echo the hero figure */
+.mmri-skeleton__plates{position:relative;min-height:300px}
+.mmri-skeleton__plate{position:absolute;display:block;width:46%;height:38%;border-radius:22px;left:calc(8% + var(--i)*9%);top:calc(2% + var(--i)*15%);transform:rotate(calc(-9deg + var(--i)*4deg))}
+
+/* home skeleton: same grid as the real hero (copy left, five stacked plates right, three guide pills below) */
+html:root body.mmri-prism-page .mmri-home-skel .mmri-home-skel__title{display:grid;gap:14px;justify-items:start;width:min(560px,100%);margin:0}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-home-skel__title .mmri-sk{width:100%;min-height:46px;border-radius:12px}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-home-skel__title .mmri-sk:nth-child(2){width:78%}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-home-skel__title .mmri-sk:nth-child(3){width:58%;min-height:24px}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-home-skel__cta{width:min(300px,80%);min-height:58px;border-radius:999px}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-home-skel__pill{width:100%;min-height:68px;border-radius:24px}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-skeleton__plates{width:100%;min-height:360px}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-skeleton__plate{border-radius:26px;min-height:0;border:1px solid rgba(255,255,255,.5)}
+html:root body.mmri-prism-page .mmri-home-skel .mmri-skeleton__plate{height:132px;width:min(250px,48%);left:calc(6% + var(--i)*9.5%);top:calc(2% + var(--i)*13.5%)}

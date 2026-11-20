@@ -10,7 +10,7 @@ check('atomic PDF file replace',svc.includes('rename(staged,finalPath)'));
 check('artifact metadata upsert',svc.includes('reportArtifact.upsert'));
 check('PDF generation audited',svc.includes('eventType:"REPORT_GENERATED"')&&svc.includes('artifactOperation:existing?"REGENERATED":"GENERATED"'));
 check('ReportLab renderer is invariant/deterministic',renderer.includes('rl_config.invariant = 1'));
-check('PDF generator v1.5 exact three-page contract',pdf.includes('MMRI-PDF-1.5-BUSINESS-REPORT')&&renderer.includes('expected 3 pages')&&renderer.includes('doc.page != 3'));
+check('PDF generator v1.5 exact three-page contract',pdf.includes('MMRI-PDF-1.6-BUSINESSMRI-BRAND')&&renderer.includes('expected 3 pages')&&renderer.includes('doc.page != 3'));
 check('PDF priority current/target scores bound',pdf.includes('currentScore:a.currentCellScore')&&pdf.includes('targetScore:a.targetCellScore')&&renderer.includes('Одоо')&&renderer.includes('Зорилт'));
 check('PDF roadmap compact table',renderer.includes('roadmap_summary_rows')&&renderer.includes('roadmap_table'));
 check('PDF domain frame',renderer.includes('roundRect(6.5 * mm')&&renderer.includes('setStrokeColor(DOMAIN)'));

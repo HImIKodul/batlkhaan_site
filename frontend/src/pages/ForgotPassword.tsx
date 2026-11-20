@@ -12,13 +12,13 @@ export default function ForgotPassword(){
  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
  const submit=async()=>{if(!emailOk){setError('Зөв имэйл хаяг оруулна уу.');return}setError('');setBusy(true);try{await api.requestPasswordReset(email.trim());setSent(true)}catch(e:any){setError(e?.status===429?'Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу.':'Хүсэлт илгээж чадсангүй. Дахин оролдоно уу.')}finally{setBusy(false)}};
  return <div className="auth">
-  <a className="auth__brand" href={routeHref('home')} aria-label="BUSINESSMRI.MN - Нүүр">BUSINESSMRI.MN</a>
+  <a className="auth__brand" href={routeHref('home')} aria-label="BusinessMRI.mn - Нүүр">BusinessMRI.mn</a>
   <PageContainer className="auth__layout auth__layout--single">
    <Card className="auth__card mmri-glass mmri-glass--strong" tone="focal">
     <h1 className="auth__card-title" tabIndex={-1} data-route-heading>Нууц үг сэргээх</h1>
     {sent?<div className="auth__done" role="status">
       <p><b>Хүсэлт хүлээн авлаа.</b></p>
-      <p>Хэрэв {email.trim()} хаягаар бүртгэл байвал нууц үг сэргээх холбоосыг илгээлээ. Холбоос 30 минутын дотор, зөвхөн нэг удаа ажиллана. Имэйл ирэхгүй бол спам хавтсаа шалгана уу.</p>
+      <p>Хэрэв {email.trim()} хаягаар бүртгэл байвал нууц үг сэргээх холбоосыг илгээлээ. Холбоос зөвхөн нэг удаа ажиллана. Хүчинтэй хугацааг имэйлээс шалгана уу. Имэйл ирэхгүй бол спам хавтсаа шалгана уу.</p>
       <a className="auth__back" href="#/login">Нэвтрэх хуудас руу буцах</a>
      </div>
     :<form className="auth__form" onSubmit={e=>{e.preventDefault();void submit()}}>

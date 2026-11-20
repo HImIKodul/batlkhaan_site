@@ -90,7 +90,8 @@ export class OpenAiNarrativeProvider implements NarrativeProvider{
         if(r.ok){
           if(body?.status==="incomplete")throw new Error(`AI response incomplete: ${String(body?.incomplete_details?.reason??"unknown").slice(0,60)}`);
           const parsed=JSON.parse(extractResponseText(body)); const draft=normalizeDraft(parsed);
-          const telemetry:NarrativeProviderTelemetry={httpAttempts:attempts,retryCount:retries,requestIds,finalHttpStatus:r.status,durationMs:Date.now()-started};
+          const usage=body?.usage&&typeof body.usage==="object"?{inputTokens:Number(body.usage.input_tokens)||0,outputTokens:Number(body.usage.output_tokens)||0}:undefined;
+          const telemetry:NarrativeProviderTelemetry={httpAttempts:attempts,retryCount:retries,requestIds,finalHttpStatus:r.status,durationMs:Date.now()-started,...(usage?{usage}:{})};
           return {draft:{...draft,schemaVersion:"MMRI-NARRATIVE-DRAFT-1.0",payloadHash:payload.payloadHash},telemetry};
         }
         lastError=new Error(safeProviderMessage(body,r.status));

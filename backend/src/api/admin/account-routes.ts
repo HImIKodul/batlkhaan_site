@@ -27,7 +27,7 @@ export interface AccountRouteDeps {
 
 const reasonOf = (v: unknown) => { const r = String(v ?? "").replace(/\s+/g, " ").trim(); if (r.length < 8) throw badRequest("Шалтгаанаа дор хаяж 8 тэмдэгтээр бичнэ үү."); return r.slice(0, 300); };
 const maskEmail = (e: string) => { const [l = "", d = ""] = e.split("@"); return `${l.slice(0, 1)}***@${d}`; };
-const safeUser = { id: true, email: true, displayName: true, status: true, lastLoginAt: true, erasedAt: true, createdAt: true } as const;
+const safeUser = { id: true, email: true, displayName: true, status: true, lastLoginAt: true, erasedAt: true, createdAt: true, emailVerificationRequired: true, emailVerifiedAt: true } as const;
 
 export function registerAccountRoutes(d: AccountRouteDeps) {
   const { route, audit, pageOf } = d;
@@ -47,7 +47,26 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
     if (status && !["ACTIVE", "DISABLED"].includes(status)) throw badRequest("Төлөв буруу байна.");
     const where: any = { ...(status ? { status } : {}), ...(q ? { OR: [{ email: { contains: q, mode: "insensitive" } }, { displayName: { contains: q, mode: "insensitive" } }] } : {}) };
     const [total, rows] = await Promise.all([prisma.user.count({ where }), prisma.user.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize, select: { ...safeUser, adminAccount: { select: { role: true } }, _count: { select: { memberships: true } } } })]);
-    ok(c.res, { page, pageSize, total, items: rows.map(u => ({ id: u.id, email: u.erasedAt ? null : u.email, displayName: u.erasedAt ? null : u.displayName, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt, erased: !!u.erasedAt, adminRole: u.adminAccount?.role ?? null, companies: u._count.memberships })) });
+    // One batched read for the whole page (no per-row queries): companies, domain access, diagnosis progress, payment and report status.
+    const ids = rows.map(u => u.id);
+    const mem = await prisma.companyMembership.findMany({ where: { userId: { in: ids } }, select: { userId: true, companyId: true, company: { select: { name: true, erasedAt: true } } } });
+    const cids = [...new Set(mem.map(m => m.companyId))];
+    const [ents, asm, inv, rev] = cids.length ? await Promise.all([
+      prisma.companyEntitlement.findMany({ where: { companyId: { in: cids }, status: "ACTIVE" }, select: { companyId: true, domainCode: true, origin: true } }),
+      prisma.assessment.groupBy({ by: ["companyId", "status"], where: { companyId: { in: cids } }, _count: { _all: true } }),
+      prisma.billingInvoice.groupBy({ by: ["companyId", "status"], where: { companyId: { in: cids } }, _count: { _all: true } }),
+      prisma.reportReview.groupBy({ by: ["companyId", "status"], where: { companyId: { in: cids } }, _count: { _all: true } })]) : [[], [], [], []];
+    const forUser = (uid: string) => {
+      const mine = mem.filter(m => m.userId === uid), mc = new Set(mine.map(m => m.companyId));
+      const domains = new Map<string, string>(); for (const e of ents as any[]) if (mc.has(e.companyId) && (!domains.has(e.domainCode) || e.origin === "PAID")) domains.set(e.domainCode, e.origin);
+      const cnt = (list: any[], pred: (st: string) => boolean) => list.filter(x => mc.has(x.companyId) && pred(x.status)).reduce((n, x) => n + x._count._all, 0);
+      return { companyNames: mine.filter(m => !m.company.erasedAt).map(m => m.company.name).slice(0, 3),
+        domains: [...domains].map(([domain, origin]) => ({ domain, origin })),
+        diagnoses: { inProgress: cnt(asm as any[], st => ["IN_PROGRESS", "PAUSED", "READY_FOR_COMPLETION", "PROCESSING", "PROFILE_PENDING"].includes(st)), completed: cnt(asm as any[], st => ["COMPLETED", "COMPLETED_WITH_REVIEW"].includes(st)) },
+        payments: { paid: cnt(inv as any[], st => st === "PAID"), pending: cnt(inv as any[], st => ["CREATED", "PENDING"].includes(st)), failed: cnt(inv as any[], st => ["FAILED", "CANCELLED"].includes(st)) },
+        reports: { pending: cnt(rev as any[], st => st !== "PUBLISHED"), published: cnt(rev as any[], st => st === "PUBLISHED") } };
+    };
+    ok(c.res, { page, pageSize, total, items: rows.map(u => ({ ...forUser(u.id), id: u.id, email: u.erasedAt ? null : u.email, displayName: u.erasedAt ? null : u.displayName, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt, emailVerificationRequired: u.emailVerificationRequired, emailVerifiedAt: u.emailVerifiedAt, erased: !!u.erasedAt, adminRole: u.adminAccount?.role ?? null, companies: u._count.memberships })) });
   }, { sensitive: false });
 
   route("GET", "/users/:id", "accounts.manage", async (c) => {
@@ -57,7 +76,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       prisma.refreshSession.count({ where: { userId: u.id, revokedAt: null, expiresAt: { gt: new Date() } } }),
       prisma.authAuditEvent.findMany({ where: { userId: u.id }, orderBy: { createdAt: "desc" }, take: 10, select: { eventType: true, createdAt: true } }),
       prisma.adminAuditEvent.findMany({ where: { targetType: "USER", targetId: u.id }, orderBy: { createdAt: "desc" }, take: 20, select: { action: true, outcome: true, createdAt: true, metadata: true } })]);
-    ok(c.res, { user: { id: u.id, email: u.erasedAt ? null : u.email, displayName: u.erasedAt ? null : u.displayName, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt, erased: !!u.erasedAt, adminRole: u.adminAccount?.role ?? null },
+    ok(c.res, { user: { id: u.id, email: u.erasedAt ? null : u.email, displayName: u.erasedAt ? null : u.displayName, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt, emailVerificationRequired: u.emailVerificationRequired, emailVerifiedAt: u.emailVerifiedAt, erased: !!u.erasedAt, adminRole: u.adminAccount?.role ?? null },
       companies: u.memberships.map(m => ({ id: m.company.id, name: m.company.erasedAt ? null : m.company.name, role: m.role })), activeSessions: sessions, recentSignIns: authEvents, adminHistory: adminEvents });
   }, { sensitive: false });
 
@@ -70,6 +89,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       if (!EMAIL_RE.test(next) || next.length > 254) throw badRequest("Имэйл хаяг буруу байна.");
       if (String(b.confirmNewEmail ?? "").trim().toLowerCase() !== next) throw badRequest("Имэйл хаягийг баталгаажуулах талбар таарахгүй байна.");
       const out = await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${id} FOR UPDATE`;
         const u = await tx.user.findUnique({ where: { id }, select: { id: true, email: true, erasedAt: true, adminAccount: { select: { id: true } } } });
         if (!u) throw notFound("Хэрэглэгч олдсонгүй.");
         if (u.erasedAt) throw new ApiError(409, "ACCOUNT_ERASED", "Устгагдсан бүртгэлийн имэйлийг солих боломжгүй.");
@@ -77,12 +97,13 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
         if (u.email.toLowerCase() === next) throw new ApiError(409, "EMAIL_UNCHANGED", "Шинэ имэйл одоогийнхтой ижил байна.");
         const taken = await tx.user.findFirst({ where: { id: { not: id }, email: { equals: next, mode: "insensitive" } }, select: { id: true } });
         if (taken) throw new ApiError(409, "EMAIL_TAKEN", "Энэ имэйл хаяг өөр бүртгэлд ашиглагдаж байна.");
-        await tx.user.update({ where: { id }, data: { email: next, tokenVersion: { increment: 1 } } });
+        await tx.user.update({ where: { id }, data: { email: next, tokenVersion: { increment: 1 }, emailVerificationRequired: true, emailVerifiedAt: null } });
         const revoked = await tx.refreshSession.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+        await tx.passwordResetToken.updateMany({where:{userId:id,usedAt:null},data:{usedAt:new Date()}});
         return { from: u.email, sessionsRevoked: revoked.count };
       });
       await audit(p.adminId, "ADMIN_USER_EMAIL_CHANGED", "SUCCESS", fp, { type: "USER", id }, { reason, from: maskEmail(out.from), to: maskEmail(next), sessionsRevoked: out.sessionsRevoked });
-      ok(c.res, { changed: true, email: next, sessionsRevoked: out.sessionsRevoked, note: "Хэрэглэгч шинэ имэйлээр дахин нэвтэрнэ. Шинэ хаягийн эзэмшлийг имэйлээр баталгаажуулах холболт одоогоор байхгүй." });
+      ok(c.res, { changed: true, email: next, sessionsRevoked: out.sessionsRevoked, note: "Хэрэглэгч нэвтрэх хуудаснаас шинэ имэйлдээ баталгаажуулах холбоос авч, нууц үгээ тогтоосны дараа нэвтэрнэ." });
     } catch (e: any) {
       if (e?.code === "P2002") return fail(p, fp, "ADMIN_USER_EMAIL_CHANGED", "USER", id, new ApiError(409, "EMAIL_TAKEN", "Энэ имэйл хаяг өөр бүртгэлд ашиглагдаж байна."), reason);
       return fail(p, fp, "ADMIN_USER_EMAIL_CHANGED", "USER", id, e, reason);
@@ -96,6 +117,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       reason = reasonOf(b.reason);
       if (!["ACTIVE", "DISABLED"].includes(b.status)) throw badRequest("Төлөв буруу байна.");
       const out = await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${id} FOR UPDATE`;
         const u = await tx.user.findUnique({ where: { id }, select: { id: true, status: true, erasedAt: true, adminAccount: { select: { id: true } } } });
         if (!u) throw notFound("Хэрэглэгч олдсонгүй.");
         if (u.erasedAt) throw new ApiError(409, "ACCOUNT_ERASED", "Устгагдсан бүртгэлийн төлөвийг өөрчлөх боломжгүй.");
@@ -104,6 +126,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
         if (u.status === b.status) return { changed: false, sessionsRevoked: 0 };
         await tx.user.update({ where: { id }, data: { status: b.status, ...(b.status === "DISABLED" ? { tokenVersion: { increment: 1 } } : {}) } });
         const revoked = b.status === "DISABLED" ? await tx.refreshSession.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } }) : { count: 0 };
+        if(b.status==="DISABLED")await tx.passwordResetToken.updateMany({where:{userId:id,usedAt:null},data:{usedAt:new Date()}});
         return { changed: true, sessionsRevoked: revoked.count };
       });
       await audit(p.adminId, action, "SUCCESS", fp, { type: "USER", id }, { reason, to: b.status, changed: out.changed, sessionsRevoked: out.sessionsRevoked });

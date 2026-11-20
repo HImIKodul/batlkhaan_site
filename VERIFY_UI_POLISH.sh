@@ -131,7 +131,7 @@ check('PDF browser fallback fixed A4 three-page surface', 'width:210mm!important
 renderer=R/'render_report_pdf.py'
 if renderer.exists():
     py=renderer.read_text(encoding='utf-8')
-    check('PDF renderer version','MMRI-PDF-1.5-BUSINESS-REPORT' in py)
+    check('PDF renderer version','GENERATOR_VERSION = "MMRI-PDF-1.6-BUSINESSMRI-BRAND"' in py and 'BUSINESSMMRI' not in py.upper())
     check('PDF Noto fonts','NotoSans-Regular.ttf' in py and 'NotoSans-Bold.ttf' in py)
     check('PDF five domain accents',all(x in py.lower() for x in ['ff3d8d','00a6ff','ffd000','7c4dff','ff6a00']))
     check('PDF explicit three-section flow',py.count('PageBreak')>=2)

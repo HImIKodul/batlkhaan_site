@@ -309,15 +309,9 @@ body.mmri-prism-page .mmri-questionnaire__form{border-radius:30px}
 /* dark panel: near-white text; the context chip, answer cards and buttons keep their own light/ink or blue surfaces */
 body.mmri-prism-page :is(.mmri-questionnaire__count,.mmri-questionnaire__count span,.mmri-questionnaire__eyebrow,.mmri-questionnaire__question-head h1,.mmri-questionnaire__special>span,.mmri-questionnaire__save-line,.mmri-questionnaire__save-line span,.mmri-questionnaire__autosave){color:#fff}
 body.mmri-prism-page :is(.mmri-questionnaire__clear,.mmri-questionnaire__top .mmri-button--ghost,.mmri-questionnaire__actions .mmri-button--ghost){color:#fff}
-body.mmri-prism-page .mmri-questionnaire__special{border-top-color:rgba(255,255,255,.35)}
+
 body.mmri-prism-page .mmri-questionnaire__actions .is-back{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.6)}
 body.mmri-prism-page .mmri-questionnaire__actions .is-back:hover:not(:disabled){background:rgba(255,255,255,.26);border-color:#fff}
-body.mmri-prism-page .mmri-questionnaire__form :is(.mmri-radio-card__copy strong){color:var(--wp-ink)}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card{border-radius:999px;padding-left:22px;background-image:linear-gradient(180deg,rgba(255,255,255,.5) 0,rgba(255,255,255,0) 52%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 30%,#fff),color-mix(in srgb,var(--ac) 14%,#fff) 78%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -6px 10px -6px color-mix(in srgb,var(--ac) 40%,transparent),0 8px 18px -12px color-mix(in srgb,var(--ac) 70%,rgba(6,21,92,.6))}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card::before{display:none}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card:hover{background-image:linear-gradient(180deg,rgba(255,255,255,.55) 0,rgba(255,255,255,0) 52%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 42%,#fff),color-mix(in srgb,var(--ac) 22%,#fff) 78%);box-shadow:inset 0 1.5px 0 #fff,0 0 22px -4px color-mix(in srgb,var(--ac) 65%,transparent),0 10px 22px -12px color-mix(in srgb,var(--ac) 75%,rgba(6,21,92,.5))}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card.is-selected{background-image:linear-gradient(180deg,rgba(255,255,255,.4) 0,rgba(255,255,255,0) 52%),linear-gradient(100deg,color-mix(in srgb,var(--ac) 62%,#fff),color-mix(in srgb,var(--ac) 38%,#fff) 82%);box-shadow:inset 0 1.5px 0 #fff,0 0 0 2px var(--ac),0 0 0 5px rgba(255,255,255,.55),0 0 34px 0 color-mix(in srgb,var(--ac) 80%,transparent)}
-body.mmri-prism-page .mmri-radio-group .mmri-radio-card:has(input:focus-visible){outline:3px solid #0A1B4D;outline-offset:4px;box-shadow:0 0 0 7px rgba(255,255,255,.85)}
 
 /* ---- GUIDE POPUPS: darker violet-blue floating glass (reference: violet overlay); inner cards stay light frosted for readable ink ---- */
 body.mmri-prism-page .mmri-guide2::before{background:radial-gradient(70% 60% at 30% 10%,rgba(150,170,255,.18),transparent 70%),radial-gradient(90% 80% at 50% 40%,rgba(40,60,150,.28),rgba(14,24,90,.5) 100%)}
@@ -390,7 +384,6 @@ body.mmri-prism-page :is(.mmri-questionnaire__clear,.mmri-questionnaire__actions
 body.mmri-prism-page .auth__legal small{opacity:1;color:var(--wp-ink2)}
 
 /* Hero lead: dark navy (the sheet is a saturated translucent blue behind it) */
-body.mmri-prism-page .mmri-home2__copy h1 em{color:var(--wp-ink);font-weight:500}
 
 /* ---- Tier-2 controls on the sheet (home guide buttons): blue glass with visible edge thickness instead of near-white pills ---- */
 body.mmri-prism-page .mmri-home2__guide{background:linear-gradient(180deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.08) 50%),linear-gradient(160deg,rgba(190,228,255,.7),rgba(110,172,255,.55));border-color:rgba(255,255,255,.95);

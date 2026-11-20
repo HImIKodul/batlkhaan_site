@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import {fixtureVerificationToken} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* 20-question company onboarding: save, reload, re-login persistence and failure recovery through the REAL UI.
    Run ONLY against an isolated stack with synthetic users. Env: PW=<playwright-core path> BASE=<frontend origin>/ (dev server proxying /api to the isolated backend)
    SHOT=<dir for screenshots, optional>. Exit code 1 on any failure. */
@@ -5,7 +7,7 @@ import {createRequire} from 'module';const require=createRequire(import.meta.url
 const BASE=process.env.BASE||'http://127.0.0.1:5310/',SHOT=process.env.SHOT||'';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let fail=0;const t=(id,n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+String(d).slice(0,220):''))};
 const PW='Ui-Test-Pass-12345!';const email=`ui.onb.${Date.now()}@example.test`;
-const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
+const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',chromiumSandbox:true});
 async function run(viewport,label){
   const ctx=await b.newContext({viewport});const p=await ctx.newPage();const puts=[];
   p.on('response',r=>{if(r.request().method()==='PUT'&&r.url().includes('/profile-answers'))puts.push(r.status())});
@@ -13,7 +15,9 @@ async function run(viewport,label){
   const em=label+'.'+email;
   await p.goto(BASE+'#/login');await sleep(1000);
   await p.locator('.mmri-tabs button',{hasText:'Бүртгүүлэх'}).first().click();await p.fill('input[autocomplete=name]','Synthetic UI');await p.fill('input[type=email]',em);await p.fill('input[type=password]',PW);
-  await p.click('button[type=submit]');await sleep(2200);
+  const registered=p.waitForResponse(r=>r.url().endsWith('/auth/register'));await p.click('button[type=submit]');const pending=await registered;if(pending.status()!==202)throw new Error('Registration must require ownership verification');
+  await p.goto(BASE+'#/verify-email?token='+fixtureVerificationToken(em));await p.locator('input[autocomplete=new-password]').first().fill(PW);await p.locator('input[autocomplete=new-password]').nth(1).fill(PW);const confirmed=p.waitForResponse(r=>r.url().endsWith('/email-verification/confirm'));await p.locator('button[type=submit]').click();if((await confirmed).status()!==200)throw new Error('Ownership verification failed');
+  await p.goto(BASE+'#/login');await p.fill('input[type=email]',em);await p.fill('input[type=password]',PW);await p.locator('button[type=submit]').click();await p.waitForURL(url=>!url.hash.startsWith('#/login'));
   await p.goto(BASE+'#/company');await sleep(1200);
   await p.fill('input[autocomplete=organization]','Синтетик Тест');await p.click('input[role=combobox]');await p.keyboard.type('ХХК');await sleep(300);await p.locator('[role=option]').first().click();
   await p.getByRole('button',{name:'Үргэлжлүүлэх'}).click();await sleep(1200);
@@ -58,6 +62,7 @@ async function run(viewport,label){
   await p.goto(BASE+'#/company');await sleep(2200);
   t(label+'-P3','after logging out and in the answers are still complete',(await p.locator('h1').innerText()).includes('Байгууллагын мэдээлэл')&&(await p.locator('.company-detail-editor__grid label').count())===20);
   const overflow=await p.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1);t(label+'-L1','no horizontal overflow',!overflow);
+  if(process.env.QA_CREDENTIAL_OUT_ONBOARD){if(!process.env.QA_CREDENTIAL_OUT_ONBOARD.includes('/private/'))throw new Error('Private fixture credential path required');fs.writeFileSync(process.env.QA_CREDENTIAL_OUT_ONBOARD,JSON.stringify({email:em,password:PW})+'\n',{mode:0o600})}
   await ctx.close();
 }
 await run({width:1280,height:900},'desktop');

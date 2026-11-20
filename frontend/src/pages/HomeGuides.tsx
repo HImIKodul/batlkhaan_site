@@ -1,91 +1,57 @@
 import React,{useEffect,useState} from 'react';
 import { Icon } from '../components/Icon';
 import { type BusinessAreaId } from '../data/businessEvaluation';
+import { DOMAIN_ORDER,domainWithAbbr } from '../data/domainOrder';
 
-const areaOrder:BusinessAreaId[]=['marketing','it','finance','people','operations'];
 
 /* ---------- Guide 1: BusinessMRI.mn гэж юу вэ? ---------- */
-/* 320 = 5 domains x 64 capabilities and 61,440 = 5 x 12,288 questions are the validated frozen-bank counts; 192-280 is the adaptive
-   QUICK range enforced by the backend (soft minimum 192, hard maximum 280). */
-const metrics:{value:string;label:string}[]=[
- {value:'5',label:'чиглэл'},
- {value:'320',label:'үнэлэх чадвар'},
- {value:'61,440',label:'асуултын сан'},
- {value:'192–280',label:'сонгогдох асуулт'},
- {value:'12',label:'сарын хөгжлийн төлөвлөгөө'},
+/* ONE static page: no tabs, slides, animation or controls. The figures below are the owner-approved guide copy (see CLAUDE_PROGRESS.md for how they relate to the validated bank counts). */
+const aboutStages:{title:string;text:string}[]=[
+ {title:'БИД ХААНА БАЙНА?',text:'Бизнесийн өнөөгийн байдлыг оношилно.'},
+ {title:'БИД ЮУГ САЙЖРУУЛАХ ВЭ?',text:'Асуудал, шалтгаан, сайжруулах боломжийг тодорхойлно.'},
+ {title:'БИД ЦААШИД ЮУ ХИЙХ ВЭ?',text:'Хэрэгжүүлэх ажлуудыг тодорхойлно.'},
+ {title:'12 САРЫН ТӨЛӨВЛӨГӨӨ',text:'Стратегийн зорилго, хэрэгжүүлэх ажлууд, хөгжлийн төлөвлөгөө.'},
 ];
-const stages:{title:string;text:string}[]=[
- {title:'Бид хаана байна вэ?',text:'Бизнесийн өнөөгийн чадавхыг оношилно.'},
- {title:'Юуг сайжруулах вэ?',text:'Асуудал, шалтгаан, боломжийг тодорхойлно.'},
- {title:'Цаашид юуг хийх вэ?',text:'Стратегийн зорилго, 12 сарын төлөвлөгөөг гаргана.'},
-];
-
-const pagedQuery='(max-width:820px),(max-height:780px)';
+const AboutStat=({value,label,wide}:{value:string;label:string;wide?:boolean})=><div className={`mmri-guide2__card mmri-about1__stat${wide?' mmri-about1__stat--wide':''}`}><strong>{value}</strong><span>{label}</span></div>;
 export function AboutGuide(){
- const paged=useMedia(pagedQuery);const [page,setPage]=useState(0);
- const showMetrics=!paged||page===0,showFlow=!paged||page===1;
- return <div className="mmri-guide2__about" data-paged={paged||undefined}>
-  {showMetrics&&<ul className="mmri-guide2__metrics" aria-label="Платформын үзүүлэлтүүд">
-   {metrics.map(m=><li key={m.value} className="mmri-guide2__card mmri-guide2__metric"><strong>{m.value}</strong><span>{m.label}</span></li>)}
-  </ul>}
-  {showFlow&&<ul className="mmri-guide2__flow" aria-label="Оношилгооны гурван гол үр дүн">
-   {stages.map(s=><li key={s.title} className="mmri-guide2__stage is-right"><div className="mmri-guide2__card mmri-guide2__stage-card"><strong>{s.title}</strong><p>{s.text}</p></div></li>)}
-  </ul>}
-  {paged&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
-   <button type="button" className="mmri-guide2__nav-btn" disabled={page===0} onClick={()=>setPage(0)}><Icon name="back" size={18}/>Өмнөх</button>
-   <span className="mmri-guide2__counter" role="status" aria-live="polite">{page+1}<em> / 2</em></span>
-   <button type="button" className="mmri-guide2__nav-btn is-primary" disabled={page===1} onClick={()=>setPage(1)}>Дараах<Icon name="arrow" size={18}/></button>
-  </div>}
+ return <div className="mmri-about1">
+  <div className="mmri-about1__cols">
+   <div className="mmri-about1__left">
+    <div className="mmri-about1__row"><AboutStat value="5" label="Үндсэн чиглэл"/><AboutStat value="320" label="Чадварыг үнэлнэ"/></div>
+    <AboutStat wide value="12 сар" label="Хөгжлийн төлөвлөгөө"/>
+    <div className="mmri-about1__row"><AboutStat value="75,000+" label="Оношилгооны асуулт"/><AboutStat value="200–280" label="Нэг чиглэлд сонгогдох асуулт"/></div>
+    <div className="mmri-guide2__card mmri-about1__result"><strong>Таны авах үр дүн</strong><p>Оношилгооны тайлан, давуу болон сул тал, сайжруулах чиглэл, 12 сарын хэрэгжүүлэх төлөвлөгөө.</p></div>
+   </div>
+   <ol className="mmri-about1__flow" aria-label="Оношилгооноос төлөвлөгөө хүртэлх дөрвөн үе шат">
+    {aboutStages.map((st,i)=><li key={st.title} className="mmri-about1__step">
+     <div className="mmri-guide2__card mmri-about1__step-card"><strong>{st.title}</strong><p>{st.text}</p></div>
+     {i<aboutStages.length-1&&<span className="mmri-about1__arrow" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg></span>}
+    </li>)}
+   </ol>
+  </div>
+  <div className="mmri-about1__slogans"><p>“Монголын бизнесийн оюунлаг шийдэл”</p><p>“Оношилгооноос төлөвлөгөө рүү”</p></div>
  </div>;
 }
 
 /* ---------- Guide 2: Оношилгооны үр дүн ---------- */
 /* Illustrative wording only: describes what each report section covers. It contains no scores, findings or customer results. */
-type AreaCol={id:BusinessAreaId;name:string;cells:{rating:string;strength:string;weakness:string;problem:string;top5:string[];plan:[string,string][]}};
-const reportColumns:AreaCol[]=[
- {id:'marketing',name:'Маркетинг',cells:{
-  rating:'Зах зээл, үйлчлүүлэгч, брэнд, борлуулалтын чадавхын нэгдсэн оноо ба түвшин.',
-  strength:'Тогтвортой үйлчлүүлэгчийн суурь, ойлгомжтой үнэ цэнийн санал.',
-  weakness:'Маркетингийн үр дүнг тогтмол хэмжиж, дүгнэдэггүй.',
-  problem:'Сувгийн зардал ба борлуулалтын өсөлтийн хоорондын холбоо тодорхойгүй.',
-  top5:['Зорилтот сегментээ нарийвчлах','Борлуулалтын сувгийн үр дүнг хэмжих','Брэндийн мессежийг нэг мөр болгох','Давтан худалдан авалтыг нэмэгдүүлэх','Сарын маркетингийн тайлан гаргах'],
-  plan:[['1–3 сар','суурь үзүүлэлт тогтоох'],['4–9 сар','сувгийн туршилт, оновчлол'],['10–12 сар','үр дүнг бататгаж дараа жилийн төлөвлөгөө гаргах']]}},
- {id:'it',name:'Мэдээллийн технологи',cells:{
-  rating:'Систем, мэдээллийн аюулгүй байдал, автоматжуулалтын чадавхын нэгдсэн оноо ба түвшин.',
-  strength:'Өдөр тутмын үйл ажиллагаанд шаардлагатай үндсэн программууд ашиглагддаг.',
-  weakness:'Мэдээллийн нөөцлөлт, хандалтын эрхийн дүрэм тогтмол шалгагддаггүй.',
-  problem:'Хэлтэс бүр тусдаа системтэй тул мэдээлэл давхардаж, тайлан удаан гардаг.',
-  top5:['Мэдээллийн нөөцлөлтийг тогтмолжуулах','Хандалтын эрхийг шинэчлэх','Системүүдийг нэгтгэх','Давтагддаг ажлыг автоматжуулах','Ажилтны аюулгүй байдлын сургалт'],
-  plan:[['1–3 сар','эрсдэлийн үнэлгээ, нөөцлөлт'],['4–9 сар','системийн нэгтгэл, автоматжуулалт'],['10–12 сар','хяналт, дараагийн жилийн хөрөнгө оруулалт']]}},
- {id:'finance',name:'Санхүү',cells:{
-  rating:'Төсөв, мөнгөн гүйлгээ, ашигт ажиллагааны хяналтын чадавхын нэгдсэн оноо ба түвшин.',
-  strength:'Орлого, зарлагын бүртгэл тогтмол хөтлөгддөг.',
-  weakness:'Мөнгөн гүйлгээний урьдчилсан төлөвлөлт хязгаарлагдмал.',
-  problem:'Төсөв ба гүйцэтгэлийн зөрүүг хугацаанд нь шинжилдэггүй.',
-  top5:['Сарын мөнгөн гүйлгээний төлөвлөгөө','Төсөв ба гүйцэтгэлийн харьцуулалт','Авлагын хугацааг богиносгох','Бүтээгдэхүүн бүрийн ашгийг тооцох','Санхүүгийн үндсэн үзүүлэлтийн самбар'],
-  plan:[['1–3 сар','төсвийн суурь загвар'],['4–9 сар','мөнгөн гүйлгээний хяналт, авлагын удирдлага'],['10–12 сар','ашигт ажиллагааны дүн шинжилгээ']]}},
- {id:'people',name:'Хүний нөөц',cells:{
-  rating:'Ажилтны сонгон шалгаруулалт, хөгжил, урамшуулал, соёлын чадавхын нэгдсэн оноо ба түвшин.',
-  strength:'Багийн гишүүд байгууллагын зорилгыг ойлгож, хамтран ажилладаг.',
-  weakness:'Ажлын байрны тодорхойлолт, гүйцэтгэлийн үнэлгээ албан ёсны хэлбэргүй.',
-  problem:'Гол ажилтнуудын гарц өндөр, орлон гүйцэтгэх хүн бэлтгэгдээгүй.',
-  top5:['Ажлын байрны тодорхойлолт шинэчлэх','Гүйцэтгэлийн үнэлгээ нэвтрүүлэх','Шинэ ажилтны дадлагажуулалт','Гол албан тушаалын залгамж халаа','Ажилтны сэтгэл ханамжийн судалгаа'],
-  plan:[['1–3 сар','бүтэц, үүрэг хариуцлага тодорхойлох'],['4–9 сар','үнэлгээ, сургалт нэвтрүүлэх'],['10–12 сар','үр дүнг эргэн харж ахиулах']]}},
- {id:'operations',name:'Үйлдвэрлэл ба үйл ажиллагаа',cells:{
-  rating:'Процесс, чанар, нийлүүлэлт, хүчин чадлын чадавхын нэгдсэн оноо ба түвшин.',
-  strength:'Гол үйл ажиллагааны дараалал тогтсон, нийлүүлэгчийн сүлжээтэй.',
-  weakness:'Чанарын шалгалт, алдааны бүртгэл системчилсэн бус.',
-  problem:'Нөөцийн хөдөлгөөн, хүргэлтийн хугацаа тогтворгүй тул захиалга хоцорно.',
-  top5:['Үндсэн процессыг бичгээр тогтоох','Чанарын шалгалтын жагсаалт','Нөөцийн түвшний хяналт','Нийлүүлэгчийн үнэлгээ','Захиалгын хугацааг хэмжих'],
-  plan:[['1–3 сар','процессын зураглал'],['4–9 сар','чанар, нөөцийн хяналтын горим'],['10–12 сар','хүчин чадлын тооцоо, өргөжүүлэх төлөвлөгөө']]}},
-];
-const reportRows:{key:'rating'|'strength'|'weakness'|'problem'|'top5'|'plan';label:string}[]=[
- {key:'rating',label:'Үнэлгээ'},
+type ReportKey='rating'|'strength'|'weakness'|'problem'|'top5'|'plan';
+type AreaCol={id:BusinessAreaId;name:string;cells:Record<ReportKey,string>};
+/* Exact approved wording of the result-section table (descriptive only: no scores, findings or customer results). Column order and names come from data/domainOrder.ts. */
+const AREA_WORDS:Record<string,[rating:string,problem:string,plan:string]>={
+ marketing:['Маркетингийн үнэлгээ','Маркетингийн асуудал','12 сарын маркетингийн төлөвлөгөө'],
+ finance:['Санхүүгийн үнэлгээ','Санхүүгийн асуудал','12 сарын санхүүгийн төлөвлөгөө'],
+ people:['ХН-ийн үнэлгээ','ХН-ийн асуудал','12 сарын ХН-ийн төлөвлөгөө'],
+ it:['МТ-ийн үнэлгээ','МТ-ийн асуудал','12 сарын МТ-ийн төлөвлөгөө'],
+ operations:['Үйл ажиллагааны үнэлгээ','Үйл ажиллагааны асуудал','12 сарын үйл ажиллагааны төлөвлөгөө']};
+const reportColumns:AreaCol[]=DOMAIN_ORDER.map(id=>({id,name:domainWithAbbr(id),cells:{rating:AREA_WORDS[id][0],strength:'Хүчтэй 5 чадавх',weakness:'5 чиглэл',problem:AREA_WORDS[id][1],top5:'5 ажил',plan:AREA_WORDS[id][2]}}));
+const reportRows:{key:ReportKey;label:string}[]=[
+ {key:'rating',label:'Ерөнхий үнэлгээ'},
  {key:'strength',label:'Давуу тал'},
- {key:'weakness',label:'Сул тал'},
- {key:'problem',label:'Асуудал'},
- {key:'top5',label:'Тэргүүлэх 5 ажил'},
- {key:'plan',label:'Төлөвлөгөө'},
+ {key:'weakness',label:'Сайжруулах чиглэл'},
+ {key:'problem',label:'Гол асуудал'},
+ {key:'top5',label:'Тэргүүлэх ажил'},
+ {key:'plan',label:'Хөгжлийн төлөвлөгөө'},
 ];
 
 function ReportMatrix(){
@@ -95,15 +61,13 @@ function ReportMatrix(){
    <table className="mmri-guide2__table">
     <caption className="mmri-visually-hidden">Таван чиглэлийн оношилгооны тайланд харагдах хэсгүүдийн жишээ</caption>
     <thead><tr>
-     <th scope="col" className="mmri-guide2__corner"><span className="mmri-visually-hidden">Тайлангийн хэсэг</span></th>
+     <th scope="col" className="mmri-guide2__corner">Үр дүнгийн хэсэг</th>
      {reportColumns.map(c=><th scope="col" key={c.id} data-area={c.id}><span className="mmri-guide2__area"><i className="mmri-domain__mark" aria-hidden="true"/>{c.name}</span></th>)}
     </tr></thead>
     <tbody>{reportRows.map(r=><tr key={r.key}>
      <th scope="row">{r.label}</th>
      {reportColumns.map(c=><td key={c.id} data-area={c.id} data-label={c.name}>
-      {r.key==='top5'?<ol>{c.cells.top5.map(t=><li key={t}>{t}</li>)}</ol>
-       :r.key==='plan'?<ul className="mmri-guide2__plan">{c.cells.plan.map(([range,text])=><li key={range}><b>{range}:</b> {text}</li>)}</ul>
-       :c.cells[r.key]}
+      {c.cells[r.key]}
      </td>)}
     </tr>)}</tbody>
    </table>
@@ -113,6 +77,7 @@ function ReportMatrix(){
 
 /* Compact view (narrow or short viewports): the same content, one area at a time. Tabs choose the area; the sections of the chosen area are split into pages on
    phones so every panel fits the popup without an inner scrollbar. */
+const pagedQuery='(max-width:820px),(max-height:780px)';
 const compactQuery='(max-width:1000px),(max-height:740px)';
 const narrowQuery='(max-width:700px),(max-height:680px)';
 function useMedia(q:string){
@@ -121,7 +86,7 @@ function useMedia(q:string){
  useEffect(()=>{if(typeof window.matchMedia!=='function')return;const mq=window.matchMedia(q);const f=()=>setM(mq.matches);f();mq.addEventListener('change',f);return()=>mq.removeEventListener('change',f)},[q]);
  return m;
 }
-const phonePages:('rating'|'strength'|'weakness'|'problem'|'top5'|'plan')[][]=[['rating','strength'],['weakness','problem'],['top5'],['plan']];
+const phonePages:ReportKey[][]=[['rating','strength'],['weakness','problem'],['top5'],['plan']];
 function ReportCompact(){
  const [area,setArea]=useState(0);const [page,setPage]=useState(0);
  const narrow=useMedia(narrowQuery);const col=reportColumns[area];
@@ -136,9 +101,7 @@ function ReportCompact(){
   <div id="rg-panel" role="tabpanel" aria-labelledby={`rg-tab-${col.id}`} className="mmri-guide2__dpanel">
    {keys.map(k=>{const row=reportRows.find(r=>r.key===k)!;return <section key={k} className={`mmri-guide2__dsec is-${k}`}>
     <h3>{row.label}</h3>
-    {k==='top5'?<ol>{col.cells.top5.map(t=><li key={t}>{t}</li>)}</ol>
-     :k==='plan'?<ul className="mmri-guide2__plan">{col.cells.plan.map(([range,text])=><li key={range}><b>{range}:</b> {text}</li>)}</ul>
-     :<p>{col.cells[k]}</p>}
+    <p>{col.cells[k]}</p>
    </section>})}
   </div>
   {narrow&&<div className="mmri-guide2__pager" role="group" aria-label="Хуудас">
@@ -163,22 +126,29 @@ export function ReportGuide(){
    sanitized local QA company: no e-mail, password, token or personal data is visible. */
 type WalkStep={title:string;text:string;shot:string;alt:string;note?:string;extra?:boolean;noShot?:boolean;desktopOnly?:boolean};
 const walkSteps:WalkStep[]=[
+ {title:'Нүүр хуудаснаас эхлэх',shot:'0-home',alt:'Нүүр хуудас: таван чиглэлийн хавтан ба «ОНОШИЛГОО ЭХЛҮҮЛЭХ» товч',
+  text:'Нүүр хуудсанд BusinessMRI-ийн таван чиглэлийн хавтан харагдана. «ОНОШИЛГОО ЭХЛҮҮЛЭХ» товчийг дарж нэвтэрнэ эсвэл бүртгүүлнэ.'},
  {title:'Бүртгэл үүсгэх',shot:'1-register',alt:'Нэвтрэх хуудасны «Бүртгүүлэх» таб: нэр, имэйл, нууц үгийн талбарууд',
-  text:'Нэвтрэх хуудсан дээрх «Бүртгүүлэх» табыг сонгоно. Нэр, имэйл хаяг болон дор хаяж 10 тэмдэгттэй нууц үгээ оруулаад «Бүртгэл үүсгэх» товчийг дарна.'},
- {title:'Байгууллагын мэдээллээ оруулах',shot:'2-company',desktopOnly:true,alt:'Байгууллагын мэдээлэл хуудас: байгууллагын нэр, хэлбэр, 20 суурь асуулт',
+  text:'Нэвтрэх хуудсан дээрх «Бүртгүүлэх» табыг сонгоно. Нэр, имэйл хаяг болон дор хаяж 10 тэмдэгттэй нууц үгээ оруулаад бүртгэлээ үүсгэнэ. Имэйлээ баталгаажуулсны дараа нэвтэрнэ.'},
+ {title:'Байгууллагын мэдээллээ оруулах',shot:'2-company',alt:'Байгууллагын мэдээлэл хуудас: байгууллагын нэр, хэлбэр, 20 суурь асуулт',
   text:'«Байгууллагын мэдээлэл» хэсэгт байгууллагын нэр, хэлбэрээ бичиж, 20 суурь асуултад хариулна. Бүгдийг бөглөсний дараа «20/20 · Бүрэн» гэж харагдана; төлбөр хийхээс өмнө энэ алхам дуусах ёстой.'},
  {title:'Оношилгооны чиглэл сонгох',shot:'3-domain',alt:'Оношилгоо хуудас: таван чиглэлийн карт',
-  text:'Дээд цэсний «Оношилгоо» хэсгээс таван чиглэлийн аль нэгийг сонгоно: Мэдээллийн технологи, Маркетинг, Санхүү, Хүний нөөц, Үйлдвэрлэл ба үйл ажиллагаа. Чиглэл бүр тусдаа оношилгоо, тусдаа тайлантай.',
-  note:'Зураг дээр оношилгоо хийгдсэн туршилтын байгууллага харагдаж байна. Шинэ хэрэглэгчид карт бүр дээр «ТӨЛӨХ · 300,000₮» товч гарна.'},
- {title:'Төлбөр төлөх',shot:'4-payment',desktopOnly:true,alt:'Төлбөрийн хуудас: 300,000₮, «Төлбөрийн код үүсгэх» товч',
-  text:'«Төлбөрийн код үүсгэх» товчийг дарж гарсан QPay кодыг банкны аппаараа уншуулан 300,000₮ төлнө. Төлбөр орсон даруйд систем өөрөө шалгаж, оношилгооны эрхийг нээнэ.'},
+  text:'Дээд цэсний «Оношилгоо» хэсгээс таван чиглэлийн аль нэгийг сонгоно: Маркетинг, Мэдээллийн технологи, Санхүү, Хүний нөөц, Үйлдвэрлэл үйл ажиллагаа. Чиглэл бүр тусдаа оношилгоо, тусдаа тайлантай.',
+  note:'Карт дээр зөвхөн чиглэлийн нэр бичигдсэн. Дарахад төлбөр, асуулт эсвэл тайлан руу шууд орно.'},
+ {title:'Төлбөр төлөх',shot:'4-payment',alt:'Төлбөрийн хуудас: 300,000₮ ба төлбөрийн самбар',
+  text:'Төлбөрийн хуудас нээгдмэгц төлбөрийн самбар шууд харагдана. Банкны аппаараа кодыг уншуулан 300,000₮ төлнө. Төлбөр орсон даруйд систем өөрөө шалгаж, оношилгооны эрхийг нээнэ.',
+  note:'Зураг туршилтын орчноос авсан тул бодит QPay кодын оронд туршилтын самбар харагдаж байна.'},
  {title:'Асуултад хариулах',shot:'5-questions',alt:'Асуултын хуудас: хариултын сонголтууд, «Буцах» ба «Үргэлжлүүлэх» товчнууд',
-  text:'Эрх нээгдсэний дараа «ЭХЛҮҮЛЭХ» товч идэвхжинэ. Асуулт бүрт нэг хариулт сонгоод «Үргэлжлүүлэх» товчийг дарна; өмнөх асуулт руу «Буцах», сонголтоо болиулахдаа «Сонголтыг буцаах» товчийг ашиглана. Нийт 192–280 асуулт бөгөөд явц автоматаар хадгалагдана.',
+  text:'Эрх нээгдсэний дараа оношилгоо эхэлнэ. Асуулт бүрт нэг хариулт сонгоход «Үргэлжлүүлэх» товч идэвхжинэ; өмнөх асуулт руу «Буцах» товчоор очино. Нийт 200–280 асуулт бөгөөд явц автоматаар хадгалагдана.',
   note:'Зурагт аппын асуултын хэсгийн жишээ асуулт харагдаж байна.'},
- {title:'Үр дүн, тайлангаа харах',shot:'6-report',desktopOnly:true,alt:'Тайлангийн хуудас: нийт үнэлгээ, давуу ба сул тал, PDF татах товч',
-  text:'Асуулт дуусмагц «Тайлан» хэсэгт нийт үнэлгээ, давуу болон сул тал, тэргүүлэх ажлууд, 12 сарын төлөвлөгөө гарна. «PDF татах» товчоор тайлангаа татаж авна.'},
- {title:'Дахин оношилгоо хийх',shot:'7-retake',noShot:true,extra:true,alt:'Дахин оношилгооны төлбөрийн хуудас: «Өмнөх тайлан хэвээр үлдэнэ»',
-  text:'Өөр чиглэл сонгох эсвэл тухайн чиглэлээ дахин оношлуулахдаа карт дээрх «Дахин оношилгоо · 300,000₮» эсвэл тайлангийн «+ Дахин оношилгоо» товчийг дарна. Шинээр төлбөр төлж, шинэ тайлан үүснэ; өмнөх тайлан хэвээр хадгалагдана.'},
+ {title:'Тайлан хянагдаж байна',shot:'6-review',alt:'Тайлангийн хуудас: «Таны тайлан хянагдаж байна» мэдээлэл',
+  text:'Оношилгоо дуусмагц тайлан шинжээчийн хяналтад орно. Хянах зорилтот хугацаа 24 цаг. Шинжээч баталгаажуулмагц тайлан тэр даруй нээгдэж, апп дотор мэдэгдэл (мөн имэйл) ирнэ. Баталгаажих хүртэл «Таны тайлан хянагдаж байна» гэж харагдана.'},
+ {title:'Тайлангаа харах',shot:'7-report',alt:'Тайлангийн хуудас: нийт үнэлгээ, давуу ба сул тал, PDF татах товч',
+  text:'Мэдэгдэл ирсний дараа «Тайлан» хэсэгт нийт үнэлгээ, 5 давуу тал, 5 сул тал, тэргүүлэх ажлууд, 12 сарын төлөвлөгөө гарна.'},
+ {title:'PDF татах',shot:'8-pdf',alt:'«PDF тайлан татах уу?» цонх: файлын нэр, «Татах» товч',
+  text:'Тайлангийн дээд талын «PDF татах» товчийг дарахад баталгаажуулах цонх гарч, файлын нэр (байгууллага, чиглэл, огноо) харагдана. «Татах» товчоор 3 хуудас PDF тайлангаа авна.'},
+ {title:'Дахин оношилгоо хийх',shot:'9-retake',noShot:true,extra:true,alt:'Дахин оношилгооны төлбөрийн хуудас: «Өмнөх тайлан хэвээр үлдэнэ»',
+  text:'Тухайн чиглэлээ дахин оношлуулахдаа тайлангийн «+ Дахин оношилгоо» товчийг дарна. Шинээр төлбөр төлж, шинэ тайлан үүснэ; өмнөх тайлан хэвээр хадгалагдана.'},
 ];
 
 function shotSrc(name:string,kind:'d'|'m'){return `${import.meta.env.BASE_URL}guide-shots/${name}-${kind}.jpg`}
@@ -228,9 +198,9 @@ export function HowToGuide(){
     
     <div className="mmri-guide2__walk-body" key={index}>
      <div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>
-     {!step.noShot&&<figure className="mmri-guide2__devices" style={{'--arw':step.shot==='5-questions'?1.32:1.6} as React.CSSProperties}>
-      {!compact&&<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={step.shot==='5-questions'?1090:900} decoding="async"/></div>}
-      {(!step.desktopOnly||compact)&&<div className="mmri-guide2__phone"><img src={shotSrc(step.shot,'m')} alt={`${step.alt} (гар утасны харагдац)`} width={390} height={844} decoding="async"/></div>}
+     {!step.noShot&&<figure className="mmri-guide2__devices" style={{'--arw':1.6} as React.CSSProperties}>
+      {<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={900} decoding="async"/></div>}
+      {<div className="mmri-guide2__phone"><img src={shotSrc(step.shot,'m')} alt={`${step.alt} (гар утасны харагдац)`} width={390} height={844} decoding="async"/></div>}
      </figure>}
     </div>
    </div>

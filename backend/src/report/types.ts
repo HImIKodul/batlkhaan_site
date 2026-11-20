@@ -96,6 +96,8 @@ export interface FrozenReportPayload {
   risks: ReportRisk[];
   remeasurement: { horizon: HorizonId; labelMn: string };
   requiredWarnings: string[];
+  /** Phase 2.7 proposal (B3); only present when the B3 flag was ON when the payload was frozen. */
+  evidenceDisclosure?: import("../diagnosis/evidence-disclosure.js").EvidenceDisclosure;
   displayDictionary: Record<string,string>;
   traceIndex: Record<string,{kind:string; ref:string}>;
   versions: {
@@ -142,6 +144,8 @@ export interface NarrativeDraft {
   schemaVersion: "MMRI-NARRATIVE-DRAFT-1.0";
   payloadHash: string;
   sections: NarrativeSection[];
+  /** Administrator visual overlay (see report/annotations.ts). Absent when there are none, so frozen narratives and their hashes are unchanged. */
+  visualAnnotations?: import("./annotations.js").VisualAnnotationSet;
 }
 
 
@@ -158,6 +162,8 @@ export interface NarrativeProviderTelemetry {
   requestIds: string[];
   finalHttpStatus: number | null;
   durationMs: number;
+  /** Provider-reported token usage of the successful call (cost control); absent when the provider does not report it. */
+  usage?: { inputTokens: number; outputTokens: number };
 }
 
 /** MMRI-43: a failing provider call still reports what it did. Providers attach this to the error they throw. */

@@ -1,5 +1,6 @@
 import { mnText } from '../content/mongolian';
-import type { ActionPlanPayload, AssessmentLifecycleStatus, AssessmentMode, AssessmentProgress, AssessmentSummary, AuthResponse, BillingCatalogPlan, BillingInvoice, BillingPlanCode, BillingStatus, Company, DiagnosisPayload, FrozenReportPayload, ProfileAnswerInput, ProfileQuestion, RecommendationsPayload, ReportResponse, RespondentRole, ResultsPayload, RoutingPayload, User, MilestoneStatus, MilestoneTrackingPatch } from './types';
+import { plainDeep } from '../data/plainTerms';
+import type { ServerNotificationList, ActionPlanPayload, AssessmentLifecycleStatus, AssessmentMode, AssessmentProgress, AssessmentSummary, AuthResponse, BillingCatalogPlan, BillingInvoice, BillingPlanCode, BillingStatus, Company, DiagnosisPayload, FrozenReportPayload, ProfileAnswerInput, ProfileQuestion, RecommendationsPayload, ReportResponse, RespondentRole, ResultsPayload, RoutingPayload, User, MilestoneStatus, MilestoneTrackingPatch } from './types';
 
 const API_BASE=(import.meta.env.VITE_API_BASE_URL??'/api/v1').replace(/\/$/,'');
 export const TARGET_METHODOLOGY_VERSION=(import.meta.env.VITE_MMRI_METHODOLOGY_VERSION??'3.0.0').trim();
@@ -34,7 +35,7 @@ export function customerSafeMessage(message:unknown):string|null{const m=String(
  *  by stripping its Latin words (that left fragments such as "үнэлгээ;" on screen). Those cases use a complete Mongolian sentence chosen from the HTTP status / error code. */
 const BRAND_TOKENS=/\b(QPay|MMRI|BusinessMRI|PDF|OWNER|SUPER_ADMIN|ADMIN|MFA|AI)\b/g;
 function statusMessageMn(status:number,code?:string){
- if(status===409)return /REVISION|CONFLICT/i.test(code||'CONFLICT')?'Энэ хуудас өөр цонх эсвэл төхөөрөмж дээр өөрчлөгдсөн байна. Хуудсыг дахин ачаалж үргэлжлүүлнэ үү.':'Үйлдлийг одоо гүйцэтгэх боломжгүй байна. Дахин оролдоно уу.';
+ if(status===409)return /REVISION|CONFLICT/i.test(code||'CONFLICT')?'Энэ хуудас өөр цонх эсвэл төхөөрөмж дээр өөрчлөгдсөн байна. Хуудсыг дахин ачаалж үргэлжлүүлнэ үү.':'Одоогоор хийх боломжгүй байна. Дахин оролдоно уу.';
  if(status===0)return 'Сервертэй холбогдож чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.';
  if(status===401)return 'Нэвтрэх хугацаа дууссан байна. Дахин нэвтэрнэ үү.';
  if(status===403)return 'Танд энэ үйлдлийг хийх эрх байхгүй байна.';
@@ -83,7 +84,9 @@ async function request<T>(path:string,init:RequestOptions={}):Promise<T>{const h
 async function requestBlob(path:string,fallbackFilename:string,retryAuth=true):Promise<{blob:Blob;filename:string}>{const headers:Record<string,string>={'X-MMRI-Writer-ID':writerId()};if(session.accessToken)headers.Authorization=`Bearer ${session.accessToken}`;const r=await fetchRetryingRateLimit(`${API_BASE}${path}`,{method:'GET',headers,credentials:'include'});if(r.status===401&&retryAuth){if(await refreshAccessToken())return requestBlob(path,fallbackFilename,false)}if(!r.ok){const body=await parseBody(r);throw new ApiError(r.status,body?.error?.message??`HTTP ${r.status}`,body)}const cd=r.headers.get('content-disposition')||'';const utf=cd.match(/filename\*=UTF-8''([^;]+)/i);const basic=cd.match(/filename="([^"]+)"/i);let filename=fallbackFilename;try{if(utf?.[1])filename=decodeURIComponent(utf[1]);else if(basic?.[1])filename=basic[1]}catch{/* use safe fallback */}return {blob:await r.blob(),filename}}
 
 export const api={
- async register(body:{email:string;password:string;displayName?:string}){const x=await request<AuthResponse>('/auth/register',{method:'POST',body:JSON.stringify(body),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
+ register:(body:{email:string;password:string;displayName?:string})=>request<{accepted:boolean;message:string}>('/auth/register',{method:'POST',body:JSON.stringify(body),retryAuth:false}),
+ requestEmailVerification:(email:string)=>request<{accepted:boolean;message:string}>('/auth/email-verification/request',{method:'POST',body:JSON.stringify({email}),retryAuth:false}),
+ confirmEmailVerification:(email:string,code:string)=>request<{verified:boolean}>('/auth/email-verification/confirm',{method:'POST',body:JSON.stringify({email,code}),retryAuth:false}),
  async login(body:{email:string;password:string}){const x=await request<AuthResponse>('/auth/login',{method:'POST',body:JSON.stringify(body),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
  requestPasswordReset:(email:string)=>request<{accepted:boolean;message:string}>('/auth/password-reset/request',{method:'POST',body:JSON.stringify({email}),retryAuth:false}),
  async confirmPasswordReset(token:string,password:string){const x=await request<{reset:boolean;message:string}>('/auth/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password}),retryAuth:false});session.clear();return x},
@@ -125,6 +128,12 @@ export const api={
  mockPayBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}/mock-pay`,{method:'POST'}),
  cancelBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}`,{method:'DELETE'}),
  listAssessments:(companyId:string)=>request<AssessmentSummary[]>(`/companies/${companyId}/assessments`),
+ /* Server-side customer notifications. A 404 NOTIFICATIONS_DISABLED means the feature is not active on this server (the shell then keeps its previous local behaviour). */
+ listNotifications:(companyId?:string|null)=>request<ServerNotificationList>(`/notifications?limit=30${companyId?`&companyId=${encodeURIComponent(companyId)}`:''}`),
+ markNotificationRead:(id:string,companyId?:string|null)=>request<unknown>(`/notifications/${encodeURIComponent(id)}/read${companyId?`?companyId=${encodeURIComponent(companyId)}`:''}`,{method:'POST'}),
+ markNotificationUnread:(id:string,companyId?:string|null)=>request<unknown>(`/notifications/${encodeURIComponent(id)}/unread${companyId?`?companyId=${encodeURIComponent(companyId)}`:''}`,{method:'POST'}),
+ dismissNotification:(id:string,companyId?:string|null)=>request<unknown>(`/notifications/${encodeURIComponent(id)}/dismiss${companyId?`?companyId=${encodeURIComponent(companyId)}`:''}`,{method:'POST'}),
+ markAllNotificationsRead:(companyId?:string|null)=>request<unknown>(`/notifications/read-all${companyId?`?companyId=${encodeURIComponent(companyId)}`:''}`,{method:'POST'}),
  /* WS-D: paged invoice history (OWNER/ADMIN), member list/revoke, explicit active-company resolution (MMRI-23/24/08). */
  listBillingInvoices:(companyId:string,offset=0,limit=50)=>request<{invoices:BillingStatus['invoices'];total:number;limit:number;offset:number;hasMore:boolean}>(`/companies/${companyId}/billing/invoices?offset=${offset}&limit=${limit}`),
  listCompanyMembers:(companyId:string)=>request<Array<{userId:string;email:string;displayName:string|null;status:string;role:'OWNER'|'ADMIN'|'ASSESSOR'|'CONSULTANT'|'VIEWER';createdAt:string;isSelf:boolean}>>(`/companies/${companyId}/members`),
@@ -146,11 +155,11 @@ export const api={
  previousAnswer:(id:string,expectedAssessmentRevision:number)=>request<RoutingPayload>(`/assessments/${id}/back`,{method:'POST',body:JSON.stringify({expectedAssessmentRevision})}),
  saveDraft:(id:string,input:{questionIssueId:string;questionId:string;draft:Record<string,unknown>;expectedAssessmentRevision:number})=>request<{saved:true;draftRevision:number;serverAckAt:string;assessmentRevision:number}>(`/assessments/${id}/draft`,{method:'PUT',body:JSON.stringify(input)}),
  heartbeatWriterLease:(id:string)=>request<{writerLeaseExpiresAt:string;assessmentRevision:number}>(`/assessments/${id}/writer-lease/heartbeat`,{method:'POST'}),
- completeAssessment:(id:string,expectedAssessmentRevision:number)=>request<any>(`/assessments/${id}/complete`,{method:'POST',body:JSON.stringify({expectedAssessmentRevision})}),getProgress:(id:string)=>request<AssessmentProgress>(`/assessments/${id}/progress`),getResults:(id:string)=>request<ResultsPayload>(`/assessments/${id}/results`),
- generateStrategy:(id:string)=>request<any>(`/assessments/${id}/strategy/generate`,{method:'POST'}),getDiagnosis:(id:string)=>request<DiagnosisPayload>(`/assessments/${id}/diagnosis`),getRecommendations:(id:string)=>request<RecommendationsPayload>(`/assessments/${id}/recommendations`),
+ completeAssessment:(id:string,expectedAssessmentRevision:number)=>request<any>(`/assessments/${id}/complete`,{method:'POST',body:JSON.stringify({expectedAssessmentRevision})}),getProgress:(id:string)=>request<AssessmentProgress>(`/assessments/${id}/progress`),getResults:(id:string)=>request<ResultsPayload>(`/assessments/${id}/results`).then(plainDeep),
+ generateStrategy:(id:string)=>request<any>(`/assessments/${id}/strategy/generate`,{method:'POST'}),getDiagnosis:(id:string)=>request<DiagnosisPayload>(`/assessments/${id}/diagnosis`),getRecommendations:(id:string)=>request<RecommendationsPayload>(`/assessments/${id}/recommendations`).then(plainDeep),
  getActionPlan:(id:string)=>request<ActionPlanPayload>(`/assessments/${id}/action-plan`),
  updateMilestone:(id:string,milestoneId:string,patch:MilestoneTrackingPatch|MilestoneStatus)=>request<any>(`/assessments/${id}/action-plan/milestones/${milestoneId}`,{method:'PATCH',body:JSON.stringify(typeof patch==='string'?{status:patch}:patch)}),
- getReportPayload:(id:string)=>request<FrozenReportPayload>(`/assessments/${id}/report-payload`),getReport:(id:string)=>getReportWhenReady(id),downloadReportPdf:(id:string)=>requestBlob(`/assessments/${id}/report/pdf`,`MMRI-${id}.pdf`),getTraceability:(id:string)=>request<any>(`/assessments/${id}/trace`)
+ getReportPayload:(id:string)=>request<FrozenReportPayload>(`/assessments/${id}/report-payload`).then(plainDeep),getReport:(id:string)=>getReportWhenReady(id).then(plainDeep),downloadReportPdf:(id:string)=>requestBlob(`/assessments/${id}/report/pdf`,`MMRI-${id}.pdf`),getTraceability:(id:string)=>request<any>(`/assessments/${id}/trace`)
 };
 
 export async function resolveBoundAssessmentId(){

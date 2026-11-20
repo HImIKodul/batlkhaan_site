@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* Shared helpers for the workstream-D regression scripts. Refuses to run against anything but the private clone mmri_ws_d. */
 import { randomUUID } from "node:crypto";
 import { prisma } from "../src/db.js";
@@ -14,8 +15,8 @@ export async function http(method: string, path: string, token?: string, body?: 
 }
 export async function registerUser(prefix: string) {
   const email = `${prefix}.${randomUUID().slice(0, 8)}@mmri.test`; const password = "Qa-Wsd-" + randomUUID().slice(0, 12) + "!9";
-  const r = await http("POST", "/auth/register", undefined, { email, password, displayName: prefix });
-  if (r.status !== 201) throw new Error("register failed " + r.status + " " + JSON.stringify(r.body));
+  const response = await registerVerifiedFixture(API+"/api/v1", {email,password,displayName:prefix}, {origin:ORIGIN});
+  const r = {data:(await response.json()).data};
   const user = await prisma.user.findUniqueOrThrow({ where: { email } });
   return { email, password, id: user.id, token: r.data.accessToken as string };
 }

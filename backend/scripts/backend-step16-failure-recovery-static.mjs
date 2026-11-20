@@ -13,7 +13,7 @@ check('stale local invoice becomes failed not paid',B.includes('status:"FAILED",
 check('invoice recovery runs before new invoice lookup',B.indexOf('recoverInterruptedInvoiceCreations(companyId,domainCode)')<B.indexOf('billingInvoice.findFirst({where:{companyId,domainCode,planCode'));
 check('company billing status triggers recovery',B.includes('await this.recoverInterruptedInvoiceCreations(companyId);'));
 check('orphan claim requires consumed single use and no assessment',B.includes('status:"CONSUMED",assessmentsUsed:1')&&B.includes('assessments:{none:{}}'));
-check('orphan claim requires paid source invoice',B.includes('sourceInvoice:{status:"PAID"}'));
+check('orphan claim requires paid source invoice',B.includes('const SETTLED_ENTITLEMENT={OR:[{origin:"ADMIN_GRANT" as const},{sourceInvoice:{status:"PAID" as const}}]}')&&/companyEntitlement\.findFirst\(\{where:\{companyId,domainCode,planCode:expectedPlan,status:"ACTIVE",assessmentsUsed:\{lt:1\},\.\.\.SETTLED_ENTITLEMENT\}/.test(B));
 check('orphan claim resets to active unused',B.includes('data:{status:"ACTIVE",assessmentsUsed:0}'));
 check('claim path recovers old orphan first',B.includes('await this.recoverOrphanedEntitlementClaims(companyId,domainCode);'));
 check('normal create failure releases entitlement',read('src/api/app.ts').includes('await billing.releaseClaim(claim)'));

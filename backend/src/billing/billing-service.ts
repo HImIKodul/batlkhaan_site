@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypt
 import { prisma } from "../db.js";
 import type { Prisma } from "@prisma/client";
 import type { ApiConfig } from "../api/config.js";
+import { customerNotifications } from "../api/notifications/notification-service.js";
 import { ApiError, conflict, notFound } from "../api/errors.js";
 import { ManualPaymentAdapter, MockPaymentAdapter, QPayMerchantV2Adapter } from "./qpay-client.js";
 import type { BillingPlanCode, PaymentProviderAdapter, ProviderPaymentResult } from "./types.js";
@@ -115,7 +116,7 @@ export class BillingService {
     const callbackUrl=`${this.config.billingCallbackBaseUrl}/api/v1/billing/qpay/callback/${encodeURIComponent(local.id)}?token=${encodeURIComponent(callbackToken)}`;
     let remote:Awaited<ReturnType<PaymentProviderAdapter["createInvoice"]>>;
     try{
-      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`MMRI · ${domainCode} · ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
+      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`BusinessMRI.mn · ${domainCode} · ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
     }catch(error:any){
       // Compare-and-set: only a still-CREATED row may become FAILED (a concurrent cancel/recovery decision is never overwritten).
       await prisma.billingInvoice.updateMany({where:{id:local.id,status:"CREATED"},data:{status:"FAILED",failureReason:String(error?.message??"Provider error").slice(0,500)}}).catch(()=>{});
@@ -235,9 +236,9 @@ export class BillingService {
   async reconcileInvoice(invoiceId:string){
     const invoice=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
     if(!invoice)throw notFound("Billing invoice not found");
-    if(invoice.status==="PAID"||invoice.status==="REFUNDED")return this.presentInvoice(invoice);
+    if((invoice.status==="PAID"||invoice.status==="REFUNDED")&&invoice.provider!=="QPAY")return this.presentInvoice(invoice);
     // CANCELLED stays reconcilable for provider invoices: a payment confirmed after a local cancel must be honoured, not lost.
-    if(invoice.status!=="CREATED"&&invoice.status!=="PENDING"&&!((invoice.status==="CANCELLED"||(invoice.status==="FAILED"&&invoice.providerInvoiceId))&&invoice.provider==="QPAY"))throw new ApiError(409,"INVOICE_NOT_RECONCILABLE","Энэ нэхэмжлэхийг төлбөртэй тулгах боломжгүй төлөвт байна.");
+    if(invoice.status!=="PAID"&&invoice.status!=="REFUNDED"&&invoice.status!=="CREATED"&&invoice.status!=="PENDING"&&!((invoice.status==="CANCELLED"||(invoice.status==="FAILED"&&invoice.providerInvoiceId))&&invoice.provider==="QPAY"))throw new ApiError(409,"INVOICE_NOT_RECONCILABLE","Энэ нэхэмжлэхийг төлбөртэй тулгах боломжгүй төлөвт байна.");
     if(invoice.provider!=="QPAY"||!invoice.providerInvoiceId)throw new ApiError(409,"AUTOMATIC_RECONCILIATION_UNAVAILABLE","Энэ төлбөрийн төрөл автоматаар шалгагдахгүй.");
     if(this.provider.name!=="QPAY")throw new ApiError(409,"PAYMENT_PROVIDER_MISMATCH","QPay payment verification is not active on this server.");
     let verification:ProviderPaymentResult;
@@ -296,18 +297,44 @@ export class BillingService {
     if(!Number.isSafeInteger(paidAmount)||paidAmount<=0)throw new ApiError(502,"INVALID_PROVIDER_PAYMENT_AMOUNT","Төлбөрийн үйлчилгээ баталгаажуулах боломжгүй дүн буцаалаа.");
     if(!verification.paymentId)throw new ApiError(502,"MISSING_PROVIDER_PAYMENT_ID","Төлбөрийн үйлчилгээ гүйлгээний баталгаажуулах дугаар буцаасангүй.");
     const providerPaymentId=paymentReference(verification.paymentId,"provider payment id");
-    return this.withSerializableRetry(()=>prisma.$transaction(async(tx:any)=>{
+    // Set only by the attempt that actually performed the CREATED/PENDING/CANCELLED/FAILED -> PAID transition; reset on every serializable retry.
+    let newlyPaid:{companyId:string;domainCode:string}|null=null;
+    const activated=await this.withSerializableRetry(()=>{newlyPaid=null;return prisma.$transaction(async(tx:any)=>{
       const head=await tx.billingInvoice.findUnique({where:{id:invoiceId},select:{companyId:true,domainCode:true}});
       if(!head)throw notFound("Billing invoice not found");
       await this.lockPurchase(tx,head.companyId,head.domainCode as DomainCode);
       const current=await tx.billingInvoice.findUnique({where:{id:invoiceId}});
       if(!current)throw notFound("Billing invoice not found");
-      if(current.status==="REFUNDED")return this.presentInvoice(current);
-      if(current.status==="PAID")return this.presentInvoice(current);
-      if(current.status!=="CREATED"&&current.status!=="PENDING"&&current.status!=="CANCELLED"&&!(current.status==="FAILED"&&current.providerInvoiceId))throw new ApiError(409,"INVOICE_NOT_PAYABLE","Энэ нэхэмжлэх төлбөрөөр идэвхжих боломжгүй төлөвт байна.");
+      const settled=current.status==="PAID"||current.status==="REFUNDED";
+      if(!settled&&current.status!=="CREATED"&&current.status!=="PENDING"&&current.status!=="CANCELLED"&&!(current.status==="FAILED"&&current.providerInvoiceId))throw new ApiError(409,"INVOICE_NOT_PAYABLE","Энэ нэхэмжлэх төлбөрөөр идэвхжих боломжгүй төлөвт байна.");
       if(paidAmount<current.amountMnt)throw new ApiError(409,"PARTIAL_PAYMENT","Төлбөрийн дүн нэхэмжлэхийн дүнгээс бага байна.");
+      const transactions=verification.transactions ?? (current.provider!=="QPAY" ? [{id:providerPaymentId,amountMnt:paidAmount}] : []);
+      if(!transactions.length||transactions.length>1000)throw new ApiError(502,"MISSING_PAYMENT_TRANSACTIONS","Төлбөрийн мэдээллийг баталгаажуулж чадсангүй. Дараа дахин шалгана уу.");
+      const ids=new Set<string>();let sum=0;
+      for(const payment of transactions){
+        if(typeof payment.id!=="string"||paymentReference(payment.id,"transaction id")!==payment.id)throw new ApiError(502,"INVALID_PAYMENT_TRANSACTIONS","Төлбөрийн мэдээллийг баталгаажуулж чадсангүй. Дараа дахин шалгана уу.");
+        if(ids.has(payment.id)||!Number.isSafeInteger(payment.amountMnt)||payment.amountMnt<=0||payment.amountMnt>2147483647)throw new ApiError(502,"INVALID_PAYMENT_TRANSACTIONS","Төлбөрийн мэдээллийг баталгаажуулж чадсангүй. Дараа дахин шалгана уу.");
+        ids.add(payment.id);sum+=payment.amountMnt;
+      }
+      if(sum!==paidAmount||!Number.isSafeInteger(sum))throw new ApiError(502,"INVALID_PAYMENT_TRANSACTIONS","Төлбөрийн дүн зөрүүтэй байна. Дараа дахин шалгана уу.");
+      // Also serialize across companies/domains: an overlapping transaction may otherwise race
+      // two independent purchase locks. The unique ledger index remains the final constraint.
+      for(const id of [...ids].sort())await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`payment:${current.provider}:${id}`}, 0))`;
+      if(current.provider==="QPAY"&&!settled){
+        const unresolved=await tx.billingInvoice.findFirst({where:{provider:"QPAY",status:{in:["PAID","REFUNDED"]},providerPaymentId:{startsWith:"qpay-set-"},paymentTransactions:{none:{}}},select:{id:true}});
+        if(unresolved)throw new ApiError(409,"PAYMENT_LEDGER_RECONCILIATION_REQUIRED","Төлбөрийн өмнөх бүртгэлийг тулгаж байна. Тусламжийн багтай холбогдоно уу.");
+      }
+      if(settled&&current.providerPaymentId!==providerPaymentId)throw new ApiError(409,"PAYMENT_REFERENCE_CHANGED","Төлбөрийн мэдээлэл зөрүүтэй байна. Тусламжийн багтай холбогдоно уу.");
       const duplicate=await tx.billingInvoice.findFirst({where:{providerPaymentId,id:{not:current.id}},select:{id:true}});
       if(duplicate)throw new ApiError(409,"PAYMENT_ALREADY_USED","Нэг төлбөрөөр хоёр нэхэмжлэх идэвхжүүлэх боломжгүй.");
+      for(const payment of transactions){
+        const existing=await tx.billingPaymentTransaction.findUnique({where:{provider_transactionId:{provider:current.provider,transactionId:payment.id}}});
+        if(existing&&existing.invoiceId!==current.id)throw new ApiError(409,"PAYMENT_ALREADY_USED","Нэг төлбөрөөр хоёр нэхэмжлэх идэвхжүүлэх боломжгүй.");
+        if(existing&&existing.amountMnt!==payment.amountMnt&&!String(existing.id).startsWith("legacy:"))throw new ApiError(502,"PAYMENT_TRANSACTION_CHANGED","Төлбөрийн дүн зөрүүтэй байна. Тусламжийн багтай холбогдоно уу.");
+        if(!existing)await tx.billingPaymentTransaction.create({data:{provider:current.provider,transactionId:payment.id,amountMnt:payment.amountMnt,invoiceId:current.id}});
+      }
+      // Reconciliation can fill a historical ledger without regranting a consumed/refunded entitlement.
+      if(settled)return this.presentInvoice(current);
 
       const transitioned=await tx.billingInvoice.updateMany({
         where:{id:current.id,OR:[{status:{in:["CREATED","PENDING","CANCELLED"]}},{status:"FAILED",providerInvoiceId:{not:null}}]},
@@ -319,6 +346,7 @@ export class BillingService {
         throw new ApiError(409,"PAYMENT_STATE_CHANGED","Нэхэмжлэхийн төлөв зэрэг өөрчлөгдсөн тул төлбөрийг автоматаар идэвхжүүлсэнгүй.");
       }
 
+      newlyPaid={companyId:current.companyId,domainCode:current.domainCode};
       if(current.status==="CANCELLED"||current.status==="FAILED")console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"payment_confirmed_after_cancel_reconciled",invoiceId:current.id}));
       await tx.companyEntitlement.upsert({
         where:{sourceInvoiceId:current.id},
@@ -327,14 +355,18 @@ export class BillingService {
       });
       const paid=await tx.billingInvoice.findUnique({where:{id:invoiceId}});
       return this.presentInvoice(paid);
-    },{isolationLevel:"Serializable"} as any));
+    },{isolationLevel:"Serializable"} as any)});
+    // After commit, and only for a verified PAID transition. Never throws; idempotent per invoice.
+    const done=newlyPaid as {companyId:string;domainCode:string}|null;
+    if(done)await customerNotifications.paymentConfirmed(done.companyId,invoiceId,done.domainCode);
+    return activated;
   }
 
-  /** Bounded retry for transient Serializable conflicts (P2034); the transaction body is idempotent. */
+  /** A stale serializable snapshot can surface as P2034 or a unique-ledger P2002. Retry the entire idempotent transaction against a fresh snapshot. */
   private async withSerializableRetry<T>(run:()=>Promise<T>,attempts=4):Promise<T>{
     for(let i=1;;i++){
       try{return await run()}catch(error:any){
-        if(error?.code!=="P2034"||i>=attempts)throw error;
+        if(!["P2034","P2002"].includes(error?.code)||i>=attempts)throw error;
         await new Promise(r=>setTimeout(r,15*i+Math.floor(Math.random()*25)));
       }
     }

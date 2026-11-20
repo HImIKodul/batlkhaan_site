@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* Browser checks for the 2026-11-06 source-audit repairs (A3 login field readability, A4 payment code, A7 demo button).
    Needs an isolated API (default :4010) and the Vite dev server on :5176.  PW=<playwright-core path> JSQR=<jsqr dir> OUT=<dir>.
    NOTE: real browser autofill cannot be triggered headlessly; the autofill rule is verified by selector/specificity only (see AUTOFILL-* rows). */
@@ -5,7 +6,7 @@ import {createRequire} from 'module';const require=createRequire(import.meta.url
 import fs from 'fs';import crypto from 'crypto';import path from 'path';
 const OUT=process.env.OUT||'/tmp',BASE=process.env.BASE||'http://127.0.0.1:5176/',API=process.env.API||'http://localhost:4010/api/v1',ORIGIN=process.env.ORIGIN||'http://localhost:5176';fs.mkdirSync(OUT,{recursive:true});
 const W=crypto.randomUUID(),sleep=ms=>new Promise(r=>setTimeout(r,ms));const res=[];const t=(id,n,ok,d='')=>{res.push({id,n,ok:!!ok,d});console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+String(d).slice(0,240):''))};
-const api=async(m,p,tok,b)=>{const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
+const api=async(m,p,tok,b)=>{if(p==='/auth/register'){const verified=await registerVerifiedFixture(API,b);const j=await verified.json();return {s:verified.status,d:j.data}}const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
 const email=`audit.${Date.now()}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';
 const tok=(await api('POST','/auth/register',null,{email,password:pw,displayName:'Audit'})).d.accessToken;const co=(await api('POST','/companies',tok,{name:'Audit QA ХХК'})).d.id;
 const pq=(await api('GET','/methodology/current/profile-questions',tok)).d;const prof=pq.slice(0,20).map(q=>({questionId:q.id,optionIndexes:[q.options[0].optionIndex]}));

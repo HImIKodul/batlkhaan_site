@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime
@@ -14,8 +15,10 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (
     Flowable,
     KeepTogether,
@@ -28,9 +31,21 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-GENERATOR_VERSION = "MMRI-PDF-1.5-BUSINESS-REPORT"
-FONT_REG = "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
-FONT_BOLD = "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf"
+GENERATOR_VERSION = "MMRI-PDF-1.6-BUSINESSMRI-BRAND"
+# Noto Sans (SIL OFL 1.1) ships next to this script so the renderer does not depend on the server's font packages.
+# Resolution order: environment override, bundled fonts/, legacy Linux system path.
+_FONT_DIR = Path(__file__).resolve().parent / "fonts"
+
+
+def _font_path(env_name, file_name, system_path):
+    for candidate in (os.environ.get(env_name, "").strip(), str(_FONT_DIR / file_name), system_path):
+        if candidate and Path(candidate).is_file():
+            return candidate
+    return system_path
+
+
+FONT_REG = _font_path("MMRI_PDF_FONT_REGULAR", "NotoSans-Regular.ttf", "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf")
+FONT_BOLD = _font_path("MMRI_PDF_FONT_BOLD", "NotoSans-Bold.ttf", "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf")
 
 # Restrained business-report palette: one brand family, one risk color, neutrals.
 INK = colors.HexColor("#163C30")
@@ -248,7 +263,7 @@ def page_header_footer(canvas, doc, source, st):
     # Header
     canvas.setFillColor(INK)
     canvas.setFont("MMRINotoBold", 7.2)
-    canvas.drawString(14 * mm, height - 10.5 * mm, "BUSINESSMMRI.MN")
+    canvas.drawString(14 * mm, height - 10.5 * mm, "BusinessMRI.mn")
     canvas.setFillColor(MUTED)
     canvas.setFont("MMRINoto", 6.3)
     canvas.drawRightString(width - 14 * mm, height - 10.5 * mm, "Бизнесийн оношилгооны тайлан")
@@ -264,6 +279,102 @@ def page_header_footer(canvas, doc, source, st):
     canvas.drawCentredString(width / 2, 7.0 * mm, date_label(source.get("generatedAt")))
     canvas.drawRightString(width - 14 * mm, 7.0 * mm, f"{doc.page}")
     canvas.restoreState()
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Administrator visual annotations (source["annotations"]). An overlay drawn on top of each finished page, in page units
+# (0..1 of the A4 width/height, origin top-left). It never takes part in the layout, so the three-page contract and the
+# original content are unaffected; without annotations this code path draws nothing.
+ANNOTATION_COLORS = {"red": "#D64545", "orange": "#E8913A", "green": "#2E9E6B", "blue": "#2F6FDE", "ink": "#1F2937", "yellow": "#F5C518"}
+
+
+def _annotation_items(source, page):
+    raw = (source.get("annotations") or {}).get("items") or []
+    return [a for a in raw if isinstance(a, dict) and int(a.get("page", 0)) == page]
+
+
+def draw_annotations(canvas, source, page):
+    items = _annotation_items(source, page)
+    if not items:
+        return
+    width, height = A4
+    px = lambda v: float(v) * width
+    py = lambda v: height - float(v) * height
+    canvas.saveState()
+    for a in items:
+        kind = a.get("type")
+        col = colors.HexColor(ANNOTATION_COLORS.get(a.get("color"), "#D64545"))
+        sw = float(a.get("strokeWidth") or 1.5)
+        canvas.setLineCap(1)
+        canvas.setLineJoin(1)
+        if kind == "highlight":
+            canvas.setFillColor(col)
+            canvas.setFillAlpha(0.35)
+            canvas.rect(px(a["x"]), py(a["y"] + a["h"]), px(a["w"]), float(a["h"]) * height, fill=1, stroke=0)
+        elif kind == "rect":
+            canvas.setStrokeColor(col)
+            canvas.setLineWidth(sw)
+            canvas.roundRect(px(a["x"]), py(a["y"] + a["h"]), px(a["w"]), float(a["h"]) * height, 1.2, fill=0, stroke=1)
+        elif kind == "arrow":
+            (x1, y1), (x2, y2) = a["points"][0], a["points"][-1]
+            ax, ay, bx, by = px(x1), py(y1), px(x2), py(y2)
+            dx, dy = bx - ax, by - ay
+            length = (dx * dx + dy * dy) ** 0.5 or 1.0
+            ux, uy = dx / length, dy / length
+            head = min(max(sw * 4.0, 6.0), length * 0.6)
+            canvas.setStrokeColor(col)
+            canvas.setFillColor(col)
+            canvas.setLineWidth(sw)
+            canvas.line(ax, ay, bx - ux * head * 0.7, by - uy * head * 0.7)
+            path = canvas.beginPath()
+            path.moveTo(bx, by)
+            path.lineTo(bx - ux * head + uy * head * 0.45, by - uy * head - ux * head * 0.45)
+            path.lineTo(bx - ux * head - uy * head * 0.45, by - uy * head + ux * head * 0.45)
+            path.close()
+            canvas.drawPath(path, fill=1, stroke=0)
+        elif kind == "pen":
+            pts = a.get("points") or []
+            if len(pts) >= 2:
+                canvas.setStrokeColor(col)
+                canvas.setLineWidth(sw)
+                path = canvas.beginPath()
+                path.moveTo(px(pts[0][0]), py(pts[0][1]))
+                for qx, qy in pts[1:]:
+                    path.lineTo(px(qx), py(qy))
+                canvas.drawPath(path, fill=0, stroke=1)
+        elif kind == "text":
+            bx, by, bw, bh = px(a["x"]), py(a["y"] + a["h"]), px(a["w"]), float(a["h"]) * height
+            canvas.setFillColor(colors.HexColor("#FFFDF4"))
+            canvas.setFillAlpha(0.94)
+            canvas.setStrokeColor(col)
+            canvas.setLineWidth(0.8)
+            canvas.roundRect(bx, by, bw, bh, 1.6, fill=1, stroke=1)
+            canvas.setFillAlpha(1)
+            canvas.setFillColor(colors.HexColor("#1F2937"))
+            size = float(a.get("fontSize") or 9)
+            lead = size * 1.25
+            pad = 3.0
+            lines = []
+            for para in str(a.get("text") or "").split("\n"):
+                lines.extend(simpleSplit(para, "MMRINoto", size, max(bw - 2 * pad, 4)) or [""])
+            room = max(int((bh - 2 * pad) // lead), 0)
+            shown = lines[:room]
+            canvas.setFont("MMRINoto", size)
+            for i, line in enumerate(shown):
+                canvas.drawString(bx + pad, by + bh - pad - size - i * lead, line)
+    canvas.restoreState()
+
+
+def annotated_canvas_factory(source):
+    class AnnotatedCanvas(Canvas):
+        def showPage(self):  # the page is complete here: draw the overlay on top of it, then finish the page
+            draw_annotations(self, source, self._pageNumber)
+            super().showPage()
+
+    def make(*args, **kwargs):
+        return AnnotatedCanvas(*args, **kwargs)
+
+    return make
 
 
 PRELIM_NOTE = "Урьдчилсан гэж тэмдэглэсэн чадавхыг одоогийн хариултын бодит оноогоор эрэмбэлсэн бөгөөд нэмэлт нотолгоо бүрдэх тусам баталгаажна."
@@ -657,8 +768,8 @@ def main():
             leftMargin=left,
             topMargin=top,
             bottomMargin=bottom,
-            title=f"MMRI {source.get('reportId', '')}",
-            author="BusinessMMRI.mn",
+            title=f"BusinessMRI.mn {source.get('reportId', '')}",
+            author="BusinessMRI.mn",
             subject=f"{GENERATOR_VERSION} {source.get('payloadHash', '')}",
             creator=GENERATOR_VERSION,
             pageCompression=1,
@@ -668,6 +779,7 @@ def main():
                 build_story(source, st, content_width),
                 onFirstPage=lambda c, d: page_header_footer(c, d, source, st),
                 onLaterPages=lambda c, d: page_header_footer(c, d, source, st),
+                canvasmaker=annotated_canvas_factory(source),
             )
         except Exception as exc:  # a single block taller than a page raises LayoutError: that tier simply does not fit
             if "too large" not in str(exc) and exc.__class__.__name__ != "LayoutError":

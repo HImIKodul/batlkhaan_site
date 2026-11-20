@@ -1,10 +1,11 @@
+import { DOMAIN_ORDER } from '../data/domainOrder';
 import { useEffect,useLayoutEffect } from 'react';
 
 /* Category theme for the glass stage. ONE module-level state; its only output is <html data-glass="domain"> (absent = default blue).
    The stage never re-renders for a theme change: CSS crossfades the opacity of pre-built coloured light layers.
    Precedence: hovered domain > selected domain of the current screen > default blue. */
 export type GlassDomain='marketing'|'it'|'finance'|'people'|'operations';
-const domains:GlassDomain[]=['marketing','it','finance','people','operations'];
+const domains:GlassDomain[]=[...DOMAIN_ORDER];
 let hovered:GlassDomain|null=null;
 let selected:GlassDomain|null=null;
 let clearTimer=0;

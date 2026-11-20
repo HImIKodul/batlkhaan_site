@@ -9,7 +9,7 @@ let pass=0,fail=0;
 const ck=(name,ok,detail='')=>{console.log(`${ok?'PASS':'FAIL'} ${name}${detail?` — ${detail}`:''}`);ok?pass++:fail++};
 const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
 const tsPath=path.join(root,'src/question-bank-overlay.ts');
-const ts=await import(pathToFileURL(path.join(execFileSync('npm',['root','-g'],{encoding:'utf8'}).trim(),'typescript/lib/typescript.js')).href);
+const ts=await import(pathToFileURL(path.join(execFileSync('npm',['root','-g'],{encoding:'utf8'}).trim(),'typescript/lib/typescript.js')).href).catch(()=>import('typescript')); // global install preferred; fall back to the project's pinned local copy
 const source=fs.readFileSync(tsPath,'utf8');
 const js=ts.default.transpileModule(source,{compilerOptions:{target:ts.default.ScriptTarget.ES2022,module:ts.default.ModuleKind.ES2022}}).outputText;
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'mmri-qbank14-'));
@@ -19,10 +19,10 @@ const mod=await import(`${pathToFileURL(modulePath).href}?v=${Date.now()}`);
 
 const bundles=[
   ['marketing','methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json','3.0.4','3.1.4-HUMAN'],
-  ['it','methodology/businessmri-v2.5-runtime-bundles/MMRI_ISMRI_Methodology_4.3.5_BUSINESSMRI_V2.json','4.3.5','BUSINESSMRI-v2.5-ISMRI-HUMAN'],
-  ['finance','methodology/businessmri-v2.5-runtime-bundles/MMRI_FINMRI_Methodology_4.2.5_BUSINESSMRI_V2.json','4.2.5','BUSINESSMRI-v2.5-FINMRI-HUMAN'],
-  ['people','methodology/businessmri-v2.5-runtime-bundles/MMRI_HRMRI_Methodology_4.1.5_BUSINESSMRI_V2.json','4.1.5','BUSINESSMRI-v2.5-HRMRI-HUMAN'],
-  ['operations','methodology/businessmri-v2.5-runtime-bundles/MMRI_OPMRI_Methodology_4.4.5_BUSINESSMRI_V2.json','4.4.5','BUSINESSMRI-v2.5-OPMRI-HUMAN']
+  ['it','methodology/businessmri-v2.5-runtime-bundles/MMRI_ISMRI_Methodology_4.3.5_BUSINESSMRI_V2.json','4.3.6','BUSINESSMRI-v2.5-ISMRI-HUMAN'],
+  ['finance','methodology/businessmri-v2.5-runtime-bundles/MMRI_FINMRI_Methodology_4.2.5_BUSINESSMRI_V2.json','4.2.6','BUSINESSMRI-v2.5-FINMRI-HUMAN'],
+  ['people','methodology/businessmri-v2.5-runtime-bundles/MMRI_HRMRI_Methodology_4.1.5_BUSINESSMRI_V2.json','4.1.6','BUSINESSMRI-v2.5-HRMRI-HUMAN'],
+  ['operations','methodology/businessmri-v2.5-runtime-bundles/MMRI_OPMRI_Methodology_4.4.5_BUSINESSMRI_V2.json','4.4.6','BUSINESSMRI-v2.5-OPMRI-HUMAN']
 ];
 
 for(const [domain,rel,candidateVersion,qbankVersion] of bundles){

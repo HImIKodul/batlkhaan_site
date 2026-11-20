@@ -1,7 +1,8 @@
 /* Mandatory report review, enforced inside the same database transaction that makes an assessment terminal.
    Every terminal write path calls enqueueReviewInTx, so no endpoint can finish an assessment without its review record.
    A failure here throws and rolls the completion back (fail closed). */
-export const REVIEW_HOURS = 48;
+/** Review TARGET turnaround (hours). A target only: nothing is auto-approved or auto-published when it passes; the review turns OVERDUE and is highlighted. Owner policy 2026-11: 24 h. */
+export const REVIEW_HOURS = (() => { const n = Number(process.env.MMRI_REPORT_REVIEW_TARGET_HOURS); return Number.isFinite(n) && n >= 1 && n <= 240 ? n : 24; })();
 
 export function reportReviewRequired(): boolean {
   const raw = process.env.MMRI_REPORT_REVIEW_REQUIRED;

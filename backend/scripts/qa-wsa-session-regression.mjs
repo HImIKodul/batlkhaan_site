@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* WS-A regression: MMRI-16 (concurrent refresh with the same cookie, grace window, replay detection), MMRI-19 (logout kills the access token, other devices survive).
    Self-contained: it registers its own synthetic user and needs no external harness files.
    Env: API=<api base, with or without /api/v1> (ISOLATED API started with AUTH_IP_RATE_LIMIT raised, e.g. 5000: the suite performs ~15 logins)
@@ -18,7 +19,7 @@ async function call(method,path,{token,cookie,body}={}){const h={origin:ORIGIN.o
   const r=await fetch(B+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});let j=null;try{j=await r.json()}catch{}
   const sc=r.headers.get('set-cookie');return {status:r.status,j,cookie:sc?sc.split(';')[0]:null,token:j?.data?.accessToken}}
 const login=()=>call('POST','/auth/login',{body:{email:creds.email,password:creds.password}});
-const reg=await call('POST','/auth/register',{body:{email:creds.email,password:creds.password,displayName:'WSA session test'}});if(reg.status!==201){console.log('FAIL setup: synthetic user could not be registered, status '+reg.status);process.exit(1)}
+const reg=await registerVerifiedFixture(B,{email:creds.email,password:creds.password,displayName:'WSA session test'},{origin:ORIGIN.origin});if(reg.status!==200)throw new Error('Verified fixture login failed');
 const refresh=cookie=>call('POST','/auth/refresh',{cookie});
 const me=token=>call('GET','/auth/me',{token});
 

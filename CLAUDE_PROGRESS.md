@@ -811,3 +811,81 @@ Safari/WebKit and real touch devices untested. Non-marketing QA scores are posit
 - Stale expectations updated (not weakened): security shutdown check, step-10 domain pins (4.1.7/4.2.7/4.3.7/4.4.7), billing-retake claim path + 300,000₮ disclosure.
 - Open: `VERIFY_STEP09_CSS_REGRESSION.sh` fails on CSS drift from recent visual work (pre-existing; needs design decision).
 - Cleanup: 135 obsolete step reports/prompts/verifiers/logs removed (archive in ~/Downloads/BUSINESSMRI_RELEASE_PACKAGE_01/CLEANUP_BACKUP/batch2_verified); BACKEND_STEP03–19 design docs moved to `docs/engineering/`.
+
+## 2026-11-10 — Codex takeover / incremental engineering (NOT final acceptance)
+- Original Claude CSS work, staged deletion and untracked comparator preserved in external patch/index checkpoint before overlapping edits. See docs/engineering/CODEX_PROGRESS.md for evidence, failures and remaining work.
+- Fixed original-CSS comparison server font 403s; bounded mobile public rendering (8 states), desktop/mobile authenticated diagnosis and native-motion probes pass. Exhaustive CSS and authenticated report comparisons timed out and remain incomplete.
+- BusinessMRI.mn branding corrected in mail/MFA/PDF/payment descriptions; PDF generator bumped to 1.6 for cache regeneration. Actual five-domain PDF regression passes 23/23.
+- Resend adapter + secure config/preflight/local contract implemented; email verification and full recovery/delivery lifecycle remain open. No external email sent.
+- QPay duplicate-row/aggregate amount defects fixed; provider contract 28/28 and isolated billing races 11/11 pass. Multi-payment overlap replay ledger and callback journeys still open.
+- New mmri_codexfix_release_20261110 dataset: one synthetic company, all five ACTIVE methodologies/61,440 questions; original databases preserved. Independent bank census passes.
+- All 325 design-workspace entries inventoried; nothing consolidated or removed. Final source gate passes. No push/deployment. System remains NOT release-ready.
+
+## 2026-11-17 — Release policy, two-section admin, Gmail adapter (QA only; nothing committed or deployed)
+- Report policy (owner): approval releases immediately. `MMRI_REPORT_MIN_RELEASE_HOURS`/`RELEASE_NOT_DUE` removed; 24 h (`MMRI_REPORT_REVIEW_TARGET_HOURS`) is a review target, overdue is highlighted, nothing auto-approves. One action `POST /admin/reviews/:id/approve` = approve + publish (idempotent, retry-safe; failed publication stays APPROVED and is retried by maintenance). Regression `backend/scripts/qa-release-policy-regression.mjs` 49/49.
+- Admin: Control Center (overview counts, customers with access/payment/report columns, companies, access, payments, support) and Review Studio (queue stages, stepper, "Батлах, илгээх"). Notifications/Settings pages are no longer in the navigation.
+- Gmail: `src/api/mail/gmail-client.ts` (OAuth refresh token, send + read), `GmailMailer` (MMRI_MAIL_PROVIDER=gmail), support inbox (`support-mail-service.ts`, migration `20261117120000_support_mail_inbox`, applied to the QA DB only). Owner step: `scripts/gmail-authorize.mjs`. Unit 28/28, inbox (mock mailbox) 23/23. Real Gmail NOT exercised: no credentials exist.
+- Legacy suites `qa-admin-review-e2e.mjs` (RV-26a/26b/36/37) and `qa-report-editor-regression.mjs` (VE-16..20) still encode the old two-step/24 h-hold flow and need rewriting; they were not run.
+
+## 2026-11-17/20 — Direct report editing, edit lock, AI scan/Hunspell, guides, legacy suites (QA only; nothing committed, pushed or deployed)
+Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_REPORT_PHASE2_20261117.md):
+- Release policy regression `qa-release-policy-regression.mjs`: run 1 = 49/49; re-run after the edit lock = 47 PASS / 2 FAIL (mock mailbox found 0 release e-mails). Cause (confirmed): `LifecycleMailService.dispatchPending` took the oldest 120 mail-type notifications in the 48 h window before skipping already-sent ones, so a backlog of sent rows starved new ones (158 notifications, 119 sent, 39 never attempted). Fixed in `backend/src/api/mail/lifecycle-mail.ts` (finished rows excluded in SQL; admin alerts newest-first). Verified by a targeted release: delivery `SENT`, one release e-mail in the mock mailbox. The full 49-check suite was NOT re-run after the fix.
+- Edit lock + direct-edit fidelity `qa-review-lock-regression.mjs` 24/24; UI acceptance 10/10; legacy `qa-report-editor-regression.mjs` 29/29 and `qa-admin-review-e2e.mjs` 39/39 (updated to the immediate-release policy); Gmail adapter unit 28/28; support inbox (mock mailbox) 23/23; Hunspell unit 6/6; release-policy unit 3/3; backend vitest 219/219; backend and frontend type-check/build clean.
+- New migrations applied to the QA DB ONLY: 20261117120000_support_mail_inbox, 20261118100000_review_edit_lock (chain fingerprint files updated). Production `mmri`: 31 migrations, none of the new tables/columns (read-only check).
+- Admins (QA DB): BILLING_REVIEWER 0 enabled/14 disabled, REPORT_REVIEWER 0/23, SUPER_ADMIN 2 enabled/5 disabled. Enabled = the two `admin.qa.p3.*` SUPER_ADMIN accounts. Disabled (reversible, backed up) in this series: 16 + 19 + 1 throw-away test admins.
+- Not verified: real Gmail (no credentials), real AI (OpenAI HTTP 429 credit_balance_exhausted), QPay, production deployment, human proofreading.
+
+## 2026-11-20 — Direct editing completed for all five domains, mail-dispatcher regression, 49/49 (QA only; nothing committed, pushed or deployed)
+- Only S04/S05/S06/S10 narrative text is customer-visible (web + PDF) and editable; S01/S02/S03/S07/S08/S09 are calculated values or mandatory disclosures and are refused server-side (`CLAIM_NOT_EDITABLE`, `EDITABLE_SECTIONS` in review-service.ts); the secondary edit list is removed. Verified in the browser for Marketing, IT, Finance, People, Operations: 16/16 inline, save/reopen, release, customer page, 3-page byte-identical PDF.
+- Mail dispatcher: regression `qa-mail-dispatch-regression.mjs` 14/14; release-policy regression 49/49 (one of the 49 is a placeholder check); lock 24/24; e2e 39/39; editor 29/29; narrative-editable 10/10.
+- Wording: proposals in /home/kirby/mmri-qa-runtime/WORDING_CORRECTION_PROPOSAL.md (304 + 256 questions), nothing applied. Full report: /home/kirby/mmri-qa-runtime/FINAL_REPORT_PHASE2_20261117.md (update section at the top).
+
+## 2026-11-20 release-acceptance pass
+- Fixed: admin-alert mail starvation (lifecycle-mail.ts, SQL exclusion before LIMIT, disabled-admin recipients skipped); conclusion 80-160 word counter + Mongolian V27 message; expired lock housekeeping; test fixes (TOTP replay, lock fixture picker).
+- New tests: qa-admin-alert-regression.mjs (13), conclusion-words-unit.ts (11), narrative regression now 14.
+- Results: release-policy 49/49, lock 24/24, editor 29/29, e2e ALL PASS, mail-dispatch 14/14, ui-acceptance 10/10, vitest 219/219, builds/tsc clean, step17 28/28.
+- Migration rehearsal on scratch DBs: fresh 35/35, upgrade-from-main copy 4/4. `mmri` untouched.
+- Blocked: plan wording editing (PLAN_EDITING_PROPOSAL.md), wording bank approval, Gmail/OpenAI/QPay, Prisma 7 audit item.
+- Full report: /home/kirby/mmri-qa-runtime/BUSINESSMRI_FINAL_RELEASE_ACCEPTANCE.md
+
+## 2026-11-20 cleanup + RC pass
+- Disabled 15 disposable test admins (2 SUPER_ADMIN enabled, 77 admin accounts disabled, none deleted). Re-run /home/kirby/mmri-qa-runtime/cleanup/disable-extra-admins.mjs after suites.
+- 18 verified archive dumps in ~/BUSINESSMRI_DB_BACKUPS/archive_20261120 (sha256 + restore drill). NO database dropped; DROP batch awaits owner approval (see report).
+- RC staged: ~/mmri-release-candidates/businessmri-rc-20261120 (657 files, checksums, .env.production.example, RELEASE_README.md). Official baseline NOT replaced.
+- Tests: release-policy 53/53 (enforcement on), accounts 46/46 (enforcement on), five-domain 45/45, retake 8/8, mail-dispatch 14/14 (drains backlog), admin-alert 13/13. NOT RUN: authorization matrix, diagnostic profiles, language sweep.
+- Report: /home/kirby/mmri-qa-runtime/BUSINESSMRI_CLEANUP_AND_RC_REPORT_20261120.md. Verdict NO-GO for public launch.
+
+## 2026-11-20 approved historical DB cleanup executed
+- Owner confirmed; dropped 18 archived databases individually (ws_a/b/c/d/e/g/h, glass_integration, final2, codexfix_p1test, 4x acceptance_flow, final_audit, codexfix_release_20261110, design_test, v2_qa). 0 errors, 0 skipped. Free disk 6.8 GB -> 16 GB.
+- Kept: mmri, mmri_fin_qa_20261116214738, both phase2, mmri_codexfix, mmri_qa_launch, mmri_phase3_qa_preview. Archive files + SHA256SUMS kept (18/18 OK). No Docker volumes touched.
+- Post-check 11/11 PASS (admin MFA login, customer login, PDF 3 pages, billing, 5180). mmri unchanged (323/151/192, 31 migrations).
+- Account deletion NOT done (needs separate approval). Release candidate, Git, deployment untouched.
+
+## 2026-11-20 final frontend and Mongolian wording corrections
+- Homepage: h1 "Бизнесээ оношлуул."; hero labels Маркетинг (MMRI) / Мэдээллийн технологи (ITMRI) / Санхүү (FINMRI) / Хүний нөөц (HRMRI) / Үйлдвэрлэл, үйл ажиллагаа (POMMRI); label size reduced so the longest fits its plate.
+- Guides: Guide 1 replaced by one static page (HomeGuides.tsx AboutGuide, .mmri-about1 CSS; old Guide 1 CSS removed); larger headings/intros in all guides; Guide 3 shows desktop + mobile at every screenshot step (desktopOnly removed, aspect fixed 1.6, no clipping); 18 screenshots regenerated from the current site (old set: runtime backups/guide-shots-old-20261120).
+- PDF file name: src/pages/reportFileName.ts -> <company>_<category>_тайлан_<YYYY-MM-DD>.pdf (Ulaanbaatar date, sanitised). Unit test: frontend/scripts/report-file-name.test.mts (9/9).
+- Questionnaire: divider/padding removed from the extra-options wrapper; equal 10px gaps verified (desktop and 390px).
+- Readable glass: tokens --mmri-readable-* in design/tokens.css; applied to report pages, billing, company information, account blocks; strengths/weaknesses share one neutral surface (old red/green rules removed from crystal.css/crystal-phase3.css/report.css).
+- Report: "Дууссан/Дуусаагүй" buttons and progress hint removed (statuses/logic untouched); category names now Mongolian (data/businessEvaluation.ts); headings reworded.
+- Figures in Guide 1 are the owner-supplied copy (75,000+ questions, 200–280 per domain); validated bank counts are 61,440 and backend QUICK range 192–280.
+- Verification: tsc 0 errors, vite build OK, ui-verify 14 real checks PASS, guides 3x2 views no overflow/clipping. Downloadable PDF headings come from the backend renderer and were not changed.
+
+## 2026-11-20 plain terms, report glass consolidation, homepage subtitle
+- Terms: src/data/plainTerms.ts (exact owner replacements for ISMRI-C32 and the low-code capability + «засаглал» -> «удирдлага» with case endings). Applied to canonicalCapabilities.ts (name/definition, 14+14 lines) and domainQuestionSamples.ts (topic only, 14 lines); NOT applied to sample question text, ids, scores or backend methodology. Runtime: plainDeep() on results/recommendations/report-payload API responses (display copy) and mnCustomerText. Test: frontend/scripts/plain-terms.test.mts (11/11). Other heavy terms were NOT changed (owner list in the final message).
+- Report glass: removed solid/bevel/gradient/sheen rules from pages/report.css and design/crystal.css; ONE surface per report page in design/crystal-phase3.css (tokens --mmri-report-* in tokens.css: 22% white, blur(14px) saturate(1.1) brightness(1.3) contrast(.65)); report ink tokens scoped on .report-three-page (#030c28). Strengths/weaknesses are flat inside the page surface with a vertical hairline.
+- Contrast (cleanup/report-contrast.mjs + contrast-analyze.py in the QA runtime; real viewport, scroll-stepped, text hidden to sample the true backdrop, darkest 5% of pixels): desktop 5 domains 655 boxes 0 below AA (worst 5.05); 390px 3 domains 390 boxes 0 below AA (worst 4.55). Fixed bottom nav excluded on phones.
+- Homepage: subtitle restored as the h1 <em> (original structure) inside a translucent panel; hero ink scoped (--wp-ink/--gm-navy #020a22); contrast 4.84 desktop and mobile.
+- Not re-checked: the admin report editor (shares the report components), other domains at 390px.
+
+## 2026-11-20 RC5 (frozen)
+- Package: /home/kirby/mmri-release-candidates/businessmri-release-1.0.0-rc5-20261120. Adds ops/provision-methodologies.mjs + 4 domain bundles (fresh install from package only), blue reading-glass token, rank-based answer colours, N_A_CLAIM shown as lowest rung of the applicability ladder (display only).
+- Verified from the extracted package: fresh 80/80, upgrade (copy of mmri) 80/80, probe 21/21 x2, restart OK, PDF 5x3 pages. Report: /home/kirby/mmri-qa-runtime/BUSINESSMRI_RC5_FINAL_REPORT_20261120.md
+- No RC6 without a confirmed defect.
+
+## 2026-11-20 final cleanup
+- QA DB reduced to ONE SUPER_ADMIN (…3e98) + ONE customer (…a89a); backup backups/qa-db-before-final-cleanup-20261120.dump (restore verified). credentials.local now holds only those two.
+- Old RC packages deleted (RC5 kept, frozen); screenshots/captures deleted; old copies, audits, notes, scripts, logs moved to /home/kirby/BUSINESSMRI_ARCHIVE_20261120/. Report: /home/kirby/mmri-qa-runtime/reports/BUSINESSMRI_FINAL_CLEANUP_REPORT_20261120.md
+
+## 2026-11-20 Gmail (support@businessmri.mn) on QA
+- Secrets in /home/kirby/mmri-secrets (not in repo); run-backend.sh sources gmail-support.env; qa-backend.env uses gmail + recipient allowlist. Live tests PASS (registration, reset, report-ready, support inbox, refresh, restart). gmail-client.ts: 403 rate-limit now RATE_LIMIT (source only; RC5 unchanged). Report: mmri-qa-runtime/reports/BUSINESSMRI_GMAIL_CONNECTION_REPORT_20261120.md

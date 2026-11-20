@@ -1,4 +1,4 @@
-# BusinessMMRI.mn — external requirements before production
+# BusinessMRI.mn — external requirements before production
 
 Everything below depends on a third party, a credential, or the physical server, so it cannot be completed or verified by the repository alone.
 Each item states what exists in the code, what is missing, what you must obtain, and the **acceptance test** that proves it. Until an item is accepted, the
@@ -23,8 +23,11 @@ clone stack (`harness/`) or a staging copy, and never initiate real payments wit
 
 ## 2. Transactional e-mail provider
 
-- **In the code:** a `Mailer` interface with only `mock` and `disabled` implementations (`backend/src/api/mail/mailer.ts`); enumeration-safe password-reset endpoints with rate limiting, single-use salted-hash tokens and full session revocation; the preflight **requires `MMRI_MAIL_PROVIDER=disabled`** in production because no real provider is implemented.
-- **Missing (engineering):** a real `Mailer` implementation (SMTP or the provider's API) plus the e-mail-ownership verification flow (audit item MMRI-01 remainder: new accounts are not verified, so e-mail addresses are unproven), and relaxing the preflight rule once it is tested.
+- **In the code:** `mock`, `disabled`, and Resend HTTPS adapters (`backend/src/api/mail/mailer.ts`). Resend uses a fixed endpoint, request timeout, redirect rejection, server-only credentials and sanitized errors. Provider acceptance is not proof of inbox delivery. Local mocked contract tests pass; external sending has not been performed.
+- **Configuration:** `MMRI_MAIL_PROVIDER=resend`, `RESEND_API_KEY`, plain sender address `MMRI_MAIL_FROM`, `MMRI_MAIL_REQUEST_TIMEOUT_MS` (1–15 seconds), and `MMRI_PUBLIC_APP_URL=https://businessmri.mn`. `mock` remains forbidden in production. `disabled` sends nothing and produces a preflight warning.
+- **Local implementation:** new public accounts require an ownership link before login; verification establishes the final password. Tokens expire, are single use and purpose-separated, with a 60-second resend cooldown and three-per-hour durable cap. Admin email changes revoke outstanding links and require fresh ownership. Legacy accounts remain login-compatible; their addresses are not retroactively proven and must not authorize privileged access. Mocked timing, recovery, session and MFA tests pass; the new migration and real PostgreSQL/browser tests remain pending in this restricted session.
+- **Still required:** authorized inbox deliverability, slow real-provider timing, bounce/complaint processing and operational delivery monitoring. No live provider verification is claimed.
+- **Provider contract:** https://resend.com/docs/api-reference/emails/send-email
 - **You must obtain:** a transactional provider account that can reach Mongolian recipients (provider choice is yours; judge by deliverability to the mailbox providers your customers actually use), a sending domain/sub-domain with **SPF, DKIM and DMARC** published, a from-address (e.g. no-reply@yourdomain), bounce/complaint handling, credentials in `deploy/.env.production` (never in the repo).
 - **Acceptance test:** register → verification mail arrives (inbox, not spam) in at least three recipient mailbox providers; link works once and expires; password reset mail arrives, link works once, old sessions are revoked, an unknown address gets the same response as a known one; DMARC alignment passes in the received headers; bounces are logged.
 - Until accepted: users cannot self-recover passwords; document a manual operator procedure.

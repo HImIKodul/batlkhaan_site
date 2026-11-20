@@ -9,11 +9,15 @@ import { loadApiConfig, type ApiConfig } from "./config.js";
 import { ApiError, badRequest, conflict, notFound } from "./errors.js";
 import { AuthService } from "./auth/auth-service.js";
 import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
+import { EmailVerificationService } from "./auth/email-verification-service.js";
 import { createMailer } from "./mail/mailer.js";
+import { LifecycleMailService } from "./mail/lifecycle-mail.js";
 import { DataLifecycleService } from "./account/data-lifecycle-service.js";
 import { AdminService } from "./admin/admin-service.js";
 import { ReviewService } from "./admin/review-service.js";
 import { registerAdminRoutes } from "./admin/admin-routes.js";
+import { SupportMailService } from "./mail/support-mail-service.js";
+import { registerNotificationRoutes } from "./notifications/notification-routes.js";
 import { authenticate, assessmentAccess, billingInvoiceAccess, pilotEnrollmentAccess, requireCompanyRole, requireOperator, type CompanyRole } from "./auth/access.js";
 import { assertOwnerTransitionAllowed } from "./auth/role-policy.js";
 import { parseCookies, refreshCookie, clearRefreshCookie } from "./auth/cookies.js";
@@ -52,12 +56,18 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   const auth=new AuthService(config);
   const mailer=createMailer(config);
   const passwordReset=new PasswordResetService(config,mailer);
+  const emailVerification=new EmailVerificationService(config,mailer);
+  const EMAIL_CODE_MIN_RESPONSE_MS=300;
+  const finishMailRequest=async(started:number)=>{const wait=(config.mailRequestTimeoutMs??5000)+PASSWORD_RESET_MIN_RESPONSE_MS-(Date.now()-started);if(wait>0)await new Promise(r=>setTimeout(r,wait))};
   const dataLifecycle=new DataLifecycleService(config);
   const engine=new PrismaAssessmentEngine();
   const narrativeProvider=createNarrativeProviderFromEnv(config.environment);
   const strategyReports=new PrismaStrategyReportService(engine,narrativeProvider);
   const adminService=new AdminService(config);
   const reviews=new ReviewService(config,strategyReports);
+  const supportMail=new SupportMailService(config);
+  const lifecycleMail=new LifecycleMailService(config,mailer);
+  reviews.afterMaintenance=async()=>{await lifecycleMail.dispatchPending()};
   reviewGate=id=>reviews.assertCustomerMayRead(id);
   /**
    * First-time report generation includes a provider call that can take about a minute, which is longer than a
@@ -89,6 +99,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   const authIpLimiter=new MemoryRateLimiter(config.authIpRateLimit,config.rateLimitWindowMs);
   const authAccountLimiter=new MemoryRateLimiter(config.authAccountRateLimit,config.rateLimitWindowMs);
   const refreshLimiter=new MemoryRateLimiter(config.refreshRateLimit,config.rateLimitWindowMs);
+  const notificationLimiter=new MemoryRateLimiter(120,config.rateLimitWindowMs);
   const operationalMetrics=new OperationalMetrics();
   let acceptingTraffic=true;
 
@@ -110,12 +121,14 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   },false);
 
   router.add("POST","/api/v1/auth/register",async({req,res})=>{
+    const started=Date.now();
     const ip=clientIp(req,config); authIpLimiter.check(`register:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
     const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
     authAccountLimiter.check(`register:acct:${emailKey}`);
-    const result=await auth.register({email:body.email,password:body.password,displayName:body.displayName},fingerprint(req,config));
-    res.setHeader("set-cookie",refreshCookie(result.refreshToken,config));
-    created(res,{user:result.user,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
+    await auth.register({email:body.email,password:body.password,displayName:body.displayName},fingerprint(req,config));
+    try{await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
+    await finishMailRequest(started);
+    json(res,202,{data:{accepted:true,message:"Имэйлдээ илгээсэн 6 оронтой баталгаажуулах кодыг оруулна уу."}});
   },false);
 
   router.add("POST","/api/v1/auth/login",async({req,res})=>{
@@ -134,9 +147,31 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
     authAccountLimiter.check(`pwreset:acct:${emailKey}`);
     try{await passwordReset.requestReset(body.email,fingerprint(req,config))}
-    catch(error:any){console.log(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"password_reset_request_failed",reason:String(error?.message??error).slice(0,120)}))}
-    const wait=PASSWORD_RESET_MIN_RESPONSE_MS-(Date.now()-started);if(wait>0)await new Promise(r=>setTimeout(r,wait));
+    catch{console.error(JSON.stringify({event:"password_reset_request_failed"}))}
+    await finishMailRequest(started);
     json(res,202,{data:{accepted:true,message:"Хэрэв энэ имэйл хаягаар бүртгэл байвал нууц үг сэргээх холбоосыг илгээлээ. Имэйлээ шалгана уу."}});
+  },false);
+
+  router.add("POST","/api/v1/auth/email-verification/request",async({req,res})=>{
+    const started=Date.now();
+    authIpLimiter.check(`verify:ip:${clientIp(req,config)}`);
+    const body=await readJson(req,config.requestBodyLimitBytes);
+    const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
+    authAccountLimiter.check(`verify:acct:${emailKey}`);
+    try{await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
+    await finishMailRequest(started);
+    json(res,202,{data:{accepted:true,message:"Хэрэв энэ имэйл баталгаажаагүй бүртгэлтэй бол шинэ код илгээлээ. Имэйлээ шалгана уу."}});
+  },false);
+  /* Registration code check (body: email + 6-digit code). Same answer and the same minimum duration for every failure, so it cannot be used to probe which addresses exist. */
+  router.add("POST","/api/v1/auth/email-verification/confirm",async({req,res})=>{
+    const started=Date.now();
+    authIpLimiter.check(`verify-confirm:ip:${clientIp(req,config)}`);
+    const body=await readJson(req,config.requestBodyLimitBytes);
+    const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
+    authAccountLimiter.check(`verify-confirm:acct:${emailKey}`);
+    try{await emailVerification.verifyCode(body.email,body.code,fingerprint(req,config))}
+    catch(e){const w=EMAIL_CODE_MIN_RESPONSE_MS-(Date.now()-started);if(w>0)await new Promise(r=>setTimeout(r,w));throw e}
+    ok(res,{verified:true});
   },false);
 
   router.add("POST","/api/v1/auth/password-reset/confirm",async({req,res})=>{
@@ -170,7 +205,9 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   /* Administration Center (separate session, MFA, server-side roles). See backend/src/api/admin. */
-  registerAdminRoutes({router,config,admin:adminService,reviews,ipLimiter:new MemoryRateLimiter(300,config.rateLimitWindowMs),loginLimiter:new MemoryRateLimiter(Math.max(3,Number(process.env.MMRI_ADMIN_LOGIN_RATE_LIMIT??10)||10),config.rateLimitWindowMs),readJson,clientIp:req=>clientIp(req,config),fingerprint:req=>fingerprint(req,config)});
+  registerAdminRoutes({router,config,admin:adminService,reviews,supportMail,queriesResults:(id:string)=>queries.results(id),ipLimiter:new MemoryRateLimiter(300,config.rateLimitWindowMs),loginLimiter:new MemoryRateLimiter(Math.max(3,Number(process.env.MMRI_ADMIN_LOGIN_RATE_LIMIT??10)||10),config.rateLimitWindowMs),readJson,clientIp:req=>clientIp(req,config),fingerprint:req=>fingerprint(req,config)});
+
+  registerNotificationRoutes(router,notificationLimiter);
 
   /* Customer side of the review workflow, disputes and support. */
   router.add("GET","/api/v1/assessments/:assessmentId/review-status",async({res,principal,params})=>{
@@ -743,7 +780,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       json(res,e.status,{error:{code:e.code,message:e.message,details:e.details,requestId}});
     }
   });
-  return {server,router,config,reviews,beginDrain:()=>{acceptingTraffic=false;},operationalSnapshot:()=>operationalMetrics.snapshot()};
+  return {server,router,config,reviews,lifecycleMail,beginDrain:()=>{acceptingTraffic=false;},operationalSnapshot:()=>operationalMetrics.snapshot()};
 }
 
 function normalizeError(error:any,environment="development",context?:{requestId:string;path:string;releaseSha:string;instanceId:string}):ApiError {

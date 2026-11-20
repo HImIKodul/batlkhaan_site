@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* Rendered-style check of the FIRST questions of a fresh diagnosis (the applicability gate "Тийм, хамаарна." + "no"/"unknown"), per domain, desktop or mobile.
    Captures computed background-image, border colour, left-bar colour and --answer-color of every card; checks the affirmative card is GREEN, the exceptional
    cards are neutral gray (dashed), selection keeps the colour, and after Continue + Back the saved answer is restored with the same colours.
@@ -5,7 +6,7 @@
 import {createRequire} from 'module';const require=createRequire(import.meta.url);const {chromium}=require(process.env.PW);import fs from 'fs';import crypto from 'crypto';import path from 'path';
 const DOMAIN=process.env.DOMAIN||'it',OUT=process.env.OUT||'/tmp',BASE=process.env.BASE||'http://127.0.0.1:5176/',API=process.env.API||'http://localhost:4010/api/v1',ORIGIN=process.env.ORIGIN||'http://localhost:5176';fs.mkdirSync(OUT,{recursive:true});
 const W=crypto.randomUUID(),sleep=ms=>new Promise(r=>setTimeout(r,ms));let fail=0;const t=(id,n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+String(d).slice(0,260):''))};
-const api=async(m,p,tok,b)=>{const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
+const api=async(m,p,tok,b)=>{if(p==='/auth/register'){const verified=await registerVerifiedFixture(API,b);const j=await verified.json();return {s:verified.status,d:j.data}}const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
 const email=`gate.${DOMAIN}.${Date.now()}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';
 const tok=(await api('POST','/auth/register',null,{email,password:pw,displayName:'Gate'})).d.accessToken;const co=(await api('POST','/companies',tok,{name:'Gate QA ХХК'})).d.id;
 const pq=(await api('GET','/methodology/current/profile-questions',tok)).d;const prof=pq.slice(0,20).map(q=>({questionId:q.id,optionIndexes:[q.options[0].optionIndex]}));
@@ -13,7 +14,7 @@ await api('PUT',`/companies/${co}/profile-answers`,tok,{profileAnswers:prof,basi
 const inv=(await api('POST',`/companies/${co}/billing/invoices`,tok,{planCode:'DIAGNOSTIC',domainCode:DOMAIN})).d;await api('POST',`/billing/invoices/${inv.id}/mock-pay`,tok);
 const a=(await api('POST',`/companies/${co}/assessments`,tok,{domainCode:DOMAIN})).d.id;await api('POST',`/assessments/${a}/start`,tok,{mode:'QUICK',profileAnswers:prof});
 const first=(await api('GET',`/assessments/${a}/next-question`,tok)).d.nextQuestion;
-const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});const ctx=await b.newContext({viewport:{width:Number(process.env.VW||1280),height:Number(process.env.VH||1300)}});
+const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',chromiumSandbox:true});const ctx=await b.newContext({viewport:{width:Number(process.env.VW||1280),height:Number(process.env.VH||1300)}});
 await ctx.route('**/api/**',r=>r.continue({headers:{...r.request().headers(),origin:ORIGIN}}));
 await ctx.addInitScript(([w,c,aid])=>{try{sessionStorage.setItem('mmri.writerId',w);localStorage.setItem('mmri.companyId',c);localStorage.setItem('mmri.assessmentId.'+c,aid)}catch{}},[W,co,a]);
 const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(String(e).slice(0,100)));

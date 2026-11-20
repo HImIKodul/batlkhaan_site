@@ -12,7 +12,7 @@ export default function AccountData(){
  const companyId=session.companyId;const companyName=session.companyName||'';
  const [busy,setBusy]=useState('');const [companyErased,setCompanyErased]=useState(false);const [msg,setMsg]=useState<{tone:'ok'|'error';text:string}|null>(null);
  const [coName,setCoName]=useState('');const [coPw,setCoPw]=useState('');const [acEmail,setAcEmail]=useState('');const [acPw,setAcPw]=useState('');
- const run=async(key:string,fn:()=>Promise<void>)=>{setBusy(key);setMsg(null);try{await fn()}catch(e:any){setMsg({tone:'error',text:e?.message||'Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.'})}finally{setBusy('')}};
+ const run=async(key:string,fn:()=>Promise<void>)=>{setBusy(key);setMsg(null);try{await fn()}catch(e:any){setMsg({tone:'error',text:e?.message||'Үйлдэл хийгдсэнгүй. Дахин оролдоно уу.'})}finally{setBusy('')}};
  const exportAccount=()=>run('ea',async()=>{saveBlob(await api.exportAccountData(),'mmri-account-export.json');setMsg({tone:'ok',text:'Бүртгэлийн мэдээлэл татагдлаа.'})});
  const exportCompany=()=>run('ec',async()=>{if(!companyId)return;saveBlob(await api.exportCompanyData(companyId),'mmri-company-export.json');setMsg({tone:'ok',text:'Байгууллагын мэдээлэл татагдлаа.'})});
  const eraseCompany=()=>run('dc',async()=>{if(!companyId)return;const r=await api.eraseCompanyData(companyId,coName,coPw);setCoName('');setCoPw('');setMsg({tone:'ok',text:`Байгууллагын мэдээлэл устгагдлаа (${r.assessmentsRemoved} оношилгоо). Төлбөрийн бүртгэл, аюулгүй байдлын бүртгэл хадгалагдана.`});setCompanyErased(true)});

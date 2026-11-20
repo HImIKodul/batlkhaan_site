@@ -1,5 +1,7 @@
 import type { MethodologyDefinition, RuntimeSnapshot } from "../engine/types.js";
 import type { StrategyResult } from "../strategy/types.js";
+import { readPolicyFlags } from "../engine/policy-flags.js";
+import { buildEvidenceDisclosure } from "../diagnosis/evidence-disclosure.js";
 import { selectRecommendationActions } from "../strategy/recommendations.js";
 import type { FrozenReportPayload, MetricType, ReportRisk, RoadmapRow, StrengthFinding, WeaknessFinding } from "./types.js";
 
@@ -50,6 +52,8 @@ export interface BuildReportPayloadInput {
   snapshot: RuntimeSnapshot;
   strategy: StrategyResult;
   purposeLabels: Record<string,string>;
+  /** Phase 2.7: explicit override for tests; default reads the (OFF-by-default) policy flags. */
+  policyFlags?: ReturnType<typeof readPolicyFlags>;
 }
 
 export function buildFrozenReportPayload(input: BuildReportPayloadInput): FrozenReportPayload {
@@ -209,6 +213,8 @@ export function buildFrozenReportPayload(input: BuildReportPayloadInput): Frozen
     risks:selectedRisks,
     remeasurement:{horizon:strategy.actionPlan.remeasurementHorizons[0] ?? "H2",labelMn:"Дахин хэмжилтийн эхний цэг"},
     requiredWarnings:warningSet(input.assessmentMode,input.assessmentStatus,input.routingState,snapshot),
+    // B3 (flag ON only): key absent when OFF => frozen payload JSON/hash identical to before.
+    ...((input.policyFlags ?? readPolicyFlags()).b3 && methodology.engineKind === "BUSINESSMRI_V2" ? { evidenceDisclosure: buildEvidenceDisclosure(methodology, snapshot) } : {}),
     displayDictionary:{
       QUICK_ESTIMATE:"Түргэвчилсэн үнэлгээний тооцоолол",
       OFFICIAL_OVERALL_SCORE:"Албан ёсны нийт оноо",

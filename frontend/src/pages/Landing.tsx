@@ -11,7 +11,7 @@ import { setDomainTheme } from '../design/domainTheme';
 type GuideId='about'|'report'|'howto';
 type Guide={id:GuideId;title:string;short:string;intro:React.ReactNode};
 const guides:Guide[]=[
- {id:'about',title:'BusinessMRI.mn гэж юу вэ?',short:'BusinessMRI.mn гэж юу вэ?',intro:<>BusinessMRI.mn нь байгууллагын маркетинг, санхүү, хүний нөөц, мэдээллийн технологи, үйлдвэрлэл үйл ажиллагааны 5 үндсэн чиглэлээр <strong>ОНОШИЛГОО</strong> хийж, давуу тал, тулгарч буй асуудал, сайжруулах боломжийг тодорхойлон, цаашид хэрэгжүүлэх хөгжлийн <strong>ТӨЛӨВЛӨГӨӨ</strong> боловсруулдаг нэгдсэн платформ юм.</>},
+ {id:'about',title:'BusinessMRI.mn гэж юу вэ?',short:'BusinessMRI.mn гэж юу вэ?',intro:<>BusinessMRI.mn нь маркетинг, санхүү, хүний нөөц, мэдээллийн технологи, үйлдвэрлэл, үйл ажиллагаа гэсэн таван үндсэн чиглэлээр бизнесийг <strong>ОНОШИЛЖ</strong>, давуу тал, сул тал, сайжруулах боломжийг тодорхойлоод, дараагийн 12 сарын <strong>ТӨЛӨВЛӨГӨӨГ</strong> гаргаж өгдөг платформ юм.</>},
  {id:'report',title:'Оношилгооны үр дүн',short:'Оношилгооны тайлангаар юу харах вэ?',intro:'Танай бизнесийн сонгосон чиглэлийн өнөөгийн нөхцөл байдлыг тодорхойлж, цаашдын төлөвлөгөөг гаргана.'},
  {id:'howto',title:'Бүртгүүлэх, төлбөр төлөх заавар',short:'Хэрхэн оношилгоо хийлгэх вэ?',intro:'Бүртгүүлэхээс эхлээд тайлангаа харах хүртэлх алхмыг сайтын жинхэнэ дэлгэцийн зургаар алхам алхмаар үзнэ үү.'},
 ];
@@ -65,20 +65,21 @@ export default function Landing(){
   setClosing(true);window.setTimeout(()=>{setOpen(null);setClosing(false)},240);
  };
  /* an open guide moves the page atmosphere quietly to its own tint (never on hover) */
- useEffect(()=>{setDomainTheme(open?({about:'it',report:'people',howto:'operations'} as const)[open]:null);return()=>setDomainTheme(null)},[open]);
+ useEffect(()=>{setDomainTheme(null);return()=>setDomainTheme(null)},[open]);
+ useEffect(()=>{const el=document.documentElement;el.classList.toggle('mmri-guide-open',!!open);return()=>el.classList.remove('mmri-guide-open')},[open]);
  const guide=guides.find(g=>g.id===open);
  const startDiagnosis=()=>go(loggedIn?'analysis':'login');
  return <AppShell route="home"><div className="mmri-home2">
   <main ref={stageRef} className="mmri-home2__stage">
    <section className="mmri-home2__hero" aria-labelledby="mmri-home2-title">
     <div className="mmri-home2__copy">
-     <h1 id="mmri-home2-title" data-route-heading tabIndex={-1}><span>Бизнесийнхээ бодит дүр зургийг хар.</span> <em>Дараагийн 12 сарынхаа зөв алхмыг тодорхойл.</em></h1>
+     <h1 id="mmri-home2-title" data-route-heading tabIndex={-1}><span>Бизнесээ оношлуул.</span> <em>12 сарын төлөвлөгөөгөө гарга.</em></h1>
      <button type="button" className="mmri-home2__start" data-sheen onClick={startDiagnosis}><span className="mmri-shell-glint mmri-btn-glint" aria-hidden="true"><i/></span><span>ОНОШИЛГОО ЭХЛҮҮЛЭХ</span><i className="mmri-home2__start-chip"><Icon name="arrow" size={18}/></i></button>
     </div>
     <div className="mmri-home2__art"><HeroCrystal/></div>
    </section>
 
-   <nav className="mmri-home2__guides" aria-label="BusinessMRI гарын авлага">
+   <nav className="mmri-home2__guides" aria-label="BusinessMRI.mn гарын авлага">
     {guides.map((g,gi)=><button type="button" key={g.id} className={`mmri-home2__guide is-${g.id}`} onClick={e=>{guideTriggerRef.current=e.currentTarget;setClosing(false);setOpen(g.id)}} aria-haspopup="dialog" aria-expanded={open===g.id} aria-controls={open===g.id?'mmri-guide2-dialog':undefined}>
      <span className="mmri-shell-glint" aria-hidden="true" style={{'--gi':gi} as React.CSSProperties}><i/></span><GuideTileNo n={gi+1}/><span className="mmri-home2__guide-title">{g.short}</span><i className="mmri-home2__guide-chip"><Icon name="arrow" size={17}/></i>
     </button>)}

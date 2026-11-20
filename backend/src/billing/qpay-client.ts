@@ -28,7 +28,7 @@ export class QPayMerchantV2Adapter implements PaymentProviderAdapter {
     if(this.tokenInflight)return this.tokenInflight;
     this.tokenInflight=(async()=>{
       const basic=Buffer.from(`${this.config.qpayClientId}:${this.config.qpayClientSecret}`,"utf8").toString("base64");
-      const res=await fetch(`${this.config.qpayBaseUrl}/v2/auth/token`,{method:"POST",headers:{authorization:`Basic ${basic}`},signal:this.requestSignal()});
+      const res=await fetch(`${this.config.qpayBaseUrl}/v2/auth/token`,{method:"POST",headers:{authorization:`Basic ${basic}`},redirect:"error",signal:this.requestSignal()});
       const body=await readProviderBody(res);
       if(!res.ok)throw new Error(`QPay auth failed (${res.status})`);
       const access=text((body as any)?.access_token);
@@ -50,7 +50,7 @@ export class QPayMerchantV2Adapter implements PaymentProviderAdapter {
       amount:input.amountMnt,
       callback_url:input.callbackUrl
     };
-    const res=await fetch(`${this.config.qpayBaseUrl}/v2/invoice`,{method:"POST",headers:jsonHeaders(token),body:JSON.stringify(payload),signal:this.requestSignal()});
+    const res=await fetch(`${this.config.qpayBaseUrl}/v2/invoice`,{method:"POST",headers:jsonHeaders(token),body:JSON.stringify(payload),redirect:"error",signal:this.requestSignal()});
     const body:any=await readProviderBody(res);
     if(!res.ok)throw new Error(`QPay invoice creation failed (${res.status})`);
     const providerInvoiceId=text(body?.invoice_id);
@@ -69,7 +69,7 @@ export class QPayMerchantV2Adapter implements PaymentProviderAdapter {
 
   async cancelInvoice(providerInvoiceId:string):Promise<void>{
     const token=await this.token();
-    const res=await fetch(`${this.config.qpayBaseUrl}/v2/invoice/${encodeURIComponent(providerInvoiceId)}`,{method:"DELETE",headers:{authorization:`Bearer ${token}`},signal:this.requestSignal()});
+    const res=await fetch(`${this.config.qpayBaseUrl}/v2/invoice/${encodeURIComponent(providerInvoiceId)}`,{method:"DELETE",headers:{authorization:`Bearer ${token}`},redirect:"error",signal:this.requestSignal()});
     if(!res.ok){
       await readProviderBody(res);
       throw new Error(`QPay invoice cancellation failed (${res.status})`);
@@ -78,16 +78,41 @@ export class QPayMerchantV2Adapter implements PaymentProviderAdapter {
 
   async checkInvoicePayment(providerInvoiceId:string,expectedAmountMnt:number):Promise<ProviderPaymentResult>{
     const token=await this.token();
-    const payload={object_type:"INVOICE",object_id:providerInvoiceId,offset:{page_number:1,page_limit:100}};
-    const res=await fetch(`${this.config.qpayBaseUrl}/v2/payment/check`,{method:"POST",headers:jsonHeaders(token),body:JSON.stringify(payload),signal:this.requestSignal()});
-    const body:any=await readProviderBody(res);
-    if(!res.ok)throw new Error(`QPay payment verification failed (${res.status})`);
-    const rows=Array.isArray(body?.rows)?body.rows:[];
+    const signal=this.requestSignal();
+    const rows:any[]=[];
+    let body:any;let expectedCount:number|null=null;
+    // Provider pagination is bounded. Incomplete/malformed responses never activate an invoice.
+    for(let page=1;page<=10;page++){
+      const payload={object_type:"INVOICE",object_id:providerInvoiceId,offset:{page_number:page,page_limit:100}};
+      const res=await fetch(`${this.config.qpayBaseUrl}/v2/payment/check`,{method:"POST",headers:jsonHeaders(token),body:JSON.stringify(payload),redirect:"error",signal});
+      body=await readProviderBody(res);
+      if(!res.ok)throw new Error(`QPay payment verification failed (${res.status})`);
+      if(!Array.isArray(body?.rows)||body.rows.length>100)throw new Error("QPay returned invalid payment rows");
+      rows.push(...body.rows);
+      const count=body.count===undefined?null:Number(body.count);
+      if(count!==null&&(!Number.isSafeInteger(count)||count<0||count>1000))throw new Error("QPay returned an invalid payment count");
+      if(page===1)expectedCount=count;else if(count!==expectedCount)throw new Error("QPay payment count changed during pagination");
+      if(count!==null&&rows.length>count)throw new Error("QPay returned inconsistent payment count");
+      if(count!==null ? rows.length>=count : body.rows.length<100)break;
+      if(!body.rows.length||page===10)throw new Error("QPay payment response is incomplete");
+    }
+    const returnedIds=rows.map(row=>text(row?.payment_id));
+    if(expectedCount!==null&&returnedIds.every(Boolean)&&new Set(returnedIds).size<expectedCount)throw new Error("QPay payment pages contain repeated transactions");
     const paidRows=rows.filter((r:any)=>String(r?.payment_status??r?.status??"").toUpperCase()==="PAID");
-    const rowAmount=paidRows.reduce((sum:number,r:any)=>sum+asNumber(r?.payment_amount??r?.amount),0);
-    const paidAmount=Math.max(asNumber(body?.paid_amount),rowAmount);
-    const paymentIds=paidRows.map((r:any)=>text(r?.payment_id)).filter((x:string|null):x is string=>Boolean(x));
-    return {paid:paidAmount>=expectedAmountMnt,paidAmountMnt:paidAmount,paymentId:stablePaymentSetId(paymentIds),raw:body};
+    // Count each provider transaction once. Aggregate totals alone cannot establish a
+    // payable amount: they may include other pages, duplicate rows, or unconfirmed rows.
+    const amounts=new Map<string,number>();
+    for(const row of paidRows){
+      const id=text(row?.payment_id),amount=asNumber(row?.payment_amount??row?.amount);
+      if(!id||!Number.isSafeInteger(amount)||amount<=0)throw new Error("QPay returned an invalid paid transaction");
+      if(row?.payment_currency&&String(row.payment_currency).toUpperCase()!=="MNT")throw new Error("QPay returned an unexpected payment currency");
+      if(amounts.has(id)&&amounts.get(id)!==amount)throw new Error("QPay returned inconsistent duplicate transactions");
+      amounts.set(id,amount);
+    }
+    const paidAmount=[...amounts.values()].reduce((sum,amount)=>sum+amount,0);
+    if(!Number.isSafeInteger(paidAmount))throw new Error("QPay returned an invalid payment total");
+    const paymentIds=[...amounts.keys()];
+    return {paid:paidAmount>=expectedAmountMnt,paidAmountMnt:paidAmount,paymentId:stablePaymentSetId(paymentIds),transactions:[...amounts].map(([id,amountMnt])=>({id,amountMnt})),raw:body};
   }
 }
 

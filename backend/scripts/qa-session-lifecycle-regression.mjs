@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* Session lifecycle, malformed-request and rate-limit regression for an ISOLATED API with synthetic users (no external harness).
    Env:  API=<main api base incl. /api/v1, started with AUTH_IP_RATE_LIMIT/AUTH_ACCOUNT_RATE_LIMIT raised>   PGDATABASE=<scratch db>
          TTL_API=<api base started with ACCESS_TOKEN_TTL_SECONDS=60>   (optional: access-token expiry)
@@ -16,10 +17,11 @@ async function call1(base,method,p,{tok,cookie,body,raw,headers={}}={}){const h=
     const sc=r.headers.getSetCookie?r.headers.getSetCookie():[];return{s:r.status,j,d:j?.data,text,sc,h:r.headers}}catch(e){return{s:0,text:String(e),sc:[],h:new Headers()}}}
 const cookieOf=r=>{const c=r.sc.find(x=>/mmri_refresh/.test(x));return c?c.split(';')[0]:null};
 const rnd=()=>crypto.randomBytes(4).toString('hex');const PW='Session-Test-Pass-12345!';
-async function newUser(base,tag){const email=`sess.${tag}.${Date.now()}.${rnd()}@example.test`;const r=await call(base,'POST','/auth/register',{body:{email,password:PW,displayName:'Sess '+tag}});return{email,tok:r.d?.accessToken,cookie:cookieOf(r),reg:r}}
+async function newUser(base,tag){const email=`sess.${tag}.${Date.now()}.${rnd()}@example.test`;const r=await registerVerifiedFixture(base,{email,password:PW,displayName:'Sess '+tag},{origin:ORIGIN});const j=await r.json();const fixture={s:r.status,j,d:j.data,sc:r.headers.getSetCookie(),h:r.headers};return{email,tok:j.data.accessToken,cookie:cookieOf(fixture),reg:fixture}}
+
 // ---------------- S1 cookie attributes and basic session ----------------
 const u=await newUser(API,'a');
-t('S1','register returns an access token and an HttpOnly SameSite=Strict refresh cookie scoped to /api/v1/auth',!!u.tok&&u.reg.sc.some(c=>/HttpOnly/i.test(c)&&/SameSite=Strict/i.test(c)&&/Path=\/api\/v1\/auth/.test(c)),u.reg.sc.join('|').replace(/=[^;]+/,'=***').slice(0,120));
+t('S1','verified login returns an access token and an HttpOnly SameSite=Strict refresh cookie scoped to /api/v1/auth',!!u.tok&&u.reg.sc.some(c=>/HttpOnly/i.test(c)&&/SameSite=Strict/i.test(c)&&/Path=\/api\/v1\/auth/.test(c)),u.reg.sc.join('|').replace(/=[^;]+/,'=***').slice(0,120));
 t('S1b','the refresh token is not in the JSON body',!/refresh/i.test(JSON.stringify(u.reg.j??{}).replace(/refreshCookie/g,'')));
 t('S2','/auth/me works with the access token',(await call(API,'GET','/auth/me',{tok:u.tok})).s===200);
 // ---------------- S3 refresh rotation ----------------
@@ -81,5 +83,5 @@ t('S9c','API still healthy after the malformed-request barrage',(await call(API.
 if(RL_API){let first429=0,limited=null;for(let i=1;i<=30;i++){const r=await call(RL_API,'POST','/auth/login',{body:{email:`rl${i}.${rnd()}@example.test`,password:'Wrong-Pass-12345!'}});if(r.s===429&&!first429){first429=i;limited=r}}
   t('S10','per-IP auth limit trips (429) before 30 failed logins',first429>0&&first429<=21,`first429=${first429}`);
   t('S10b','429 carries Retry-After and a generic Mongolian-safe envelope',!!limited&&!!limited.h.get('retry-after')&&limited.j?.error?.code==='RATE_LIMITED',limited?`retry-after=${limited.h.get('retry-after')} ${limited.j?.error?.code}`:'no 429');
-  const ru=await newUser(RL_API.replace('x','x'),'rl-after');t('S10c','a legitimate registration from the same IP is also throttled while the bucket is full (documents shared-IP behaviour)',ru.reg.s===429||ru.reg.s===201,String(ru.reg.s))}else console.log('SKIP S10 (RL_API not set)');
+  const ru=await call(RL_API,'POST','/auth/register',{body:{email:`rl-after.${Date.now()}.${rnd()}@example.test`,password:PW}});t('S10c','registration remains pending without a session or is throttled independently',ru.s===429||(ru.s===202&&ru.d?.accepted===true&&!ru.d?.accessToken),String(ru.s))}else console.log('SKIP S10 (RL_API not set)');
 console.log(fail?`FAILED ${fail}`:'ALL PASSED');process.exit(fail?1:0);

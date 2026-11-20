@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from './lib/verified-test-registration.mjs';
 /* Concurrent full-diagnosis load test on an ISOLATED API (mock billing) with synthetic customers. Measures per-endpoint latency, errors, API CPU/RSS and database activity.
    Each virtual customer: register -> company -> 20-question profile -> mock purchase -> assessment (domain rotates over the five domains) -> answer every question -> complete -> read results/report.
    Usage: API=http://127.0.0.1:4310/api/v1 PGDATABASE=<scratch db> USERS=4 [API_PID=<pid>] node scripts/qa-load-journeys.mjs
@@ -12,7 +13,7 @@ const DOMAINS=(process.env.DOMAINS||'marketing,it,finance,people,operations').sp
 async function call(tag,method,p,{tok,body,w}={}){const s=process.hrtime.bigint();let r,text;try{r=await fetch(API+p,{method,headers:{'content-type':'application/json',origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{}),...(w?{'x-mmri-writer-id':w}:{})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(120000)});text=await r.text()}catch(e){(lat[tag]??=[]).push(120000);errs.push(`${tag} network ${e}`);return{s:0}}
   const ms=Number(process.hrtime.bigint()-s)/1e6;(lat[tag]??=[]).push(ms);let j;try{j=JSON.parse(text)}catch{}if(r.status>=500)errs.push(`${tag} ${r.status}`);return{s:r.status,d:j?.data,e:j?.error}}
 async function journey(i){const domain=DOMAINS[i%DOMAINS.length];const W=crypto.randomUUID();const email=`load.${i}.${Date.now()}.${crypto.randomBytes(2).toString('hex')}@example.test`;
-  const reg=await call('register','POST','/auth/register',{body:{email,password:'Load-Test-Pass-12345!',displayName:'Load '+i}});const tok=reg.d?.accessToken;if(!tok)return{i,domain,ok:false,why:'register '+reg.s};
+  const registrationStarted=performance.now();const registered=await registerVerifiedFixture(API,{email,password:'Load-Test-Pass-12345!',displayName:'Load '+i},{origin:ORIGIN});const reg=(await registered.json()).data;const tok=reg.accessToken;(lat.verifiedRegistration??=[]).push(performance.now()-registrationStarted);if(!tok)return{i,domain,ok:false,why:'verified registration'};
   const co=await call('createCompany','POST','/companies',{tok,body:{name:`Load ${i} ХХК`}});const coId=co.d?.id;
   const pq=(await call('profileQuestions','GET','/methodology/current/profile-questions',{tok})).d||[];const prof=pq.slice(0,20).map(q=>({questionId:q.id,optionIndexes:[q.options[0].optionIndex]}));
   await call('saveProfile','PUT',`/companies/${coId}/profile-answers`,{tok,w:W,body:{profileAnswers:prof,basicInfoAnswers:Array.from({length:20},(_,k)=>({questionId:'B'+String(k+1).padStart(2,'0'),optionIndexes:[1]}))}});

@@ -24,6 +24,7 @@ import './pages/priorities.css';
 import './pages/support.css';
 import './design/prism-app.css';
 import './design/crystal.css';
+import './design/crystal-phase3.css';
 import './design/preferences.css';
 
 

@@ -32,3 +32,8 @@
 .auth__done .mmri-button{justify-content:center;width:100%;margin-top:10px;text-decoration:none}
 .auth__done{display:grid;gap:10px;color:var(--wp-ink2,#33435A);line-height:1.55}.auth__done p{margin:0}
 .auth__legal{margin:2px 0 0;font-size:13px;line-height:1.5;color:var(--wp-ink3,#566683)}.auth__legal a{color:var(--wp-ink2,#33435A);font-weight:600;text-underline-offset:3px}.auth__legal small{display:block;opacity:.85}
+
+/* registration e-mail code: six large, evenly spaced digits */
+.auth__code{font-size:28px;font-weight:700;letter-spacing:.45em;text-align:center;font-variant-numeric:tabular-nums;padding-left:.45em}
+.auth__code::placeholder{letter-spacing:.45em;opacity:.45}
+@media (max-width:420px){.auth__code{font-size:24px;letter-spacing:.35em;padding-left:.35em}}

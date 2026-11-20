@@ -1,3 +1,4 @@
+import { customerNotificationsTablePresent } from "../notifications/notification-service.js";
 import path from "node:path";
 import { unlink } from "node:fs/promises";
 import { Prisma } from "@prisma/client";
@@ -116,6 +117,7 @@ export class DataLifecycleService {
         await tx.adminNotification.updateMany({ where: { targetType: "REVIEW", targetId: { in: reviewIds } }, data: { body: "Байгууллагын мэдээлэл устгагдсан." } });
         reviewsRemoved = (await tx.reportReview.deleteMany({ where: { id: { in: reviewIds } } })).count;
       }
+      if (await customerNotificationsTablePresent(tx)) await tx.customerNotification.deleteMany({ where: { companyId } });
       const removed = await tx.assessment.deleteMany({ where: { companyId } });          // answers, results, snapshots, reports, plans cascade
       // Mark the company erased FIRST: the last-owner database guard only lets an erased company drop its final OWNER membership.
       await tx.company.update({ where: { id: companyId }, data: { name: ERASED_COMPANY_NAME, industry: null, businessModel: null, employeeCount: null, companyAgeYears: null, marketType: null, country: null, profile: Prisma.DbNull, erasedAt: new Date() } });
@@ -130,6 +132,7 @@ export class DataLifecycleService {
   async eraseAccount(userId: string, input: { confirmEmail?: unknown; password?: unknown }, fp: RequestFingerprint) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.erasedAt) throw notFound("Account not found");
+    if(await prisma.adminAccount.findUnique({where:{userId},select:{id:true}}))throw new ApiError(403,"ADMIN_ACCOUNT_PROTECTED","Админ бүртгэлийг хэрэглэгчийн устгах үйлдлээр өөрчлөх боломжгүй.");
     await this.requirePassword(userId, input.password, fp);
     if (String(input.confirmEmail ?? "").trim().toLowerCase() !== user.email) throw new ApiError(400, "CONFIRMATION_MISMATCH", MSG.badConfirmEmail);
     const owned = await prisma.companyMembership.findMany({ where: { userId, role: "OWNER" }, select: { companyId: true, company: { select: { name: true, erasedAt: true } } } });
@@ -143,6 +146,11 @@ export class DataLifecycleService {
     const passwordHash = await hashPassword(randomBytes(24).toString("base64url"), this.config.passwordPepper);
     const now = new Date();
     await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
+      const current=await tx.user.findUnique({where:{id:userId}});
+      if(!current || current.erasedAt || current.status!=="ACTIVE" || current.passwordHash!==user.passwordHash || current.tokenVersion!==user.tokenVersion || current.email!==user.email)throw new ApiError(409,"ACCOUNT_CHANGED","Бүртгэл өөрчлөгдсөн тул дахин нэвтэрнэ үү.");
+      if(await tx.adminAccount.findUnique({where:{userId},select:{id:true}}))throw new ApiError(403,"ADMIN_ACCOUNT_PROTECTED","Админ бүртгэл хамгаалагдсан.");
+      if (await customerNotificationsTablePresent(tx)) await tx.customerNotification.deleteMany({ where: { userId } });
       const memberships = await tx.companyMembership.deleteMany({ where: { userId } });
       await tx.refreshSession.deleteMany({ where: { userId } });
       await tx.passwordResetToken.deleteMany({ where: { userId } });

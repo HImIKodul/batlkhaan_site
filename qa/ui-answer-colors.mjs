@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* Rendered-pixel regression for questionnaire answer colours. For one domain (DOMAIN=it|marketing|finance|people|operations) it walks the real questionnaire in the browser,
    and for every question measures the rendered colour of each answer card (screenshot -> canvas pixels) at rest, hover and selected.
    Needs API :4000 and the preview build :4173. PW=<playwright-core path> OUT=<dir for screenshots and json>. */
@@ -6,7 +7,7 @@ import {createRequire} from 'module';const require=createRequire(import.meta.url
 const DOMAIN=process.env.DOMAIN||'people',MAXQ=Number(process.env.MAXQ||70),OUT=process.env.OUT||'/tmp';fs.mkdirSync(OUT,{recursive:true});
 const BASE=process.env.BASE||'http://127.0.0.1:4173/',API=MMRI_API_GUARD(process.env.API||'http://localhost:4000/api/v1'),W=crypto.randomUUID();const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const res=[];const t=(id,n,ok,d='')=>{res.push({id,n,ok:!!ok,d});console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+String(d).slice(0,260):''))};
-const api=async(m,p,tok,b)=>{const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
+const api=async(m,p,tok,b)=>{if(p==='/auth/register'){const verified=await registerVerifiedFixture(API,b);const j=await verified.json();return {s:verified.status,d:j.data}}const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
 const email=`ac.${DOMAIN}.${Date.now()}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';const tok=(await api('POST','/auth/register',null,{email,password:pw,displayName:'AC'})).d.accessToken;const co=(await api('POST','/companies',tok,{name:'Answer colour QA ХХК'})).d.id;
 const pq=(await api('GET','/methodology/current/profile-questions',tok)).d;const prof=pq.slice(0,20).map(q=>({questionId:q.id,optionIndexes:[q.options[0].optionIndex]}));
 await api('PUT',`/companies/${co}/profile-answers`,tok,{profileAnswers:prof,basicInfoAnswers:Array.from({length:20},(_,i)=>({questionId:'B'+String(i+1).padStart(2,'0'),optionIndexes:[1]}))});

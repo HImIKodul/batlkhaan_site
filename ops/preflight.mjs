@@ -20,7 +20,7 @@ const need=(name)=>{const v=(process.env[name]??'').trim(); if(!v)errors.push(`$
 const secret=(name,min=48)=>{const v=need(name); if(v.length<min)errors.push(`${name} must be at least ${min} characters`); if(placeholder(v))errors.push(`${name} contains a placeholder`); return v;};
 const parseUrl=(name,value)=>{try{return new URL(value)}catch{errors.push(`${name} must be a valid URL`);return null;}};
 const httpsOrigin=(name,value,{allowPath=false}={})=>{const u=parseUrl(name,value);if(!u)return null;if(u.protocol!=='https:')errors.push(`${name} must use HTTPS`);if(u.username||u.password||u.search||u.hash||(!allowPath&&u.pathname!=='/'))errors.push(`${name} must be a ${allowPath?'safe HTTPS URL':'bare HTTPS origin'}`);if(['localhost','127.0.0.1','::1'].includes(u.hostname))errors.push(`${name} must not use a local hostname`);return u;};
-const postgres=(name,{runtime=false}={})=>{const raw=need(name);const u=parseUrl(name,raw);if(!u)return null;if(!['postgres:','postgresql:'].includes(u.protocol))errors.push(`${name} must be PostgreSQL`);if(!u.hostname||['localhost','127.0.0.1','::1'].includes(u.hostname))errors.push(`${name} must not point to a local database`);const ssl=(u.searchParams.get('sslmode')??'').toLowerCase();if(!['require','verify-ca','verify-full'].includes(ssl))errors.push(`${name} must use sslmode=require, verify-ca or verify-full`);const user=decodeURIComponent(u.username||'').toLowerCase();if(!user)errors.push(`${name} must include a database user`);if(!u.password)errors.push(`${name} must include a database password`);if(runtime&&['postgres','root','admin','administrator'].includes(user))errors.push(`${name} must use a least-privilege runtime database user`);if(placeholder(raw))errors.push(`${name} contains a placeholder`);return u;};
+const postgres=(name,{runtime=false}={})=>{const raw=need(name);const u=parseUrl(name,raw);if(!u)return null;if(!['postgres:','postgresql:'].includes(u.protocol))errors.push(`${name} must be PostgreSQL`);if(!u.hostname||['localhost','127.0.0.1','::1'].includes(u.hostname))errors.push(`${name} must not point to a local database`);const ssl=(u.searchParams.get('sslmode')??'').toLowerCase();if(!['require','verify-ca','verify-full'].includes(ssl))errors.push(`${name} must use sslmode=require, verify-ca or verify-full`);if((u.searchParams.get('sslaccept')??'').toLowerCase()!=='strict')errors.push(`${name} must set sslaccept=strict (the Prisma engine does not verify the database certificate otherwise; sslmode=verify-full alone is not enforced)`);const user=decodeURIComponent(u.username||'').toLowerCase();if(!user)errors.push(`${name} must include a database user`);if(!u.password)errors.push(`${name} must include a database password`);if(runtime&&['postgres','root','admin','administrator'].includes(user))errors.push(`${name} must use a least-privilege runtime database user`);if(placeholder(raw))errors.push(`${name} contains a placeholder`);return u;};
 
 const database=postgres('DATABASE_URL',{runtime:true});
 const migrationDatabase=postgres('MIGRATION_DATABASE_URL');
@@ -42,8 +42,13 @@ for(const name of ['MMRI_API_IMAGE','MMRI_WEB_IMAGE','MMRI_MIGRATE_IMAGE']){cons
 
 const mailProvider=(process.env.MMRI_MAIL_PROVIDER??'disabled').trim().toLowerCase();
 if(mailProvider==='mock')errors.push('MMRI_MAIL_PROVIDER=mock is forbidden in production');
-else if(mailProvider!=='disabled')errors.push('MMRI_MAIL_PROVIDER must be disabled: no real mail provider is implemented yet');
-else warnings.push('Password recovery e-mail is NOT delivered (MMRI_MAIL_PROVIDER=disabled). Implement and test a real mail provider before launch.');
+else if(mailProvider==='resend'){
+  if(!(process.env.RESEND_API_KEY??'').trim()||/[\r\n]/.test(process.env.RESEND_API_KEY??''))errors.push('RESEND_API_KEY is required and must not contain newlines');
+  try{const u=new URL(process.env.MMRI_PUBLIC_APP_URL??'');if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)throw new Error();}catch{errors.push('MMRI_PUBLIC_APP_URL must be a clean public HTTPS URL for resend');}
+  if(!/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test((process.env.MMRI_MAIL_FROM??'').trim()))errors.push('MMRI_MAIL_FROM must be a plain sender address');
+}
+else if(mailProvider!=='disabled')errors.push('MMRI_MAIL_PROVIDER must be resend or disabled');
+else warnings.push('Password recovery e-mail is NOT delivered (MMRI_MAIL_PROVIDER=disabled). Configure and externally verify resend before launch.');
 if(!/^https:\/\//.test((process.env.MMRI_PUBLIC_APP_URL??'').trim()))warnings.push('MMRI_PUBLIC_APP_URL should be the public https URL used in password reset links (falls back to the first ALLOWED_ORIGINS entry)');
 const billingProvider=(process.env.MMRI_BILLING_PROVIDER??'').trim().toLowerCase();
 if(!['qpay','manual'].includes(billingProvider))errors.push('MMRI_BILLING_PROVIDER must be qpay or manual in production; mock is forbidden');
@@ -73,7 +78,7 @@ if(!fs.existsSync('backend/package-lock.json'))errors.push('backend/package-lock
 if(!fs.existsSync('frontend/package-lock.json'))errors.push('frontend/package-lock.json is required for a reproducible production release');
 for(const file of ['frontend/.env.production','frontend/.env.example']){
   if(!fs.existsSync(file))continue;const text=fs.readFileSync(file,'utf8');
-  if(/OPENAI_API_KEY|QPAY_CLIENT_SECRET|DATABASE_URL|ACCESS_TOKEN_SECRET|PASSWORD_PEPPER|AUDIT_HASH_SALT|METRICS_TOKEN/i.test(text))errors.push(`${file} must not contain backend secret variable names`);
+  if(/OPENAI_API_KEY|RESEND_API_KEY|QPAY_CLIENT_SECRET|DATABASE_URL|ACCESS_TOKEN_SECRET|PASSWORD_PEPPER|AUDIT_HASH_SALT|METRICS_TOKEN/i.test(text))errors.push(`${file} must not contain backend secret variable names`);
   if(/sk-(?:svcacct-)?[A-Za-z0-9_-]{20,}/.test(text))errors.push(`${file} contains an OpenAI-like secret token`);
 }
 const result={status:errors.length?'FAIL':'PASS',errors,warnings,releaseSha:release||null}; console.log(JSON.stringify(result,null,2)); if(errors.length)process.exit(1);

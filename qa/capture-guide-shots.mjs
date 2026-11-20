@@ -1,3 +1,4 @@
+import {registerVerifiedFixture} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* Regenerates frontend/public/guide-shots/*.jpg for the "Хэрхэн оношилгоо хийлгэх вэ?" walkthrough from the CURRENT UI.
    Isolated stack only (clean-env API on a scrubbed clone + Vite). API/BASE/ORIGIN/PW/OUT env; demo account = the seeded demo company.
    Refuses :4000. Steps: 1-register 2-company 3-domain 4-payment 5-questions 6-report 7-retake, each desktop (d) 1440x900 and mobile (m) 390x844. */
@@ -5,7 +6,7 @@ import {createRequire} from 'module';const require=createRequire(import.meta.url
 const API=process.env.API||'',BASE=process.env.BASE||'',ORIGIN=process.env.ORIGIN||'',OUT=process.env.OUT||'.';
 if(!API||!BASE||/:4000\b|:4001\b/.test(API))throw new Error('set an isolated API/BASE (never :4000)');
 fs.mkdirSync(OUT,{recursive:true});const sleep=ms=>new Promise(r=>setTimeout(r,ms));const W=crypto.randomUUID();
-const api=async(m,p,tok,b)=>{const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
+const api=async(m,p,tok,b)=>{if(p==='/auth/register'){const verified=await registerVerifiedFixture(API,b);const j=await verified.json();return {s:verified.status,d:j.data}}const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':W,origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>null);return {s:r.status,d:j?.data}};
 // fresh synthetic customer per viewport: paid IT diagnosis (step 5)
 const makeAcct=async(o={paid:true,profile:true})=>{
 const email=`guide.${Date.now()}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';

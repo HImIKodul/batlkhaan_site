@@ -126,11 +126,17 @@ export class AssessmentQueryService {
   async progress(assessmentId:string) {
     const a=await prisma.assessment.findUnique({where:{id:assessmentId},select:{mode:true,status:true,routingState:true,coverage:true,overallOfficialScore:true}});
     if(!a)return null;
-    const [answered,asked]=await Promise.all([
-      prisma.answer.count({where:{assessmentId,active:true}}),
+    const [byStatus,asked]=await Promise.all([
+      prisma.answer.groupBy({by:["status"],where:{assessmentId,active:true},_count:{_all:true}}),
       prisma.assessmentAskedQuestion.count({where:{assessmentId}})
     ]);
-    return { mode:a.mode,status:a.status,routingState:a.routingState,answeredQuestions:answered,askedQuestions:asked,
+    // answeredQuestions = every saved answer (kept for compatibility). The breakdown separates saved answers that carry scored evidence
+    // from "do not know" / "not applicable" responses and context-only answers (applicability confirmations such as «Тийм, хамаарна», or a
+    // condition marked unavailable), which are saved and advance the questionnaire but never contribute a maturity score.
+    const count=(s:string)=>byStatus.find(r=>r.status===s)?._count._all??0;
+    const answered=byStatus.reduce((sum,r)=>sum+r._count._all,0);
+    const answerBreakdown={saved:answered,evidenceBearing:count("ANSWERED"),doNotKnow:count("DNK"),notApplicableClaims:count("N_A_CLAIM"),contextOnly:count("UNAVAILABLE")};
+    return { mode:a.mode,status:a.status,routingState:a.routingState,answeredQuestions:answered,askedQuestions:asked,answerBreakdown,
       quick:a.mode==="QUICK"?{softMinimum:192,hardMaximum:280}:null,
       diagnosticCoverage:numberOrNull(a.coverage),officialResultAvailable:a.status==="COMPLETED"&&a.overallOfficialScore!==null };
   }

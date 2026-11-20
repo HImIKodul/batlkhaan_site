@@ -2,12 +2,12 @@
    Usage: PW=<playwright-core> node qa/ui-admin.mjs <reviewId> */
 import {createRequire} from 'module';const require=createRequire(import.meta.url);const {chromium}=require(process.env.PW);import fs from 'fs';import path from 'path';
 const {provision,totp,sql,call}=await import(path.resolve('backend/scripts/lib/admin-qa.mjs'));
-const BASE=process.env.BASE||'http://127.0.0.1:4173/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));const res=[];const t=(id,n,ok,d='')=>{res.push({id,n,ok:!!ok,d});console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+d:''))};
+const BASE=process.env.BASE;if(!BASE)throw new Error('Set BASE to the isolated frontend URL');const sleep=ms=>new Promise(r=>setTimeout(r,ms));const res=[];const t=(id,n,ok,d='')=>{res.push({id,n,ok:!!ok,d});console.log((ok?'PASS ':'FAIL ')+id+' '+n+(d?' | '+d:''))};
+const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',chromiumSandbox:true});
 const reviewId=process.argv[2]||sql(`select id from report_reviews where status in ('AWAITING_REVIEW','IN_REVIEW') order by "createdAt" desc limit 1`);
-const sup=provision('SUPER_ADMIN','ui'),bil=provision('BILLING_REVIEWER','ui');
+const sup=provision('SUPER_ADMIN','ui'),bil=provision('BILLING_REVIEWER','ui');const ownedAdmins=[sup,bil];
 const axeSrc=fs.readFileSync(path.join(path.dirname(require.resolve(process.env.PW)),'../axe-core/axe.min.js'),'utf8');
-const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
-const mk=async(vp)=>{const c=await b.newContext({viewport:vp});await c.route('**/api/**',r=>r.continue({headers:{...r.request().headers(),origin:'http://localhost:5173'}}));return c};
+const mk=async(vp)=>{const c=await b.newContext({viewport:vp});await c.route('**/api/**',r=>r.continue({headers:{...r.request().headers(),origin:process.env.ORIGIN||new URL(BASE).origin}}));return c};
 const ov=p=>p.evaluate(()=>document.documentElement.scrollWidth-innerWidth);const axe=async p=>{await p.evaluate(axeSrc);return p.evaluate(async()=>(await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}})).violations.map(v=>v.id+':'+v.nodes.length))};
 async function login(p,a,off=0){await p.goto(BASE+'#/admin/login');await p.reload();await sleep(900);await p.fill('input[type=email]',a.email);await p.fill('input[autocomplete=current-password]',a.password);await p.fill('input[autocomplete=one-time-code]',totp(a.secret,off));await p.getByRole('button',{name:'Нэвтрэх'}).click();await sleep(2200)}
 const c=await mk({width:1440,height:900});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(String(e).slice(0,100)));
@@ -54,11 +54,12 @@ await p.goto(BASE+'#/admin/settings');await sleep(1500);t('AU17','settings shows
 const bell=await p.locator('.adm-bell').getAttribute('aria-label');t('AU18','the notification bell exposes the unread count to screen readers',/Мэдэгдэл/.test(bell||''),bell);
 // responsive + axe for every admin page
 const pages=['','reports','reports/'+reviewId,'companies','payments','notifications','settings','support'];
-for(const vp of [{width:1920,height:1080},{width:1440,height:900},{width:1024,height:768},{width:768,height:1024},{width:430,height:932},{width:390,height:844},{width:360,height:800}]){const cx=await mk(vp);const q=await cx.newPage();const ra=provision('SUPER_ADMIN','vp'+vp.width);await q.goto(BASE+'#/admin/login');await q.reload();await sleep(700);await q.fill('input[type=email]',ra.email);await q.fill('input[autocomplete=current-password]',ra.password);await q.fill('input[autocomplete=one-time-code]',totp(ra.secret,0));await q.getByRole('button',{name:'Нэвтрэх'}).click().catch(()=>{});await sleep(2500);
+const requestedViewports=process.env.ADMIN_VIEWPORTS?process.env.ADMIN_VIEWPORTS.split(',').map(v=>{const [width,height]=v.split('x').map(Number);if(!width||!height)throw new Error('Invalid ADMIN_VIEWPORTS');return {width,height}}):[{width:1920,height:1080},{width:1440,height:900},{width:1024,height:768},{width:768,height:1024},{width:430,height:932},{width:390,height:844},{width:360,height:800}];
+for(const vp of requestedViewports){const cx=await mk(vp);const q=await cx.newPage();const ra=provision('SUPER_ADMIN','vp'+vp.width);ownedAdmins.push(ra);await q.goto(BASE+'#/admin/login');await q.reload();await sleep(700);await q.fill('input[type=email]',ra.email);await q.fill('input[autocomplete=current-password]',ra.password);await q.fill('input[autocomplete=one-time-code]',totp(ra.secret,0));await q.getByRole('button',{name:'Нэвтрэх'}).click().catch(()=>{});await sleep(2500);
  const inOk=!q.url().includes('/login');let bad=inOk?[]:['LOGIN_FAILED'],axeBad=[];for(const pg of pages){await q.goto(BASE+'#/admin'+(pg?'/'+pg:''));await sleep(2000);const o=await ov(q);if(o>0)bad.push(pg+':'+o);const a=await axe(q);if(a.length)axeBad.push(pg+':'+a.join('|'))}
  t(`AR-${vp.width}`,`${vp.width}x${vp.height}: ${pages.length} admin pages have no horizontal overflow and no axe violations`,bad.length===0&&axeBad.length===0,[...bad,...axeBad].join(' ; '));await cx.close();await sleep(31000*0)}
 // mobile navigation
-const m=await mk({width:390,height:844});const mp=await m.newPage();const rm=provision('SUPER_ADMIN','mob');await mp.goto(BASE+'#/admin/login');await mp.reload();await sleep(700);await mp.fill('input[type=email]',rm.email);await mp.fill('input[autocomplete=current-password]',rm.password);await mp.fill('input[autocomplete=one-time-code]',totp(rm.secret,0));await mp.getByRole('button',{name:'Нэвтрэх'}).click();await sleep(2200);
+const m=await mk({width:390,height:844});const mp=await m.newPage();const rm=provision('SUPER_ADMIN','mob');ownedAdmins.push(rm);await mp.goto(BASE+'#/admin/login');await mp.reload();await sleep(700);await mp.fill('input[type=email]',rm.email);await mp.fill('input[autocomplete=current-password]',rm.password);await mp.fill('input[autocomplete=one-time-code]',totp(rm.secret,0));await mp.getByRole('button',{name:'Нэвтрэх'}).click();await sleep(2200);
 t('AU19','mobile: the menu is hidden until the burger is pressed, then lists every section',await mp.locator('.adm-nav').isHidden()&&await (async()=>{await mp.getByRole('button',{name:'Цэс'}).click();await sleep(300);return (await mp.locator('.adm-nav a').count())>=5})());
 // keyboard: tab order reaches the skip link, brand, bell, logout and nav
 await p.goto(BASE+'#/admin');await p.reload();await sleep(2000);const seen=[];for(let i=0;i<9;i++){await p.keyboard.press('Tab');await sleep(450);seen.push(await p.evaluate(()=>{const e=document.activeElement;const s=getComputedStyle(e);return (e.innerText||e.getAttribute('aria-label')||e.tagName).replace(/\s+/g,' ').trim().slice(0,22)+'|'+(s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>=2)}))}
@@ -70,5 +71,7 @@ t('AU21','the billing reviewer sees no report review or settings navigation and 
 // logout
 await p.goto(BASE+'#/admin');await sleep(1000);await p.getByRole('button',{name:'Гарах'}).click();await sleep(1500);t('AU22','logout returns to the login page and the stored token is gone',p.url().includes('#/admin/login')&&(await p.evaluate(()=>sessionStorage.getItem('mmri.adminToken.v1')))===null);
 t('AU23','no uncaught page errors',errs.length===0,errs.join(';'));
-sql(`update admin_accounts set status='DISABLED',"disabledAt"=now() where "userId" in (select id from users where email like 'admin.qa.%')`);
+sql(`update admin_accounts set status='DISABLED',"disabledAt"=now() where "userId" in (select id from users where email in (${ownedAdmins.map(a=>"'"+a.email.replace(/'/g,"''")+"'").join(',')}))`);
 fs.writeFileSync((process.env.OUT||'/tmp')+'/ui-admin.json',JSON.stringify(res,null,1));console.log(res.filter(r=>r.ok).length+'/'+res.length);await b.close();
+
+process.exitCode=res.some(r=>!r.ok)?1:0;

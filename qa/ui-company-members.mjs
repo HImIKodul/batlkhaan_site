@@ -1,10 +1,11 @@
+import {registerVerifiedFixture} from '../backend/scripts/lib/verified-test-registration.mjs';
 /* Browser check of Settings > Data: company member management (add by e-mail, change role, remove, last-owner guard, non-admin hidden).
    Isolated API only: API=http://127.0.0.1:4111/api/v1 BASE=http://127.0.0.1:4211/ ORIGIN=http://127.0.0.1:4211 PW=<playwright-core path> OUT=<dir>. Refuses :4000. */
 import {createRequire} from 'module';const require=createRequire(import.meta.url);const {chromium}=require(process.env.PW);import crypto from 'crypto';
 const API=process.env.API||'',BASE=process.env.BASE||'',ORIGIN=process.env.ORIGIN||'',OUT=process.env.OUT||'.';
 if(!API||!BASE||/:4000\b|:4001\b/.test(API))throw new Error('set an isolated API/BASE (never :4000)');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));let fail=0;const t=(n,ok,d='')=>{if(!ok)fail++;console.log((ok?'PASS ':'FAIL ')+n+(d?' | '+String(d).slice(0,200):''))};
-const api=async(m,p,tok,b)=>{const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':crypto.randomUUID(),origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});let d=null;try{d=(await r.json())?.data}catch{}return {s:r.status,d}};
+const api=async(m,p,tok,b)=>{if(p==='/auth/register'){const verified=await registerVerifiedFixture(API,b);const j=await verified.json();return {s:verified.status,d:j.data}}const r=await fetch(API+p,{method:m,headers:{'content-type':'application/json','x-mmri-writer-id':crypto.randomUUID(),origin:ORIGIN,...(tok?{authorization:'Bearer '+tok}:{})},body:b===undefined?undefined:JSON.stringify(b)});let d=null;try{d=(await r.json())?.data}catch{}return {s:r.status,d}};
 const mk=async(tag)=>{const email=`mem.${tag}.${Date.now()}@mmri.test`,pw=crypto.randomBytes(12).toString('base64url')+'Aa1!';const r=await api('POST','/auth/register',null,{email,password:pw,displayName:'Member '+tag});return {email,pw,tok:r.d.accessToken}};
 const A=await mk('own'),B=await mk('vie');const co=(await api('POST','/companies',A.tok,{name:'Members QA ХХК'})).d.id;
 const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});

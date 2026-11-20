@@ -29,7 +29,7 @@ export function verifyTotp(secretBase32: string, code: string, nowMs = Date.now(
   for (const s of [step, step - 1, step + 1]) { const expected = Buffer.from(hotp(secret, s)); if (timingSafeEqual(expected, Buffer.from(code))) return s; }
   return null;
 }
-export function otpauthUri(email: string, secretBase32: string, issuer = "BusinessMMRI Admin"): string {
+export function otpauthUri(email: string, secretBase32: string, issuer = "BusinessMRI.mn Admin"): string {
   return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}?secret=${secretBase32}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
 }
 const key = (master: string) => scryptSync(master, "mmri-admin-mfa-v1", 32);

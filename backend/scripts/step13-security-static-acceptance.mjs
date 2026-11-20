@@ -37,7 +37,7 @@ check('jwt_alg_typ_checked',has(crypto,'parsedHeader.alg!=="HS256"')&&has(crypto
 check('jwt_iss_aud_claims_checked',has(crypto,'claims.iss !== config.issuer')&&has(crypto,'claims.aud !== config.audience'));
 check('jwt_user_status_token_version_checked',has(access,'user.status !== "ACTIVE"')&&has(access,'user.tokenVersion !== claims.tv'));
 check('refresh_tokens_hashed',has(auth,'hashRefreshToken(refreshToken)'));
-check('refresh_replay_family_revoke',has(auth,'REFRESH_REPLAY')&&has(auth,'tokenVersion: { increment: 1 }'));
+check('refresh_replay_family_revoke',has(auth,'REFRESH_REPLAY')&&/tokenVersion:\s*\{\s*increment:\s*1\s*\}/.test(auth));
 check('refresh_rotation_compare_and_set',has(auth,'updateMany({ where: { id: session.id, revokedAt: null }')&&has(auth,'REFRESH_ROTATION_RACE'));
 check('refresh_cookie_http_only_strict',has(cookies,'HttpOnly')&&has(cookies,'SameSite=Strict'));
 check('unknown_login_dummy_work',has(auth,'dummyPasswordHash')&&has(auth,'user?.passwordHash??await this.dummyPasswordHash'));
@@ -81,7 +81,8 @@ check('logout_clears_context',/async logout\(\)[\s\S]{0,1200}finally\{session\.c
 // Sensitive public-route surface must remain narrow.
 const falseCount=(app.match(/false\);/g)||[]).length;
 // 11 earlier public routes + POST /auth/password-reset/request and /confirm (security-reviewed: enumeration-safe 202 with constant minimum latency, per-IP and per-account limiters, 256-bit salted-hash single-use tokens, session revocation on confirm).
-check('public_route_count_expected',falseCount===13);
+// 13 + POST /auth/email-verification/request and /confirm (migration 31 email ownership: enumeration-safe, rate-limited, single-use tokens; covered by qa-authorization-matrix and qa-password-recovery).
+check('public_route_count_expected',falseCount===15);
 check('auth_me_not_public',!/auth\/me[\s\S]{0,220}false\);/.test(app));
 check('assessment_routes_not_public',!/assessments\/:assessmentId[\s\S]{0,260}false\);/.test(app));
 check('trace_route_not_public',!/assessments\/:assessmentId\/trace[\s\S]{0,260}false\);/.test(app));

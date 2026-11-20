@@ -17,7 +17,7 @@ check('manual payment needs operator confirmation',A.includes('/operator/billing
 check('refund recording is operator-only',A.includes('/operator/billing/invoices/:invoiceId/refund-confirm')&&A.includes('BILLING_REFUND_CONFIRMED'));
 check('company admins can reconcile QPay without trusting browser',A.includes('/billing/invoices/:invoiceId/reconcile')&&A.includes('billingInvoiceAccess(principal!.userId,params.invoiceId,COMPANY_ADMIN)'));
 check('invoice creation blocks an already-active diagnosis',B.includes('ASSESSMENT_ALREADY_ACTIVE')&&B.includes('ACTIVE_ASSESSMENT_STATUSES'));
-check('entitlement claims require a PAID source invoice',B.includes('sourceInvoice:{status:"PAID"}'));
+check('entitlement claims require a PAID source invoice',B.includes('const SETTLED_ENTITLEMENT={OR:[{origin:"ADMIN_GRANT" as const},{sourceInvoice:{status:"PAID" as const}}]}')&&/companyEntitlement\.findFirst\(\{where:\{companyId,domainCode,planCode:expectedPlan,status:"ACTIVE",assessmentsUsed:\{lt:1\},\.\.\.SETTLED_ENTITLEMENT\}/.test(B));
 check('settlement requires provider payment id',B.includes('MISSING_PROVIDER_PAYMENT_ID'));
 check('underpayment is rejected',B.includes('PARTIAL_PAYMENT')&&B.includes('paidAmount<current.amountMnt'));
 check('duplicate provider payment cannot settle two invoices',B.includes('PAYMENT_ALREADY_USED')&&B.includes('providerPaymentId,id:{not:current.id}'));

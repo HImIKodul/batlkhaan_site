@@ -2,10 +2,13 @@ import "dotenv/config";
 import { prisma } from "../db.js";
 import { createApi } from "./app.js";
 
-const {server,config,reviews,beginDrain,operationalSnapshot}=createApi();
+const {server,config,reviews,lifecycleMail,beginDrain,operationalSnapshot}=createApi();
 /* Review reminders (24/36/44 h), 48 h overdue and stuck-draft retries. Idempotent: notifications are deduplicated by key, so restarts and overlapping runs never duplicate. */
 const reviewTimer=setInterval(()=>{void reviews.maintenance().catch(e=>console.error(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"review_maintenance_failed",reason:String(e?.message??e).slice(0,160)})))},5*60_000);
 reviewTimer.unref();
+/* Lifecycle e-mails (completion acknowledgement, report status, administrator review alerts): exactly-once claims, bounded retries. No-op unless MMRI_CUSTOMER_EMAILS=on / MMRI_ADMIN_ALERT_EMAILS is set. */
+const mailTimer=setInterval(()=>{void lifecycleMail.dispatchPending().catch(e=>console.error(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"lifecycle_mail_dispatch_failed",reason:String(e?.message??e).slice(0,160)})))},30_000);
+mailTimer.unref();
 void reviews.maintenance().catch(()=>undefined);
 server.requestTimeout=config.requestTimeoutMs;
 server.headersTimeout=config.headersTimeoutMs;

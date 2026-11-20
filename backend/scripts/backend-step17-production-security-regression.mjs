@@ -4,8 +4,8 @@ import {fileURLToPath} from 'node:url';
 const here=path.dirname(fileURLToPath(import.meta.url));const repo=path.resolve(here,'../..');
 const sha=(c)=>c.repeat(64);
 const base={
-  ...process.env,NODE_ENV:'production',DATABASE_URL:'postgresql://mmri_runtime:StrongRuntimePass123@db.internal:5432/mmri?schema=public&sslmode=require',MIGRATION_DATABASE_URL:'postgresql://mmri_migrate:StrongMigratePass456@db.internal:5432/mmri?schema=public&sslmode=require',
-  ACCESS_TOKEN_SECRET:'A'.repeat(64),PASSWORD_PEPPER:'B'.repeat(64),AUDIT_HASH_SALT:'C'.repeat(64),METRICS_TOKEN:'D'.repeat(64),ALLOWED_ORIGINS:'https://businessmmri.mn',COOKIE_SECURE:'true',REFRESH_COOKIE_NAME:'__Secure-mmri_refresh',TRUST_PROXY:'true',TRUST_PROXY_HOPS:'1',MMRI_API_REPLICA_COUNT:'1',RELEASE_SHA:'abcdef1234567',INSTANCE_ID:'mmri-api-1',
+  ...process.env,NODE_ENV:'production',DATABASE_URL:'postgresql://mmri_runtime:StrongRuntimePass123@db.internal:5432/mmri?schema=public&sslmode=require&sslaccept=strict',MIGRATION_DATABASE_URL:'postgresql://mmri_migrate:StrongMigratePass456@db.internal:5432/mmri?schema=public&sslmode=require&sslaccept=strict',
+  ACCESS_TOKEN_SECRET:'A'.repeat(64),PASSWORD_PEPPER:'B'.repeat(64),AUDIT_HASH_SALT:'C'.repeat(64),METRICS_TOKEN:'D'.repeat(64),ALLOWED_ORIGINS:'https://businessmri.mn',COOKIE_SECURE:'true',REFRESH_COOKIE_NAME:'__Secure-mmri_refresh',TRUST_PROXY:'true',TRUST_PROXY_HOPS:'1',MMRI_API_REPLICA_COUNT:'1',RELEASE_SHA:'abcdef1234567',INSTANCE_ID:'mmri-api-1',
   MMRI_API_IMAGE:`registry/mmri-api@sha256:${sha('a')}`,MMRI_WEB_IMAGE:`registry/mmri-web@sha256:${sha('b')}`,MMRI_MIGRATE_IMAGE:`registry/mmri-migrate@sha256:${sha('c')}`,
   MMRI_BILLING_PROVIDER:'manual',MMRI_BILLING_ENFORCEMENT:'true',MMRI_DIAGNOSTIC_PRICE_MNT:'300000',MMRI_RETAKE_PRICE_MNT:'300000',MMRI_OPERATOR_USER_IDS:'op_user_0001_immutable',MMRI_MANUAL_PAYMENT_QR_TEXT:'STATIC-QR-TEXT',
   MMRI_AI_REPORT_PROVIDER:'openai',MMRI_AI_REPORT_REQUIRED:'true',MMRI_AI_REPORT_MODEL:'gpt-6.1-sol',MMRI_AI_REPORT_ENDPOINT:'https://api.openai.com/v1/responses',OPENAI_API_KEY:'sk-proj-'+ 'X'.repeat(40),MMRI_REPORT_STORAGE_DIR:'/var/lib/mmri/report-storage'
@@ -15,17 +15,23 @@ const cases=[];const expect=(name,pass,overrides={})=>{const r=run(overrides);co
 expect('valid hardened production config passes',true);
 expect('mock payment rejected',false,{MMRI_BILLING_PROVIDER:'mock'});
 expect('mock mail provider rejected in production',false,{MMRI_MAIL_PROVIDER:'mock'});
-expect('unimplemented mail provider rejected',false,{MMRI_MAIL_PROVIDER:'smtp'});
+expect('unsupported mail provider rejected',false,{MMRI_MAIL_PROVIDER:'smtp'});
 expect('disabled mail provider is accepted (with a warning that recovery e-mail is not delivered)',true,{MMRI_MAIL_PROVIDER:'disabled'});
+expect('resend without credentials is rejected',false,{MMRI_MAIL_PROVIDER:'resend',RESEND_API_KEY:'',MMRI_MAIL_FROM:'noreply@businessmri.mn',MMRI_PUBLIC_APP_URL:'https://businessmri.mn'});
+expect('resend with secure configuration is accepted',true,{MMRI_MAIL_PROVIDER:'resend',RESEND_API_KEY:'contract-test-key',MMRI_MAIL_FROM:'noreply@businessmri.mn',MMRI_PUBLIC_APP_URL:'https://businessmri.mn'});
+expect('resend rejects HTTP reset links',false,{MMRI_MAIL_PROVIDER:'resend',RESEND_API_KEY:'contract-test-key',MMRI_MAIL_FROM:'noreply@businessmri.mn',MMRI_PUBLIC_APP_URL:'http://businessmri.mn'});
+expect('resend rejects sender header injection',false,{MMRI_MAIL_PROVIDER:'resend',RESEND_API_KEY:'contract-test-key',MMRI_MAIL_FROM:'noreply@businessmri.mn\r\nBcc: victim@example.invalid',MMRI_PUBLIC_APP_URL:'https://businessmri.mn'});
 expect('report review required without MMRI_REPORT_REVIEW_ENFORCED_SINCE is rejected in production (fail-open guard)',false,{MMRI_REPORT_REVIEW_REQUIRED:'true'});
 expect('report review required WITH an ISO enforcement timestamp is accepted',true,{MMRI_REPORT_REVIEW_REQUIRED:'true',MMRI_REPORT_REVIEW_ENFORCED_SINCE:'2026-11-09T00:00:00Z'});
 expect('report review required with an invalid timestamp is rejected',false,{MMRI_REPORT_REVIEW_REQUIRED:'true',MMRI_REPORT_REVIEW_ENFORCED_SINCE:'not-a-date'});
-expect('operator access by e-mail address is rejected in production (MMRI-01)',false,{MMRI_OPERATOR_EMAILS:'operator@businessmmri.mn'});
+expect('operator access by e-mail address is rejected in production (MMRI-01)',false,{MMRI_OPERATOR_EMAILS:'operator@businessmri.mn'});
 expect('manual payment without operator user ids is rejected',false,{MMRI_OPERATOR_USER_IDS:''});
 expect('billing enforcement cannot be disabled',false,{MMRI_BILLING_ENFORCEMENT:'false'});
-expect('local database rejected',false,{DATABASE_URL:'postgresql://mmri_runtime:pass@127.0.0.1:5432/mmri?sslmode=require'});
+expect('local database rejected',false,{DATABASE_URL:'postgresql://mmri_runtime:pass@127.0.0.1:5432/mmri?sslmode=require&sslaccept=strict'});
 expect('database without TLS rejected',false,{DATABASE_URL:'postgresql://mmri_runtime:pass@db.internal:5432/mmri'});
-expect('runtime postgres superuser name rejected',false,{DATABASE_URL:'postgresql://postgres:pass@db.internal:5432/mmri?sslmode=require'});
+expect('sslmode=verify-full without sslaccept=strict rejected (the engine would not verify the certificate)',false,{DATABASE_URL:'postgresql://mmri_runtime:StrongRuntimePass123@db.internal:5432/mmri?sslmode=verify-full'});
+expect('verified TLS with a private CA file is accepted',true,{DATABASE_URL:'postgresql://mmri_runtime:StrongRuntimePass123@db.internal:5432/mmri?sslmode=require&sslaccept=strict&sslcert=%2Fetc%2Fmmri%2Fpg-ca.crt'});
+expect('runtime postgres superuser name rejected',false,{DATABASE_URL:'postgresql://postgres:pass@db.internal:5432/mmri?sslmode=require&sslaccept=strict'});
 expect('same runtime and migration credential rejected',false,{MIGRATION_DATABASE_URL:base.DATABASE_URL});
 expect('localhost production origin rejected',false,{ALLOWED_ORIGINS:'https://localhost'});
 expect('insecure cookie rejected',false,{COOKIE_SECURE:'false'});

@@ -1,4 +1,6 @@
-# BusinessMRI (businessmri.mn)
+# BusinessMRI.mn
+
+> Deployment engineer: start with [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 Business-diagnosis platform: five domains (Marketing, Information Technology, Finance, Human Resources, Production & Operations), 61,440 questions
 (12,288 per domain; 64 capabilities and 3,072 cell instances per domain), PostgreSQL, TypeScript/Node.js backend, React/Vite frontend,
@@ -21,3 +23,9 @@ Runtime: Node 22.16.x, npm 10.9.x (see `.nvmrc`, `package.json` engines; lockfil
 | Customer-flow regressions (isolated stack, synthetic users only) | `cd backend && npm run qa:onboarding-save` (20-question save/reload/isolation), `npm run qa:proxy-ip`; UI: `qa/ui-onboarding-save.mjs`, `qa/ui-auth-register.mjs` |
 | Reverse proxy / IIS | `TRUST_PROXY=true` and `TRUST_PROXY_HOPS` are mandatory behind IIS/ARR or nginx (otherwise all visitors share one rate-limit bucket); see `deploy/WINDOWS_SERVER_DEPLOYMENT.md` |
 | Release verification | `bash ops/release-gate.sh` (source gate), `bash VERIFY_UI_POLISH.sh`, `bash VERIFY_STEP11_FULL_REGRESSION.sh`, CI: `.github/workflows/release-gate.yml` |
+
+Current local acceptance status and all remaining blockers: [FINAL_ACCEPTANCE_REPORT.md](FINAL_ACCEPTANCE_REPORT.md).
+Source layout and preservation decisions: [docs/engineering/FINAL_SOURCE_STRUCTURE.md](docs/engineering/FINAL_SOURCE_STRUCTURE.md).
+New bounded critical tests: `cd backend && npm run test:critical` (one worker). Real database suites require explicit isolated settings; see [docs/engineering/CRITICAL_ACCEPTANCE_RUNBOOK.md](docs/engineering/CRITICAL_ACCEPTANCE_RUNBOOK.md).
+
+Current execution follow-up: [DATABASE_FINAL_VERIFICATION.md](DATABASE_FINAL_VERIFICATION.md), [FINAL_SOURCE_CLEANUP_REPORT.md](FINAL_SOURCE_CLEANUP_REPORT.md), and [REMAINING_BLOCKERS.md](REMAINING_BLOCKERS.md). Guarded normal-terminal commands: [LOCAL_ACCEPTANCE_COMMANDS.md](docs/engineering/LOCAL_ACCEPTANCE_COMMANDS.md). Resend/QPay owner checklist: [EXTERNAL_ACCEPTANCE_CHECKLIST.md](docs/engineering/EXTERNAL_ACCEPTANCE_CHECKLIST.md).
