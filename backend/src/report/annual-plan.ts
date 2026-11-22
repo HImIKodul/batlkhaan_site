@@ -23,7 +23,7 @@ export const MIN_STAGES = 3, MAX_STAGES = 8, MAX_ACTIONS_PER_STAGE = 5;
 export const PLAN_LINE_BUDGET = 70;
 const CHARS_PER_LINE = 86;
 
-export const PLAN_DOMAIN_NAME_MN: Record<string, string> = { marketing: "Маркетинг", finance: "Санхүү", people: "Хүний нөөц", it: "Мэдээллийн технологи", operations: "Үйлдвэрлэл, үйл ажиллагаа" };
+export const PLAN_DOMAIN_NAME_MN: Record<string, string> = { marketing: "Маркетинг", finance: "Санхүү", people: "Хүний нөөц", it: "Мэдээллийн технологи", operations: "Үйлдвэрлэл ба үйл ажиллагаа" };
 export interface PlanActionDraft { textMn: string; recommendationIds: string[] }
 export interface PlanStageDraft { id: string; headingMn: string; startDay: number; durationDays: number; dependsOnStageIds: string[]; dependencyNoteMn: string | null; actions: PlanActionDraft[] }
 export interface AnnualPlanDraft { schemaVersion: "MMRI-ANNUAL-PLAN-DRAFT-1.0"; stages: PlanStageDraft[] }

@@ -21,7 +21,7 @@ export default function GuideReportExample(){
   <div className="mmri-gex__stage" aria-hidden="true"><GlassStage route="report"/></div>
   <div className="mmri-gex__body">
    <header className="mmri-gex__head">
-    <h3 id="mmri-gex-title">Маркетинг (MMRI) · Тайлангийн жишээ</h3>
+    <h3 id="mmri-gex-title">Маркетинг (MKT) · Тайлангийн жишээ</h3>
     <p className="mmri-gex__demo" role="note"><b>ЖИШЭЭ ӨГӨГДӨЛ</b> Энэ тайлан нь бодит компани биш, зөвхөн тайланг ойлгуулах зорилготой зохиомол жишээ.</p>
     <div className="mmri-gex__tabs" role="tablist" aria-label="Тайлангийн харагдац">
      <button type="button" role="tab" aria-selected={view==='web'} className={view==='web'?'is-active':''} onClick={()=>setView('web')}>Вэб тайлан</button>

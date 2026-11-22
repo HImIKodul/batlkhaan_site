@@ -163,7 +163,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  const answered=Math.max(0,serverAnswered-uncertainIds.length);
  const questionNo=answered+1;
  const questionUpper=progress?.quick?.hardMaximum??null;
- const area=domainCode; const modeText=progress?.mode==='FULL'?'Бүрэн оношилгоо':area==='it'?'Мэдээллийн технологи':area==='finance'?'Санхүү':area==='people'?'Хүний нөөц':area==='operations'?'Үйлдвэрлэл, үйл ажиллагаа':'Маркетинг';
+ const area=domainCode; const modeText=progress?.mode==='FULL'?'Бүрэн оношилгоо':area==='it'?'Мэдээллийн технологи':area==='finance'?'Санхүү':area==='people'?'Хүний нөөц':area==='operations'?'Үйлдвэрлэл ба үйл ажиллагаа':'Маркетинг';
  const expectedByArea:Record<string,number>={it:280,marketing:280,finance:280,people:280,operations:280};
  const expectedTotal=Math.max(1,questionUpper??expectedByArea[area]??280);
  const countProgress=Math.max(0,Math.min(99,Math.round((answered/expectedTotal)*100)));
