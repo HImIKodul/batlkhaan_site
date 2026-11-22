@@ -22,6 +22,12 @@ const QA_EMAIL = process.env.MMRI_QA_EMAIL?.trim() || "qa.local@mmri.test";
 const QA_DISPLAY_NAME = "QA хэрэглэгч (локал)";
 const QA_COMPANY_NAME = "QA Локал Компани ХХК";
 const QA_TAG = "MMRI_QA_LOCAL_V1";
+/** Owner mode (MMRI_QA_OWNER_EMAIL): populate the owner's EXISTING synthetic QA company (created by scripts/qa-create-local-customer.mts) without touching the user, the password or any credentials file. All invoice identifiers get their own prefix, so nothing collides with, or can be deleted from, the standard QA fixture. */
+const OWNER_EMAIL = process.env.MMRI_QA_OWNER_EMAIL?.trim().toLowerCase() || "";
+const OWNER_TAG = "owner-local-customer";
+const ACTIVE_TAG = OWNER_EMAIL ? OWNER_TAG : QA_TAG;
+const INV = OWNER_EMAIL ? "QA-LOCAL-OWNER-" : "QA-LOCAL-";
+const PFX = OWNER_EMAIL ? "owner_" : "";
 const DEMO_AUTHORITY = 0.95;
 const CREDENTIALS_FILE = new URL("../.qa-credentials.local", import.meta.url);
 
@@ -136,7 +142,7 @@ function buildDemoSelections(def: MethodologyDefinition, moduleTargets: number[]
 }
 
 async function createDemoPayment(companyId: string, userId: string, date: Date, index: number, tag: string) {
-  const senderInvoiceNo = `QA-LOCAL-${tag}-${date.toISOString().slice(0, 10)}-${index}`;
+  const senderInvoiceNo = `${INV}${tag}-${date.toISOString().slice(0, 10)}-${index}`;
   const invoice = await prisma.billingInvoice.create({
     data: {
       companyId,
@@ -146,8 +152,8 @@ async function createDemoPayment(companyId: string, userId: string, date: Date, 
       amountMnt: 300000,
       currency: "MNT",
       provider: "MOCK",
-      providerInvoiceId: `qa_provider_${tag}_${date.toISOString().slice(0, 10)}_${index}`,
-      providerPaymentId: `qa_payment_${tag}_${date.toISOString().slice(0, 10)}_${index}`,
+      providerInvoiceId: `${PFX}qa_provider_${tag}_${date.toISOString().slice(0, 10)}_${index}`,
+      providerPaymentId: `${PFX}qa_payment_${tag}_${date.toISOString().slice(0, 10)}_${index}`,
       senderInvoiceNo,
       callbackTokenHash: `qa-token-${index}-${randomUUID()}`,
       status: "PAID",
@@ -212,7 +218,7 @@ async function ensureDemoShowcase(companyId: string, userId: string, assessmentI
   const readyInvoice = await ensureDemoInvoice({
     companyId,
     userId,
-    senderInvoiceNo: "QA-LOCAL-SHOWCASE-PAID-READY",
+    senderInvoiceNo: `${INV}SHOWCASE-PAID-READY`,
     status: "PAID",
     createdAt: new Date("2026-09-14T10:00:00+08:00")
   });
@@ -232,10 +238,10 @@ async function ensureDemoShowcase(companyId: string, userId: string, assessmentI
     });
   }
 
-  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: "QA-LOCAL-SHOWCASE-CREATED", status: "CREATED", createdAt: new Date("2026-09-15T08:30:00+08:00") });
-  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: "QA-LOCAL-SHOWCASE-PENDING", status: "PENDING", createdAt: new Date("2026-09-15T08:45:00+08:00") });
-  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: "QA-LOCAL-SHOWCASE-FAILED", status: "FAILED", createdAt: new Date("2026-09-13T15:20:00+08:00"), failureReason: "Тест төлбөр банкнаас баталгаажаагүй." });
-  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: "QA-LOCAL-SHOWCASE-CANCELLED", status: "CANCELLED", createdAt: new Date("2026-09-12T17:10:00+08:00") });
+  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: `${INV}SHOWCASE-CREATED`, status: "CREATED", createdAt: new Date("2026-09-15T08:30:00+08:00") });
+  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: `${INV}SHOWCASE-PENDING`, status: "PENDING", createdAt: new Date("2026-09-15T08:45:00+08:00") });
+  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: `${INV}SHOWCASE-FAILED`, status: "FAILED", createdAt: new Date("2026-09-13T15:20:00+08:00"), failureReason: "Тест төлбөр банкнаас баталгаажаагүй." });
+  await ensureDemoInvoice({ companyId, userId, senderInvoiceNo: `${INV}SHOWCASE-CANCELLED`, status: "CANCELLED", createdAt: new Date("2026-09-12T17:10:00+08:00") });
 
   const latestAssessmentId = assessmentIds[assessmentIds.length - 1];
   if (latestAssessmentId) {
@@ -402,7 +408,7 @@ async function ensureQaIdentity(password: string) {
       data: {
         name: QA_COMPANY_NAME, industry: "Жижиглэн худалдаа ба үйлчилгээ", businessModel: "Хэрэглэгчид шууд борлуулдаг · Онлайн болон салбар дэлгүүр",
         employeeCount: 52, companyAgeYears: 6.5, marketType: "Монголын хотын хэрэглэгчийн зах зээл", country: "Монгол",
-        profile: { qaLocal: true, qaTag: QA_TAG, descriptionMn: "Зөвхөн локал QA-д зориулсан синтетик компани." }
+        profile: { qaLocal: true, qaTag: ACTIVE_TAG, descriptionMn: "Зөвхөн локал QA-д зориулсан синтетик компани." }
       }
     });
   }
@@ -411,6 +417,15 @@ async function ensureQaIdentity(password: string) {
     create: { companyId: company.id, userId: user.id, role: "OWNER" }, update: { role: "OWNER" }
   });
   return { user, company };
+}
+
+/** Owner mode: the account and its synthetic company must already exist; neither the user row nor the password is read or changed. */
+async function resolveOwnerIdentity() {
+  const user = await prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
+  if (!user || user.status !== "ACTIVE") throw new Error("QA seed refused: the owner account does not exist or is not ACTIVE (create it with scripts/qa-create-local-customer.mts first).");
+  const membership = await prisma.companyMembership.findFirst({ where: { userId: user.id, role: "OWNER" }, include: { company: true } });
+  if (!membership) throw new Error("QA seed refused: the owner has no company membership.");
+  return { user, company: membership.company };
 }
 
 async function seedAssessment(args: { domain: string; methodologyVersion: string; qbVersion: string; index: number; companyId: string; userId: string; entitlementId: string; def: MethodologyDefinition; moduleTargets: number[]; completedAt: Date; previousAssessmentId?: string | null; rootAssessmentId?: string | null; }) {
@@ -437,7 +452,8 @@ async function seedAssessment(args: { domain: string; methodologyVersion: string
 async function assertDedicatedQaCompany(companyId: string, userId: string) {
   const company = await prisma.company.findUnique({ where: { id: companyId }, include: { memberships: true } });
   const profile = company?.profile as Record<string, unknown> | null;
-  if (!company || profile?.qaLocal !== true || profile?.qaTag !== QA_TAG || company.name !== QA_COMPANY_NAME || company.memberships.length === 0 || company.memberships.some(m => m.userId !== userId)) {
+  const nameOk = OWNER_EMAIL ? String(company?.name ?? "").startsWith("QA Synthetic") : company?.name === QA_COMPANY_NAME;
+  if (!company || profile?.qaLocal !== true || profile?.qaTag !== ACTIVE_TAG || !nameOk || company.memberships.length === 0 || company.memberships.some(m => m.userId !== userId)) {
     throw new Error("QA seed refused: the target company is not the dedicated QA company (flag, tag, name and sole member must all match).");
   }
 }
@@ -445,7 +461,7 @@ async function assertDedicatedQaCompany(companyId: string, userId: string) {
 /** Removes ONLY the QA fixture (every row is filtered by the QA company id and, for billing, the QA-LOCAL- invoice prefix). */
 async function resetQaFixture(companyId: string, userId: string) {
   await assertDedicatedQaCompany(companyId, userId);
-  const invoices = await prisma.billingInvoice.findMany({ where: { companyId, senderInvoiceNo: { startsWith: "QA-LOCAL-" } }, select: { id: true } });
+  const invoices = await prisma.billingInvoice.findMany({ where: { companyId, senderInvoiceNo: { startsWith: INV } }, select: { id: true } });
   await prisma.assessment.deleteMany({ where: { companyId } });
   if (invoices.length) {
     await prisma.companyEntitlement.deleteMany({ where: { companyId, sourceInvoiceId: { in: invoices.map(x => x.id) } } });
@@ -461,7 +477,7 @@ async function main() {
   assertLocalDevDatabase();
   // Idempotent: the saved password is reused, so re-running never rotates it or invalidates the tester's session.
   const password = process.env.MMRI_QA_PASSWORD?.trim() || readSavedPassword() || randomBytes(15).toString("base64url");
-  const { user, company } = await ensureQaIdentity(password);
+  const { user, company } = OWNER_EMAIL ? await resolveOwnerIdentity() : await ensureQaIdentity(password);
   await assertDedicatedQaCompany(company.id, user.id);
   const cache = new MethodologyDefinitionCache(prisma);
   const row = await prisma.company.findUnique({ where: { id: company.id } });
@@ -473,7 +489,7 @@ async function main() {
   }
   const stored: Record<string, string> = forceReset ? {} : ((cur.qaDomainFixtures as Record<string, string> | undefined) ?? {});
   const mk = await prisma.methodologyVersion.findFirst({ where: { domainCode: "marketing", status: "ACTIVE" } });
-  const writeProfile = (fx: Record<string, string>) => prisma.company.update({ where: { id: company.id }, data: { profile: { ...cur, qaLocal: true, qaTag: QA_TAG, qaDomainFixtures: fx, ...(mk ? { assessmentProfileAnswers: profileAnswersCache, profileAnswersUpdatedAt: new Date().toISOString() } : {}) } as any } });
+  const writeProfile = (fx: Record<string, string>) => prisma.company.update({ where: { id: company.id }, data: { profile: { ...cur, qaLocal: true, qaTag: ACTIVE_TAG, qaDomainFixtures: fx, ...(mk ? { assessmentProfileAnswers: profileAnswersCache, profileAnswersUpdatedAt: new Date().toISOString() } : {}) } as any } });
   const profileAnswersCache = mk ? profileAnswers(await cache.get(mk.id)) : [];
   await writeProfile(stored);
 
@@ -486,7 +502,7 @@ async function main() {
     if ((done.get(target.domainCode) ?? 0) >= 2 && stored[target.domainCode] === domainFingerprint(target.domainCode)) { console.log(`  ${target.domainCode}: already seeded (fixture ${stored[target.domainCode]})`); continue; }
     // a partially written domain (interrupted run): clear that domain's QA rows only, then rebuild it
     await prisma.assessment.deleteMany({ where: { companyId: company.id, domainCode: target.domainCode } });
-    const stale = await prisma.billingInvoice.findMany({ where: { companyId: company.id, senderInvoiceNo: { startsWith: `QA-LOCAL-${target.domainCode}-` } }, select: { id: true } });
+    const stale = await prisma.billingInvoice.findMany({ where: { companyId: company.id, senderInvoiceNo: { startsWith: `${INV}${target.domainCode}-` } }, select: { id: true } });
     if (stale.length) {
       await prisma.companyEntitlement.deleteMany({ where: { companyId: company.id, sourceInvoiceId: { in: stale.map(x => x.id) } } });
       await prisma.billingInvoice.deleteMany({ where: { companyId: company.id, id: { in: stale.map(x => x.id) } } });
@@ -506,9 +522,9 @@ async function main() {
     await writeProfile(stored);
   }
   if (latestIds.length) await ensureDemoShowcase(company.id, user.id, latestIds);
-  writeFileSync(CREDENTIALS_FILE, `email=${QA_EMAIL}\npassword=${password}\n`, { mode: 0o600 });
-  try { chmodSync(CREDENTIALS_FILE, 0o600); } catch { /* best effort */ }
-  console.log("\nQA account ready (local only). Credentials are in backend/.qa-credentials.local (git-ignored).");
+  if (!OWNER_EMAIL) writeFileSync(CREDENTIALS_FILE, `email=${QA_EMAIL}\npassword=${password}\n`, { mode: 0o600 });
+  if (!OWNER_EMAIL) try { chmodSync(CREDENTIALS_FILE, 0o600); } catch { /* best effort */ }
+  console.log(OWNER_EMAIL ? "\nOwner QA data ready (local only). No password or credentials file was read or written." : "\nQA account ready (local only). Credentials are in backend/.qa-credentials.local (git-ignored).");
 }
 
 main().catch(err => { console.error("QA seed failed:", err instanceof Error ? err.message : err); process.exitCode = 1; }).finally(async () => { await prisma.$disconnect(); });
