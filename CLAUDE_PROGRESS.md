@@ -906,3 +906,10 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - `MMRI_AI_REPORT_REQUIRED=true` now fails closed at runtime (prisma-strategy-report-service): no deterministic-fallback publication; snapshot becomes GENERATION_BLOCKED, audited. Gate: `scripts/qa-gate-ai-required.mjs` 5/5 (fake 429 provider, nothing leaves the machine).
 - Live AI check on synthetic payloads: `scripts/qa-live-ai-synthetic.sh` (minimal env, Node permission model, host allow-list, request/cost caps). Step 1 (marketing) was refused by OpenAI: HTTP 429 organization_spend_limit_exceeded. No further live calls until the spend limit is raised.
 - Incident report: ~/Downloads/BUSINESSMRI_FINAL_RELEASE_GATE/evidence/INCIDENT-D5-accidental-live-ai-calls.md
+
+## 2026-11-23 offline RC7 verification (no AI, no primary DB)
+- Active bundles (hashes match the QA DB): marketing 3.0.3/QB 3.1.3; finance 4.2.7, people 4.1.7, it 4.3.7, operations 4.4.7 (all 12,288 questions, 64 categories, 3,072 cells x 4 paths, 0 mapping defects). Comparison + CSVs: ~/Downloads/BUSINESSMRI_FINAL_RELEASE_GATE/evidence/question-bank/ (`scripts/qa-question-bank-compare.py`).
+- Existing five-domain regressions were pinned to 4.x.5 bundles; re-run on the active 4.x.7 bundles with `scripts/qa-regressions-on-active-bundles.sh`: scoring 55/55, findings 100/100, recommendations 85/85, action plans 115/115. Marketing scoring 2342/2342.
+- `scripts/qa-routing-equivalence.mts`: optimised router == pre-optimisation router (064e5fb): 4,869 identical decisions on all five active bundles, FULL+QUICK; router time 233 s -> 89 s.
+- Grant pilot documented: ops/release-assets/PILOT_GRANT_MODE.md; preflight grant rules verified (5 cases).
+- Privacy assessment appended to evidence/INCIDENT-D5-accidental-live-ai-calls.md.
