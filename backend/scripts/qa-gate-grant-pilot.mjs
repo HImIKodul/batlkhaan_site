@@ -1,0 +1,34 @@
+/* Administrator-grant pilot mode (MMRI_BILLING_PROVIDER=grant). ISOLATED API + disposable DB; run the API with MMRI_PILOT_GRANT_AUTHORIZED_BY and MMRI_PILOT_GRANT_EXPIRES set.
+   Proves: no payment entry point works, access only through an audited administrator grant that carries an authorisation reference, QPay/manual code untouched (their own gates). */
+import crypto from 'node:crypto';
+const R=new URL('./lib/',import.meta.url).pathname;const {call,sql,freshAdminTotp,customer,provision,B}=await import(R+'admin-qa.mjs');const {http}=await import(R+'qa-journey.mjs');
+let pass=0,fail=0;const rec=(n,ok,d='')=>{ok?pass++:fail++;console.log((ok?'PASS ':'FAIL ')+n+(d?' | '+d:''))};
+const RUN=crypto.randomBytes(3).toString('hex');
+const cu=await customer('grant'+RUN);const co=(await http(B,'POST','/companies',{tok:cu.tok,body:{name:'Grant Pilot QA ХХК'}})).d.id;
+const inv=await http(B,'POST',`/companies/${co}/billing/invoices`,{tok:cu.tok,body:{planCode:'DIAGNOSTIC',domainCode:'marketing'}});
+rec('GRANT-01 customer cannot create an invoice (no payment collection)',inv.s===409&&inv.e?.code==='PILOT_GRANT_ONLY',`${inv.s} ${inv.e?.code}`);
+const mp=await http(B,'POST','/billing/invoices/nonexistent/mock-pay',{tok:cu.tok});
+rec('GRANT-02 mock/test payment endpoint is closed',mp.s===404||mp.s===409||mp.s===403,`${mp.s}`);
+rec('GRANT-03 no invoice rows were created',Number(sql(`select count(*) from billing_invoices where "companyId"='${co}'`))===0);
+const a0=await http(B,'POST',`/companies/${co}/assessments`,{tok:cu.tok,body:{domainCode:'marketing'}});
+rec('GRANT-04 diagnosis cannot start without a grant',a0.s>=400&&a0.s<500,`${a0.s} ${a0.e?.code}`);
+const sup=provision('SUPER_ADMIN','grantpilot');
+const L=await call('POST','/admin/auth/login',{body:{email:sup.email,password:sup.password,totpCode:await freshAdminTotp(sup)}});const tok=L.d?.token;rec('GRANT-05 administrator signs in with TOTP',L.s===200&&!!tok,`${L.s}`);
+await call('POST','/admin/auth/reauth',{tok,body:{password:sup.password,totpCode:await freshAdminTotp(sup)}});
+const gp=`/admin/companies/${co}/entitlements/grant`;
+const noRef=await call('POST',gp,{tok,body:{domainCode:'marketing',reason:'internal pilot cohort A'}});
+rec('GRANT-06 a grant without an authorisation reference is refused',noRef.s===400,`${noRef.s}`);
+const shortRef=await call('POST',gp,{tok,body:{domainCode:'marketing',reason:'internal pilot cohort A',authorizationRef:'ab'}});
+rec('GRANT-07 a too-short reference is refused',shortRef.s===400,`${shortRef.s}`);
+const okg=await call('POST',gp,{tok,body:{domainCode:'marketing',reason:'internal pilot cohort A',authorizationRef:'PILOT-2026-11-A'}});
+rec('GRANT-08 grant with reason + authorisation reference succeeds',okg.s===200&&okg.d?.granted===true,`${okg.s}`);
+const ent=sql(`select origin||'|'||status||'|'||coalesce("grantReason",'') from company_entitlements where "companyId"='${co}'`);
+rec('GRANT-09 entitlement is ADMIN_GRANT, ACTIVE, and its reason carries the authorisation reference',/^ADMIN_GRANT\|ACTIVE\|.*\[auth:PILOT-2026-11-A\]/.test(ent),ent.slice(0,90));
+const aud=sql(`select count(*) from admin_audit_events where action='ADMIN_ENTITLEMENT_GRANTED' and outcome='SUCCESS' and metadata->>'authorizationRef'='PILOT-2026-11-A' and metadata->>'pilot'='true' and metadata->>'pilotAuthorizedBy' is not null`);
+rec('GRANT-10 audit event records pilot flag, authorisation reference, pilot authoriser and expiry',Number(aud)>=1,`rows=${aud}`);
+const a1=await http(B,'POST',`/companies/${co}/assessments`,{tok:cu.tok,body:{domainCode:'marketing'}});
+rec('GRANT-11 the granted customer can start the diagnosis',a1.s===200||a1.s===201,`${a1.s} ${a1.e?.code}`);
+const again=await call('POST',gp,{tok,body:{domainCode:'marketing',reason:'duplicate attempt here',authorizationRef:'PILOT-2026-11-A'}});
+rec('GRANT-12 a second grant for the same domain is refused',again.s===409,`${again.s} ${again.e?.code}`);
+rec('GRANT-13 still no invoices or revenue',Number(sql(`select count(*) from billing_invoices where "companyId"='${co}'`))===0);
+console.log(`RESULT pass=${pass} fail=${fail}`);process.exit(fail?1:0);

@@ -900,3 +900,9 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - VERIFY_UI_POLISH.sh: 10 stale assertions rewritten for the approved crystal/midnight design (hero copy, hx3 plates, TS palette = crystal-phase3 palette, 25 CSS imports with preferences last, report score/roadmap/paper, billing QR view, settings unknown domain). Exit 0.
 - Re-verified on an isolated clone DB: auth gate 38/38, payments/profile 20/20, security matrix 43/43, publication 21/21, review e2e 34/34, restore consistency bad=0, backend vitest 262/262, QPay provider regression (fake) 45/45 + static 27/27, plain-terms 13/13.
 - Excluded from checkpoint: docs/engineering/CODEX_PROGRESS.md (another tool's notes), qa/ui-final-bounded.mjs (unowned QA script).
+
+## 2026-11-23 grant pilot mode, AI-required fail-closed, bounded live-AI check
+- `MMRI_BILLING_PROVIDER=grant` (pilot): needs MMRI_PILOT_GRANT_AUTHORIZED_BY + MMRI_PILOT_GRANT_EXPIRES (<=120 days) and MMRI_BILLING_ENFORCEMENT=true; invoices/mock-pay refused (409 PILOT_GRANT_ONLY); admin grants need reason + `authorizationRef`, are audited with pilot metadata and stop at expiry. QPay/manual untouched. Gate: `scripts/qa-gate-grant-pilot.mjs` 13/13. Preflight and env template updated.
+- `MMRI_AI_REPORT_REQUIRED=true` now fails closed at runtime (prisma-strategy-report-service): no deterministic-fallback publication; snapshot becomes GENERATION_BLOCKED, audited. Gate: `scripts/qa-gate-ai-required.mjs` 5/5 (fake 429 provider, nothing leaves the machine).
+- Live AI check on synthetic payloads: `scripts/qa-live-ai-synthetic.sh` (minimal env, Node permission model, host allow-list, request/cost caps). Step 1 (marketing) was refused by OpenAI: HTTP 429 organization_spend_limit_exceeded. No further live calls until the spend limit is raised.
+- Incident report: ~/Downloads/BUSINESSMRI_FINAL_RELEASE_GATE/evidence/INCIDENT-D5-accidental-live-ai-calls.md

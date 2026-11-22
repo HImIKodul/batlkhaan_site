@@ -57,7 +57,15 @@ else if(mailProvider!=='disabled')errors.push('MMRI_MAIL_PROVIDER must be resend
 else warnings.push('Password recovery e-mail is NOT delivered (MMRI_MAIL_PROVIDER=disabled). Configure and externally verify resend before launch.');
 if(!/^https:\/\//.test((process.env.MMRI_PUBLIC_APP_URL??'').trim()))warnings.push('MMRI_PUBLIC_APP_URL should be the public https URL used in password reset links (falls back to the first ALLOWED_ORIGINS entry)');
 const billingProvider=(process.env.MMRI_BILLING_PROVIDER??'').trim().toLowerCase();
-if(!['qpay','manual'].includes(billingProvider))errors.push('MMRI_BILLING_PROVIDER must be qpay or manual in production; mock is forbidden');
+if(!['qpay','manual','grant'].includes(billingProvider))errors.push('MMRI_BILLING_PROVIDER must be qpay, manual or grant in production; mock is forbidden');
+if(billingProvider==='grant'){
+  // Controlled pilot: no payment collection; access only through audited administrator grants, time-boxed by a written authorisation.
+  const by=(process.env.MMRI_PILOT_GRANT_AUTHORIZED_BY??'').trim(),exp=new Date((process.env.MMRI_PILOT_GRANT_EXPIRES??'').trim());
+  if(by.length<3)errors.push('MMRI_PILOT_GRANT_AUTHORIZED_BY is required for the administrator-grant pilot');
+  if(Number.isNaN(exp.getTime()))errors.push('MMRI_PILOT_GRANT_EXPIRES (ISO date-time) is required for the administrator-grant pilot');
+  else if(exp.getTime()<=Date.now())errors.push('MMRI_PILOT_GRANT_EXPIRES is in the past');
+  else if(exp.getTime()-Date.now()>120*86400000)errors.push('MMRI_PILOT_GRANT_EXPIRES must be within 120 days');
+}
 if((process.env.MMRI_BILLING_ENFORCEMENT??'').toLowerCase()!=='true')errors.push('MMRI_BILLING_ENFORCEMENT=true is required in production');
 for(const name of ['MMRI_DIAGNOSTIC_PRICE_MNT','MMRI_RETAKE_PRICE_MNT']){const v=need(name); if(v&&!/^[1-9][0-9]*$/.test(v))errors.push(`${name} must be a positive whole-number MNT amount`);}
 if(billingProvider==='qpay'){

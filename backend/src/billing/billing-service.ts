@@ -89,7 +89,13 @@ export class BillingService {
     return plan;
   }
 
+  /** Pilot grant mode collects no payment at all: every payment entry point refuses, access comes only from audited administrator grants. */
+  private assertPaymentsEnabled(){
+    if(this.config.billingProvider==="grant")throw new ApiError(409,"PILOT_GRANT_ONLY","Payments are disabled during the controlled pilot; an administrator grants access.");
+  }
+
   async createInvoice(companyId:string,userId:string,rawPlanCode:string,rawDomainCode:unknown="marketing"){
+    this.assertPaymentsEnabled();
     const planCode=this.validatePlan(rawPlanCode);
     const domainCode=normalizeDomainCode(rawDomainCode);
     const amountMnt=this.price(planCode);
@@ -274,6 +280,7 @@ export class BillingService {
   }
 
   async mockPay(invoiceId:string){
+    this.assertPaymentsEnabled();
     if(this.config.environment==="production"||this.provider.name!=="MOCK")throw new ApiError(404,"NOT_FOUND","Route not found");
     const invoice=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
     if(!invoice)throw notFound("Billing invoice not found");

@@ -5,9 +5,8 @@ import { runStrategyPipeline } from '../../dist-strategy/strategy/index.js';
 import { buildFrozenReportPayload, deterministicFallbackNarrative, generateValidatedNarrative, reportBindingMaterial } from '../../dist-strategy/report/index.js';
 import { safeNarrativeCompanyName } from '../../dist-strategy/report/ai-prompt.js';import { validateNarrativeDraft } from '../../dist-strategy/report/validator.js';
 import { sha256Json } from '../../dist-strategy/lib/hash.js';
-export async function buildSyntheticPayload(){
+export async function buildSyntheticPayload(file='methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json'){
 const checks=[];const check=(name,pass,detail='')=>{checks.push({name,pass:Boolean(pass),detail:String(detail)});if(!pass)throw new Error(`FAIL ${name}: ${detail}`)};
-const file='methodology/MMRI_v3.0.3_QBANK_v3.1.3_STEP6_OF6_ACCEPTED_FINAL.json';
 const def=buildDefinition(JSON.parse(fs.readFileSync(file,'utf8')));
 function q(cat,cell,path){const x=def.questionByCategoryCellPath.get(`${cat}:${cell}:${path}`);if(!x)throw new Error(`Missing ${cat}:${cell}:${path}`);return x}
 function applicable(x){return x.options.find(o=>['APPLICABLE','MOSTLY_APPLICABLE','PARTIAL_APPLICABILITY'].includes(o.state))?.optionIndex ?? x.options[0].optionIndex}

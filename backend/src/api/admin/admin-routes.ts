@@ -268,7 +268,7 @@ export function registerAdminRoutes(d: AdminDeps) {
     const a = await admin.changeRole(c.params.id, b.role, p.adminId, { enforceNotSelf: true });
     await aud(p, fp, "ADMIN_ROLE_CHANGED", "ADMIN", a.id, { to: b.role }); ok(c.res, { role: b.role });
   }, { sensitive: true });
-  registerAccountRoutes({ route, audit: (id, action, outcome, fp, target, meta) => admin.audit(id, action, outcome, fp as any, target, meta), pageOf });
+  registerAccountRoutes({ route, audit: (id, action, outcome, fp, target, meta) => admin.audit(id, action, outcome, fp as any, target, meta), pageOf, pilotGrant: config.pilotGrant });
   route("POST", "/maintenance/run", "admins.manage", async (c, p, fp) => { const out = await reviews.maintenance(); await aud(p, fp, "MAINTENANCE_RUN", "SYSTEM", "reviews", out); ok(c.res, out); }, { sensitive: true, body: false });
 }
 void json;

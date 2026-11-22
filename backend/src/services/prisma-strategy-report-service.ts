@@ -27,6 +27,9 @@ function boundedEnvInt(name:string,fallback:number,min:number,max:number){
 const AI_GENERATION_LEASE_MS=()=>boundedEnvInt("MMRI_AI_REPORT_GENERATION_LEASE_MS",300_000,60_000,900_000);
 const AI_RETRY_COOLDOWN_MS=()=>boundedEnvInt("MMRI_AI_REPORT_RETRY_COOLDOWN_MS",300_000,0,86_400_000);
 
+/** Production policy (MMRI_AI_REPORT_REQUIRED=true): no deterministic-fallback publication. Read per call so the policy follows the environment of the running process. */
+const aiNarrativeRequired=()=>(process.env.MMRI_AI_REPORT_REQUIRED??"false").trim().toLowerCase()==="true";
+
 export class ReportGenerationInProgressError extends Error {
   readonly code="REPORT_GENERATION_IN_PROGRESS";
   constructor(){super("Report generation is already in progress");this.name="ReportGenerationInProgressError";}
@@ -457,6 +460,9 @@ export class PrismaStrategyReportService {
     try{
       mark("lease_and_audit");
       let result=await generateValidatedNarrative(payload,this.narrativeProvider);
+      /* MMRI_AI_REPORT_REQUIRED=true: a report is never published from the generic deterministic fallback. The attempt fails closed (GENERATION_BLOCKED, retried later,
+         audited by the catch block below), so no customer or reviewer can mistake generic text for the personalised AI narrative. */
+      if(aiNarrativeRequired()&&result.state!=="PASS")throw new Error(`AI narrative is required but unavailable: ${String(result.providerError??"no provider result").slice(0,300)}`);
       mark("narrative_ai_and_validation");
       /* 12-month plan (page 3). Only when explicitly enabled; a plan that cannot be validated or does not fit is NOT stored (the report keeps its existing page 3). */
       let planOutcome:string|null=null;

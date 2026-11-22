@@ -23,6 +23,8 @@ export interface AccountRouteDeps {
   route: (method: string, path: string, permission: Permission | null, handler: H, opts?: { sensitive?: boolean; body?: boolean }) => void;
   audit: (adminId: string, action: string, outcome: "SUCCESS" | "DENIED" | "FAILURE", fp: FP | null, target?: { type?: string; id?: string }, metadata?: Record<string, unknown>) => Promise<unknown>;
   pageOf: (q: URLSearchParams) => { page: number; pageSize: number; skip: number };
+  /** Controlled pilot (MMRI_BILLING_PROVIDER=grant): grants need a written authorisation reference and stop at the pilot expiry. */
+  pilotGrant?: { authorizedBy: string; expiresAt: Date } | null;
 }
 
 const reasonOf = (v: unknown) => { const r = String(v ?? "").replace(/\s+/g, " ").trim(); if (r.length < 8) throw badRequest("Шалтгаанаа дор хаяж 8 тэмдэгтээр бичнэ үү."); return r.slice(0, 300); };
@@ -155,6 +157,13 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
     const id = c.params.id; let reason: string | undefined;
     try {
       reason = reasonOf(b.reason);
+      let authorizationRef: string | undefined;
+      if (d.pilotGrant) {
+        if (Date.now() >= d.pilotGrant.expiresAt.getTime()) throw new ApiError(409, "PILOT_EXPIRED", "Пилотын хугацаа дууссан тул эрх олгохгүй.");
+        authorizationRef = String(b.authorizationRef ?? "").replace(/\s+/g, " ").trim();
+        if (authorizationRef.length < 4 || authorizationRef.length > 120) throw badRequest("Пилотын зөвшөөрлийн лавлагааг (4-120 тэмдэгт) заавал бичнэ.");
+        reason = `${reason} [auth:${authorizationRef}]`;
+      }
       const domain = String(b.domainCode ?? "");
       if (!(DOMAIN_CODES as readonly string[]).includes(domain)) throw badRequest("Оношилгооны чиглэл буруу байна.");
       const out = await prisma.$transaction(async tx => {
@@ -171,7 +180,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
         const ent = await tx.companyEntitlement.create({ data: { companyId: id, domainCode: domain, origin: "ADMIN_GRANT", planCode: plan, status: "ACTIVE", assessmentLimit: 1, assessmentsUsed: 0, grantedByAdminId: p.adminId, grantReason: reason } });
         return { entitlementId: ent.id, plan };
       });
-      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT" });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "COMPANY", id }, { entitlementId: out.entitlementId, domainCode: domain });
       ok(c.res, { granted: true, ...out, domainCode: domain });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_GRANTED", "COMPANY", id, e, reason); }

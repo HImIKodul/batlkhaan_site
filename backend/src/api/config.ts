@@ -1,5 +1,7 @@
 import path from "node:path";
-export type BillingProviderMode = "qpay" | "mock" | "manual";
+export type BillingProviderMode = "qpay" | "mock" | "manual" | "grant";
+/** Controlled-pilot mode: no payment is collected; access exists only through audited administrator grants until `expiresAt`. */
+export interface PilotGrantConfig { authorizedBy: string; expiresAt: Date; }
 
 export interface ApiConfig {
   port: number;
@@ -49,6 +51,7 @@ export interface ApiConfig {
   publicAppUrl: string;
   passwordResetTtlMinutes: number;
   billingProvider: BillingProviderMode;
+  pilotGrant: PilotGrantConfig | null;
   billingEnforcement: boolean;
   diagnosticPriceMnt: number | null;
   retakePriceMnt: number | null;
@@ -202,7 +205,18 @@ export function loadApiConfig(): ApiConfig {
   const passwordResetTtlMinutes=intEnv("MMRI_PASSWORD_RESET_TTL_MINUTES",30,5,120);
   const mockMailDir=(process.env.MMRI_MOCK_MAIL_DIR??"").trim()||new URL("../../.mock-mailbox",import.meta.url).pathname;
   const billingProvider=((process.env.MMRI_BILLING_PROVIDER??(environment==="production"?"qpay":"mock")).trim().toLowerCase()) as BillingProviderMode;
-  if(!["qpay","mock","manual"].includes(billingProvider))throw new Error("MMRI_BILLING_PROVIDER must be qpay, mock or manual");
+  if(!["qpay","mock","manual","grant"].includes(billingProvider))throw new Error("MMRI_BILLING_PROVIDER must be qpay, mock, manual or grant");
+  let pilotGrant:PilotGrantConfig|null=null;
+  if(billingProvider==="grant"){
+    const authorizedBy=(process.env.MMRI_PILOT_GRANT_AUTHORIZED_BY??"").trim();
+    const expiresRaw=(process.env.MMRI_PILOT_GRANT_EXPIRES??"").trim();
+    const expiresAt=new Date(expiresRaw);
+    if(authorizedBy.length<3||authorizedBy.length>120||/[\r\n]/.test(authorizedBy))throw new Error("MMRI_PILOT_GRANT_AUTHORIZED_BY (3-120 characters, the person who authorised the pilot) is required when MMRI_BILLING_PROVIDER=grant");
+    if(!expiresRaw||Number.isNaN(expiresAt.getTime()))throw new Error("MMRI_PILOT_GRANT_EXPIRES (ISO date-time) is required when MMRI_BILLING_PROVIDER=grant");
+    if(expiresAt.getTime()-Date.now()>120*86_400_000)throw new Error("MMRI_PILOT_GRANT_EXPIRES must be within 120 days: a pilot is time-boxed");
+    if(environment==="production"&&expiresAt.getTime()<=Date.now())throw new Error("MMRI_PILOT_GRANT_EXPIRES is in the past: renew the written pilot authorisation");
+    pilotGrant={authorizedBy,expiresAt};
+  }
   const qpayClientId=(process.env.QPAY_CLIENT_ID??"").trim();
   const qpayClientSecret=(process.env.QPAY_CLIENT_SECRET??"").trim();
   const qpayInvoiceCode=(process.env.QPAY_INVOICE_CODE??"").trim();
@@ -245,6 +259,7 @@ export function loadApiConfig(): ApiConfig {
   assertProductionReportStorage(environment);
   if(environment==="production"&&billingProvider==="mock")throw new Error("MMRI_BILLING_PROVIDER=mock is forbidden in production");
   if(environment==="production"&&!billingEnforcement)throw new Error("MMRI_BILLING_ENFORCEMENT=true is required in production");
+  if(billingProvider==="grant"&&!billingEnforcement)throw new Error("MMRI_BILLING_ENFORCEMENT=true is required when MMRI_BILLING_PROVIDER=grant (otherwise diagnosis access would be free for everyone)");
   if(billingProvider==="qpay"){
     assertHttpsServiceUrl("QPAY_BASE_URL",qpayBaseUrl,environment,true);
     assertHttpsServiceUrl("MMRI_BILLING_CALLBACK_BASE_URL",billingCallbackBaseUrl,environment,true);
@@ -308,6 +323,7 @@ export function loadApiConfig(): ApiConfig {
     publicAppUrl,
     passwordResetTtlMinutes,
     billingProvider,
+    pilotGrant,
     billingEnforcement,
     diagnosticPriceMnt,
     retakePriceMnt,
