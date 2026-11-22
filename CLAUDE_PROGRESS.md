@@ -920,3 +920,7 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - Blocked (isolated): DM-A3, B2, B3, C1-C3, all wording changes (L1-L8, L10), scoring decisions.
 - Auth: QA customer logs in (200); the 401s were for an e-mail not present in the QA database; login failures now carry a server-side reason code. Auth gate 38/38.
 - Billing catalog exposes GRANT mode; guide step 3 follows the real payment mode; domain labels UPPERCASE (ABBR); em dash removed at source in recommendation titles.
+
+## 2026-11-23 follow-up after RC8
+- Customer login: owner e-mail has no account in the QA DB; QA mail allow-list (5 @businessmri.mn addresses) drops codes to other recipients. Procedures in ~/Downloads/BUSINESSMRI_FINAL_INTEGRATED_RELEASE/01_FOLLOW_UP_AND_APPROVAL_TABLE.md. No account record modified.
+- Guide alt-texts/notes rewritten as sentences; hero cards variant opt-in (?hero=cards) from MMRI_APPROVED_LIQUID_GLASS_REFERENCE.png (needs owner confirmation); 12-month branch inspected read-only: 6 conflicts with RC8, not ready.

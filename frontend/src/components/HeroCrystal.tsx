@@ -15,7 +15,9 @@ export const heroIntent:{area:string;at:number}={area:'',at:0};
 export const takeHeroIntent=()=>{const a=Date.now()-heroIntent.at<600000?heroIntent.area:'';heroIntent.area='';return a};
 export default function HeroCrystal(){
  useEffect(()=>{if(session.accessToken&&heroIntent.area&&Date.now()-heroIntent.at<600000)go('analysis')},[]);
- return <div className="hx" role="group" aria-label="BusinessMRI.mn оношилгооны таван чиглэл">
+ /* Prototype of the reference composition (five overlapping translucent liquid-glass cards, diagonal cascade). Opt-in with ?hero=cards until the owner approves it as the default; the plates stay the default. */
+ const variant=typeof location!=='undefined'&&new URLSearchParams(location.search).get('hero')==='cards'?'cards':undefined;
+ return <div className="hx" data-variant={variant} role="group" aria-label="BusinessMRI.mn оношилгооны таван чиглэл">
   <div className="hx__scene">
    <div className="hx__stack">
     {AREAS.map((a,i)=><div key={a.id} className="hx3" style={{'--i':i,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}>
