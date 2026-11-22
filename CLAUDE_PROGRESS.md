@@ -913,3 +913,10 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - `scripts/qa-routing-equivalence.mts`: optimised router == pre-optimisation router (064e5fb): 4,869 identical decisions on all five active bundles, FULL+QUICK; router time 233 s -> 89 s.
 - Grant pilot documented: ops/release-assets/PILOT_GRANT_MODE.md; preflight grant rules verified (5 cases).
 - Privacy assessment appended to evidence/INCIDENT-D5-accidental-live-ai-calls.md.
+
+## 2026-11-23 final integrated repair (RC8 candidate, NO-GO)
+- AI spend guard: report generation has explicit triggers (COMPLETION/VIEW/ADMIN/RETRY); opening, refreshing or downloading a report never calls the provider again; automatic fallback upgrades off (MMRI_AI_AUTO_UPGRADE_FALLBACK); usage tokens, trigger, model and estimated cost (MMRI_AI_PRICE_INPUT_USD_PER_M / _OUTPUT_) recorded in REPORT_GENERATED / REPORT_GENERATION_FAILED audit events. Gate qa-gate-ai-spend-guard.mjs 9/9. backend-gate-ai-real-adapter.ts now needs MMRI_AI_LIVE_GATE_APPROVED and refuses the primary DB.
+- Methodology 4.x.8 CANDIDATES (scripts/build-businessmri-v2.8-candidates.py; reproducible; not committed, not activatable; importer refuses them): DM-A1 conditional policy for 7 context-only cells, DM-A2 NO_ELIGIBLE_CASE state, DM-L9 orthography. Proof: scripts/qa-candidate-diff.py (only intended differences), regression family 355/355 on active AND candidate, QUICK what-if (candidate removes N/A repair loops, same scores), historical replay 4/4 (scripts/qa-historical-replay.mts). NO_ELIGIBLE_CASE persists as answers.status UNAVAILABLE with evidence_signals.state kept.
+- Blocked (isolated): DM-A3, B2, B3, C1-C3, all wording changes (L1-L8, L10), scoring decisions.
+- Auth: QA customer logs in (200); the 401s were for an e-mail not present in the QA database; login failures now carry a server-side reason code. Auth gate 38/38.
+- Billing catalog exposes GRANT mode; guide step 3 follows the real payment mode; domain labels UPPERCASE (ABBR); em dash removed at source in recommendation titles.

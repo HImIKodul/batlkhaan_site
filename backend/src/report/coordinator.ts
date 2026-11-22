@@ -28,6 +28,8 @@ export interface CoordinatedReportResult {
   providerHttpAttempts: number;
   providerRetryCount: number;
   providerRequestIds: string[];
+  /** Provider-reported tokens summed over every call of this generation (absent when the provider reports none). */
+  providerUsage?: { inputTokens: number; outputTokens: number };
   providerMetadata: NarrativeProviderMetadata;
   providerError: string | null;
 }
@@ -44,11 +46,12 @@ function unwrapProviderResult(value:NarrativeDraft|NarrativeProviderResult):{dra
 export async function generateValidatedNarrative(payload: FrozenReportPayload, provider?: NarrativeProvider): Promise<CoordinatedReportResult> {
   const verifiedPayload=verifiedFrozenReportPayloadForAi(payload);
   let attempts=0; let providerError:string|null=null;
-  let providerHttpAttempts=0; let providerRetryCount=0; const providerRequestIds:string[]=[];
+  let providerHttpAttempts=0; let providerRetryCount=0; const providerRequestIds:string[]=[]; let usageIn=0,usageOut=0,usageSeen=false;
   const absorb=(telemetry?:NarrativeProviderTelemetry)=>{
     if(!telemetry)return;
     providerHttpAttempts+=Math.max(0,telemetry.httpAttempts||0);
     providerRetryCount+=Math.max(0,telemetry.retryCount||0);
+    if(telemetry.usage){usageSeen=true;usageIn+=Math.max(0,telemetry.usage.inputTokens||0);usageOut+=Math.max(0,telemetry.usage.outputTokens||0);}
     for(const id of telemetry.requestIds??[])if(id&&!providerRequestIds.includes(id))providerRequestIds.push(id);
   };
   if (provider) {
@@ -57,13 +60,13 @@ export async function generateValidatedNarrative(payload: FrozenReportPayload, p
       const generated=unwrapProviderResult(await provider.generate(verifiedPayload)); absorb(generated.telemetry);
       let draft = withDeterministicClaimIds(generated.draft);
       let validation = validateNarrativeDraft(verifiedPayload, draft);
-      if (validation.state === "PASS") return { narrative:draft, validation, state:"PASS", providerAttempts:attempts, providerHttpAttempts, providerRetryCount, providerRequestIds, providerMetadata:provider.metadata, providerError:null };
+      if (validation.state === "PASS") return { narrative:draft, validation, state:"PASS", providerAttempts:attempts, providerHttpAttempts, providerRetryCount, providerRequestIds, ...(usageSeen?{providerUsage:{inputTokens:usageIn,outputTokens:usageOut}}:{}), providerMetadata:provider.metadata, providerError:null };
       if (validation.state === "REPAIR_REQUIRED" && provider.repair) {
         attempts=2;
         const repaired=unwrapProviderResult(await provider.repair(verifiedPayload,draft,validation)); absorb(repaired.telemetry);
         draft = withDeterministicClaimIds(repaired.draft);
         validation = validateNarrativeDraft(verifiedPayload,draft);
-        if (validation.state === "PASS") return { narrative:draft, validation, state:"PASS", providerAttempts:attempts, providerHttpAttempts, providerRetryCount, providerRequestIds, providerMetadata:provider.metadata, providerError:null };
+        if (validation.state === "PASS") return { narrative:draft, validation, state:"PASS", providerAttempts:attempts, providerHttpAttempts, providerRetryCount, providerRequestIds, ...(usageSeen?{providerUsage:{inputTokens:usageIn,outputTokens:usageOut}}:{}), providerMetadata:provider.metadata, providerError:null };
       }
       providerError=`AI narrative validation did not pass after controlled generation${attempts>1?" and repair":""}: ${validation.issues.slice(0,5).map(x=>x.checkId).join(",")||validation.state}`.slice(0,500);
     } catch (error) {
@@ -74,5 +77,5 @@ export async function generateValidatedNarrative(payload: FrozenReportPayload, p
   const fallback = withDeterministicClaimIds(deterministicFallbackNarrative(verifiedPayload));
   const validation = validateNarrativeDraft(verifiedPayload,fallback);
   if (validation.state !== "PASS") throw new Error(`Deterministic report fallback failed validation: ${JSON.stringify(validation.issues)}`);
-  return { narrative:fallback, validation, state:"AI_FALLBACK_USED", providerAttempts:attempts, providerHttpAttempts, providerRetryCount, providerRequestIds, providerMetadata:provider?.metadata ?? {provider:"NONE",modelIdentifier:"deterministic-fallback",modelConfig:{},promptVersion:MMRI_AI_REPORT_PROMPT_VERSION}, providerError };
+  return { narrative:fallback, validation, state:"AI_FALLBACK_USED", providerAttempts:attempts, providerHttpAttempts, providerRetryCount, providerRequestIds, ...(usageSeen?{providerUsage:{inputTokens:usageIn,outputTokens:usageOut}}:{}), providerMetadata:provider?.metadata ?? {provider:"NONE",modelIdentifier:"deterministic-fallback",modelConfig:{},promptVersion:MMRI_AI_REPORT_PROMPT_VERSION}, providerError };
 }

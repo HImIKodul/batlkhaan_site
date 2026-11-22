@@ -1,0 +1,55 @@
+{
+ "status": "CANDIDATE_BLOCKED",
+ "activationAllowed": false,
+ "generated": "2026-11-22T19:22:26.027605+00:00",
+ "domains": {
+  "finance": {
+   "file": "MMRI_FINMRI_Methodology_4.2.8_BUSINESSMRI_V2_CANDIDATE.json",
+   "sha256": "1c02d8404bddec5b4d96992a06011a2b21626f580f5181d49c7cd3fb64937753",
+   "supersedes": "MMRI_FINMRI_Methodology_4.2.7_BUSINESSMRI_V2.json",
+   "supersedesSha256": "aee57b0dc1f37fda8f6738fb3c94d01eba765b5fb3e4c591c70d6f4c4f1a6c5a",
+   "methodologyVersion": "4.2.8",
+   "changes": {
+    "A1 cell instances set CONDITIONAL": 448,
+    "A2 options re-stated NO_ELIGIBLE_CASE": 1536,
+    "L9 questions orthography corrected": 720
+   }
+  },
+  "people": {
+   "file": "MMRI_HRMRI_Methodology_4.1.8_BUSINESSMRI_V2_CANDIDATE.json",
+   "sha256": "f199ef8d55f17d53d563a70771fbcbbd9f5a9644078616e51195905ac6869b04",
+   "supersedes": "MMRI_HRMRI_Methodology_4.1.7_BUSINESSMRI_V2.json",
+   "supersedesSha256": "dc67054fc5b225cdf9db928934e863e29ae1dcb01cc8f8f4500885cd2f6c614e",
+   "methodologyVersion": "4.1.8",
+   "changes": {
+    "A1 cell instances set CONDITIONAL": 448,
+    "A2 options re-stated NO_ELIGIBLE_CASE": 1536,
+    "L9 questions orthography corrected": 540
+   }
+  },
+  "it": {
+   "file": "MMRI_ISMRI_Methodology_4.3.8_BUSINESSMRI_V2_CANDIDATE.json",
+   "sha256": "0d880683cc9f02e68cdc2ba28470fe9acbcb9c005a7de71869bf26506730de36",
+   "supersedes": "MMRI_ISMRI_Methodology_4.3.7_BUSINESSMRI_V2.json",
+   "supersedesSha256": "b01c2609cfa2b288c28d2443825251d7e1d68c671b6b1b91fdfaddfba1797795",
+   "methodologyVersion": "4.3.8",
+   "changes": {
+    "A1 cell instances set CONDITIONAL": 448,
+    "A2 options re-stated NO_ELIGIBLE_CASE": 1536,
+    "L9 questions orthography corrected": 567
+   }
+  },
+  "operations": {
+   "file": "MMRI_OPMRI_Methodology_4.4.8_BUSINESSMRI_V2_CANDIDATE.json",
+   "sha256": "64324f0933089b0ee033de23d1bbfa9767ed307e3c7b823f6a8e84ad7e096bab",
+   "supersedes": "MMRI_OPMRI_Methodology_4.4.7_BUSINESSMRI_V2.json",
+   "supersedesSha256": "8cc7ad98d281caae3770a16420d0f9f69fc543e4065de715ffb8731ffe9f5a7a",
+   "methodologyVersion": "4.4.8",
+   "changes": {
+    "A1 cell instances set CONDITIONAL": 448,
+    "A2 options re-stated NO_ELIGIBLE_CASE": 1536,
+    "L9 questions orthography corrected": 477
+   }
+  }
+ }
+}

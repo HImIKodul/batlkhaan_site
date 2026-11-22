@@ -31,7 +31,7 @@ import { json, ok, created, noContent } from "./http/respond.js";
 import { MemoryRateLimiter } from "./http/rate-limit.js";
 import { publicRouting } from "./presenters.js";
 import { AssessmentQueryService } from "./services/query-service.js";
-import { PrismaStrategyReportService, ReportGenerationInProgressError } from "../services/prisma-strategy-report-service.js";
+import { PrismaStrategyReportService, ReportGenerationInProgressError, ReportRegenerationNotAuthorizedError } from "../services/prisma-strategy-report-service.js";
 import { isResultTerminalAssessmentStatus } from "../services/assessment-lifecycle.js";
 import { createNarrativeProviderFromEnv, createAnnualPlanProviderFromEnv } from "./ai-report-provider.js";
 import { BillingService } from "../billing/billing-service.js";
@@ -92,7 +92,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     setImmediate(()=>{void(async()=>{
       try{
         const a=await prisma.assessment.findUnique({where:{id:assessmentId},select:{status:true}});
-        if(a&&isResultTerminalAssessmentStatus(a.status))await strategyReports.generateReport(assessmentId);
+        if(a&&isResultTerminalAssessmentStatus(a.status))await strategyReports.generateReport(assessmentId,{trigger:"COMPLETION"});
       }catch(error:any){console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"report_prewarm_skipped",assessmentId,reason:String(error?.message??error).slice(0,160)}))}
     })()});
   };
@@ -638,7 +638,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   router.add("GET","/api/v1/assessments/:assessmentId/report",async({res,principal,params})=>{
     const access=await assessmentAccess(principal!.userId,params.assessmentId,REPORT_READ); requireTerminal(access.assessment.status); await requireReportReady(params.assessmentId);
     try{ok(res,access.membership.role==="VIEWER"?await strategyReports.readPublishedReport(params.assessmentId):await withinRequestBudget(strategyReports.generateReport(params.assessmentId)));}
-    catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");throw error;}
+    catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");if(error instanceof ReportRegenerationNotAuthorizedError)throw new ApiError(409,"REPORT_REGENERATION_REQUIRES_AUTHORIZATION","Тайлан өмнө нь үүсгэхээр оролдсон. Дахин үүсгэхийг зөвхөн администратор зөвшөөрнө.");throw error;}
   });
 
   /* The company logo frozen into THIS report when it was generated (not the company's current logo). 404 when the report has none. */
@@ -656,7 +656,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       await strategyReports.ensurePublishedReport(params.assessmentId);
       const artifact=await strategyReports.getOrCreateReportPdf(params.assessmentId);
       ok(res,{filename:artifact.filename,mimeType:artifact.mimeType,sourceHash:artifact.sourceHash,contentHash:artifact.contentHash,sizeBytes:artifact.sizeBytes,generatorVersion:artifact.generatorVersion,generatedAt:artifact.generatedAt,verifiedAt:artifact.verifiedAt});
-    }catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");throw error;}
+    }catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");if(error instanceof ReportRegenerationNotAuthorizedError)throw new ApiError(409,"REPORT_REGENERATION_REQUIRES_AUTHORIZATION","Тайлан өмнө нь үүсгэхээр оролдсон. Дахин үүсгэхийг зөвхөн администратор зөвшөөрнө.");throw error;}
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/report/pdf",async({res,principal,params})=>{
@@ -666,7 +666,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       const artifact=await strategyReports.getOrCreateReportPdf(params.assessmentId);
       res.writeHead(200,{"content-type":artifact.mimeType,"content-length":String(artifact.sizeBytes),"content-disposition":`attachment; filename="${artifact.filename}"`,"cache-control":"private, no-store","x-mmri-pdf-source-hash":artifact.sourceHash,"x-mmri-pdf-content-hash":artifact.contentHash});
       const stream=createReadStream(artifact.absolutePath);stream.on("error",()=>{if(!res.headersSent)res.writeHead(500);res.destroy();});stream.pipe(res);
-    }catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");throw error;}
+    }catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");if(error instanceof ReportRegenerationNotAuthorizedError)throw new ApiError(409,"REPORT_REGENERATION_REQUIRES_AUTHORIZATION","Тайлан өмнө нь үүсгэхээр оролдсон. Дахин үүсгэхийг зөвхөн администратор зөвшөөрнө.");throw error;}
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/report/pdf/regenerate",async({res,principal,params})=>{

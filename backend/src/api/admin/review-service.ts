@@ -65,13 +65,13 @@ export class ReviewService {
     return r.count === 1;
   }
 
-  async generateDraft(reviewId: string) {
+  async generateDraft(reviewId: string, trigger: "COMPLETION" | "RETRY" | "ADMIN" = "COMPLETION", authorizedBy?: string) {
     const review = await prisma.reportReview.findUnique({ where: { id: reviewId } });
     if (!review || review.status === "PUBLISHED" || review.status === "APPROVED") return;
     // Atomic claim: only one run can move SUBMITTED/GENERATION_FAILED to GENERATING_DRAFT, so duplicate triggers (double completion, restarts) cannot race.
     if (!(await this.setStatus(reviewId, ["SUBMITTED", "GENERATION_FAILED"], "GENERATING_DRAFT", { lastError: null }))) return;
     try {
-      const report: any = await this.reports.generateReport(review.assessmentId);
+      const report: any = await this.reports.generateReport(review.assessmentId, { trigger, authorizedBy });
       let narrative = report.narrative as NarrativeDraft;
       if (!narrative?.sections?.length) throw new Error("Draft has no narrative sections");
       // Display rule: no em dash in customer-visible text. Frozen recommendation titles contain them (hash-bound), so the editable draft is normalised
@@ -384,7 +384,7 @@ export class ReviewService {
     // A draft job that has been running for over 10 minutes is considered dead (crash/restart): release it, then retry.
     await prisma.reportReview.updateMany({ where: { status: "GENERATING_DRAFT", updatedAt: { lt: new Date(now.getTime() - 10 * 60_000) } }, data: { status: "SUBMITTED" } });
     const stuck = await prisma.reportReview.findMany({ where: { status: "SUBMITTED", updatedAt: { lt: new Date(now.getTime() - 2 * 60_000) } }, select: { id: true } });
-    for (const s of stuck) { void this.generateDraft(s.id); out.retried++; }
+    for (const s of stuck) { void this.generateDraft(s.id, "RETRY"); out.retried++; }
     // REP-02: staging directories of publications that died before commit are removed (the published pair is never affected by them).
     await this.reports.sweepStaging().catch(() => undefined);
     await this.reports.sweepSuperseded().catch(() => undefined);   // aged, unreferenced artifact files only (7 days)

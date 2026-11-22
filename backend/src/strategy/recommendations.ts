@@ -287,7 +287,7 @@ export function buildRecommendations(
         : evidenceOperation(type);
       const op = (type === "EXECUTION" || type === "LOCAL_IMPROVEMENT")
         ? opBase
-        : { ...opBase, title: `${opBase.title} — ${category.nameMn}` };
+        : { ...opBase, title: `${opBase.title} (${category.nameMn})` };
       const target = type === "EXECUTION" || type === "LOCAL_IMPROVEMENT"
         ? Math.min(75, Math.max(60, (finding.cellValue ?? 35) + 25))
         : null;

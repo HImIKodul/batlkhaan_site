@@ -1,5 +1,6 @@
 export type SourceKind = "SELF_REPORT" | "RECENT_CASE" | "RECORD_CHECK" | "ADDITIONAL_CHECK" | "RESERVE" | "RESOLVER";
-export type SignalState = "SCORED" | "DNK" | "N_A_CLAIM" | "UNAVAILABLE" | "PARTIAL_APPLICABILITY" | "MOSTLY_APPLICABLE" | "APPLICABLE" | string;
+/** NO_ELIGIBLE_CASE (methodology 4.x.8 candidates): the respondent states that no case of this kind occurred in the period. It is NOT an N/A claim, NOT "do not know" and carries no score. */
+export type SignalState = "SCORED" | "DNK" | "N_A_CLAIM" | "UNAVAILABLE" | "NO_ELIGIBLE_CASE" | "PARTIAL_APPLICABILITY" | "MOSTLY_APPLICABLE" | "APPLICABLE" | string;
 export type CellStatus = "UNASSESSED" | "GATHERING" | "DIRECT_PROVISIONAL" | "DERIVED_PROVISIONAL" | "REVIEW_REQUIRED" | "DIRECT_FINAL" | "NOT_APPLICABLE" | "UNRESOLVED";
 export type CellConfidenceState = "UNASSESSED" | "UNKNOWN" | "ESTIMATED" | "VALIDATED" | "LOCKED" | "NOT_APPLICABLE";
 export type AssessmentMode = "QUICK" | "FULL";

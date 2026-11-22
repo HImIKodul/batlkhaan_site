@@ -73,7 +73,7 @@ export class BillingService {
   catalog(){
     return (["DIAGNOSTIC","RETAKE"] as BillingPlanCode[]).map(code=>{
       const amountMnt=code==="RETAKE"?this.config.retakePriceMnt:this.config.diagnosticPriceMnt;
-      return {code,...PLAN_META[code],amountMnt,currency:"MNT",available:amountMnt!==null,provider:this.provider.name,testMode:this.provider.name==="MOCK",manualMode:this.provider.name==="MANUAL"};
+      return {code,...PLAN_META[code],amountMnt,currency:"MNT",available:amountMnt!==null,provider:this.config.billingProvider==="grant"?"GRANT":this.provider.name,testMode:this.config.billingProvider!=="grant"&&this.provider.name==="MOCK",manualMode:this.provider.name==="MANUAL",grantMode:this.config.billingProvider==="grant"};
     });
   }
 
@@ -91,7 +91,7 @@ export class BillingService {
 
   /** Pilot grant mode collects no payment at all: every payment entry point refuses, access comes only from audited administrator grants. */
   private assertPaymentsEnabled(){
-    if(this.config.billingProvider==="grant")throw new ApiError(409,"PILOT_GRANT_ONLY","Payments are disabled during the controlled pilot; an administrator grants access.");
+    if(this.config.billingProvider==="grant")throw new ApiError(409,"PILOT_GRANT_ONLY","Туршилтын хугацаанд төлбөр авдаггүй. Оношилгооны эрхийг администратор нээж өгнө.");
   }
 
   async createInvoice(companyId:string,userId:string,rawPlanCode:string,rawDomainCode:unknown="marketing"){

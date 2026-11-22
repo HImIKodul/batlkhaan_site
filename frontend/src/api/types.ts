@@ -73,9 +73,9 @@ export function formatDate(value:string|null|undefined){if(!value)return '-';con
 
 
 export type BillingPlanCode='DIAGNOSTIC'|'RETAKE';
-export type BillingProvider='QPAY'|'MOCK'|'MANUAL';
+export type BillingProvider='QPAY'|'MOCK'|'MANUAL'|'GRANT';
 export type BillingInvoiceStatus='CREATED'|'PENDING'|'PAID'|'CANCELLED'|'FAILED'|'REFUNDED';
-export interface BillingCatalogPlan { code:BillingPlanCode;name:string;billingLabel:string;description:string;amountMnt:number|null;currency:'MNT'|string;available:boolean;provider:BillingProvider;testMode:boolean;manualMode:boolean; }
+export interface BillingCatalogPlan { code:BillingPlanCode;name:string;billingLabel:string;description:string;amountMnt:number|null;currency:'MNT'|string;available:boolean;provider:BillingProvider;testMode:boolean;manualMode:boolean;grantMode?:boolean; }
 export interface BillingDeeplink { name?:string;description?:string;logo?:string;link:string; }
 export interface BillingHistoryItem { id:string;companyId:string;domainCode:DomainCode;planCode:BillingPlanCode;amountMnt:number;currency:string;provider:BillingProvider;status:BillingInvoiceStatus;senderInvoiceNo:string;paidAt?:string|null;refundedAt?:string|null;lastVerifiedAt?:string|null;createdAt:string;updatedAt:string;testMode:boolean;manualMode:boolean; }
 export interface BillingInvoice extends BillingHistoryItem { qrText?:string|null;qrImage?:string|null;shortUrl?:string|null;deeplinks:BillingDeeplink[];callbackReceivedAt?:string|null;refundReason?:string|null; }

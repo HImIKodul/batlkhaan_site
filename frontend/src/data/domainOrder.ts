@@ -4,7 +4,8 @@ export const DOMAIN_ORDER=['marketing','finance','people','it','operations'] as 
 export type DomainCode=typeof DOMAIN_ORDER[number];
 export const DOMAIN_NAME_MN:Record<DomainCode,string>={marketing:'Маркетинг',finance:'Санхүү',people:'Хүний нөөц',it:'Мэдээллийн технологи',operations:'Үйлдвэрлэл, үйл ажиллагаа'};
 /* Homepage hero labels only (the platform brand stays BusinessMRI.mn). */
-export const DOMAIN_HERO_LABEL:Record<DomainCode,string>={marketing:'Маркетинг (MMRI)',finance:'Санхүү (FINMRI)',people:'Хүний нөөц (HRMRI)',it:'Мэдээллийн технологи (ITMRI)',operations:'Үйлдвэрлэл, үйл ажиллагаа (POMMRI)'};
+/* Approved convention: UPPERCASE Mongolian name followed by the English abbreviation in parentheses, identical in every customer-facing label. */
+export const DOMAIN_HERO_LABEL:Record<DomainCode,string>={marketing:'МАРКЕТИНГ (MMRI)',finance:'САНХҮҮ (FINMRI)',people:'ХҮНИЙ НӨӨЦ (HRMRI)',it:'МЭДЭЭЛЛИЙН ТЕХНОЛОГИ (ITMRI)',operations:'ҮЙЛДВЭРЛЭЛ, ҮЙЛ АЖИЛЛАГАА (POMMRI)'};
 /** Diagnosis selection cards: the same global format as everywhere ("Маркетинг (MMRI)"). */
 export const DOMAIN_DIAGNOSIS_LABEL:Record<DomainCode,string>=DOMAIN_HERO_LABEL;
 const rank=(id:string)=>{const i=(DOMAIN_ORDER as readonly string[]).indexOf(id);return i<0?DOMAIN_ORDER.length:i};
@@ -18,4 +19,4 @@ export const DOMAIN_FULL_NAME:Record<DomainCode,string>={marketing:'Маркет
 export const domainAbbr=(id:string)=>(DOMAIN_ABBR as Record<string,string>)[id]??'';
 export const domainFullName=(id:string)=>(DOMAIN_FULL_NAME as Record<string,string>)[id]??id;
 /** "Санхүү (FINMRI)" style label for compact places such as receipts. */
-export const domainWithAbbr=(id:string)=>{const a=domainAbbr(id);return a?`${domainNameMn(id)} (${a})`:domainNameMn(id)};
+export const domainWithAbbr=(id:string)=>{const a=domainAbbr(id);return a?`${domainNameMn(id).toLocaleUpperCase('mn')} (${a})`:domainNameMn(id)};

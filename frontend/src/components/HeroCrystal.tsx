@@ -21,7 +21,7 @@ export default function HeroCrystal(){
     {AREAS.map((a,i)=><div key={a.id} className="hx3" style={{'--i':i,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}>
      <i className="hx3__shadow" aria-hidden="true"/>
      <i className="hx3__face hx3__left" aria-hidden="true"/><i className="hx3__face hx3__right" aria-hidden="true"/><i className="hx3__face hx3__front" aria-hidden="true"/>
-     <button type="button" className="hx3__top" aria-label={`${a.label} - оношилгоо`} onClick={()=>{heroIntent.area=a.id;heroIntent.at=Date.now();go(session.accessToken?'analysis':'login')}}><i className="hx3__orb" aria-hidden="true"/><span className="hx3__name">{a.label}</span></button>
+     <button type="button" className="hx3__top" aria-label={`${a.label} чиглэлээр оношилгоо эхлүүлэх`} onClick={()=>{heroIntent.area=a.id;heroIntent.at=Date.now();go(session.accessToken?'analysis':'login')}}><i className="hx3__orb" aria-hidden="true"/><span className="hx3__name">{a.label}</span></button>
     </div>)}
    </div>
   </div>

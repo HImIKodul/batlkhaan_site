@@ -1061,6 +1061,8 @@ function answerStatus(state: string): "ANSWERED" | "DNK" | "N_A_CLAIM" | "UNAVAI
   if (state === "DNK") return "DNK";
   if (state === "N_A_CLAIM") return "N_A_CLAIM";
   if (state === "UNAVAILABLE") return "UNAVAILABLE";
+  // "No eligible case in the period" is an answered question without usable evidence; the specific state is kept in evidence_signals.state.
+  if (state === "NO_ELIGIBLE_CASE") return "UNAVAILABLE";
   return "ANSWERED";
 }
 

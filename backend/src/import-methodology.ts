@@ -51,6 +51,13 @@ if (integrationActivate) {
   if (version !== TARGET_METHODOLOGY_VERSION) throw new Error(`Integration activation only permits target methodology ${TARGET_METHODOLOGY_VERSION}.`);
 }
 
+// A CANDIDATE bundle (methodology 4.x.8 overlays awaiting methodology-owner and language-specialist approval) can never be imported by accident:
+// it needs the explicit disposable-database flag, and production refuses it outright.
+if (String((bundle as any).releaseStatus ?? "").startsWith("CANDIDATE") || (bundle as any).candidate?.activationAllowed === false) {
+  if ((process.env.NODE_ENV ?? "").toLowerCase() === "production" || (process.env.MMRI_ENVIRONMENT ?? "").toLowerCase() === "production") throw new Error("A CANDIDATE methodology bundle can never be imported in production.");
+  if (process.env.MMRI_ALLOW_CANDIDATE_IMPORT !== "YES_DISPOSABLE_DATABASE_ONLY") throw new Error("Refusing to import a CANDIDATE methodology bundle: it is blocked pending approval. Set MMRI_ALLOW_CANDIDATE_IMPORT=YES_DISPOSABLE_DATABASE_ONLY for an isolated test database.");
+}
+
 const vId = methodologyId(version);
 const bundleSha256 = sha256Text(raw);
 const activeMethodology = await prisma.methodologyVersion.findFirst({ where: { status: "ACTIVE" }, select: { id: true, version: true } });

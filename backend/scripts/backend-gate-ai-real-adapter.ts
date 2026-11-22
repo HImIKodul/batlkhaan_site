@@ -1,5 +1,9 @@
 // Live gate: stored frozen payload -> MMRI provider factory (env) -> OpenAI Responses -> MMRI validator -> PDF source -> PDF.
 // Non-persisting: nothing is written to ReportSnapshot. Requires network + OPENAI_API_KEY in backend/.env (never printed).
+// SAFETY (added after the 2026-11-22 incident): this gate makes ONE PAID PROVIDER CALL PER PUBLISHED REPORT of the database in DATABASE_URL.
+// It refuses to run without explicit approval and never against the primary `mmri` database.
+if (process.env.MMRI_AI_LIVE_GATE_APPROVED !== "YES_PAID_CALLS_APPROVED") { console.error("REFUSED: set MMRI_AI_LIVE_GATE_APPROVED=YES_PAID_CALLS_APPROVED (paid provider calls). No request was made."); process.exit(2); }
+if (/\/mmri(\?|$)/.test(process.env.DATABASE_URL ?? "")) { console.error("REFUSED: DATABASE_URL points at the primary `mmri` database; use a synthetic disposable database."); process.exit(2); }
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import os from "node:os";

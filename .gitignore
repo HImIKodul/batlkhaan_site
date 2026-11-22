@@ -116,3 +116,6 @@ CODEX_PROGRESS/**/design-diffs/
 ops/acceptance/__pycache__/
 CODEX_PROGRESS/**/cleanup-recovery/
 CODEX_PROGRESS/**/clean-source/
+
+# 4.x.8 CANDIDATE methodology bundles are generated (scripts/build-businessmri-v2.8-candidates.py), never committed; only their manifest is.
+backend/methodology/businessmri-v2.7-runtime-bundles-CANDIDATE/MMRI_*.json

@@ -1,4 +1,5 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useMemo,useState} from 'react';
+import { api } from '../api/client';
 import { Icon } from '../components/Icon';
 import { type BusinessAreaId } from '../data/businessEvaluation';
 import { DOMAIN_ORDER,DOMAIN_NAME_MN,DOMAIN_ABBR,domainWithAbbr } from '../data/domainOrder';
@@ -133,13 +134,22 @@ function shotSrc(name:string,kind:'d'|'m'){return `${import.meta.env.BASE_URL}gu
 
 const GuideReportExample=React.lazy(()=>import('../components/GuideReportExample'));
 
+/** Step 3 follows the REAL payment mode of the running system, so the guide never promises a payment (QR, bank, automatic confirmation) that does not exist. */
+function paymentStep(provider:string):WalkStep{
+ if(provider==='GRANT')return {title:'Чиглэлээ сонгох',shot:'3-payment',noShot:true,alt:'',text:'«Оношилгоо» хэсгээс чиглэлээ сонгоно. Туршилтын хугацаанд төлбөр авдаггүй: оношилгооны эрхийг администратор нээж өгсний дараа асуултууд эхэлнэ. Эрх нээгдээгүй бол администраторт хандана уу.'};
+ if(provider==='MANUAL')return {title:'Чиглэлээ сонгож төлбөр төлөх',shot:'3-payment',noShot:true,alt:'',text:'«Оношилгоо» хэсгээс чиглэлээ сонгож, харагдсан төлбөрийн мэдээллээр 300,000₮ төлнө. Төлбөрийг оператор шалгаж баталгаажуулсны дараа оношилгоо эхэлнэ.'};
+ return walkSteps[2];
+}
 export function HowToGuide(){
+ const [provider,setProvider]=useState('');
+ useEffect(()=>{let live=true;api.getBillingPlans().then(p=>{if(live&&p.length)setProvider(String(p[0].provider||'').toUpperCase())}).catch(()=>undefined);return()=>{live=false}},[]);
+ const steps=useMemo(()=>walkSteps.map((s,i)=>i===2?paymentStep(provider):s),[provider]);
  const [index,setIndex]=useState(0);
  const [example,setExample]=useState(false);
- const last=walkSteps.length-1;
- const step=walkSteps[index];
+ const last=steps.length-1;
+ const step=steps[index];
  const go=(i:number)=>setIndex(Math.max(0,Math.min(last,i)));
- useEffect(()=>{walkSteps.forEach(s=>{(['d','m'] as const).forEach(k=>{const img=new Image();img.src=shotSrc(s.shot,k)})})},[]);
+ useEffect(()=>{steps.forEach(s=>{(['d','m'] as const).forEach(k=>{const img=new Image();img.src=shotSrc(s.shot,k)})})},[]);
  /* The popup is modal, so the arrow keys drive the walkthrough wherever focus sits inside it (including the heading focused on open). */
  const indexRef=React.useRef(index);indexRef.current=index;
  useEffect(()=>{
@@ -156,12 +166,12 @@ export function HowToGuide(){
   document.addEventListener('keydown',onKey);
   return()=>document.removeEventListener('keydown',onKey);
  },[]);
- const total=walkSteps.length;
+ const total=steps.length;
  const compact=useMedia(pagedQuery);
  return <div className="mmri-guide2__howto" data-compact={compact||undefined}>
   <section className="mmri-guide2__walk" data-example={example||undefined} aria-roledescription="Алхам алхмаар заавар" aria-label="Оношилгоо хийлгэх алхмууд">
    <ol className="mmri-guide2__track" data-walk-nav aria-label="Алхмууд">
-    {walkSteps.map((s,i)=><li key={s.title} className={`mmri-guide2__track-item${i===index?' is-active':''}${i<index?' is-done':''}`}>
+    {steps.map((s,i)=><li key={s.title} className={`mmri-guide2__track-item${i===index?' is-active':''}${i<index?' is-done':''}`}>
      <button type="button" className="mmri-guide2__track-btn" aria-current={i===index?'step':undefined} aria-expanded={i===index} aria-label={`Алхам ${i+1}: ${s.title}`} onClick={()=>go(i)}>
       <span className="mmri-guide2__track-dot" aria-hidden="true">{i<index?<Icon name="check" size={16}/>:i+1}</span>
       <span className="mmri-guide2__track-text" aria-hidden="true"><span className="mmri-guide2__track-name">Алхам {i+1}</span><span className="mmri-guide2__track-label"><span>{s.title}</span></span></span>

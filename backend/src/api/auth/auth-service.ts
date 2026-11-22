@@ -40,7 +40,9 @@ export class AuthService {
     const passwordHash=user?.passwordHash??await this.dummyPasswordHash;
     const valid = await verifyPassword(String(input.password??""), passwordHash, this.config.passwordPepper).catch(()=>false);
     if (!user || !valid || user.status !== "ACTIVE" || user.erasedAt || (user.emailVerificationRequired && !user.emailVerifiedAt)) {
-      await this.audit(user?.id ?? null, "LOGIN_FAILURE", fp, { emailHash: hashAuditValue(email, this.config.auditSalt) });
+      // The client always gets the same 401 (no account enumeration); operators get the real reason in the audit trail only.
+      const reason = !user ? "UNKNOWN_EMAIL" : !valid ? "BAD_PASSWORD" : user.erasedAt ? "ACCOUNT_ERASED" : user.status !== "ACTIVE" ? "ACCOUNT_NOT_ACTIVE" : "EMAIL_NOT_VERIFIED";
+      await this.audit(user?.id ?? null, "LOGIN_FAILURE", fp, { emailHash: hashAuditValue(email, this.config.auditSalt), reason });
       throw unauthorized("Invalid email or password");
     }
     return prisma.$transaction(async tx => {

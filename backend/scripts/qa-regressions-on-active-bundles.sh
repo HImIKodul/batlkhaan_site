@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
+# BUNDLE_SET=candidate runs them against the 4.x.8 CANDIDATE bundles instead.
 # Re-runs the bundle-pinned regressions against the ACTIVE methodology bundles (4.x.7 in businessmri-v2.6-runtime-bundles) without editing the originals.
 # Temporary copies are created next to the originals (they use relative imports) and removed afterwards. Read-only: no database, no network.
 set -uo pipefail; cd "$(dirname "$0")/.."
 RC=0
 for s in backend-step06-scoring-integrity-regression backend-step07-findings-integrity-regression backend-step08-recommendation-integrity-regression backend-step09-action-plan-integrity-regression; do
   T=scripts/.tmp-active-$s.mjs
-  sed -E 's#businessmri-v2\.5-runtime-bundles/(MMRI_[A-Z]+_Methodology_4\.[1-4])\.5_#businessmri-v2.6-runtime-bundles/\1.7_#g' scripts/$s.mjs > "$T"
-  n=$(grep -c "v2.6-runtime-bundles" "$T"); out=$(node "$T" 2>&1); code=$?; rm -f "$T"
+  if [ "${BUNDLE_SET:-active}" = candidate ]; then
+    sed -E 's#businessmri-v2\.5-runtime-bundles/(MMRI_[A-Z]+_Methodology_4\.[1-4])\.5_BUSINESSMRI_V2\.json#businessmri-v2.7-runtime-bundles-CANDIDATE/\1.8_BUSINESSMRI_V2_CANDIDATE.json#g' scripts/$s.mjs > "$T"; n=$(grep -c "CANDIDATE" "$T")
+  else
+    sed -E 's#businessmri-v2\.5-runtime-bundles/(MMRI_[A-Z]+_Methodology_4\.[1-4])\.5_#businessmri-v2.6-runtime-bundles/\1.7_#g' scripts/$s.mjs > "$T"; n=$(grep -c "v2.6-runtime-bundles" "$T")
+  fi; out=$(node "$T" 2>&1); code=$?; rm -f "$T"
   echo "$s [bundles rewritten to active: $n lines] exit=$code"; echo "$out" | python3 -c "
 import sys,json
 t=sys.stdin.read()
