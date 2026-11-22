@@ -153,3 +153,4 @@ html body .mmri-notification-trigger:hover,html body .mmri-account-trigger:hover
 .mmri-legal-footer a{display:inline-flex;align-items:center;min-height:26px;color:var(--wp-ink2,#33435A);font-weight:500;text-underline-offset:3px}
 .mmri-legal-footer small{text-align:center}.mmri-legal-footer small::before{content:'·';margin-right:14px}@media (max-width:640px){.mmri-legal-footer small{flex-basis:100%}.mmri-legal-footer small::before{content:none}}
 @media (min-width:768px){.mmri-legal-footer{padding-bottom:30px}}
+.mmri-shell.is-public .mmri-legal-footer{padding-bottom:14px}

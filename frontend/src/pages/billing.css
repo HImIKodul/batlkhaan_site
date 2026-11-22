@@ -63,3 +63,31 @@
 
 /* Step 8/10 - dialog/small-screen safety. */
 @media (pointer:coarse){.billing-success-modal__close{width:48px;height:48px}.billing-domain-back{min-height:48px}}
+
+/* QR payment view (opens immediately; category-lit dark glass) */
+.billing-domain-page--qr{display:grid;justify-items:center;gap:14px;padding-bottom:28px}
+.billing-qr{width:min(100%,520px);display:grid;justify-items:center;gap:14px;padding:clamp(18px,3vw,28px);border-radius:24px;text-align:center;background:linear-gradient(170deg,color-mix(in srgb,var(--c) 26%,#0a2878) 0%,rgba(4,14,52,.9) 60%);border:1.5px solid color-mix(in srgb,var(--c) 80%,#fff);box-shadow:0 0 30px color-mix(in srgb,var(--c) 58%,transparent),0 0 80px -12px color-mix(in srgb,var(--c) 50%,transparent),inset 0 0 26px color-mix(in srgb,var(--c) 24%,transparent),inset 0 1px 0 rgba(255,255,255,.5)}
+.billing-qr__head{display:grid;gap:4px;justify-items:center}
+.billing-qr__head>span{font-size:12px;font-weight:800;letter-spacing:.14em;color:color-mix(in srgb,var(--c) 70%,#fff)}
+.billing-qr__head h1{margin:0;font-size:clamp(19px,3.2vw,26px);line-height:1.2;font-weight:900;text-shadow:0 0 14px var(--c),0 0 30px color-mix(in srgb,var(--c) 70%,transparent)}
+.billing-qr__price{font-size:clamp(24px,4vw,32px);font-weight:900;text-shadow:0 0 16px rgba(160,205,255,.8)}
+.billing-qr__box{width:min(78vw,280px);aspect-ratio:1;display:grid;place-items:center;border-radius:18px;background:#fff;padding:10px;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 70%,#fff),0 0 34px color-mix(in srgb,var(--c) 65%,transparent)}
+.billing-qr__box svg,.billing-qr__box img{width:100%;height:100%;display:block}
+.billing-qr__demo-box{position:relative;width:100%;height:100%}
+.billing-qr__demo-badge{position:absolute;left:50%;top:-14px;transform:translateX(-50%);padding:5px 14px;border-radius:999px;background:#f5b300;color:#2a1a00;font-size:13px;font-weight:800;letter-spacing:.04em;white-space:nowrap;box-shadow:0 0 0 2px #fff,0 4px 12px rgba(0,0,0,.4)}
+.billing-qr__wait{display:grid;justify-items:center;gap:10px;color:#06194a;font-weight:700}
+.billing-qr__wait i{width:34px;height:34px;border-radius:50%;border:4px solid #cfe0ff;border-top-color:#1559e6;animation:mmri-spin 1s linear infinite}
+@keyframes mmri-spin{to{transform:rotate(360deg)}}
+.billing-qr__demo-note{margin:0;padding:10px 12px;border-radius:12px;background:rgba(245,179,0,.14);border:1px solid rgba(245,179,0,.7);color:#ffe9a8;font-size:13.5px;line-height:1.45}
+.billing-qr__how{margin:0;max-width:44ch;font-size:14px;line-height:1.5;color:var(--mid-text-2,#e8f1ff)}
+.billing-qr__status{margin:0;min-height:1.3em;font-size:13.5px;font-weight:700;color:color-mix(in srgb,var(--c) 60%,#fff)}
+@media (prefers-reduced-motion:reduce){.billing-qr__wait i{animation:none}}
+
+.billing-qr__test{display:grid;gap:10px;justify-items:center}
+.billing-qr__expiry{margin:0;font-size:15px;color:#e8f1ff}.billing-qr__expiry b{font-size:20px;color:#fff;font-variant-numeric:tabular-nums}.billing-qr__expiry.is-expired b,.billing-qr__expiry.is-expired{color:#ffb4ae}
+.billing-qr__test-btn{min-height:50px;padding:0 24px;border-radius:16px;font:inherit;font-weight:800;font-size:16px;color:#fff;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 34%),linear-gradient(180deg,color-mix(in srgb,var(--c) 55%,#0a2a78),color-mix(in srgb,var(--c) 22%,#04123f));border:1.5px solid color-mix(in srgb,var(--c) 85%,#fff);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 0 #04123f,0 0 22px color-mix(in srgb,var(--c) 65%,transparent)}
+.billing-qr__test-btn:disabled{opacity:.5;cursor:not-allowed}
+.billing-qr__status.is-waiting{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;color:#fff}
+.billing-qr__status.is-waiting::before{content:"";width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:billing-spin 1s linear infinite;flex:none}
+@keyframes billing-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.billing-qr__status.is-waiting::before{animation:none}}

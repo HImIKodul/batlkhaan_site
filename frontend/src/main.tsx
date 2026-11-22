@@ -25,6 +25,8 @@ import './pages/support.css';
 import './design/prism-app.css';
 import './design/crystal.css';
 import './design/crystal-phase3.css';
+import './design/midnight.css';
+import './components/notifications.css';
 import './design/preferences.css';
 
 

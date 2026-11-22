@@ -1,6 +1,6 @@
 import { mnText } from '../content/mongolian';
 import { plainDeep } from '../data/plainTerms';
-import type { ServerNotificationList, ActionPlanPayload, AssessmentLifecycleStatus, AssessmentMode, AssessmentProgress, AssessmentSummary, AuthResponse, BillingCatalogPlan, BillingInvoice, BillingPlanCode, BillingStatus, Company, DiagnosisPayload, FrozenReportPayload, ProfileAnswerInput, ProfileQuestion, RecommendationsPayload, ReportResponse, RespondentRole, ResultsPayload, RoutingPayload, User, MilestoneStatus, MilestoneTrackingPatch } from './types';
+import type { CompanyLogoMeta, ServerNotificationList, ActionPlanPayload, AssessmentLifecycleStatus, AssessmentMode, AssessmentProgress, AssessmentSummary, AuthResponse, BillingCatalogPlan, BillingInvoice, BillingPlanCode, BillingStatus, Company, DiagnosisPayload, FrozenReportPayload, ProfileAnswerInput, ProfileQuestion, RecommendationsPayload, ReportResponse, RespondentRole, ResultsPayload, RoutingPayload, User, MilestoneStatus, MilestoneTrackingPatch } from './types';
 
 const API_BASE=(import.meta.env.VITE_API_BASE_URL??'/api/v1').replace(/\/$/,'');
 export const TARGET_METHODOLOGY_VERSION=(import.meta.env.VITE_MMRI_METHODOLOGY_VERSION??'3.0.0').trim();
@@ -119,6 +119,10 @@ export const api={
  async createCompany(body:{name:string;industry?:string;businessModel?:string;employeeCount?:number;companyAgeYears?:number;marketType?:string;country?:string}){const x=await request<Company>('/companies',{method:'POST',body:JSON.stringify(body)});session.companyId=x.id;session.companyName=x.name;return x},
  getCompany:(id:string)=>request<Company>(`/companies/${id}`),
  updateCompany:(id:string,body:{name:string})=>request<Company>(`/companies/${id}`,{method:'PUT',body:JSON.stringify(body)}),
+ getCompanyLogoBlob:async(companyId:string):Promise<Blob|null>=>{try{return (await requestBlob(`/companies/${companyId}/logo`,'logo.png')).blob}catch(e:any){if(e instanceof ApiError&&e.status===404)return null;throw e}},
+ setCompanyLogo:(companyId:string,dataBase64:string)=>request<{logo:CompanyLogoMeta}>(`/companies/${companyId}/logo`,{method:'PUT',body:JSON.stringify({dataBase64})}),
+ deleteCompanyLogo:(companyId:string)=>request<{logo:null}>(`/companies/${companyId}/logo`,{method:'DELETE'}),
+ getReportLogoBlob:async(assessmentId:string):Promise<Blob|null>=>{try{return (await requestBlob(`/assessments/${assessmentId}/report/logo`,'logo.png')).blob}catch(e:any){if(e instanceof ApiError&&e.status===404)return null;throw e}},
  saveCompanyProfileAnswers:(id:string,profileAnswers:ProfileAnswerInput[],basicInfoAnswers?:ProfileAnswerInput[])=>request<Company>(`/companies/${id}/profile-answers`,{method:'PUT',body:JSON.stringify({profileAnswers,basicInfoAnswers})}),
  getBillingPlans:()=>request<BillingCatalogPlan[]>('/billing/plans',{retryAuth:false}),
  getBillingStatus:(companyId:string)=>request<BillingStatus>(`/companies/${companyId}/billing/status`),

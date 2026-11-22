@@ -889,3 +889,14 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 
 ## 2026-11-20 Gmail (support@businessmri.mn) on QA
 - Secrets in /home/kirby/mmri-secrets (not in repo); run-backend.sh sources gmail-support.env; qa-backend.env uses gmail + recipient allowlist. Live tests PASS (registration, reset, report-ready, support inbox, refresh, restart). gmail-client.ts: 403 rate-limit now RATE_LIMIT (source only; RC5 unchanged). Report: mmri-qa-runtime/reports/BUSINESSMRI_GMAIL_CONNECTION_REPORT_20261120.md
+
+## 2026-11-23 admin 320px table clipping fixed
+- Cause: `design/crystal-phase3.css` forced `white-space:nowrap` on every `.adm-table` th/td at all widths, which beat the phone card-layout wrap rule. Now scoped to `@media (min-width:481px)`.
+- Verified at 320px on payments/reports/users/reviews: no clipped cells. Frontend build OK. Not committed.
+- VERIFY_UI_POLISH.sh has 10 FAIL checks that grep for old-design strings (hero copy 2026-10-30, report-score, billing modal, import count); they predate this change and were not edited.
+
+## 2026-11-23 PERF-02, polish gate, release checkpoint
+- PERF-02: routing.ts/recommendations.ts memoization (behaviour-preserving) + `src/api/concurrency-gate.ts` (MMRI_ENGINE_CONCURRENCY/QUEUE_MAX/QUEUE_WAIT_MS) around submitAnswer/next-question/complete. N=4: 190 s -> 112 s each, RSS peak 3.1 GB -> 0.96 GB. Evidence: ~/Downloads/BUSINESSMRI_FINAL_RELEASE_GATE/evidence/PERF-02-profile-and-fix.txt.
+- VERIFY_UI_POLISH.sh: 10 stale assertions rewritten for the approved crystal/midnight design (hero copy, hx3 plates, TS palette = crystal-phase3 palette, 25 CSS imports with preferences last, report score/roadmap/paper, billing QR view, settings unknown domain). Exit 0.
+- Re-verified on an isolated clone DB: auth gate 38/38, payments/profile 20/20, security matrix 43/43, publication 21/21, review e2e 34/34, restore consistency bad=0, backend vitest 262/262, QPay provider regression (fake) 45/45 + static 27/27, plain-terms 13/13.
+- Excluded from checkpoint: docs/engineering/CODEX_PROGRESS.md (another tool's notes), qa/ui-final-bounded.mjs (unowned QA script).

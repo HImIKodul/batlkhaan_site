@@ -44,11 +44,11 @@ html:root .crystal-stage__wash{mix-blend-mode:normal;background:var(--cr-optical
    no tint, no frost: nearly clear body, a few white specular reflections, a white->transparent bevel painted as a real border (background-clip),
    light backdrop blur, neutral floating shadow. The category background shows straight through it. */
 html:root body.mmri-prism-page .mmri-shell::before{
- border:0;background:linear-gradient(118deg,rgba(255,255,255,.34) 0 3.5%,rgba(255,255,255,.08) 4.5% 13%,transparent 14%),linear-gradient(128deg,transparent 0 47%,rgba(255,255,255,.06) 47.4% 58%,transparent 58.4%),radial-gradient(60% 14% at 16% 0,rgba(255,255,255,.22),transparent 72%);
+ border:0;background:linear-gradient(118deg,rgba(255,255,255,.14) 0 3.5%,rgba(255,255,255,.04) 4.5% 13%,transparent 14%),linear-gradient(128deg,transparent 0 47%,rgba(255,255,255,.06) 47.4% 58%,transparent 58.4%),radial-gradient(60% 14% at 16% 0,rgba(255,255,255,.22),transparent 72%);
  -webkit-backdrop-filter:blur(7px) saturate(1.12);backdrop-filter:blur(7px) saturate(1.12);
  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 30px 56px -18px rgba(2,10,60,.55),0 70px 110px -46px rgba(2,10,60,.5)}
 /* the sheet's own (masked) rim ring, shown again: white -> transparent bevel, border only (the body stays clear) */
-html:root body.mmri-prism-page .mmri-shell::after{display:block;opacity:1;background:linear-gradient(135deg,#fff 0,rgba(255,255,255,.18) 38%,rgba(255,255,255,.06) 62%,rgba(255,255,255,.75) 100%)}
+html:root body.mmri-prism-page .mmri-shell::after{display:block;opacity:1;background:linear-gradient(135deg,rgba(210,232,255,.7) 0,rgba(150,195,255,.3) 38%,rgba(150,195,255,.3) 62%,rgba(210,232,255,.7) 100%)}
 /* header: no backing panel; wordmark, tabs, controls only */
 html:root body.mmri-prism-page .mmri-shell-inner{background:none;border:0;box-shadow:none;border-radius:0}
 html:root body.mmri-prism-page .mmri-shell-inner::before,html:root body.mmri-prism-page .mmri-shell-inner::after{display:none}
@@ -67,9 +67,9 @@ html:root body.mmri-prism-page .mmri-legal-footer{background:none}
    side  : narrow darker side face + bottom steps (box-shadow), so thickness is ~3-6px, not an extrusion
    ::before = clipped specular reflection (pointer-events:none), ::after on cards = one-time glint
    light : tight edge glow + soft coloured under-shadow;  rest / hover / pressed are visibly different */
-html:root .hx__slab{--u:1cqw}
+
 html:root body.mmri-prism-page button.diagnosis-square.cat-tile{--u:7px;--c:var(--a,#7FA6FF)}
-html:root .hx__slab,html:root body.mmri-prism-page button.diagnosis-square.cat-tile{
+html:root body.mmri-prism-page button.diagnosis-square.cat-tile{
  --gm-hi:radial-gradient(48% 24% at 20% 3%,rgba(255,255,255,.95),rgba(255,255,255,.4) 48%,transparent 80%),linear-gradient(180deg,rgba(255,255,255,.45) 0,rgba(255,255,255,.1) 12%,rgba(255,255,255,0) 28%);
  --gm-planes:linear-gradient(126deg,transparent 36%,rgba(255,255,255,.3) 36.4%,rgba(255,255,255,.06) 50%,transparent 50.4%),linear-gradient(126deg,transparent 66%,rgba(255,255,255,.18) 66.4%,transparent 78%);
  --gm-lit:radial-gradient(90% 60% at 0 0,rgba(255,255,255,.34),transparent 62%);
@@ -82,23 +82,23 @@ html:root .hx__slab,html:root body.mmri-prism-page button.diagnosis-square.cat-t
  border:1.5px solid transparent;background-image:var(--gm-hi),var(--gm-planes),var(--gm-lit),var(--gm-edgecol),var(--gm-base),var(--gm-rim);
  background-origin:border-box;background-clip:padding-box,padding-box,padding-box,padding-box,padding-box,padding-box,padding-box,border-box,border-box,border-box;background-color:transparent;
  filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:var(--gm-shadow);cursor:pointer;transition:box-shadow .25s ease,filter .25s ease}
-html:root .hx__slab::before,html:root body.mmri-prism-page button.diagnosis-square.cat-tile::before{content:"";position:absolute;inset:0;z-index:1;border-radius:inherit;pointer-events:none;height:auto;width:auto;left:0;top:0;opacity:1;transform:none;
+html:root body.mmri-prism-page button.diagnosis-square.cat-tile::before{content:"";position:absolute;inset:0;z-index:1;border-radius:inherit;pointer-events:none;height:auto;width:auto;left:0;top:0;opacity:1;transform:none;
  background:linear-gradient(118deg,rgba(255,255,255,.5) 0 4%,rgba(255,255,255,.12) 5% 13%,transparent 14%),linear-gradient(180deg,rgba(255,255,255,.18),transparent 22%);-webkit-mask:none;mask:none;padding:0}
-html:root .hx__slab::after{display:none}
+
 /* geometry is fixed on hover/focus/press and neighbours are never dimmed (legacy landing.css lifts the plate and fades the others) */
-html:root .hx__slab:is(:hover,:focus-visible,:active){--lift:0cqw}
-@media (hover:hover){html:root .hx__stack:has(.hx__slab:hover) .hx__slab:not(:hover){opacity:1}}
-html:root .hx__slab:is(:hover,:focus-visible),html:root body.mmri-prism-page button.diagnosis-square.cat-tile:is(:hover,:focus-visible){filter:brightness(1.1) saturate(1.1);box-shadow:var(--gm-shadow-hover);
+
+
+html:root body.mmri-prism-page button.diagnosis-square.cat-tile:is(:hover,:focus-visible){filter:brightness(1.1) saturate(1.1);box-shadow:var(--gm-shadow-hover);
  --gm-hi:radial-gradient(52% 26% at 22% 2%,rgba(255,255,255,.95),rgba(255,255,255,.42) 48%,transparent 80%),linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.14) 14%,rgba(255,255,255,0) 30%);
  --gm-rim:radial-gradient(circle at 0 0,#fff 0,#fff 8%,transparent 36%),radial-gradient(circle at 100% 100%,#fff 0,transparent 30%),linear-gradient(150deg,#fff,color-mix(in srgb,var(--c) 30%,#fff) 50%,#fff);
  --gm-edgecol:radial-gradient(130% 100% at 100% 100%,var(--c),transparent 80%),radial-gradient(90% 70% at 0 100%,color-mix(in srgb,var(--c) 80%,transparent),transparent 75%)}
-html:root .hx__slab:is(:hover,:focus-visible)::before,html:root body.mmri-prism-page button.diagnosis-square.cat-tile:is(:hover,:focus-visible)::before{background:linear-gradient(118deg,rgba(255,255,255,.75) 0 4.5%,rgba(255,255,255,.2) 5.5% 14%,transparent 15%),linear-gradient(180deg,rgba(255,255,255,.3),transparent 26%)}
-html:root .hx__slab:active,html:root body.mmri-prism-page button.diagnosis-square.cat-tile:active{filter:brightness(.97);box-shadow:var(--gm-shadow);transition-duration:.08s}
-html:root .hx__slab:focus-visible,html:root body.mmri-prism-page button.diagnosis-square.cat-tile:focus-visible{outline:3px solid #fff;outline-offset:3px}
+html:root body.mmri-prism-page button.diagnosis-square.cat-tile:is(:hover,:focus-visible)::before{background:linear-gradient(118deg,rgba(255,255,255,.75) 0 4.5%,rgba(255,255,255,.2) 5.5% 14%,transparent 15%),linear-gradient(180deg,rgba(255,255,255,.3),transparent 26%)}
+html:root body.mmri-prism-page button.diagnosis-square.cat-tile:active{filter:brightness(.97);box-shadow:var(--gm-shadow);transition-duration:.08s}
+html:root body.mmri-prism-page button.diagnosis-square.cat-tile:focus-visible{outline:3px solid #fff;outline-offset:3px}
 /* hero plate label + dot: one family with the cards */
-html:root .hx__dot,html:root body.mmri-prism-page .cat-tile__name::before{background:radial-gradient(circle at 35% 30%,#fff,var(--c) 65%);box-shadow:0 0 calc(var(--u)*1.2) var(--c),0 0 0 calc(var(--u)*.3) rgba(255,255,255,.75)}
+html:root body.mmri-prism-page .cat-tile__name::before{background:radial-gradient(circle at 35% 30%,#fff,var(--c) 65%);box-shadow:0 0 calc(var(--u)*1.2) var(--c),0 0 0 calc(var(--u)*.3) rgba(255,255,255,.75)}
 /* hero scene: a calm deep-blue pool behind the plates */
-html:root .hx::before{content:"";position:absolute;inset:-16% -14% -12% -14%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(8,40,170,.8),rgba(8,40,170,.5) 55%,transparent 100%)}
+
 /* diagnosis cards: layout, label, entrance (mounts once per visit; hover/state updates never replay it) */
 html:root body.mmri-prism-page button.diagnosis-square.cat-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:0;padding:0;border-radius:26px;overflow:hidden;isolation:isolate;text-align:left;width:100%;font:inherit;color:#08205a;grid-template-rows:none;animation:cat-in .5s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--n,0)*85ms)}
 html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(1){--n:0}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(2){--n:1}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(3){--n:2}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(4){--n:3}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(5){--n:4}
@@ -118,16 +118,7 @@ html:root body.mmri-prism-page button.diagnosis-square.cat-tile::after{display:b
 
 /* ---- 4. guides: translucent royal-blue backdrop (the homepage stays visible), blue liquid-glass dialog ---- */
 html:root body.mmri-prism-page .mmri-home2__guide:is(.is-about,.is-report,.is-howto){--g1:#8ec3ff;--g2:#1d63e0;--gg:#2f86ff}
-html:root body.mmri-prism-page .mmri-home2__guide:is(.is-about,.is-report,.is-howto) .mmri-home2__guide-title{color:#04184a;font-weight:700}
 html:root body.mmri-prism-page .mmri-guide2{background:none}
-html:root body.mmri-prism-page .mmri-guide2::before{background:rgba(8,67,184,.5);-webkit-backdrop-filter:blur(4px) saturate(1.1);backdrop-filter:blur(4px) saturate(1.1);animation:mmri-fade .35s ease both}
-html:root body.mmri-prism-page .mmri-guide2__panel{border:1px solid rgba(255,255,255,.95);
- background:radial-gradient(50% 16% at 14% 0,rgba(190,230,255,.55),transparent 72%),linear-gradient(118deg,rgba(200,236,255,.4) 0 3%,transparent 4%),linear-gradient(165deg,rgba(60,130,255,.62),rgba(26,96,235,.6) 55%,rgba(14,70,210,.62));
- -webkit-backdrop-filter:blur(6px) saturate(130%);backdrop-filter:blur(6px) saturate(130%);
- box-shadow:inset 0 2px 0 #fff,inset 0 0 0 2px rgba(130,235,255,.95),inset 0 0 40px rgba(110,215,255,.4),0 0 0 1px rgba(255,255,255,.55),0 0 40px rgba(70,170,255,.65),0 40px 70px -20px rgba(0,30,170,.85)}
-html:root body.mmri-prism-page .mmri-guide2__panel::before,html:root body.mmri-prism-page .mmri-guide2__panel::after{display:none}
-html:root body.mmri-prism-page .mmri-guide2__panel :is(h1,h2){color:#fff;text-shadow:0 1px 3px rgba(0,20,100,.5)}
-html:root body.mmri-prism-page .mmri-guide2__card{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(235,246,255,.5))}
 .mmri-guide2__howto:not([data-compact]) .mmri-guide2__track{gap:12px}
 .mmri-guide2__howto:not([data-compact]) .mmri-guide2__track-item:not(:last-child)::after{content:"";position:absolute;z-index:2;left:21px;top:calc(100% + 2px);width:8px;height:8px;margin-left:-4px;border-right:2.5px solid #1d4fc4;border-bottom:2.5px solid #1d4fc4;transform:rotate(45deg);pointer-events:none;opacity:.85}
 .mmri-guide2__howto:not([data-compact]) .mmri-guide2__track-item.is-done:not(:last-child)::after{border-color:#0d3aa6;opacity:1}
@@ -214,32 +205,30 @@ html:root body.mmri-prism-page .mmri-questionnaire__reload{flex:none;padding:6px
 @media (max-width:640px){html:root body.mmri-prism-page .report-domain-switcher{gap:8px}html:root body.mmri-prism-page .report-domain-switcher button{height:40px;min-width:40px}html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon{width:37px;font-size:13px}html:root body.mmri-prism-page .report-domain-switcher button.is-active{min-height:40px;order:1;flex:1 0 100%}html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__active-copy strong{min-height:37px;padding:6px 16px;white-space:normal;font-size:13.5px}}
 
 /* ---- 7. notifications: simple list, newest first, unread prominent, read subdued, order never changes ---- */
-html:root body.mmri-prism-page .mmri-notification-panel{padding:0 0 6px;max-height:min(70dvh,560px);color:var(--gm-navy);border:1px solid rgba(255,255,255,.95);border-radius:24px;
- background:linear-gradient(118deg,rgba(255,255,255,.5) 0 4%,transparent 5%),linear-gradient(160deg,rgba(240,249,255,.92),rgba(214,234,255,.88) 60%,rgba(224,222,255,.9));-webkit-backdrop-filter:blur(12px) saturate(170%);backdrop-filter:blur(12px) saturate(170%);
- box-shadow:inset 0 2px 0 #fff,inset 0 0 0 1.5px rgba(120,225,255,.7),0 0 28px rgba(90,215,255,.5),0 26px 44px -14px rgba(2,10,90,.6)}
-html:root body.mmri-prism-page .mmri-notification-panel>header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;background:none;border:0;border-bottom:1px solid rgba(6,25,74,.12);border-radius:0}
-html:root body.mmri-prism-page .mmri-notification-panel>header strong{display:flex;align-items:baseline;gap:8px;flex:1;font-size:17px;color:var(--gm-navy)}
-html:root body.mmri-prism-page .mmri-notification-panel>header strong small{font-size:12.5px;font-weight:600;color:#27407a}
-html:root body.mmri-prism-page .mmri-notification-all{padding:0;border:0;background:none;font:inherit;font-size:13px;font-weight:650;color:#0a3fc0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-html:root body.mmri-prism-page .mmri-notification-group{padding:0}
-html:root body.mmri-prism-page .mmri-notification-item::before{display:none}
-html:root body.mmri-prism-page .mmri-notification-item{display:flex;align-items:flex-start;flex-wrap:nowrap;border-bottom:1px solid rgba(6,25,74,.09);border-radius:0;box-shadow:none;background:none;transition:opacity .2s ease,background-color .2s ease}
-html:root body.mmri-prism-page .mmri-notification-item.is-unread{background:linear-gradient(90deg,rgba(21,101,240,.12),rgba(255,255,255,.85) 28%);box-shadow:inset 3px 0 0 var(--gm-royal)}
-html:root body.mmri-prism-page .mmri-notification-item>a{flex:1;min-width:0;display:flex;gap:10px;padding:12px 8px 12px 16px;color:var(--gm-navy);text-decoration:none}
-html:root body.mmri-prism-page .mmri-notification-item>a>div{min-width:0}
-html:root body.mmri-prism-page .mmri-notification-item strong{display:block;font-size:14.5px;font-weight:700;color:var(--gm-navy)}
-html:root body.mmri-prism-page .mmri-notification-item.is-unread strong{font-weight:800}
-html:root body.mmri-prism-page .mmri-notification-item p{margin:2px 0 4px;font-size:13px;line-height:1.4;color:#17306b}
-html:root body.mmri-prism-page .mmri-notification-item small{display:block;font-size:12px;color:#3a5190}
-html:root body.mmri-prism-page .mmri-notification-item .mmri-notification-dot{flex:none;width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--gm-royal);box-shadow:0 0 0 3px rgba(21,101,240,.25),0 0 10px rgba(21,101,240,.7)}
-html:root body.mmri-prism-page .mmri-notification-item.is-read .mmri-notification-dot{visibility:hidden}
-html:root body.mmri-prism-page .mmri-notification-item.is-read>a{opacity:.68}
-html:root body.mmri-prism-page .mmri-notification-item.is-read strong{font-weight:600}
-html:root body.mmri-prism-page .mmri-notification-dismiss{flex:none;align-self:center;display:grid;place-items:center;width:28px;height:28px;margin:0 12px 0 0;padding:0;border:0;border-radius:50%;background:none;color:#3a5190;cursor:pointer;transition:background-color .15s ease,color .15s ease}
-html:root body.mmri-prism-page .mmri-notification-dismiss:is(:hover,:focus-visible){background:rgba(6,25,74,.1);color:var(--gm-navy)}
-html:root body.mmri-prism-page .mmri-notification-dismiss:focus-visible{outline:2px solid var(--gm-navy);outline-offset:1px}
-html:root body.mmri-prism-page .mmri-notification-empty{margin:0;padding:22px 16px;text-align:center;font-size:14px;color:#27407a}
-html:root body.mmri-prism-page .mmri-notification-item__actions{display:none}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ---- 8. payment history / profile / settings / billing: ONE sheet, content on it ---- */
 html:root body.mmri-prism-page .mmri-shell-main :is(.lg,.lg--soft,.content-surface,.mmri-surface,.company-detail-editor__name,.company-detail-editor__grid,.company-detail-editor__bar,.billing-payment-console,.billing-domain-start){background:none;border:0;outline:0;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -258,7 +247,7 @@ html:root body.mmri-prism-page .account-payment-history>section>article:last-chi
 html:root body.mmri-prism-page .profile-question-card,html:root body.mmri-prism-page .company-detail-editor__grid,html:root body.mmri-prism-page .technical-settings__group{border-bottom:1px solid rgba(6,25,74,.14);padding-bottom:14px}
 html:root body.mmri-prism-page :is(.company-detail-editor__grid,.company-detail-editor__name,.profile-onboarding) label{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding-inline:0}
 /* fields: one consistent control look */
-html:root body.mmri-prism-page .mmri-shell-main :is(input:not([type=checkbox]):not([type=radio]),select,textarea,.mmri-choice-select__trigger){background:rgba(255,255,255,.78);color:var(--gm-navy);border:1px solid rgba(255,255,255,.95);border-radius:12px;box-shadow:inset 0 1px 2px rgba(2,20,90,.12);-webkit-backdrop-filter:none;backdrop-filter:none}
+html:root body.mmri-prism-page .mmri-shell-main :is(input:not([type=checkbox]):not([type=radio]),select,textarea,.mmri-choice-select__trigger){background:rgba(5,18,56,.72);color:#fff;border:1px solid rgba(122,178,255,.45);border-radius:12px;box-shadow:inset 0 2px 6px rgba(0,6,24,.5);-webkit-backdrop-filter:none;backdrop-filter:none}
 html:root body.mmri-prism-page .mmri-shell-main :is(input,select,textarea):focus-visible{outline:3px solid var(--gm-royal);outline-offset:1px}
 html:root body.mmri-prism-page .mmri-shell-main :is(h1,h2,h3,label,legend){color:var(--gm-navy)}
 
@@ -268,28 +257,24 @@ html:root body .adm-shell .adm-page{padding:22px 24px 26px;border-radius:26px;bo
  box-shadow:inset 0 2px 0 #fff,inset 2px 0 0 rgba(255,255,255,.6),1px 2px 0 rgba(160,210,255,.9),3px 5px 0 #3f78e8,0 0 0 1px rgba(255,255,255,.5),12px 28px 36px -18px rgba(2,12,90,.65)}
 html:root body .adm-shell .adm-page a{color:#0b3fb8;text-decoration-thickness:1.5px;text-underline-offset:3px;font-weight:600;overflow-wrap:anywhere}
 html:root body .adm-shell .adm-page :is(h1,h2,h3,label,legend){color:#07204f}
-html:root body .adm-shell .adm-table :is(th,td){white-space:nowrap;word-break:normal;overflow-wrap:normal;hyphens:none}
+@media (min-width:481px){html:root body .adm-shell .adm-table :is(th,td){white-space:nowrap;word-break:normal;overflow-wrap:normal;hyphens:none}}
 html:root body .adm-shell .adm-table td:has(>a){white-space:normal;min-width:11em}
 @media (max-width:700px){html:root body .adm-shell .adm-page{padding:16px 14px 20px;border-radius:20px}}
 
 /* notifications: opaque-enough liquid-glass sheet (no show-through), visible per-item X, clear unread state */
-html:root body.mmri-prism-page .mmri-notification-panel{background:linear-gradient(118deg,rgba(255,255,255,.55) 0 4%,transparent 5%),linear-gradient(160deg,rgba(242,250,255,.97),rgba(216,235,255,.96) 60%,rgba(226,224,255,.97));-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);overflow-y:auto;overflow-x:hidden}
-html:root body.mmri-prism-page .mmri-notification-panel>header,html:root body.mmri-prism-page .mmri-notification-tools{position:sticky;z-index:2}
-html:root body.mmri-prism-page .mmri-notification-panel>header{top:0;background:rgba(236,247,255,.98)}
-html:root body.mmri-prism-page .mmri-notification-item .mmri-notification-dismiss{align-self:flex-start;margin:12px 12px 0 0;width:30px;height:30px;border:1px solid rgba(6,25,74,.2);background:rgba(255,255,255,.8);color:var(--gm-navy)}
-html:root body.mmri-prism-page .mmri-notification-item .mmri-notification-dismiss:is(:hover,:focus-visible){background:#fff;box-shadow:0 0 0 2px rgba(21,101,240,.45)}
-html:root body.mmri-prism-page .mmri-notification-item.is-unread{background:linear-gradient(90deg,rgba(21,101,240,.18),rgba(255,255,255,.9) 34%);box-shadow:inset 4px 0 0 var(--gm-royal)}
-html:root body.mmri-prism-page .mmri-notification-item.is-read>a{opacity:.72}
+
+
+
+
+
+
+
 
 /* answers: light, clean, glowing bodies (hue still comes from the answer's own tone; meaning and order are unchanged) */
 html:root body.mmri-prism-page .mmri-questionnaire__actions .is-next:disabled{opacity:.55;filter:saturate(.5)}
 
 /* guides: readable white heading + intro on the blue liquid-glass sheet; the sheet stays translucent so the page behind it shows through */
-html:root body.mmri-prism-page .mmri-guide2__panel .mmri-guide2__header :is(h1,h2){color:#fff;-webkit-text-fill-color:#fff;text-shadow:0 1px 6px rgba(0,25,110,.55)}
-html:root body.mmri-prism-page .mmri-guide2__panel .mmri-guide2__header p{color:#eef6ff;-webkit-text-fill-color:#eef6ff;text-shadow:0 1px 4px rgba(0,25,110,.5)}
-html:root body.mmri-prism-page .mmri-guide2__panel .mmri-guide2__header p strong{color:#fff;-webkit-text-fill-color:#fff}
-html:root body.mmri-prism-page .mmri-guide2__panel{background:radial-gradient(50% 16% at 14% 0,rgba(200,236,255,.5),transparent 72%),linear-gradient(118deg,rgba(210,240,255,.4) 0 3%,transparent 4%),linear-gradient(165deg,rgba(50,125,255,.55),rgba(22,92,235,.52) 55%,rgba(12,64,205,.58));-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%)}
 
 /* hero: the Human Resources label sat under the Finance plate's lower edge; a slightly taller plate lowers its (bottom-aligned) label out of the overlap */
-@media (min-width:701px){html:root .hx__slab:nth-child(5){height:calc(var(--ph)*1.12cqw)}html:root .hx__slab:nth-child(6){margin-top:3.6cqw}}
-html:root .hx__name{text-shadow:0 0 5px rgba(255,255,255,.55)}
+
+

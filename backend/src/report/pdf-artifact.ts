@@ -178,7 +178,11 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
     conclusionMn:conclusionText(narrative),strengths:b4Active?withPlaceholders(strengths,payload.strengths.slice(0,5),B4_PLACEHOLDER_TEXT.strength,"strength",b4Rule):strengths,weaknesses:b4Active?withPlaceholders(weaknesses,payload.weaknesses.slice(0,5),B4_PLACEHOLDER_TEXT.weakness,"weakness",b4Rule):weaknesses,criticalActions,
     roadmap:payload.roadmap.map(r=>({horizon:r.horizon,nameMn:r.nameMn,dayStart:r.dayStart,dayEnd:r.dayEnd,milestones:r.milestones.map(m=>({milestoneId:m.milestoneId,recommendationId:m.recommendationId,titleMn:m.titleMn,milestoneMn:m.milestoneMn,deliverableMn:m.deliverableMn,ownerRoleLabelMn:m.ownerRoleLabelMn,kpiMn:m.kpiMn}))})),
     warnings:[...payload.requiredWarnings,...(flags.b3&&payload.evidenceDisclosure?payload.evidenceDisclosure.warningsMn:[])],risks:payload.risks.map(r=>r.messageMn),
-    ...(narrative.visualAnnotations?.items?.length?{annotations:narrative.visualAnnotations}:{})
+    ...(narrative.visualAnnotations?.items?.length?{annotations:narrative.visualAnnotations}:{}),
+    /* Identity of the frozen logo snapshot only (bytes are attached outside the hashed source at render time and verified against this hash). Absent without a snapshot, so existing sources and PDFs are unchanged. */
+    ...(narrative.companyLogo?{companyLogo:{sha256:narrative.companyLogo.sha256}}:{}),
+    /* Customer-safe projection of the validated 12-month plan: titles, calendar labels and Mongolian text only (no stage ids, finding references or provider details). Absent for reports without a READY plan, which keep the existing page 3. */
+    ...(narrative.annualPlan?.state==="READY"?{annualPlan:{periodLabel:narrative.annualPlan.periodLabel,stages:narrative.annualPlan.stages.map(st=>({headingMn:st.headingMn,dateLabel:st.dateLabel,dependencyNoteMn:st.dependencyNoteMn,actions:st.actions.map(x=>({textMn:x.textMn}))}))}}:{})
   };
 }
 

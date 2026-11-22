@@ -236,14 +236,18 @@ export function rankAdaptiveV13Questions(definition: MethodologyDefinition, inpu
     cellWeight: number;
   }> = [];
 
+  const categoryById = lookupById(definition.categories);
+  const cellById = lookupById(definition.cells);
+  const coverageByCategory = new Map<string, number>();
+  const gainByCell = new Map<string, number>();
   for (const question of definition.questions) {
     const policy = runtime.questionById.get(question.id);
     if (!policy) continue;
     const cellPolicy = runtime.cellByCategoryCell.get(mapKey(question.categoryId, question.cellId));
     if (!cellPolicy) continue;
     const state = input.snapshot.cells.get(mapKey(question.categoryId, question.cellId));
-    const category = definition.categories.find(c => c.id === question.categoryId);
-    const cell = definition.cells.find(c => c.id === question.cellId);
+    const category = categoryById.get(question.categoryId);
+    const cell = cellById.get(question.cellId);
     if (!state || !category || !cell) continue;
     if (!eligibleAdaptiveQuestion(definition, input, question.categoryId, question.cellId, policy, cellPolicy, state)) continue;
 
@@ -253,8 +257,12 @@ export function rankAdaptiveV13Questions(definition: MethodologyDefinition, inpu
     const relevance = profileRelevance.get(question.categoryId) ?? 1;
     const uncertainty = 1 - state.effectiveConfidence;
     const coverageGap = question.cellId === "C01" || !maturityScoredCell || state.status === "NOT_APPLICABLE" || state.effectiveScore !== null ? 0 : 1;
-    const categoryCoverage = currentCategoryCoverage(definition, input, question.categoryId);
-    const projectedCoverageGain = projectedGainForQuestion(definition, input, question.categoryId, question.cellId);
+    // Both are pure functions of (definition, snapshot) and identical for every question of the same category/cell.
+    let categoryCoverage = coverageByCategory.get(question.categoryId);
+    if (categoryCoverage === undefined) coverageByCategory.set(question.categoryId, categoryCoverage = currentCategoryCoverage(definition, input, question.categoryId));
+    const gainKey = mapKey(question.categoryId, question.cellId);
+    let projectedCoverageGain = gainByCell.get(gainKey);
+    if (projectedCoverageGain === undefined) gainByCell.set(gainKey, projectedCoverageGain = projectedGainForQuestion(definition, input, question.categoryId, question.cellId));
     const criticalRepair = criticalDirectConfidenceNeedsRepair(definition, question.cellId, state);
     const urgentRepair = state.hasHardContradiction || state.hasSameCellVariance || state.naClaimCount > 0 || state.status === "REVIEW_REQUIRED";
     const priority = 100 * (
@@ -449,8 +457,32 @@ function resolveCellApplicability(
     ?? "UNKNOWN";
 }
 
+const scoreEligibleMemo = new WeakMap<MethodologyDefinition, Map<string, boolean>>();
+const idLookupMemo = new WeakMap<object, Map<string, any>>();
+/** id -> item index for an immutable methodology array (first match wins, like Array.find). */
+function lookupById<T extends { id: string }>(items: readonly T[]): Map<string, T> {
+  let map = idLookupMemo.get(items) as Map<string, T> | undefined;
+  if (!map) {
+    map = new Map();
+    for (const item of items) if (!map.has(item.id)) map.set(item.id, item);
+    idLookupMemo.set(items, map);
+  }
+  return map;
+}
+
 function cellHasScoreEligibleQuestion(definition: MethodologyDefinition, categoryId: string, cellId: string): boolean {
   if (cellId === "C01") return false;
+  let memo = scoreEligibleMemo.get(definition);
+  if (!memo) scoreEligibleMemo.set(definition, memo = new Map());
+  const memoKey = `${categoryId}|${cellId}`;
+  const cached = memo.get(memoKey);
+  if (cached !== undefined) return cached;
+  const result = computeCellHasScoreEligibleQuestion(definition, categoryId, cellId);
+  memo.set(memoKey, result);
+  return result;
+}
+
+function computeCellHasScoreEligibleQuestion(definition: MethodologyDefinition, categoryId: string, cellId: string): boolean {
   // Maturity membership belongs to the diagnostic construct, not direct-ask
   // eligibility. INFER_ONLY D45 retains numeric scoring semantics even though
   // its question policies are non-direct/non-scoring at runtime. Context-only

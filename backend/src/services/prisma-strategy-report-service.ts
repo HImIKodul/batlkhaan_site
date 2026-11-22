@@ -1,3 +1,6 @@
+import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, type PlanEvidenceLine } from "../report/annual-plan.js";
+import { companyLogos } from "../company/company-logo-service.js";
+import { checkPdfLayoutBudget } from "../report/pdf-budget.js";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../db.js";
 import { normalizeJsonNumbers, sha256Json } from "../lib/hash.js";
@@ -79,7 +82,21 @@ export class PrismaStrategyReportService {
   private readonly reportGenerationInFlight = new Map<string, Promise<any>>();
   private readonly fallbackUpgradesInFlight = new Map<string, Promise<unknown>>();
   private readonly pdfArtifacts = new ReportPdfArtifactService();
-  constructor(private readonly assessmentEngine: PrismaAssessmentEngine, private readonly narrativeProvider?: NarrativeProvider) {}
+  constructor(private readonly assessmentEngine: PrismaAssessmentEngine, private readonly narrativeProvider?: NarrativeProvider, private readonly annualPlanProvider?: AnnualPlanProvider) {}
+
+  /** Compact questionnaire evidence per finding for the 12-month plan (answer counts and up to three answered examples). Optional input: any failure returns nothing. */
+  private async planEvidence(assessmentId:string,payload:FrozenReportPayload):Promise<PlanEvidenceLine[]>{
+    try{
+      const out:PlanEvidenceLine[]=[];
+      for(const [i,a] of payload.priorityActions.entries()){
+        const rows=await prisma.answer.findMany({where:{assessmentId,active:true,question:{categoryId:a.categoryId}},select:{status:true,optionIndex:true,question:{select:{textMn:true,options:{select:{optionIndex:true,labelMn:true}}}}},take:40});
+        const answered=rows.filter((r:any)=>r.status==="ANSWERED");
+        out.push({findingRef:`F${i+1}`,answered:answered.length,unknown:rows.filter((r:any)=>r.status==="DNK").length,notApplicable:rows.filter((r:any)=>r.status==="N_A_CLAIM").length,
+          examplesMn:answered.slice(0,3).map((r:any)=>`${String(r.question.textMn).slice(0,140)} -> ${String(r.question.options.find((o:any)=>o.optionIndex===r.optionIndex)?.labelMn??"").slice(0,90)}`)});
+      }
+      return out;
+    }catch{return []}
+  }
 
   private context(assessmentId:string){
     let current=this.terminalContextCache.get(assessmentId);
@@ -439,8 +456,23 @@ export class PrismaStrategyReportService {
 
     try{
       mark("lease_and_audit");
-      const result=await generateValidatedNarrative(payload,this.narrativeProvider);
+      let result=await generateValidatedNarrative(payload,this.narrativeProvider);
       mark("narrative_ai_and_validation");
+      /* 12-month plan (page 3). Only when explicitly enabled; a plan that cannot be validated or does not fit is NOT stored (the report keeps its existing page 3). */
+      let planOutcome:string|null=null;
+      if(this.annualPlanProvider){
+        const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{domainCode:true}});
+        const narrativeBase=result.narrative;
+        const plan=await generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload)},fits:async p=>(await checkPdfLayoutBudget(payload,{...narrativeBase,annualPlan:p})).fits});
+        if(plan.state==="READY"){result={...result,narrative:{...narrativeBase,annualPlan:plan}};planOutcome="READY";}else planOutcome=`UNAVAILABLE: ${plan.reason}`;
+        mark("annual_plan");
+      }
+      /* Company logo snapshot (immutable asset id + hash). Reports issued later keep this logo even if the company replaces or removes it. */
+      {
+        const owner=await prisma.assessment.findUnique({where:{id:assessmentId},select:{companyId:true}});
+        const logo=owner?await companyLogos.snapshot(owner.companyId):null;
+        if(logo)result={...result,narrative:{...result.narrative,companyLogo:logo}};
+      }
       const narrativeHash=sha256Json(result.narrative);
       // Renew ownership before provenance freezing so a slow trace build cannot let another
       // process publish a competing narrative for the same frozen report.
@@ -455,7 +487,7 @@ export class PrismaStrategyReportService {
         if(changed.count!==1)throw new ReportGenerationInProgressError();
         await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_VALIDATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,bindingHash:payload.bindingHash,narrativeHash,validation:result.validation,leaseId}}});
         if(result.state==="AI_FALLBACK_USED")await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATION_FALLBACK",entityType:"ReportSnapshot",entityId:row.id,payload:{leaseId,providerError:result.providerError,providerAttempts:result.providerAttempts,providerHttpAttempts:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,nextAiRetryAt:nextAiRetryAt?.toISOString()??null}}});
-        await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,diagnosisResultHash:payload.diagnosisResultHash,strategyHash:payload.strategyHash,planHash:payload.planHash,bindingHash:payload.bindingHash,narrativeHash,modelIdentifier:result.providerMetadata.modelIdentifier,promptVersion:result.providerMetadata.promptVersion,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,providerError:result.providerError,leaseId}}});
+        await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,...(planOutcome?{annualPlan:planOutcome,annualPlanPromptVersion:MMRI_ANNUAL_PLAN_PROMPT_VERSION}:{}),diagnosisResultHash:payload.diagnosisResultHash,strategyHash:payload.strategyHash,planHash:payload.planHash,bindingHash:payload.bindingHash,narrativeHash,modelIdentifier:result.providerMetadata.modelIdentifier,promptVersion:result.providerMetadata.promptVersion,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,providerError:result.providerError,leaseId}}});
         return tx.reportSnapshot.findUnique({where:{id:row.id}});
       },LONG_TX);
       mark("publish_transaction");emit(result.state);
@@ -496,6 +528,17 @@ export class PrismaStrategyReportService {
     return this.generateReport(assessmentId);
   }
 
+  /** REP-02: render + verify the candidate pdf for the currently published snapshot row WITHOUT touching the database or the published artifact. */
+  async stagePublication(assessmentId:string,narrative:NarrativeDraft){
+    const published=await this.readPublishedReport(assessmentId);
+    const row=await prisma.reportSnapshot.findFirst({where:{assessmentId,publishedAt:{not:null}},orderBy:{publishedAt:"desc"}});
+    if(!row)throw new Error("Published report not found");
+    return this.pdfArtifacts.stage(row.id,published.payload,narrative);
+  }
+  commitPublication(staged:Awaited<ReturnType<ReportPdfArtifactService["stage"]>>,snapshotUpdate:{narrative:unknown;narrativeHash:string;validation:unknown},also:(tx:any)=>Promise<void>){return this.pdfArtifacts.commit(staged,snapshotUpdate,also)}
+  discardStaged(staged:Awaited<ReturnType<ReportPdfArtifactService["stage"]>>){return this.pdfArtifacts.discard(staged)}
+  sweepStaging(){return this.pdfArtifacts.sweepStaging()}
+  sweepSuperseded(){return this.pdfArtifacts.sweepSuperseded()}
   async getOrCreateReportPdf(assessmentId:string,force=false){
     const published=await this.readPublishedReport(assessmentId);
     const row=await prisma.reportSnapshot.findFirst({where:{assessmentId,publishedAt:{not:null}},orderBy:{publishedAt:"desc"}});

@@ -94,8 +94,20 @@ export class ReviewService {
 
   // ---------- customer view ----------
   async customerState(assessmentId: string) {
-    const r = await prisma.reportReview.findUnique({ where: { assessmentId } });
-    if (!r) return { reviewRequired: false, state: "LEGACY_AVAILABLE", available: true };
+    let r = await prisma.reportReview.findUnique({ where: { assessmentId } });
+    if (!r) {
+      /* REP-03: decide with the SAME policy as assertCustomerMayRead. A post-cutover assessment without a review row is NOT available (it is withheld and its review is repaired); only genuinely
+         legacy assessments (completed before review was enforced) stay available. The status endpoint can therefore never say "available" and be followed by a 409 from the content gate. */
+      const a = await prisma.assessment.findUnique({ where: { id: assessmentId }, select: { id: true, completedAt: true } });
+      const state = a ? await derivedContentWithheld(prisma, a) : { withheld: false, missingReview: false };
+      if (!state.withheld) return { reviewRequired: false, state: "LEGACY_AVAILABLE", available: true };
+      if (state.missingReview) {
+        const created: any = await this.createForAssessment(assessmentId);
+        if (created?.status === "SUBMITTED") setImmediate(() => { void this.generateDraft(created.id); });
+      }
+      r = await prisma.reportReview.findUnique({ where: { assessmentId } });
+      if (!r) return { reviewRequired: true, state: "PENDING_REVIEW", available: false, submittedAt: null, estimatedAvailableAt: null, publishedAt: null, message: CUSTOMER_PENDING_MESSAGE, note: "Тайлан баталгаажмагц танд мэдэгдэнэ." };
+    }
     const published = r.status === "PUBLISHED";
     return { reviewRequired: true, state: published ? "PUBLISHED" : "PENDING_REVIEW", available: published, submittedAt: r.submittedAt, estimatedAvailableAt: published ? null : r.deadlineAt, publishedAt: r.publishedAt,
       message: published ? "Тайлан бэлэн боллоо." : CUSTOMER_PENDING_MESSAGE, note: published ? null : "Тайлан баталгаажмагц танд мэдэгдэнэ." };
@@ -344,21 +356,20 @@ export class ReviewService {
     if (!snap) { await this.abortPublish(reviewId, "NO_SNAPSHOT"); throw new ApiError(409, "NO_SNAPSHOT", "Тайлангийн суурь хувилбар олдсонгүй."); }
     const v = await this.validate(r.assessmentId, narrative);
     if (v.state !== "PASS") { await this.abortPublish(reviewId, `validation ${v.state}`); throw new ApiError(422, "VALIDATION_NOT_PUBLISHABLE", "Тайлан баталгаажуулалтыг бүрэн давахгүй тул нийтлэх боломжгүй.", { state: v.state, issues: v.issues.slice(0, 8) }); }
-    const before = { narrative: snap.narrative, narrativeHash: snap.narrativeHash, validation: snap.validation };
-    await prisma.reportSnapshot.update({ where: { id: snap.id }, data: { narrative: narrative as any, narrativeHash: approvedHash, validation: v as any } });
+    /* REP-02: stage -> verify -> atomic commit. The candidate PDF is rendered and checked (3 pages) BEFORE any database change; the snapshot, the artifact row and the review status then change in ONE transaction.
+       If anything fails the previously published snapshot/artifact pair is exactly as it was (nothing to compensate), and the review returns to APPROVED for a retry. */
+    let staged: any;
+    try { staged = await this.reports.stagePublication(r.assessmentId, narrative); }
+    catch (e: any) { await this.abortPublish(reviewId, String(e?.message ?? e)); throw new ApiError(500, "PUBLISH_FAILED", "Нийтлэх үед алдаа гарлаа. Өмнөх нийтлэгдсэн тайлан хэвээр үлдлээ, тайлан нийтлэгдээгүй."); }
     try {
-      const artifact: any = await this.reports.getOrCreateReportPdf(r.assessmentId, true);
-      const pages = Number(/Pages:\s+(\d+)/.exec(execFileSync("pdfinfo", [artifact.absolutePath], { encoding: "utf8" }))?.[1] ?? 0);
-      if (pages !== 3) throw new Error(`PDF has ${pages} pages, expected exactly 3`);
-      const web: any = await this.reports.readPublishedReport(r.assessmentId); // proves web report hash consistency
-      if (sha256Json(web.narrative) !== approvedHash) throw new Error("Published web report differs from the approved narrative");
-      const done = await prisma.reportReview.updateMany({ where: { id: reviewId, status: "PUBLISHING", currentRevision: r.approvedRevision, approvedNarrativeHash: approvedHash }, data: { status: "PUBLISHED", publishedAt: new Date(), publishedByAdminId: adminId, publishedRevision: rev.revision, lastError: null, version: { increment: 1 } } });
-      if (done.count !== 1) throw new Error("Review changed during publication");
+      await this.reports.commitPublication(staged, { narrative, narrativeHash: approvedHash, validation: v }, async (tx: any) => {
+        const done = await tx.reportReview.updateMany({ where: { id: reviewId, status: "PUBLISHING", currentRevision: r.approvedRevision, approvedNarrativeHash: approvedHash }, data: { status: "PUBLISHED", publishedAt: new Date(), publishedByAdminId: adminId, publishedRevision: rev.revision, lastError: null, version: { increment: 1 } } });
+        if (done.count !== 1) throw new Error("Review changed during publication");
+      });
     } catch (e: any) {
-      await prisma.reportSnapshot.update({ where: { id: snap.id }, data: { narrative: before.narrative as any, narrativeHash: before.narrativeHash, validation: before.validation as any } });
-      try { await this.reports.getOrCreateReportPdf(r.assessmentId, true); } catch { /* previous artifact is regenerated lazily */ }
+      await this.reports.discardStaged(staged).catch(() => undefined);
       await this.abortPublish(reviewId, String(e?.message ?? e));
-      throw new ApiError(500, "PUBLISH_FAILED", "Нийтлэх үед алдаа гарлаа. Өөрчлөлт буцаагдлаа, тайлан нийтлэгдээгүй.");
+      throw new ApiError(500, "PUBLISH_FAILED", "Нийтлэх үед алдаа гарлаа. Өмнөх нийтлэгдсэн тайлан хэвээр үлдлээ, тайлан нийтлэгдээгүй.");
     }
     await this.notify("REPORT_PUBLISHED", `REPORT_PUBLISHED:${reviewId}`, { type: "REVIEW", id: reviewId }, "Тайлан нийтлэгдлээ", "Тайлан хэрэглэгчид нээлттэй боллоо. (Имэйл илгээлт тохируулагдаагүй: хэрэглэгчид системд мэдэгдэнэ.)");
     await customerNotifications.reportReleased(r.companyId, r.assessmentId, r.domainCode);
@@ -374,6 +385,9 @@ export class ReviewService {
     await prisma.reportReview.updateMany({ where: { status: "GENERATING_DRAFT", updatedAt: { lt: new Date(now.getTime() - 10 * 60_000) } }, data: { status: "SUBMITTED" } });
     const stuck = await prisma.reportReview.findMany({ where: { status: "SUBMITTED", updatedAt: { lt: new Date(now.getTime() - 2 * 60_000) } }, select: { id: true } });
     for (const s of stuck) { void this.generateDraft(s.id); out.retried++; }
+    // REP-02: staging directories of publications that died before commit are removed (the published pair is never affected by them).
+    await this.reports.sweepStaging().catch(() => undefined);
+    await this.reports.sweepSuperseded().catch(() => undefined);   // aged, unreferenced artifact files only (7 days)
     // Expired edit locks are cleared (idempotent housekeeping; an expired lock never blocks anyone, this just keeps the data truthful).
     await prisma.$executeRaw`UPDATE report_reviews SET "lockedByAdminId" = NULL, "lockExpiresAt" = NULL WHERE "lockedByAdminId" IS NOT NULL AND "lockExpiresAt" < now()`;
     // Open reviews created under the old 48 h rule get the current target as their deadline (idempotent; only the deadline column of unfinished reviews).

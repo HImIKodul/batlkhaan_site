@@ -5,6 +5,8 @@ export type DomainCode=typeof DOMAIN_ORDER[number];
 export const DOMAIN_NAME_MN:Record<DomainCode,string>={marketing:'Маркетинг',finance:'Санхүү',people:'Хүний нөөц',it:'Мэдээллийн технологи',operations:'Үйлдвэрлэл, үйл ажиллагаа'};
 /* Homepage hero labels only (the platform brand stays BusinessMRI.mn). */
 export const DOMAIN_HERO_LABEL:Record<DomainCode,string>={marketing:'Маркетинг (MMRI)',finance:'Санхүү (FINMRI)',people:'Хүний нөөц (HRMRI)',it:'Мэдээллийн технологи (ITMRI)',operations:'Үйлдвэрлэл, үйл ажиллагаа (POMMRI)'};
+/** Diagnosis selection cards: the same global format as everywhere ("Маркетинг (MMRI)"). */
+export const DOMAIN_DIAGNOSIS_LABEL:Record<DomainCode,string>=DOMAIN_HERO_LABEL;
 const rank=(id:string)=>{const i=(DOMAIN_ORDER as readonly string[]).indexOf(id);return i<0?DOMAIN_ORDER.length:i};
 /** Stable sort into the standard domain order; unknown ids go last in their original order. Never mutates the input. */
 export function sortByDomain<T>(rows:readonly T[],id:(row:T)=>string):T[]{return rows.map((r,i)=>[r,i] as const).sort((a,b)=>rank(id(a[0]))-rank(id(b[0]))||a[1]-b[1]).map(x=>x[0])}

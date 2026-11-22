@@ -1,4 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
+import { DOMAIN_ORDER,domainWithAbbr } from '../data/domainOrder';
 import { createPortal } from 'react-dom';
 import { AppShell,go } from '../components/AppShell';
 import { Icon } from '../components/Icon';
@@ -11,9 +12,9 @@ import { setDomainTheme } from '../design/domainTheme';
 type GuideId='about'|'report'|'howto';
 type Guide={id:GuideId;title:string;short:string;intro:React.ReactNode};
 const guides:Guide[]=[
- {id:'about',title:'BusinessMRI.mn гэж юу вэ?',short:'BusinessMRI.mn гэж юу вэ?',intro:<>BusinessMRI.mn нь маркетинг, санхүү, хүний нөөц, мэдээллийн технологи, үйлдвэрлэл, үйл ажиллагаа гэсэн таван үндсэн чиглэлээр бизнесийг <strong>ОНОШИЛЖ</strong>, давуу тал, сул тал, сайжруулах боломжийг тодорхойлоод, дараагийн 12 сарын <strong>ТӨЛӨВЛӨГӨӨГ</strong> гаргаж өгдөг платформ юм.</>},
- {id:'report',title:'Оношилгооны үр дүн',short:'Оношилгооны тайлангаар юу харах вэ?',intro:'Танай бизнесийн сонгосон чиглэлийн өнөөгийн нөхцөл байдлыг тодорхойлж, цаашдын төлөвлөгөөг гаргана.'},
- {id:'howto',title:'Бүртгүүлэх, төлбөр төлөх заавар',short:'Хэрхэн оношилгоо хийлгэх вэ?',intro:'Бүртгүүлэхээс эхлээд тайлангаа харах хүртэлх алхмыг сайтын жинхэнэ дэлгэцийн зургаар алхам алхмаар үзнэ үү.'},
+ {id:'about',title:'BusinessMRI.mn гэж юу вэ?',short:'BusinessMRI.mn гэж юу вэ?',intro:<>BusinessMRI.mn нь бизнесийн байгууллагын {DOMAIN_ORDER.map((id,i)=><React.Fragment key={id}>{i>0?', ':''}<span className="mmri-about2__dom" style={{'--c':`var(--mmri-domain-${id})`} as React.CSSProperties}>{domainWithAbbr(id)}</span></React.Fragment>)} гэсэн үндсэн 5 чиглэлээр <b>ОНОШИЛГОО</b> хийж, тулгарч буй асуудал, боломжийг тодорхойлон цаашид хэрэгжүүлэх хөгжлийн <b>ТӨЛӨВЛӨГӨӨ</b> боловсруулдаг нэгдсэн платформ юм.</>},
+ {id:'report',title:'ОНОШИЛГООНЫ ҮР ДҮН ЮУГ ХАРУУЛАХ ВЭ?',short:'Оношилгооны тайлангаар юу харах вэ?',intro:'Танай бизнесийн сонгосон чиглэлийн өнөөгийн нөхцөл байдлыг тодорхойлж, цаашдын төлөвлөгөөг гаргана.'},
+ {id:'howto',title:'Хэрхэн оношилгоо хийлгэх вэ?',short:'Хэрхэн оношилгоо хийлгэх вэ?',intro:'Бүртгүүлэхээс эхлээд тайлангаа харах хүртэлх алхмыг сайтын жинхэнэ дэлгэцийн зургаар алхам алхмаар үзнэ үү.'},
 ];
 
 function GuideTileNo({n}:{n:number}){
@@ -73,7 +74,7 @@ export default function Landing(){
   <main ref={stageRef} className="mmri-home2__stage">
    <section className="mmri-home2__hero" aria-labelledby="mmri-home2-title">
     <div className="mmri-home2__copy">
-     <h1 id="mmri-home2-title" data-route-heading tabIndex={-1}><span>Бизнесээ оношлуул.</span> <em>12 сарын төлөвлөгөөгөө гарга.</em></h1>
+     <h1 id="mmri-home2-title" data-route-heading tabIndex={-1}><span>БИЗНЕСЭЭ ОНОШЛУУЛ</span></h1>
      <button type="button" className="mmri-home2__start" data-sheen onClick={startDiagnosis}><span className="mmri-shell-glint mmri-btn-glint" aria-hidden="true"><i/></span><span>ОНОШИЛГОО ЭХЛҮҮЛЭХ</span><i className="mmri-home2__start-chip"><Icon name="arrow" size={18}/></i></button>
     </div>
     <div className="mmri-home2__art"><HeroCrystal/></div>

@@ -7,6 +7,7 @@ import { PrismaAssessmentEngine } from "../services/prisma-assessment-engine.js"
 import type { AssessmentMode, ProfileAnswer } from "../engine/types.js";
 import { loadApiConfig, type ApiConfig } from "./config.js";
 import { ApiError, badRequest, conflict, notFound } from "./errors.js";
+import { ConcurrencyGate } from "./concurrency-gate.js";
 import { AuthService } from "./auth/auth-service.js";
 import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
 import { EmailVerificationService } from "./auth/email-verification-service.js";
@@ -23,6 +24,8 @@ import { assertOwnerTransitionAllowed } from "./auth/role-policy.js";
 import { parseCookies, refreshCookie, clearRefreshCookie } from "./auth/cookies.js";
 import { hashAuditValue } from "./auth/crypto.js";
 import { readJson } from "./http/body.js";
+import { companyLogos, LOGO_REQUEST_LIMIT_BYTES } from "../company/company-logo-service.js";
+import { validateBasicInfoAnswer } from "../company/basic-info-schema.js";
 import { Router } from "./http/router.js";
 import { json, ok, created, noContent } from "./http/respond.js";
 import { MemoryRateLimiter } from "./http/rate-limit.js";
@@ -30,7 +33,7 @@ import { publicRouting } from "./presenters.js";
 import { AssessmentQueryService } from "./services/query-service.js";
 import { PrismaStrategyReportService, ReportGenerationInProgressError } from "../services/prisma-strategy-report-service.js";
 import { isResultTerminalAssessmentStatus } from "../services/assessment-lifecycle.js";
-import { createNarrativeProviderFromEnv } from "./ai-report-provider.js";
+import { createNarrativeProviderFromEnv, createAnnualPlanProviderFromEnv } from "./ai-report-provider.js";
 import { BillingService } from "../billing/billing-service.js";
 import { TARGET_METHODOLOGY_VERSION } from "../methodology-target.js";
 import { OperationalMetrics, databaseReady, reportStorageReady, structuredRequestLog, validMetricsCredential } from "./observability.js";
@@ -62,7 +65,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   const dataLifecycle=new DataLifecycleService(config);
   const engine=new PrismaAssessmentEngine();
   const narrativeProvider=createNarrativeProviderFromEnv(config.environment);
-  const strategyReports=new PrismaStrategyReportService(engine,narrativeProvider);
+  const strategyReports=new PrismaStrategyReportService(engine,narrativeProvider,createAnnualPlanProviderFromEnv(config.environment));
   const adminService=new AdminService(config);
   const reviews=new ReviewService(config,strategyReports);
   const supportMail=new SupportMailService(config);
@@ -93,6 +96,9 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       }catch(error:any){console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"report_prewarm_skipped",assessmentId,reason:String(error?.message??error).slice(0,160)}))}
     })()});
   };
+  const envInt=(name:string,fallback:number,min:number,max:number)=>{const n=Number(process.env[name]);return Number.isInteger(n)&&n>=min&&n<=max?n:fallback};
+  /** CPU-heavy engine calls share one bounded queue (see concurrency-gate.ts). */
+  const engineGate=new ConcurrencyGate(envInt("MMRI_ENGINE_CONCURRENCY",4,1,32),envInt("MMRI_ENGINE_QUEUE_MAX",200,1,5000),envInt("MMRI_ENGINE_QUEUE_WAIT_MS",30_000,1000,120_000));
   const queries=new AssessmentQueryService(engine,strategyReports);
   const billing=new BillingService(config);
   const apiLimiter=new MemoryRateLimiter(config.apiRateLimit,config.rateLimitWindowMs);
@@ -205,7 +211,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   /* Administration Center (separate session, MFA, server-side roles). See backend/src/api/admin. */
-  registerAdminRoutes({router,config,admin:adminService,reviews,supportMail,queriesResults:(id:string)=>queries.results(id),ipLimiter:new MemoryRateLimiter(300,config.rateLimitWindowMs),loginLimiter:new MemoryRateLimiter(Math.max(3,Number(process.env.MMRI_ADMIN_LOGIN_RATE_LIMIT??10)||10),config.rateLimitWindowMs),readJson,clientIp:req=>clientIp(req,config),fingerprint:req=>fingerprint(req,config)});
+  registerAdminRoutes({router,config,billing,admin:adminService,reviews,supportMail,queriesResults:(id:string)=>queries.results(id),ipLimiter:new MemoryRateLimiter(300,config.rateLimitWindowMs),loginLimiter:new MemoryRateLimiter(Math.max(3,Number(process.env.MMRI_ADMIN_LOGIN_RATE_LIMIT??10)||10),config.rateLimitWindowMs),readJson,clientIp:req=>clientIp(req,config),fingerprint:req=>fingerprint(req,config)});
 
   registerNotificationRoutes(router,notificationLimiter);
 
@@ -221,7 +227,9 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     if(summary.length<10)throw badRequest("Маргааны тайлбарыг дор хаяж 10 тэмдэгтээр бичнэ үү.");
     const existing=await prisma.paymentDispute.findFirst({where:{invoiceId:inv.id,status:{in:["OPEN","UNDER_REVIEW","MORE_INFORMATION_REQUIRED"]}}});
     if(existing)throw conflict("Энэ нэхэмжлэхийн маргаан аль хэдийн нээлттэй байна.");
-    const dsp=await prisma.paymentDispute.create({data:{invoiceId:inv.id,companyId:inv.companyId,summary,openedByUserId:principal!.userId,events:{create:{userId:principal!.userId,kind:"CUSTOMER_REPLY",body:summary}}}});
+    let dsp:any;
+    try{dsp=await prisma.paymentDispute.create({data:{invoiceId:inv.id,companyId:inv.companyId,summary,openedByUserId:principal!.userId,events:{create:{userId:principal!.userId,kind:"CUSTOMER_REPLY",body:summary}}}});}
+    catch(e:any){if(e?.code==="P2002"||/payment_disputes_one_open_per_invoice/.test(String(e?.message??"")))throw conflict("Энэ нэхэмжлэхийн маргаан аль хэдийн нээлттэй байна.");throw e;}   // PAY-03: lost the race, the database invariant decided
     await reviews.notify("PAYMENT_DISPUTE",`PAYMENT_DISPUTE:${dsp.id}`,{type:"DISPUTE",id:dsp.id},"Төлбөрийн маргаан нээгдлээ","Хэрэглэгч төлбөрийн маргаан нээлээ.","HIGH");
     created(res,{id:dsp.id,status:dsp.status});
   });
@@ -305,8 +313,10 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,await billing.reconcileInvoice(params.invoiceId));
   });
 
+  /* SEC-01: the legacy customer-session money routes are disabled in production and off by default elsewhere (MMRI_LEGACY_OPERATOR_MONEY=on for old QA scripts only). Use the administrator routes (MFA reauth + durable audit). */
+  const requireLegacyOperatorMoney=(cfg:typeof config)=>{if(cfg.environment==="production"||(process.env.MMRI_LEGACY_OPERATOR_MONEY??"off").trim().toLowerCase()!=="on")throw notFound("Route not found")};
   router.add("POST","/api/v1/operator/billing/invoices/:invoiceId/manual-confirm",async({req,res,principal,params})=>{
-    requireOperator(principal!,config);
+    requireLegacyOperatorMoney(config);requireOperator(principal!,config);
     const body=await readJson(req,config.requestBodyLimitBytes);
     const invoice=await billing.confirmManualPayment(params.invoiceId,body.paymentReference,body.amountMnt);
     await prisma.authAuditEvent.create({data:{userId:principal!.userId,eventType:"BILLING_MANUAL_PAYMENT_CONFIRMED",metadata:{invoiceId:params.invoiceId,paymentReference:String(body.paymentReference??"").slice(0,200),amountMnt:Number(body.amountMnt??0)}}});
@@ -314,7 +324,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("POST","/api/v1/operator/billing/invoices/:invoiceId/refund-confirm",async({req,res,principal,params})=>{
-    requireOperator(principal!,config);
+    requireLegacyOperatorMoney(config);requireOperator(principal!,config);
     const body=await readJson(req,config.requestBodyLimitBytes);
     const invoice=await billing.recordConfirmedRefund(params.invoiceId,body.refundReference,body.reason);
     await prisma.authAuditEvent.create({data:{userId:principal!.userId,eventType:"BILLING_REFUND_CONFIRMED",metadata:{invoiceId:params.invoiceId,refundReference:String(body.refundReference??"").slice(0,200),reason:String(body.reason??"").slice(0,500)}}});
@@ -344,12 +354,13 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
 
   router.add("GET","/api/v1/companies",async({res,principal})=>{
     const rows=await prisma.companyMembership.findMany({where:{userId:principal!.userId},include:{company:true},orderBy:{createdAt:"asc"}});
-    ok(res,rows.map(r=>({...r.company,role:r.role})));
+    const logos=await Promise.all(rows.map(r=>companyLogos.current(r.companyId)));
+    ok(res,rows.map((r,i)=>{const {logoAssetId:_l,...plain}=r.company as any;return {...plain,role:r.role,logo:logos[i]};}));
   });
 
   router.add("GET","/api/v1/companies/:companyId",async({res,principal,params})=>{
     const membership=await requireCompanyRole(principal!.userId,params.companyId,ALL_ROLES);
-    const company=await prisma.company.findUnique({where:{id:params.companyId}}); if(!company)throw notFound("Company not found"); ok(res,{...company,role:membership.role});
+    const company=await prisma.company.findUnique({where:{id:params.companyId}}); if(!company)throw notFound("Company not found"); const {logoAssetId:_l,...plain}=company as any; ok(res,{...plain,role:membership.role,logo:await companyLogos.current(params.companyId)});
   });
 
   router.add("PUT","/api/v1/companies/:companyId",async({req,res,principal,params})=>{
@@ -359,6 +370,23 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     if(!name)throw badRequest("Company name is required");
     const company=await prisma.company.update({where:{id:params.companyId},data:{name}});
     ok(res,{...company,role:membership.role});
+  });
+
+  /* Company logo. Read: any member. Change/remove: OWNER or ADMIN (same as editing the company name). The image is validated and re-encoded server-side; clients never send paths or URLs. */
+  const logoLimiter=new MemoryRateLimiter(Math.max(1,Number(process.env.MMRI_LOGO_RATE_LIMIT||12)),config.rateLimitWindowMs);
+  router.add("GET","/api/v1/companies/:companyId/logo",async({res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,ALL_ROLES);
+    const logo=await companyLogos.currentBytes(params.companyId); if(!logo)throw notFound("Logo not found");
+    res.writeHead(200,{"content-type":logo.mimeType,"content-length":String(logo.bytes.length),"cache-control":"private, no-cache",etag:`"${logo.sha256}"`,"x-content-type-options":"nosniff","content-security-policy":"default-src 'none'; sandbox"});res.end(logo.bytes);
+  });
+  router.add("PUT","/api/v1/companies/:companyId/logo",async({req,res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN); logoLimiter.check(`logo:${principal!.userId}`);
+    const body=await readJson(req,LOGO_REQUEST_LIMIT_BYTES);
+    ok(res,{logo:await companyLogos.set(params.companyId,principal!.userId,{dataBase64:body?.dataBase64})});
+  });
+  router.add("DELETE","/api/v1/companies/:companyId/logo",async({res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN); logoLimiter.check(`logo:${principal!.userId}`);
+    await companyLogos.remove(params.companyId); ok(res,{logo:null});
   });
 
   router.add("PUT","/api/v1/companies/:companyId/profile-answers",async({req,res,principal,params})=>{
@@ -381,7 +409,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       if(basicRows.length!==20)throw new ApiError(400,"BAD_REQUEST","Суурь мэдээллийн 20 асуултын хариулт бүрэн байх шаардлагатай.");
       const expectedBasicIds=new Set(Array.from({length:20},(_,i)=>`B${String(i+1).padStart(2,"0")}`));
       const basicSeen=new Set<string>();
-      basicInfoAnswers=basicRows.map((row:any)=>{const questionId=String(row?.questionId??"").trim();const optionIndexes=Array.isArray(row?.optionIndexes)?row.optionIndexes.map((x:any)=>Number(x)).filter((x:number)=>Number.isInteger(x)&&x>0):[];if(!expectedBasicIds.has(questionId)||optionIndexes.length===0||basicSeen.has(questionId))throw new ApiError(400,"BAD_REQUEST","Суурь мэдээллийн хариулт буруу байна.");basicSeen.add(questionId);return {questionId,optionIndexes};});
+      basicInfoAnswers=basicRows.map((row:any)=>{const questionId=String(row?.questionId??"").trim();const optionIndexes=validateBasicInfoAnswer(questionId,row?.optionIndexes);if(!expectedBasicIds.has(questionId)||optionIndexes===null||basicSeen.has(questionId))throw new ApiError(400,"BAD_REQUEST","Суурь мэдээллийн хариулт буруу байна.");basicSeen.add(questionId);return {questionId,optionIndexes};});
       if(basicSeen.size!==expectedBasicIds.size)throw new ApiError(400,"BAD_REQUEST","Суурь мэдээллийн 20 асуултын хариулт бүрэн байх шаардлагатай.");
     }
     const company=await prisma.company.findUnique({where:{id:params.companyId}}); if(!company)throw notFound("Company not found");
@@ -514,7 +542,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   router.add("GET","/api/v1/assessments/:assessmentId/next-question",async({req,res,principal,params})=>{
     const access=await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     if(access.assessment.status!=="IN_PROGRESS")throw conflict(`Assessment is not accepting question requests: ${access.assessment.status}`);
-    await engine.issueNextQuestion(params.assessmentId,writerId(req));
+    await engineGate.run(()=>engine.issueNextQuestion(params.assessmentId,writerId(req)));
     const payload=await queries.resumePayload(params.assessmentId); if(!payload)throw notFound("Assessment not found"); ok(res,payload);
   });
 
@@ -522,7 +550,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
     if(!b.questionId||!Number.isInteger(b.optionIndex))throw badRequest("questionId and integer optionIndex are required");
     if(!b.clientRequestId||!b.questionIssueId||!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("clientRequestId, questionIssueId and expectedAssessmentRevision are required");
-    const result=await engine.submitAnswer(params.assessmentId,String(b.questionId),Number(b.optionIndex),text(b.respondentId),{writerLeaseId:writerId(req),clientRequestId:String(b.clientRequestId),questionIssueId:String(b.questionIssueId),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
+    const result=await engineGate.run(()=>engine.submitAnswer(params.assessmentId,String(b.questionId),Number(b.optionIndex),text(b.respondentId),{writerLeaseId:writerId(req),clientRequestId:String(b.clientRequestId),questionIssueId:String(b.questionIssueId),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)}));
     const routing=await queries.resumePayload(params.assessmentId);
     ok(res,{accepted:true,answerId:result.answerId,assessmentRevision:result.assessmentRevision,routing});
     if(config.reportReviewRequired){const rv=await prisma.reportReview.findUnique({where:{assessmentId:params.assessmentId},select:{id:true,status:true}});if(rv?.status==="SUBMITTED")setImmediate(()=>{void reviews.generateDraft(rv.id)});else if(!rv)scheduleReportPrewarm(params.assessmentId)}
@@ -551,7 +579,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   router.add("POST","/api/v1/assessments/:assessmentId/complete",async({req,res,principal,params})=>{
     await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     const b=await readJson(req,config.requestBodyLimitBytes); if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
-    const result=await engine.completeAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
+    const result=await engineGate.run(()=>engine.completeAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)}));
     const reviewTask:any=result.completed&&config.reportReviewRequired?await prisma.reportReview.findUnique({where:{assessmentId:params.assessmentId}}):null;
     if(result.completed&&config.reportReviewRequired&&!reviewTask)throw conflict("Report review record is missing for a completed assessment");
     ok(res,{completed:result.completed,reason:result.reason,routingState:result.routingState,status:result.status,assessmentRevision:result.assessmentRevision,reviewRequired:Boolean(reviewTask)});
@@ -611,6 +639,15 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const access=await assessmentAccess(principal!.userId,params.assessmentId,REPORT_READ); requireTerminal(access.assessment.status); await requireReportReady(params.assessmentId);
     try{ok(res,access.membership.role==="VIEWER"?await strategyReports.readPublishedReport(params.assessmentId):await withinRequestBudget(strategyReports.generateReport(params.assessmentId)));}
     catch(error){if(error instanceof ReportGenerationInProgressError)throw new ApiError(409,"REPORT_GENERATION_IN_PROGRESS","Report generation is already in progress");throw error;}
+  });
+
+  /* The company logo frozen into THIS report when it was generated (not the company's current logo). 404 when the report has none. */
+  router.add("GET","/api/v1/assessments/:assessmentId/report/logo",async({res,principal,params})=>{
+    const access=await assessmentAccess(principal!.userId,params.assessmentId,REPORT_READ); requireTerminal(access.assessment.status); await requireReportReady(params.assessmentId);
+    const row=await prisma.reportSnapshot.findFirst({where:{assessmentId:params.assessmentId},select:{narrative:true}});
+    const snap:any=(row?.narrative as any)?.companyLogo; if(!snap?.assetId)throw notFound("Logo not found");
+    const logo=await companyLogos.assetBytes(access.assessment.companyId,String(snap.assetId)); if(!logo||logo.sha256!==snap.sha256)throw notFound("Logo not found");
+    res.writeHead(200,{"content-type":logo.mimeType,"content-length":String(logo.bytes.length),"cache-control":"private, max-age=3600",etag:`"${logo.sha256}"`,"x-content-type-options":"nosniff","content-security-policy":"default-src 'none'; sandbox"});res.end(logo.bytes);
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/report/pdf/metadata",async({res,principal,params})=>{
@@ -776,7 +813,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       await match.route.handler({req,res,params:match.params,query:url.searchParams,requestId,principal});
     }catch(error:any){
       if(res.headersSent){res.end();return;} const e=normalizeError(error,config.environment,{requestId,path:logPath,releaseSha:config.releaseSha,instanceId:config.instanceId});
-      const retryAfter=Number((e.details as any)?.retryAfterSeconds); if(e.status===429&&Number.isFinite(retryAfter))res.setHeader("retry-after",String(Math.max(1,Math.ceil(retryAfter))));
+      const retryAfter=Number((e.details as any)?.retryAfterSeconds); if((e.status===429||e.status===503)&&Number.isFinite(retryAfter))res.setHeader("retry-after",String(Math.max(1,Math.ceil(retryAfter))));
       json(res,e.status,{error:{code:e.code,message:e.message,details:e.details,requestId}});
     }
   });

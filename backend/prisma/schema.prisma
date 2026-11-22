@@ -880,9 +880,13 @@ model Company {
   profile         Json?
   /// Set when customer content was erased at the owner's request. The row stays as an anonymised shell so retained invoices keep a valid parent.
   erasedAt        DateTime?
+  /// Current company logo (an immutable CompanyLogoAsset). Replacing or removing the logo never changes the asset rows that issued reports reference.
+  logoAssetId     String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  logoAsset        CompanyLogoAsset?   @relation("CompanyCurrentLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
+  logoAssets       CompanyLogoAsset[]  @relation("CompanyLogoAssets")
   memberships      CompanyMembership[]
   assessments      Assessment[]
   billingInvoices  BillingInvoice[]
@@ -894,6 +898,27 @@ model Company {
   customerNotifications CustomerNotification[]
 
   @@map("companies")
+}
+
+/// Company logo, stored server-side after validation and re-encoding (PNG, <= 512 px). Rows are immutable: a replaced or removed logo stays here so reports issued earlier keep their logo snapshot.
+model CompanyLogoAsset {
+  id              String   @id @default(cuid())
+  companyId       String
+  sha256          String
+  mimeType        String
+  width           Int
+  height          Int
+  byteSize        Int
+  bytes           Bytes
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+
+  company    Company   @relation("CompanyLogoAssets", fields: [companyId], references: [id], onDelete: Cascade)
+  currentFor Company[] @relation("CompanyCurrentLogo")
+
+  @@unique([companyId, sha256])
+  @@index([companyId])
+  @@map("company_logo_assets")
 }
 
 model BillingInvoice {

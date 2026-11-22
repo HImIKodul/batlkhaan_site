@@ -9,6 +9,7 @@ import { Icon } from '../components/Icon';
 import { ApiError,api,session } from '../api/client';
 import type { BillingCatalogPlan,BillingInvoice,BillingInvoiceStatus,BillingPlanCode,BillingStatus } from '../api/types';
 import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
+import { heroIntent } from '../components/HeroCrystal';
 import { areaReportPalette } from '../data/reportExperience';
 import { isTestBusiness } from '../data/experience';
 
@@ -43,9 +44,11 @@ export default function Billing(){
  /* MMRI-27: an open invoice can become FAILED/CANCELLED while this page is open (recovery, cancel in another tab). Drop the dead code so the existing "create code" start view returns. */
  const deadInvoice=(latest:BillingInvoice)=>{if(latest.status!=='FAILED'&&latest.status!=='CANCELLED')return false;setInvoice(null);setError('Төлбөрийн код хүчингүй болсон. Шинэ төлбөрийн код үүсгэнэ үү.');return true};
  const readInvoice=async(current:BillingInvoice)=>{const latest=await api.getBillingInvoice(current.id);if(deadInvoice(latest)){await refresh();return latest}setInvoice(latest);if(latest.status==='PAID'){sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}await refresh();return latest};
- const load=async()=>{if(!session.accessToken){go('login');return}if(!session.companyId){go('profile');return}setLoading(true);setError('');try{const company=await api.getCompany(session.companyId);const done=new Set(((company.profile?.assessmentProfileAnswers??[]) as {questionId:string;optionIndexes?:number[]}[]).filter(x=>/^P(?:0[1-9]|1\d|20)$/.test(x.questionId)&&(x.optionIndexes?.length??0)>0).map(x=>x.questionId));if(done.size!==20&&!isTestBusiness(company.name)){go('profile');return}const [p,s]=await Promise.all([api.getBillingPlans(),api.getBillingStatus(session.companyId)]);setPlans(p);setStatus(s);const existing=s.invoices.find(x=>x.domainCode===areaId&&x.planCode===code&&openStatuses.has(x.status));if(existing){const full=await api.getBillingInvoice(existing.id);setInvoice(full);if(full.status==='PAID')openSuccess()}else{/* No extra step: the payment panel (QR or QA mock button) is shown immediately. One invoice per page visit even under StrictMode double effects. */const key=`${areaId}.${code}`;if(autoCreateRef.current!==key){autoCreateRef.current=key;const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);await refresh()}}}catch(e:any){autoCreateRef.current='';setError(e?.message||'Төлбөрийн мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
+ const load=async()=>{if(!session.accessToken){go('login');return}if(!session.companyId){go('profile');return}setLoading(true);setError('');try{const company=await api.getCompany(session.companyId);const done=new Set(((company.profile?.assessmentProfileAnswers??[]) as {questionId:string;optionIndexes?:number[]}[]).filter(x=>/^P(?:0[1-9]|1\d|20)$/.test(x.questionId)&&(x.optionIndexes?.length??0)>0).map(x=>x.questionId));if(done.size!==20&&!isTestBusiness(company.name)){go('profile');return}const [p,s]=await Promise.all([api.getBillingPlans(),api.getBillingStatus(session.companyId)]);setPlans(p);setStatus(s);const existing=s.invoices.find(x=>x.domainCode===areaId&&x.planCode===code&&openStatuses.has(x.status));if(existing){const full=await api.getBillingInvoice(existing.id);setInvoice(full);if(full.status==='PAID')openSuccess()}else{/* No extra step: the payment panel (QR or QA mock button) is shown immediately. One invoice per page visit even under StrictMode double effects. */const key=`${areaId}.${code}`;if(autoCreateRef.current!==key){autoCreateRef.current=key;const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
+  await refresh()}}}catch(e:any){autoCreateRef.current='';setError(e?.message||'Төлбөрийн мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
  useEffect(()=>{void load()},[areaId,code]);
- const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);await refresh()}catch(e:any){setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
+ const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
+  await refresh()}catch(e:any){setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
  const check=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{
   // Ask the server to verify with the payment provider; the cached status alone could lag behind a real payment. Invoices the provider cannot check (mock/manual) fall back to a plain status read.
   let latest:BillingInvoice;
@@ -54,6 +57,8 @@ export default function Billing(){
   if(deadInvoice(latest)){await refresh();return}
   setInvoice(latest);if(latest.status==='PAID'){sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}await refresh();
  }catch(e:any){setError(e?.message||'Төлбөрийг баталгаажуулж чадсангүй.')}finally{setBusy(false)}};
+ /* QA/test only: the server accepts this route only outside production and only for MOCK invoices; the entitlement it creates then opens the diagnosis through the same effect as a real payment. */
+ const demoPay=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{const i=await api.mockPayBillingInvoice(invoice.id);setInvoice(i);setDemoSent(true);await refresh()}catch(e:any){setError(e?.message||'Туршилтын төлбөр баталгаажсангүй.')}finally{setBusy(false)}};
  const mockPay=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{const i=await api.mockPayBillingInvoice(invoice.id);setInvoice(i);await refresh();sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}catch(e:any){setError(e?.message||'Туршилтын төлбөр баталгаажсангүй.')}finally{setBusy(false)}};
  useEffect(()=>{
   if(!showSuccess)return;
@@ -88,16 +93,37 @@ export default function Billing(){
   window.addEventListener('online',resume);
   return()=>{active=false;window.clearInterval(t);document.removeEventListener('visibilitychange',resume);window.removeEventListener('online',resume)};
  },[invoice?.id,invoice?.status]);
+/* QR view opens immediately: create the invoice as soon as the page is ready (no button). */
+ useEffect(()=>{if(loading||invoice||busy||error||!plan||!session.companyId)return;const key=`${areaId}:${code}`;if(autoCreateRef.current===key)return;autoCreateRef.current=key;void create()},[loading,plan,invoice,busy,error,areaId,code]);
+ /* Access is granted by the payment provider confirmation or by an authorised administrator: poll the entitlement, then close this view and open the diagnosis. */
+ useEffect(()=>{if(loading||!session.companyId)return;const t=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>undefined)},3000);return()=>window.clearInterval(t)},[loading,areaId]);
+ /* DEMO provider only (testing UX, no server call): an example QR validity countdown and an example payment action that never counts as a payment. */
+ const [demoSent,setDemoSent]=useState(false);const [demoLeft,setDemoLeft]=useState(600);
+ useEffect(()=>{if(invoice?.provider!=='MOCK')return;setDemoLeft(600);const t=window.setInterval(()=>setDemoLeft(v=>v>0?v-1:0),1000);return()=>window.clearInterval(t)},[invoice?.id,invoice?.provider]);
+ useEffect(()=>{const ent=status?.entitlements?.find(e=>e.domainCode===areaId&&e.status==='ACTIVE'&&e.planCode===code);if(!ent)return;sessionStorage.setItem(`business:paid.${areaId}`,mode);heroIntent.area=areaId;heroIntent.at=Date.now();go('analysis')},[status,areaId,code]);
  if(loading)return <AppShell route="billing"><PageContainer className="billing-domain-page mmri-skel"><SkeletonHost label="Төлбөрийг бэлтгэж байна…"><BillingSkeletonBody/></SkeletonHost></PageContainer></AppShell>;
  if(error&&!status)return <AppShell route="billing"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
- const paid=invoice?.status==='PAID';const codeImage=imageSource(invoice?.qrImage);const codeText=invoice?payableQrText(invoice):null;
- return <AppShell route="billing"><PageContainer className="billing-domain-page billing-domain-page--compact" style={{'--billing-accent':palette.accent,'--billing-ink':palette.ink} as React.CSSProperties}>
+ const demo=invoice?.provider==='MOCK';const codeImage=imageSource(invoice?.qrImage);const codeText=invoice?payableQrText(invoice):null;
+ return <AppShell route="billing"><PageContainer className="billing-domain-page billing-domain-page--qr">
   <button type="button" className="billing-domain-back" onClick={()=>{window.location.hash='#/analysis'}}><span className="billing-domain-back__icon"><Icon name="back" size={20}/></span><span>Оношилгоо руу буцах</span></button>
-  <header><div className="billing-domain-icon" aria-hidden="true"/><div><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'АНХНЫ ОНОШИЛГОО'}</span><h1>{domainWithAbbr(area.id)}</h1><p>{mode==='retake'?'Өмнөх тайлан хэвээр үлдэнэ. Шинэ оношилгоо шинэ тайлан болж хадгалагдана.':'Төлбөр зөвхөн энэ чиглэлийн нэг удаагийн оношилгоонд хамаарна.'}</p></div><strong>{money(amount)}</strong></header>
-  {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
-  <section className="billing-domain-flow" aria-label="Төлбөрийн дараалал"><div className={!invoice?'is-current':'is-done'}><b>1</b><span>Код үүсгэх</span></div><div className={invoice&&!paid?'is-current':paid?'is-done':''}><b>2</b><span>Төлбөр хийх</span></div><div className={paid?'is-done':''}><b>3</b><span>Эрх нээх</span></div></section><section className="billing-domain-layout billing-domain-layout--single"><article className="billing-domain-main">
-   {!invoice?<div className="billing-domain-start"><Icon name="wallet" size={52}/><h2>{mode==='retake'?'Дахин оношилгооны төлбөр':'Оношилгооны төлбөр'}</h2><p>Төлбөрийн код үүсгээд банкны хэрэглүүрээр уншуулна. Төлбөр ормогц систем өөрөө шалгаж эрхийг нээнэ.</p><Button loading={busy} onClick={create}>Төлбөрийн код үүсгэх</Button></div>:paid?<div className="billing-domain-success"><Icon name="check" size={52}/><h2>Төлбөр баталгаажсан</h2><p>Оношилгоог эхлүүлэхэд бэлэн.</p><Button onClick={()=>go('analysis')}>Оношилгоо руу очих</Button></div>:<div className="billing-payment-console"><div className="billing-domain-qr"><div style={{color:palette.accent}}>{codeImage&&invoice.provider!=='MOCK'?<img src={codeImage} alt={`${area.name} чиглэлийн төлбөрийн код`}/>:codeText?<QrCode text={codeText} label={`${area.name} чиглэлийн төлбөрийн код`}/>:<NoPayableCode invoice={invoice}/>}</div></div><div className="billing-payment-console__copy"><span>ТӨЛӨХ ДҮН</span><h2>{money(invoice.amountMnt)}</h2><StatusBadge tone={tones[invoice.status]}>{labels[invoice.status]}</StatusBadge><p>Банкны гар утасны хэрэглүүрээр кодыг уншуулж төлнө. Энэ дэлгэц нээлттэй үед систем төлбөрийн төлөвийг автоматаар шалгана. Хэрэв шууд нээгдэхгүй бол доорх товчийг дарна.</p><div className="billing-domain-actions"><Button loading={busy} onClick={check}>Төлбөр баталгаажуулах</Button>{invoice.testMode&&openStatuses.has(invoice.status)&&<Button variant="secondary" loading={busy} onClick={mockPay}>Туршилтын төлбөр хийх</Button>}</div></div></div>}
-  </article></section>
-  {showSuccess&&<div className="billing-success-modal" role="dialog" aria-modal="true" aria-labelledby="billing-success-title" aria-describedby="billing-success-copy"><div ref={successDialogRef}><button type="button" className="billing-success-modal__close" aria-label="Цонх хаах" onClick={()=>setShowSuccess(false)}><Icon name="close" size={20}/></button><span className="billing-success-modal__mark" aria-hidden="true"><Icon name="check" size={44}/></span><h2 id="billing-success-title">Төлбөр амжилттай баталгаажлаа</h2><p id="billing-success-copy">{area.name} чиглэлийн оношилгоо нээгдлээ.</p><Button ref={successActionRef} onClick={()=>{setShowSuccess(false);go('analysis')}}>Оношилгоо эхлүүлэх</Button></div></div>}
+  <section className="billing-qr" data-area={areaId} style={{'--c':`var(--mmri-domain-${areaId})`} as React.CSSProperties} aria-labelledby="billing-qr-title">
+   <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title">{domainWithAbbr(area.id)}</h1><strong className="billing-qr__price">{money(amount)}</strong></header>
+   {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
+   <div className="billing-qr__box">
+    {!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
+     :demo?<div className="billing-qr__demo-box"><QrCode text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
+     :codeText?<QrCode text={codeText} label={`${area.name} оношилгооны төлбөрийн QR`}/>
+     :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
+     :<NoPayableCode invoice={invoice}/>}
+   </div>
+   {demo&&<div className="billing-qr__test" role="group" aria-label="Тест төлбөрийн жишээ">
+    <p className={`billing-qr__expiry${demoLeft===0?' is-expired':''}`}>{demoLeft>0?<>QR хүчинтэй хугацаа: <b>{String(Math.floor(demoLeft/60)).padStart(2,'0')}:{String(demoLeft%60).padStart(2,'0')}</b> <small>(жишээ)</small></>:<>QR-ийн хугацаа дууссан <small>(жишээ)</small></>}</p>
+    <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||demoLeft===0}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
+   </div>}
+   {demo&&<p className="billing-qr__demo-note" role="note">Энэ бол туршилтын (DEMO) QR бөгөөд уншуулах шаардлагагүй. «Тест төлбөр хийх» товчийг дарахад тест төлбөр баталгаажиж, оношилгоо өөрөө нээгдэнэ.</p>}
+   <p className="billing-qr__how">Банкныхаа аппликейшнээр QR кодыг уншуулж төлбөрөө хийнэ. Төлбөр баталгаажмагц оношилгоо автоматаар нээгдэнэ.</p>
+   <p className={`billing-qr__status${invoice?' is-waiting':''}`} role="status" aria-live="polite">{invoice?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөрийн баталгаажуулалтыг хүлээж байна…'):''}</p>
+   {invoice&&!demo&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}
+  </section>
  </PageContainer></AppShell>;
 }

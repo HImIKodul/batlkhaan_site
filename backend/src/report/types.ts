@@ -146,6 +146,10 @@ export interface NarrativeDraft {
   sections: NarrativeSection[];
   /** Administrator visual overlay (see report/annotations.ts). Absent when there are none, so frozen narratives and their hashes are unchanged. */
   visualAnnotations?: import("./annotations.js").VisualAnnotationSet;
+  /** Validated 12-month plan (page 3), see report/annual-plan.ts. Absent on reports created before the feature, so their hashes and PDFs are unchanged. */
+  annualPlan?: import("./annual-plan.js").AnnualPlan;
+  /** Frozen company-logo snapshot taken when this report was generated (an immutable CompanyLogoAsset). Absent on reports created before the feature or by companies without a logo. */
+  companyLogo?: { assetId: string; sha256: string; width: number; height: number };
 }
 
 

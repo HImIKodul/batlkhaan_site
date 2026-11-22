@@ -121,6 +121,8 @@ export class DataLifecycleService {
       const removed = await tx.assessment.deleteMany({ where: { companyId } });          // answers, results, snapshots, reports, plans cascade
       // Mark the company erased FIRST: the last-owner database guard only lets an erased company drop its final OWNER membership.
       await tx.company.update({ where: { id: companyId }, data: { name: ERASED_COMPANY_NAME, industry: null, businessModel: null, employeeCount: null, companyAgeYears: null, marketType: null, country: null, profile: Prisma.DbNull, erasedAt: new Date() } });
+      await tx.company.update({ where: { id: companyId }, data: { logoAssetId: null } });
+      await tx.companyLogoAsset.deleteMany({ where: { companyId } });   // customer content: the logo and its immutable copies are erased with the company
       const memberships = await tx.companyMembership.deleteMany({ where: { companyId } });
       await tx.authAuditEvent.create({ data: { userId, eventType: "COMPANY_ERASED", ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt), metadata: { companyId, assessmentsRemoved: removed.count, membershipsRemoved: memberships.count, reportFiles: artifacts.length, reviewsRemoved } as any } });
       return { assessmentsRemoved: removed.count, membershipsRemoved: memberships.count, storageKeys: artifacts.map(a => a.storageKey) };

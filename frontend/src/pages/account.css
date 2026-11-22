@@ -2,7 +2,7 @@
    Panels use the shared liquid-glass material (.lg .lg--soft from components/glass.css). */
 .technical-settings,.account-payment-history,.company-detail-editor,.profile-onboarding,.profile-login-required{width:min(960px,calc(100% - 32px));max-width:960px;margin-inline:auto;display:grid;gap:18px;padding:22px 0 40px}
 .technical-settings>header,.account-payment-history>header,.company-detail-editor>header{display:flex;align-items:center;gap:18px;padding:2px}
-.technical-settings>header>span,.account-payment-history>header>span,.company-detail-editor>header>span{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:22px;color:var(--mmri-color-text-strong);background:linear-gradient(155deg,rgba(244,247,252,.85),rgba(244,247,252,.85));border:1px solid rgba(130,145,170,.32);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),0 10px 24px rgba(8,22,42,.3)}
+.technical-settings>header>span,.account-payment-history>header>span,.company-detail-editor>header>span{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:22px;color:var(--mmri-color-text-strong);background:linear-gradient(155deg,var(--mmri-surface-raised,rgba(244,247,252,.85)),var(--mmri-surface-raised,rgba(244,247,252,.85)));border:1px solid rgba(130,145,170,.32);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),0 10px 24px rgba(8,22,42,.3)}
 .company-detail-editor>header>span.profile-avatar{font-size:22px;font-weight:800;letter-spacing:.02em;background:linear-gradient(155deg,#7FA6FF,#7A55E0);border-radius:50%}
 .technical-settings>header b,.account-payment-history>header b,.company-detail-editor>header b{display:block;font-size:var(--mmri-type-meta-size);letter-spacing:.12em;color:var(--mmri-color-text-muted)}
 .technical-settings h1,.account-payment-history h1,.company-detail-editor h1,.profile-onboarding h1,.profile-login-required h1{margin:2px 0 4px;font-size:clamp(26px,3vw,32px);line-height:1.15;font-weight:800;letter-spacing:-.02em;color:var(--mmri-color-text-strong)}
@@ -18,10 +18,11 @@
 .font-preview{font-weight:800;line-height:1}.font-preview.is-small{font-size:16px}.font-preview.is-normal{font-size:22px}.font-preview.is-large{font-size:30px}
 .technical-settings__account{display:grid;gap:14px}
 .technical-settings__account ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-.technical-settings__account li a{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid rgba(130,145,170,.32);border-radius:20px;background:rgba(244,247,252,.85);color:var(--mmri-color-text-strong);text-decoration:none;transition:background .3s,border-color .3s}
-.technical-settings__account li a:hover{background:#fff;border-color:var(--wp-silver2);box-shadow:var(--wp-shadow-1)}
+.technical-settings__account li a{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid rgba(130,145,170,.32);border-radius:20px;background:var(--mmri-surface-raised,rgba(244,247,252,.85));color:var(--mmri-color-text-strong);text-decoration:none;transition:background .3s,border-color .3s}
+.technical-settings__account li a:is(:hover,:focus-visible){background:rgba(50,120,255,.32);border-color:rgba(190,222,255,.95);box-shadow:0 0 16px rgba(70,150,255,.45)}
+.technical-settings__account li a:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .technical-settings__account li a:focus-visible{outline:3px solid #0B0F14;outline-offset:2px}
-.technical-settings__account li a>span:first-child{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:15px;background:rgba(244,247,252,.85);border:1px solid rgba(130,145,170,.32)}
+.technical-settings__account li a>span:first-child{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:15px;background:var(--mmri-surface-raised,rgba(244,247,252,.85));border:1px solid rgba(130,145,170,.32)}
 .technical-settings__account li a>span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}
 .technical-settings__account b{color:var(--mmri-color-text-strong)}.technical-settings__account small{color:var(--mmri-color-text-muted);font-size:13px}
 .technical-settings__account>.mmri-button{justify-self:start}
@@ -45,7 +46,7 @@
 .profile-onboarding .profile-company-card{overflow:visible}
 .company-detail-editor__name small{color:var(--mmri-color-text-muted)}
 .company-detail-editor__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
-.company-detail-editor__grid>label{display:grid;gap:10px;align-content:start;padding:14px;border:1px solid rgba(130,145,170,.32);border-radius:20px;background:rgba(244,247,252,.85)}
+.company-detail-editor__grid>label{display:grid;gap:10px;align-content:start;padding:14px;border:1px solid rgba(130,145,170,.32);border-radius:20px;background:var(--mmri-surface-raised,rgba(244,247,252,.85))}
 .company-detail-editor__grid>label>span{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.4;font-weight:650;color:var(--mmri-color-text)}
 .company-detail-editor__number{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--wp-mist);color:var(--wp-ink);font-size:13px}
 .company-detail-editor__bar{position:sticky;bottom:14px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 12px 22px;border-radius:999px}
@@ -69,7 +70,7 @@
 .business-name-fields__preview{margin:8px 2px 0;font-size:13px;color:var(--wp-ink3,#5B6B7E)}.business-name-fields__preview strong{color:var(--wp-ink,#162333)}
 .business-name-fields__empty{margin:0;padding:10px 12px;color:var(--mmri-color-text-faint)}
 .profile-question-jump{display:flex;flex-wrap:wrap;gap:6px}
-.profile-question-jump button{min-width:34px;height:34px;padding:0 8px;border:1px solid var(--mmri-glass-border);border-radius:10px;background:rgba(244,247,252,.85);color:inherit;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.profile-question-jump button{min-width:34px;height:34px;padding:0 8px;border:1px solid var(--mmri-glass-border);border-radius:10px;background:var(--mmri-surface-raised,rgba(244,247,252,.85));color:inherit;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
 .profile-question-jump button.is-done{background:color-mix(in srgb,var(--mmri-color-success) 28%,transparent)}
 .profile-question-jump button.is-skipped{border-style:dashed}
 .profile-question-jump button.is-current{border-color:#D9DFE8;box-shadow:var(--mmri-focus-ring)}
@@ -91,10 +92,10 @@
 .mmri-choice-select__menu{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);max-height:280px;overflow:auto;padding:6px;border:1px solid var(--mmri-glass-border);border-radius:20px;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);box-shadow:var(--mmri-glass-highlight),var(--mmri-glass-shadow-lift)}
 .mmri-choice-select__menu.is-up{top:auto;bottom:calc(100% + 6px)}
 /* A panel that holds an OPEN dropdown must not clip it (panels are overflow:hidden for their rounded sheen). */
-:is(.lg,.content-surface):has(.mmri-choice-select.is-open){overflow:visible}
+:is(.lg,.content-surface,section,article,div):has(.mmri-choice-select.is-open){overflow:visible;content-visibility:visible}
 .mmri-choice-select__menu button{display:flex;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;border:0;border-radius:14px;background:transparent;color:var(--mmri-color-text-strong);font:inherit;text-align:left;cursor:pointer}
-.mmri-choice-select__menu button:hover,.mmri-choice-select__menu button:focus-visible{outline:none;background:rgba(244,247,252,.85)}
-.mmri-choice-select__menu button.is-selected{background:rgba(244,247,252,.85);font-weight:700}
+.mmri-choice-select__menu button:hover,.mmri-choice-select__menu button:focus-visible{outline:none;background:var(--mmri-surface-raised,rgba(244,247,252,.85))}
+.mmri-choice-select__menu button.is-selected{background:var(--mmri-surface-raised,rgba(244,247,252,.85));font-weight:700}
 
 @media (min-width:1011px){
  .payment-history-date,.payment-history-amount{position:relative;left:75px}
@@ -153,3 +154,24 @@ body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-edit
  background:radial-gradient(80% 60% at 8% 0,rgba(255,255,255,.55),transparent 62%),linear-gradient(150deg,rgba(168,200,255,.5),rgba(122,156,246,.34) 58%,rgba(160,142,246,.36));
  border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -14px 24px -18px rgba(70,100,220,.55),0 14px 26px -16px rgba(20,48,150,.5)}
 body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-editor__name) :is(span,small){color:var(--mmri-color-text)}
+
+/* ===== company logo (optional) ===== */
+.mmri-company-logo{display:grid;place-items:center;width:100%;height:100%;border-radius:inherit;background:#fff;overflow:hidden}
+.mmri-company-logo img{display:block;max-width:86%;max-height:86%;object-fit:contain}
+.profile-avatar:has(.mmri-company-logo),.mmri-account-context-mark:has(.mmri-company-logo){background:#fff;padding:0;overflow:hidden}
+.company-logo-editor{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;padding:20px 24px}
+.company-logo-editor__preview{position:relative;display:grid;place-items:center;width:132px;height:96px;border-radius:18px;border:1px dashed rgba(170,210,255,.7);background:rgba(255,255,255,.95);overflow:hidden}
+.company-logo-editor__preview img{display:block;max-width:92%;max-height:90%;object-fit:contain}
+.company-logo-editor__initials{font-size:30px;font-weight:800;color:#2a3f8f}
+.company-logo-editor__tag{position:absolute;left:6px;bottom:6px;padding:2px 8px;border-radius:999px;background:#f5b300;color:#2a1a00;font-weight:800;font-size:11px}
+.company-logo-editor__body{display:grid;gap:8px;min-width:0}
+.company-logo-editor__body h2{margin:0;font-size:18px;font-weight:800}
+.company-logo-editor__body p{margin:0;font-size:14px;line-height:1.5}
+.company-logo-editor__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.company-logo-editor__error{color:#ffc2bb!important;font-weight:700}
+.company-logo-editor__note{color:#b9f5d8!important;font-weight:700}
+@media (max-width:640px){.company-logo-editor{grid-template-columns:1fr;justify-items:start;padding:18px 16px}}
+.report-v3__top .report-company__logo{flex:none;align-self:center;display:block;width:auto;height:auto;max-width:120px;max-height:64px;object-fit:contain;padding:8px 12px;margin-right:18px;border-radius:14px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.5)}
+/* Long e-mail addresses and Mongolian names wrap inside table cells instead of being cut at narrow widths. */
+.mmri-table td,.mmri-table th{overflow-wrap:anywhere;min-width:0}
+@media (max-width:640px){.mmri-table td:has(.mmri-choice-select){min-width:150px}}

@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useState} from 'react';
-import { Button,Dialog,Field,Input,Select,StatusBadge,Table } from '../components/UI';
+import { Button,ChoiceSelect,Dialog,Field,Input,Table } from '../components/UI';
 import { api } from '../api/client';
 
 type Role='OWNER'|'ADMIN'|'ASSESSOR'|'CONSULTANT'|'VIEWER';
@@ -19,12 +19,12 @@ export default function CompanyMembers({companyId}:{companyId:string}){
   <p>Зөвхөн системд бүртгэлтэй хэрэглэгчийг имэйлээр нэмнэ. Эзэмшигчийн эрхийг зөвхөн эзэмшигч олгоно; сүүлчийн эзэмшигчийг хасах боломжгүй.</p>
   {msg&&<div className={`mmri-support-alert ${msg.tone==='error'?'is-error':''}`} role={msg.tone==='error'?'alert':'status'}>{msg.text}</div>}
   {rows&&<Table caption="Гишүүд"><thead><tr><th>Имэйл</th><th>Эрх</th><th><span className="mmri-visually-hidden">Үйлдэл</span></th></tr></thead><tbody>
-   {rows.map(m=><tr key={m.userId}><td>{m.displayName?`${m.displayName} · `:''}{m.email}{m.isSelf&&<> <StatusBadge>Та</StatusBadge></>}</td>
-    <td><Select aria-label={`${m.email} · эрх`} value={m.role} disabled={!!busy||m.isSelf} onChange={e=>void run(`r${m.userId}`,'Эрх шинэчлэгдлээ.',()=>api.addCompanyMember(companyId,{email:m.email,role:e.target.value as Role}))}>{ROLES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</Select></td>
+   {rows.map(m=><tr key={m.userId}><td>{m.displayName?`${m.displayName} · `:''}{m.email}</td>
+    <td><ChoiceSelect label={`${m.email} · эрх`} value={m.role} disabled={!!busy||m.isSelf} options={ROLES.map(([v,l])=>({value:v,label:l}))} onValueChange={v=>void run(`r${m.userId}`,'Эрх шинэчлэгдлээ.',()=>api.addCompanyMember(companyId,{email:m.email,role:String(v) as Role}))}/></td>
     <td><Button variant="secondary" disabled={!!busy} onClick={()=>setRemoving(m)}>{m.isSelf?'Гарах':'Хасах'}</Button></td></tr>)}</tbody></Table>}
   <form className="account-data__actions" onSubmit={e=>{e.preventDefault();void run('add','Гишүүн нэмэгдлээ.',async()=>{await api.addCompanyMember(companyId,{email:email.trim(),role});setEmail('')})}} autoComplete="off">
    <Field label="Имэйл"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="off"/></Field>
-   <Field label="Эрх"><Select value={role} onChange={e=>setRole(e.target.value as Role)}>{ROLES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</Select></Field>
+   <Field label="Эрх"><ChoiceSelect label="Эрх" value={role} options={ROLES.map(([v,l])=>({value:v,label:l}))} onValueChange={v=>setRole(String(v) as Role)}/></Field>
    <Button type="submit" loading={busy==='add'} disabled={!!busy||!email.trim()}>Гишүүн нэмэх</Button></form>
   <Dialog open={!!removing} onOpenChange={o=>{if(!o)setRemoving(null)}} title={removing?.isSelf?'Байгууллагаас гарах уу?':'Гишүүнийг хасах уу?'} description={removing?`${removing.email} (${roleLabel(removing.role)}) байгууллагын мэдээлэлд хандах эрхээ алдана.`:''}
    footer={<><Button variant="secondary" onClick={()=>setRemoving(null)}>Болих</Button><Button variant="danger" loading={busy.startsWith('x')} onClick={()=>{const m=removing;if(!m)return;setRemoving(null);void run(`x${m.userId}`,'Гишүүн хасагдлаа.',()=>api.removeCompanyMember(companyId,m.userId))}}>Баталгаажуулах</Button></>}><span/></Dialog>

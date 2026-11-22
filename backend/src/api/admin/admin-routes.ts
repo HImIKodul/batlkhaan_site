@@ -13,7 +13,7 @@ import { scanReport } from "./review-scan.js";
 import type { SupportMailService } from "../mail/support-mail-service.js";
 
 export interface AdminDeps {
-  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
+  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; billing: { confirmManualPayment(id: string, reference: unknown, amount: unknown): Promise<any>; recordConfirmedRefund(id: string, reference: unknown, reason: unknown): Promise<any> }; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
   readJson: (req: IncomingMessage, limit: number) => Promise<any>; clientIp: (req: IncomingMessage) => string; fingerprint: (req: IncomingMessage) => { ip?: string; userAgent?: string };
 }
 const A = "/api/v1/admin";
@@ -191,6 +191,20 @@ export function registerAdminRoutes(d: AdminDeps) {
     if (kind === "INFO_REQUEST") await prisma.paymentDispute.update({ where: { id: c.params.id }, data: { status: "MORE_INFORMATION_REQUIRED", version: { increment: 1 } } });
     await aud(p, fp, "DISPUTE_" + kind, "DISPUTE", c.params.id); ok(c.res, ev);
   });
+  /* SEC-01: manual money actions are administrator operations. They need the payments.decide permission (SUPER_ADMIN / BILLING_REVIEWER), a RECENT password+MFA reauthentication (sensitive), a written reason, and the route wrapper
+     persists the intent BEFORE the mutation and the outcome after it. A customer session never reaches these. */
+  route("POST", "/billing/invoices/:id/manual-confirm", "payments.decide", async (c, p, fp, b) => {
+    const reason = clean(b.reason, 500); if (reason.length < 5) throw badRequest("Баталгаажуулах шалтгаан шаардлагатай.");
+    const inv = await d.billing.confirmManualPayment(c.params.id, b.paymentReference, b.amountMnt);
+    await aud(p, fp, "ADMIN_MANUAL_PAYMENT_CONFIRMED", "INVOICE", c.params.id, { reason, paymentReference: clean(b.paymentReference, 200), amountMnt: Number(b.amountMnt ?? 0) });
+    ok(c.res, inv);
+  }, { sensitive: true });
+  route("POST", "/billing/invoices/:id/refund-confirm", "payments.decide", async (c, p, fp, b) => {
+    const reason = clean(b.reason, 500); if (reason.length < 5) throw badRequest("Буцаалтын шалтгаан шаардлагатай.");
+    const inv = await d.billing.recordConfirmedRefund(c.params.id, b.refundReference, reason);
+    await aud(p, fp, "ADMIN_REFUND_CONFIRMED", "INVOICE", c.params.id, { reason, refundReference: clean(b.refundReference, 200) });
+    ok(c.res, inv);
+  }, { sensitive: true });
   route("POST", "/disputes/:id/status", "payments.decide", async (c, p, fp, b) => {
     const status = String(b.status); if (!DISPUTE_STATUSES.includes(status)) throw badRequest("Төлөв буруу байна.");
     const decisive = ["APPROVED", "REJECTED", "RESOLVED"].includes(status);

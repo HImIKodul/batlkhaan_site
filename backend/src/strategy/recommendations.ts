@@ -51,12 +51,26 @@ function scopesOf(r: Recommendation): Array<{ findingId: string; categoryId: str
   return r.affectedScopes?.length ? r.affectedScopes : [{ findingId: r.findingId, categoryId: r.categoryId, cellId: r.cellId }];
 }
 
+const edgeSetMemo = new WeakMap<object, { category: Set<string>; cell: Set<string> }>();
+function edgeSets(contract: any): { category: Set<string>; cell: Set<string> } {
+  let sets = edgeSetMemo.get(contract);
+  if (!sets) {
+    sets = {
+      category: new Set((contract.categoryGraph?.edges ?? []).map((e: any) => `${e.prerequisite}\u0000${e.dependent}`)),
+      cell: new Set((contract.cellGraph?.edges ?? []).map((e: any) => `${e.prerequisite}\u0000${e.dependent}`))
+    };
+    edgeSetMemo.set(contract, sets);
+  }
+  return sets;
+}
+
 function directDependency(a: Recommendation, b: Recommendation, contract: any): boolean {
   const as = scopesOf(a);
   const bs = scopesOf(b);
+  const { category, cell } = edgeSets(contract);
   for (const sa of as) for (const sb of bs) {
-    if ((contract.categoryGraph?.edges ?? []).some((e: any) => e.prerequisite === sa.categoryId && e.dependent === sb.categoryId)) return true;
-    if (sa.categoryId === sb.categoryId && (contract.cellGraph?.edges ?? []).some((e: any) => e.prerequisite === sa.cellId && e.dependent === sb.cellId)) return true;
+    if (category.has(`${sa.categoryId}\u0000${sb.categoryId}`)) return true;
+    if (sa.categoryId === sb.categoryId && cell.has(`${sa.cellId}\u0000${sb.cellId}`)) return true;
   }
   return false;
 }

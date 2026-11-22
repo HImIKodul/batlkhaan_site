@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {beforeEach,describe,it,expect,vi} from 'vitest';
 const db=vi.hoisted(()=>{
- const model=()=>Object.fromEntries(['findUnique','findFirst','create','update','updateMany','count','upsert'].map(k=>[k,vi.fn()]));
+ const model=()=>Object.fromEntries(['findUnique','findFirst','create','update','updateMany','count','upsert','deleteMany'].map(k=>[k,vi.fn()]));
  return {user:model(),passwordResetToken:model(),authAuditEvent:model(),refreshSession:model(),adminAccount:model(),adminSession:model(),adminAuditEvent:model(),billingInvoice:model(),billingPaymentTransaction:model(),companyEntitlement:model(),$queryRaw:vi.fn(),$executeRaw:vi.fn(),$transaction:vi.fn()};
 });
 vi.mock('../src/db.js',()=>({prisma:db}));
@@ -27,7 +27,7 @@ beforeEach(()=>{
  db.user.findUnique.mockResolvedValue({...user});
  db.authAuditEvent.create.mockResolvedValue({});db.adminAuditEvent.create.mockResolvedValue({});
  db.passwordResetToken.count.mockResolvedValue(0);db.passwordResetToken.findFirst.mockResolvedValue(null);
- db.passwordResetToken.create.mockResolvedValue({});db.passwordResetToken.updateMany.mockResolvedValue({count:1});
+ db.passwordResetToken.create.mockResolvedValue({id:'tok1'});db.passwordResetToken.deleteMany.mockResolvedValue({count:1});db.passwordResetToken.updateMany.mockResolvedValue({count:1});
  db.user.update.mockResolvedValue({...user});db.refreshSession.updateMany.mockResolvedValue({count:1});db.adminAccount.findUnique.mockResolvedValue(null);
  mailer.send.mockResolvedValue({delivered:true,provider:'resend'});
  reset=new PasswordResetService(config,mailer);

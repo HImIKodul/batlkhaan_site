@@ -97,6 +97,7 @@ export class BillingService {
     await this.recoverOrphanedEntitlementClaims(companyId,domainCode);
     await this.expireStaleEntitlements(companyId);
 
+    await this.retireStaleInvoices(companyId,domainCode,planCode,amountMnt);
     await this.assertPurchaseEligible(prisma,companyId,planCode,domainCode);
     const callbackToken=randomBytes(32).toString("base64url");
     const senderInvoiceNo=`MMRI-${Date.now()}-${randomUUID().slice(0,8)}`;
@@ -191,6 +192,29 @@ export class BillingService {
     };
   }
 
+
+  /** PAY-02. Local invoice lifetime for provider-hosted (QPay) invoices. A QR the provider has expired must not be handed back forever as the "open" invoice. MANUAL invoices are never retired
+      automatically (a customer may have paid by bank transfer and be waiting for an administrator). MMRI_INVOICE_TTL_MINUTES (default 30, min 5); MMRI_INVOICE_TTL_APPLY_ALL=on extends it to every provider (disposable tests). */
+  invoiceTtlMinutes():number{const n=Number(process.env.MMRI_INVOICE_TTL_MINUTES??30);return Number.isFinite(n)?Math.max(5,Math.min(1440,Math.floor(n))):30}
+  private invoiceTtlApplies(provider:string):boolean{return provider==="QPAY"||(process.env.MMRI_INVOICE_TTL_APPLY_ALL??"off").trim().toLowerCase()==="on"&&provider!=="MANUAL"}
+  /** ISO time after which an open invoice is replaced on the next purchase attempt (null when no local lifetime applies). */
+  invoiceExpiresAt(invoice:{provider:string;createdAt:Date;status:string}):string|null{
+    if(!this.invoiceTtlApplies(invoice.provider)||(invoice.status!=="CREATED"&&invoice.status!=="PENDING"))return null;
+    return new Date(invoice.createdAt.getTime()+this.invoiceTtlMinutes()*60_000).toISOString();
+  }
+  /** Retire open invoices past their lifetime. cancelInvoice() asks the provider first and never cancels a paid invoice (it activates it instead); a provider failure aborts the purchase rather than risk a second QR
+      beside an unresolved first one. A cancelled invoice that is paid late is still activated (activatePaidInvoice accepts CANCELLED), exactly once. */
+  private async retireStaleInvoices(companyId:string,domainCode:string,planCode:"DIAGNOSTIC"|"RETAKE",amountMnt:number):Promise<void>{
+    const open=await prisma.billingInvoice.findMany({where:{companyId,domainCode,planCode,amountMnt,status:{in:["CREATED","PENDING"]}},orderBy:{createdAt:"asc"}});
+    const cutoff=Date.now()-this.invoiceTtlMinutes()*60_000;
+    for(const inv of open){
+      if(!this.invoiceTtlApplies(inv.provider)||inv.createdAt.getTime()>cutoff)continue;
+      try{await this.cancelInvoice(inv.id)}catch(error:any){
+        if(error instanceof ApiError&&error.code==="PAID_INVOICE_CANNOT_BE_CANCELLED")continue;   // it was paid: the eligibility check that follows decides
+        throw error;
+      }
+    }
+  }
   async cancelInvoice(invoiceId:string){
     const invoice=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
     if(!invoice)throw notFound("Billing invoice not found");
@@ -420,7 +444,7 @@ export class BillingService {
   }
 
   presentInvoice(row:any){
-    return {id:row.id,companyId:row.companyId,domainCode:row.domainCode,planCode:row.planCode,amountMnt:row.amountMnt,currency:row.currency,provider:row.provider,status:row.status,senderInvoiceNo:row.senderInvoiceNo,qrText:row.qrText,qrImage:row.qrImage,shortUrl:row.shortUrl,deeplinks:Array.isArray(row.deeplinks)?row.deeplinks:[],paidAt:row.paidAt,refundedAt:row.refundedAt,refundReason:row.refundReason,lastVerifiedAt:row.lastVerifiedAt,callbackReceivedAt:row.callbackReceivedAt,createdAt:row.createdAt,updatedAt:row.updatedAt,testMode:row.provider==="MOCK",manualMode:row.provider==="MANUAL"};
+    return {expiresAt:row.createdAt instanceof Date?this.invoiceExpiresAt(row):null,id:row.id,companyId:row.companyId,domainCode:row.domainCode,planCode:row.planCode,amountMnt:row.amountMnt,currency:row.currency,provider:row.provider,status:row.status,senderInvoiceNo:row.senderInvoiceNo,qrText:row.qrText,qrImage:row.qrImage,shortUrl:row.shortUrl,deeplinks:Array.isArray(row.deeplinks)?row.deeplinks:[],paidAt:row.paidAt,refundedAt:row.refundedAt,refundReason:row.refundReason,lastVerifiedAt:row.lastVerifiedAt,callbackReceivedAt:row.callbackReceivedAt,createdAt:row.createdAt,updatedAt:row.updatedAt,testMode:row.provider==="MOCK",manualMode:row.provider==="MANUAL"};
   }
 
   presentInvoiceSummary(row:any){

@@ -50,17 +50,17 @@ export class EmailVerificationService {
     const issued = await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
       const current = await tx.user.findUnique({ where: { id: user.id } });
-      if (!current || current.email !== email || current.status !== "ACTIVE" || current.erasedAt || !current.emailVerificationRequired || current.emailVerifiedAt) return false;
+      if (!current || current.email !== email || current.status !== "ACTIVE" || current.erasedAt || !current.emailVerificationRequired || current.emailVerifiedAt) return null;
       const recent = await tx.passwordResetToken.count({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, createdAt: { gt: new Date(now.getTime() - 3_600_000) } } });
       const latest = await tx.passwordResetToken.findFirst({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE }, orderBy: { createdAt: "desc" } });
-      if (recent >= MAX_CODES_PER_HOUR || (latest && now.getTime() - latest.createdAt.getTime() < EMAIL_CODE_COOLDOWN_SECONDS * 1000)) return false;
+      if (recent >= MAX_CODES_PER_HOUR || (latest && now.getTime() - latest.createdAt.getTime() < EMAIL_CODE_COOLDOWN_SECONDS * 1000)) return null;
       await tx.passwordResetToken.updateMany({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, usedAt: null }, data: { usedAt: now } });
-      await tx.passwordResetToken.create({ data: {
+      const row = await tx.passwordResetToken.create({ data: {
         userId: user.id, purpose: EMAIL_CODE_PURPOSE, tokenHash: this.hashCode(user.id, code),
         expiresAt: new Date(now.getTime() + EMAIL_CODE_TTL_MINUTES * 60_000),
         requestIpHash: hashAuditValue(fp.ip, this.config.auditSalt)
       } });
-      return true;
+      return { id: row.id };
     });
     if (!issued) { await this.audit(user.id, "EMAIL_CODE_REQUEST_THROTTLED", fp); return; }
     let result;
@@ -72,9 +72,12 @@ export class EmailVerificationService {
         text: `Сайн байна уу.\n\nТаны BusinessMRI.mn бүртгэлийг баталгаажуулах код:\n\n${code}\n\nКод ${EMAIL_CODE_TTL_MINUTES} минутын дотор, зөвхөн нэг удаа ажиллана. Кодыг BusinessMRI.mn сайтын «Имэйл баталгаажуулах» хуудсанд оруулна уу. Энэ код нууц үг солихад ашиглагдахгүй.\nХэрэв та бүртгүүлээгүй бол энэ имэйлийг үл тоомсорлоно уу. Кодыг хэнд ч дамжуулж болохгүй.`
       });
     } catch {
+      // MAIL-01: a code that never left the building must not consume the cooldown or the hourly budget, or a transient outage locks the user out of retrying.
+      await prisma.passwordResetToken.deleteMany({ where: { id: issued.id } }).catch(() => undefined);
       await this.audit(user.id, "EMAIL_CODE_DELIVERY_FAILED", fp, { provider: this.mailer.provider });
       throw new Error("Mail delivery request failed");
     }
+    if (!result.delivered) await prisma.passwordResetToken.deleteMany({ where: { id: issued.id } }).catch(() => undefined);
     await this.audit(user.id, result.delivered ? "EMAIL_CODE_REQUESTED" : "EMAIL_CODE_REQUESTED_NOT_DELIVERED", fp, { provider: result.provider });
   }
 
@@ -86,26 +89,31 @@ export class EmailVerificationService {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !CODE_PATTERN.test(code)) return reject(null);
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || user.status !== "ACTIVE" || user.erasedAt || !user.emailVerificationRequired || user.emailVerifiedAt) return reject(null);
-    const row = await prisma.passwordResetToken.findFirst({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, usedAt: null, expiresAt: { gt: new Date() } }, orderBy: { createdAt: "desc" } });
-    if (!row) return reject(user.id);
-    const wrong = await prisma.authAuditEvent.count({ where: { userId: user.id, eventType: "EMAIL_CODE_REJECTED", createdAt: { gt: row.createdAt } } });
-    if (wrong >= MAX_WRONG_GUESSES) {
-      await prisma.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } });
-      return reject(user.id);
-    }
-    const a = Buffer.from(row.tokenHash, "hex"), b = Buffer.from(this.hashCode(user.id, code), "hex");
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return reject(user.id);
-    await prisma.$transaction(async tx => {
+    /* SEC-02: the whole decision (read the live code, count earlier wrong guesses, compare, record a wrong guess, consume on success) runs in ONE transaction that holds the user row lock. Parallel guesses are therefore
+       serialised per account: each one sees every earlier rejection, so the failed-attempt cap holds across workers. A wrong guess is audited INSIDE the transaction and committed (the rejection is thrown afterwards). */
+    const outcome = await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
       const now = new Date();
       const current = await tx.user.findUnique({ where: { id: user.id } });
-      if (!current || current.status !== "ACTIVE" || current.erasedAt || !current.emailVerificationRequired || current.emailVerifiedAt) throw new ApiError(400, "INVALID_VERIFICATION_CODE", MSG.invalid);
+      if (!current || current.status !== "ACTIVE" || current.erasedAt || !current.emailVerificationRequired || current.emailVerifiedAt) return "REJECT" as const;
+      const row = await tx.passwordResetToken.findFirst({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, usedAt: null, expiresAt: { gt: now } }, orderBy: { createdAt: "desc" } });
+      if (!row) { await this.audit(user.id, "EMAIL_CODE_REJECTED", fp, undefined, tx); return "REJECT" as const; }
+      const wrong = await tx.authAuditEvent.count({ where: { userId: user.id, eventType: "EMAIL_CODE_REJECTED", createdAt: { gt: row.createdAt } } });
+      if (wrong >= MAX_WRONG_GUESSES) {
+        await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: now } });
+        await this.audit(user.id, "EMAIL_CODE_REJECTED", fp, undefined, tx);
+        return "REJECT" as const;
+      }
+      const a = Buffer.from(row.tokenHash, "hex"), b = Buffer.from(this.hashCode(user.id, code), "hex");
+      if (a.length !== b.length || !timingSafeEqual(a, b)) { await this.audit(user.id, "EMAIL_CODE_REJECTED", fp, undefined, tx); return "REJECT" as const; }
       const claimed = await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
-      if (claimed.count !== 1) throw new ApiError(400, "INVALID_VERIFICATION_CODE", MSG.invalid);
+      if (claimed.count !== 1) return "REJECT" as const;
       await tx.user.update({ where: { id: user.id }, data: { emailVerifiedAt: now } });
       await tx.passwordResetToken.updateMany({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, usedAt: null }, data: { usedAt: now } });
       await this.audit(user.id, "EMAIL_CODE_VERIFIED", fp, undefined, tx);
-    });
+      return "OK" as const;
+    }, { maxWait: 10_000, timeout: 15_000 });
+    if (outcome !== "OK") throw new ApiError(400, "INVALID_VERIFICATION_CODE", MSG.invalid);
     await customerNotifications.emailVerified(user.id);
   }
 

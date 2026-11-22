@@ -47,17 +47,17 @@ export class PasswordResetService {
       // Serialize request/count/invalidation and confirmation across every API instance.
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
       const current = await tx.user.findUnique({ where: { id: user.id } });
-      if (!current || current.email !== email || current.status !== "ACTIVE" || current.erasedAt || (current.emailVerificationRequired && !current.emailVerifiedAt)) return false;
+      if (!current || current.email !== email || current.status !== "ACTIVE" || current.erasedAt || (current.emailVerificationRequired && !current.emailVerifiedAt)) return null;
       const recent = await tx.passwordResetToken.count({ where: { userId: user.id, purpose: this.purpose, createdAt: { gt: new Date(now.getTime() - 3_600_000) } } });
       const latest = await tx.passwordResetToken.findFirst({ where: { userId: user.id, purpose: this.purpose }, orderBy: { createdAt: "desc" } });
-      if (recent >= MAX_PER_HOUR || (latest && now.getTime() - latest.createdAt.getTime() < 60_000)) return false;
+      if (recent >= MAX_PER_HOUR || (latest && now.getTime() - latest.createdAt.getTime() < 60_000)) return null;
       await tx.passwordResetToken.updateMany({ where: { userId: user.id, purpose: this.purpose, usedAt: null }, data: { usedAt: now } });
-      await tx.passwordResetToken.create({ data: {
+      const row = await tx.passwordResetToken.create({ data: {
         userId: user.id, purpose: this.purpose, tokenHash: this.hashToken(token),
         expiresAt: new Date(now.getTime() + this.config.passwordResetTtlMinutes * 60_000),
         requestIpHash: hashAuditValue(fp.ip, this.config.auditSalt)
       } });
-      return true;
+      return { id: row.id };
     });
     if (!issued) { await this.audit(user.id, `${this.purpose}_REQUEST_THROTTLED`, fp); return; }
     const link = `${this.config.publicAppUrl}/#/reset-password?token=${token}`;
@@ -68,6 +68,7 @@ export class PasswordResetService {
       subject: MSG.requestSubject,
       text: `Сайн байна уу.\n\nБидэнд таны BusinessMRI.mn бүртгэлийн нууц үгийг сэргээх хүсэлт ирсэн. Шинэ нууц үг тогтоохын тулд доорх холбоос дээр дарна уу:\n\n${link}\n\nХолбоос ${this.config.passwordResetTtlMinutes} минутын дотор, зөвхөн нэг удаа ажиллана.\nХэрэв та энэ хүсэлтийг гаргаагүй бол юу ч хийх шаардлагагүй, таны нууц үг өөрчлөгдөхгүй.\n`
     })}catch{
+      await prisma.passwordResetToken.deleteMany({ where: { id: issued.id } }).catch(() => undefined);   // MAIL-01: an undelivered link must not consume the retry budget
       await this.audit(user.id,`${this.purpose}_DELIVERY_FAILED`,fp,{provider:this.mailer.provider});
       throw new Error("Mail delivery request failed");
     }

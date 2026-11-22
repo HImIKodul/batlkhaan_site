@@ -111,7 +111,7 @@ function Settings({me}:{me:AdminMe}){
 
 export default function AdminApp(){
  useDomainTheme(null); // administration stays on the neutral sapphire theme
- usePrismBody();
+ usePrismBody(true);
  const [hash,setHash]=useState(window.location.hash);const [me,setMe]=useState<AdminMe|null>(null);const [state,setState]=useState<'loading'|'out'|'in'>(adminSession.token?'loading':'out');const [unread,setUnread]=useState(0);const [reauth,setReauth]=useState<null|((ok:boolean)=>void)>(null);const [menu,setMenu]=useState(false);
  useEffect(()=>{const h=()=>{setHash(window.location.hash);setMenu(false);window.scrollTo(0,0)};window.addEventListener('hashchange',h);return()=>window.removeEventListener('hashchange',h)},[]);
  const load=useCallback(async()=>{if(!adminSession.token){setState('out');return}try{const m=await adminApi.me();setMe(m);setUnread(m.unreadNotifications);setState('in')}catch{adminSession.token=null;setState('out')}},[]);

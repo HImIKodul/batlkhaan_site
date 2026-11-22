@@ -125,7 +125,9 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
   setShowSaved(true);const t=window.setTimeout(()=>setShowSaved(false),2200);return()=>window.clearTimeout(t);
  },[draftState]);
 
- useEffect(()=>{void load()},[]);
+ /* One initial load only: React StrictMode (dev) runs this effect twice, and the second resume would send a stale assessment revision and show a false "changed in another window" conflict. */
+ const initialLoad=useRef<Promise<void>|null>(null);
+ useEffect(()=>{if(!initialLoad.current)initialLoad.current=load();void initialLoad.current},[]);
  useEffect(()=>{
   const handleOnline=()=>{setOnline(true);setDraftState(state=>state==='error'?'dirty':state)};
   const handleOffline=()=>setOnline(false);

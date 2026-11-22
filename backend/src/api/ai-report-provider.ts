@@ -1,5 +1,6 @@
 import { OpenAiNarrativeProvider } from "../report/openai-narrative-provider.js";
 import type { NarrativeProvider } from "../report/coordinator.js";
+import { OpenAiAnnualPlanProvider, type AnnualPlanProvider } from "../report/annual-plan.js";
 
 function positiveInt(name:string,fallback:number,min:number,max:number){const raw=process.env[name];const n=raw?Number(raw):fallback;if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${name} must be ${min}..${max}`);return n;}
 export function createNarrativeProviderFromEnv(environment:string):NarrativeProvider|undefined{
@@ -23,4 +24,14 @@ export function createNarrativeProviderFromEnv(environment:string):NarrativeProv
     retryMaxDelayMs:positiveInt("MMRI_AI_REPORT_RETRY_MAX_DELAY_MS",10_000,500,60_000),
     totalTimeoutMs:positiveInt("MMRI_AI_REPORT_TOTAL_TIMEOUT_MS",75_000,10_000,240_000)
   });
+}
+
+/** 12-month plan generation is OFF unless MMRI_AI_ANNUAL_PLAN=on (every plan is one chargeable model call). Uses the same OpenAI key/model/endpoint as the report narrative. */
+export function createAnnualPlanProviderFromEnv(environment:string):AnnualPlanProvider|undefined{
+  if((process.env.MMRI_AI_ANNUAL_PLAN??"off").trim().toLowerCase()!=="on")return undefined;
+  const apiKey=(process.env.OPENAI_API_KEY??"").trim(), model=(process.env.MMRI_AI_ANNUAL_PLAN_MODEL??process.env.MMRI_AI_REPORT_MODEL??"").trim();
+  if(!apiKey||!model)throw new Error("MMRI_AI_ANNUAL_PLAN=on requires OPENAI_API_KEY and MMRI_AI_REPORT_MODEL");
+  const endpoint=(process.env.MMRI_AI_REPORT_ENDPOINT??"https://api.openai.com/v1/responses").trim();
+  if(environment==="production"&&endpoint!=="https://api.openai.com/v1/responses")throw new Error("MMRI_AI_REPORT_ENDPOINT must be https://api.openai.com/v1/responses in production");
+  return new OpenAiAnnualPlanProvider({apiKey,model,endpoint,timeoutMs:positiveInt("MMRI_AI_ANNUAL_PLAN_TIMEOUT_MS",90_000,10_000,240_000),maxOutputTokens:positiveInt("MMRI_AI_ANNUAL_PLAN_MAX_OUTPUT_TOKENS",8_000,1_000,20_000)});
 }

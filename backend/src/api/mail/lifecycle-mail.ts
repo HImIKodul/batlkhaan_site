@@ -97,7 +97,7 @@ export class LifecycleMailService {
     if (admins.length) {
       // Recipients that belong to a DISABLED administrator account receive nothing (the address list is configuration, the account status is authority).
       let recipients = admins;
-      try { const off = new Set((await prisma.$queryRaw<{ e: string }[]>`SELECT lower(u.email) AS e FROM admin_accounts a JOIN users u ON u.id = a."userId" WHERE a.status <> 'ACTIVE' AND lower(u.email) = ANY(${admins})`).map(r => r.e)); recipients = admins.filter(x => !off.has(x)); } catch { /* keep the configured list if the lookup fails */ }
+      try { const off = new Set((await prisma.$queryRaw<{ e: string }[]>`SELECT lower(u.email) AS e FROM admin_accounts a JOIN users u ON u.id = a."userId" WHERE a.status <> 'ACTIVE' AND lower(u.email) = ANY(${admins})`).map(r => r.e)); recipients = admins.filter(x => !off.has(x)); } catch { /* MAIL-02: fail CLOSED. If account status cannot be determined, an alert is deferred (it stays pending and is retried on the next pass) rather than sent to a possibly disabled administrator. */ console.error(JSON.stringify({ event: "admin_mail_eligibility_lookup_failed" })); recipients = []; }
       const hashOf = (to: string) => createHash("sha256").update(to).digest("hex").slice(0, 12);
       const hashes = recipients.map(hashOf);
       // Same rule as the customer path: only alerts that still need a mail for at least one recipient are selected IN SQL (finished / exhausted / waiting-for-retry marks are excluded),

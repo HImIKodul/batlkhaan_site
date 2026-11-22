@@ -22,7 +22,7 @@ export async function checkPdfLayoutBudget(payload: FrozenReportPayload, narrati
     await run(python, [renderer, "--input", input, "--output", path.join(dir, "out.pdf"), "--strict"], { timeout: 60_000, env: { PATH: process.env.PATH || "/usr/bin:/bin", HOME: process.env.HOME || "/tmp", LANG: "C.UTF-8", LC_ALL: "C.UTF-8" } });
     return { fits: true, detail: "ok" };
   } catch (e: any) {
-    if (e?.code === 3) return { fits: false, detail: String(e.stderr ?? "").trim().slice(0, 200) };
+    if (e?.code === 3 || e?.code === 4) return { fits: false, detail: String(e.stderr ?? "").trim().slice(0, 200) };
     throw e;
   } finally { await rm(dir, { recursive: true, force: true }).catch(() => undefined); }
 }

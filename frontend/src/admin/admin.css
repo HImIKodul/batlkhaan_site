@@ -190,3 +190,10 @@
 @media (max-width:1000px){.ad-scan{left:8px;right:8px;width:auto;top:74px}}
 .ad-fixed{text-align:left}
 .ad-conc.is-bad{color:#9b1c14;font-weight:700}.ad-conc{margin:0}
+/* Phones (<=480px): the two mode links move to their own row so they never collide with the bell/sign-out buttons, and card-style table cells wrap instead of being clipped. */
+@media (max-width:480px){
+ .adm-top{flex-wrap:wrap;row-gap:8px}
+ .adm-modes{order:3;flex:1 1 100%;margin-left:0}
+ .adm-top__right{margin-left:auto}
+ .adm-table tr,.adm-table td{box-sizing:border-box}.adm-table td{overflow-wrap:anywhere;white-space:normal}.adm-table td>*{min-width:0;max-width:100%;white-space:normal}.adm-scroll{overflow-x:visible}
+}

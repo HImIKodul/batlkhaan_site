@@ -139,6 +139,7 @@
 
   /* Glass - light translucent material (green+white). Use via .mmri-glass* utilities in components/glass.css */
   --mmri-glass-bg: rgba(255,255,255,.10);
+  --mmri-surface-raised: rgba(244,247,252,.85);
   --mmri-glass-bg-strong: rgba(255,255,255,.16);
   --mmri-glass-bg-overlay: rgba(12,32,58,.62);
   --mmri-glass-bg-tint: rgba(255,255,255,.12);
@@ -172,27 +173,27 @@
   --mmri-domain-marketing: #32D7C6;
   --mmri-domain-marketing-2: #B8F5EE;
   --mmri-domain-marketing-deep: #0E8C80;
-  --mmri-domain-marketing-ink: #075F4C;
+  --mmri-domain-marketing-ink: #7DFFDA;
   --mmri-domain-marketing-soft: rgba(50,215,198,.12);
   --mmri-domain-it: #49B7FF;
   --mmri-domain-it-2: #CDEBFF;
   --mmri-domain-it-deep: #1B78C2;
-  --mmri-domain-it-ink: #0F6E8C;
+  --mmri-domain-it-ink: #8ED8FF;
   --mmri-domain-it-soft: rgba(73,183,255,.12);
   --mmri-domain-finance: #FFC25A;
   --mmri-domain-finance-2: #FFE8B8;
   --mmri-domain-finance-deep: #B87A12;
-  --mmri-domain-finance-ink: #80500A;
+  --mmri-domain-finance-ink: #FFD966;
   --mmri-domain-finance-soft: rgba(255,194,90,.12);
   --mmri-domain-people: #A879FF;
   --mmri-domain-people-2: #E3D3FF;
   --mmri-domain-people-deep: #6D45C4;
-  --mmri-domain-people-ink: #5B33A6;
+  --mmri-domain-people-ink: #CDB6FF;
   --mmri-domain-people-soft: rgba(168,121,255,.12);
   --mmri-domain-operations: #FF5BCF;
   --mmri-domain-operations-2: #FFD2F0;
   --mmri-domain-operations-deep: #B0238E;
-  --mmri-domain-operations-ink: #841E70;
+  --mmri-domain-operations-ink: #FF9AD8;
   --mmri-domain-operations-soft: rgba(255,91,207,.12);
 
   --mmri-canvas-wash: radial-gradient(900px 640px at -6% -10%,rgba(96,165,255,.42),transparent 64%),radial-gradient(760px 540px at 104% 2%,rgba(150,205,255,.40),transparent 62%),radial-gradient(640px 480px at 74% 58%,rgba(120,170,255,.16),transparent 64%),radial-gradient(720px 520px at 6% 74%,rgba(170,215,255,.26),transparent 66%),radial-gradient(840px 560px at 26% 112%,rgba(90,150,240,.26),transparent 64%),linear-gradient(150deg,#F4F9FF 0%,#E9F3FF 44%,#DDEBFC 100%);

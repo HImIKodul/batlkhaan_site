@@ -4,14 +4,11 @@ import { session } from '../api/client';
 import { DOMAIN_ORDER,DOMAIN_HERO_LABEL } from '../data/domainOrder';
 
 /**
- * Homepage hero (reference 02): ONE composition (hand sketch 02): a fanned deck of five thick, angled, overlapping translucent glass plates, one per business area. Each slab is tinted and lit
- * by its category colour and carries the area name. Free of any result figure or control (decorative; the accessible name lists the five areas).
- * Each slab is a real button: hover lights its edge and glow and lets the other slabs recede; click goes to the diagnosis hub (or sign-in) with that category opened.
- * Motion: one slow float of the stack and a soft glow breathing per slab (opacity), CSS only; no pointer-driven movement, hover never touches the page theme.
+ * Homepage hero: five physical glass plates lying at a low angle, one per business area. Every plate is a real 3D box (top face = the button, plus front, left and right
+ * side faces and a contact shadow) inside one preserve-3d stack, so thickness, bevel and perspective come from geometry, not from glow. Each plate is lit by its category colour.
+ * Click goes to the diagnosis hub (or sign-in) with that category opened. Hover only brightens the plate's own rim: it never touches the page theme, backdrop or layout.
  */
-/* r (deg) and jx/jy (cqw) are small hand-tuned per-plate offsets so the deck reads as an irregular fan, not one repeated step; the step and plate size come from CSS per breakpoint */
-const JIT=[{r:-9,jx:0,jy:0},{r:-5,jx:1.2,jy:-.4},{r:-1,jx:-.6,jy:.6},{r:4,jx:1,jy:-.2},{r:8,jx:-.4,jy:.4}];
-const AREAS=DOMAIN_ORDER.map((id,i)=>({id,label:DOMAIN_HERO_LABEL[id],...JIT[i]}));
+const AREAS=DOMAIN_ORDER.map(id=>({id,label:DOMAIN_HERO_LABEL[id]}));
 
 /* The chosen plate is remembered in memory (10 min; sign-in wipes sessionStorage by design) so login can carry the customer on to that category's dialog in the diagnosis hub. */
 export const heroIntent:{area:string;at:number}={area:'',at:0};
@@ -21,8 +18,11 @@ export default function HeroCrystal(){
  return <div className="hx" role="group" aria-label="BusinessMRI.mn оношилгооны таван чиглэл">
   <div className="hx__scene">
    <div className="hx__stack">
-    <i className="hx__floor"/>
-    {AREAS.map((a,i)=><button type="button" key={a.id} className="hx__slab" aria-label={`${a.label} - оношилгоо`} onClick={()=>{heroIntent.area=a.id;heroIntent.at=Date.now();go(session.accessToken?'analysis':'login')}} style={{'--i':i,'--r':a.r,'--jx':a.jx,'--jy':a.jy,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}><span className="hx__dot"/><span className="hx__name">{a.label}</span></button>)}
+    {AREAS.map((a,i)=><div key={a.id} className="hx3" style={{'--i':i,'--c':`var(--mmri-domain-${a.id})`} as React.CSSProperties}>
+     <i className="hx3__shadow" aria-hidden="true"/>
+     <i className="hx3__face hx3__left" aria-hidden="true"/><i className="hx3__face hx3__right" aria-hidden="true"/><i className="hx3__face hx3__front" aria-hidden="true"/>
+     <button type="button" className="hx3__top" aria-label={`${a.label} - оношилгоо`} onClick={()=>{heroIntent.area=a.id;heroIntent.at=Date.now();go(session.accessToken?'analysis':'login')}}><i className="hx3__orb" aria-hidden="true"/><span className="hx3__name">{a.label}</span></button>
+    </div>)}
    </div>
   </div>
  </div>;

@@ -6,7 +6,8 @@ export type DomainCode='it'|'marketing'|'finance'|'people'|'operations';
 
 export interface User { id:string; email:string; displayName?:string|null; status?:string; }
 export interface AuthResponse { user:User; accessToken:string; accessTokenExpiresIn?:number; }
-export interface Company { id:string; name:string; industry?:string|null; businessModel?:string|null; employeeCount?:number|null; companyAgeYears?:number|null; marketType?:string|null; country?:string|null; profile?:{assessmentProfileAnswers?:ProfileAnswerInput[];basicInfoAnswersV2?:ProfileAnswerInput[];[key:string]:unknown}|null; role?:string; createdAt?:string; updatedAt?:string; }
+export interface CompanyLogoMeta { sha256:string; width:number; height:number; byteSize:number; mimeType:string; updatedAt:string }
+export interface Company { id:string; name:string; industry?:string|null; businessModel?:string|null; employeeCount?:number|null; companyAgeYears?:number|null; marketType?:string|null; country?:string|null; logo?:CompanyLogoMeta|null; profile?:{assessmentProfileAnswers?:ProfileAnswerInput[];basicInfoAnswersV2?:ProfileAnswerInput[];[key:string]:unknown}|null; role?:string; createdAt?:string; updatedAt?:string; }
 export interface ProfileQuestionOption { optionIndex:number; labelMn:string; score?:number|null; state?:string|null; }
 export interface ProfileQuestion { id:string; textMn:string; type:'SINGLE_SELECT'|'MULTI_SELECT'|string; options:ProfileQuestionOption[]; }
 export interface ProfileAnswerInput { questionId:string; optionIndexes:number[]; }

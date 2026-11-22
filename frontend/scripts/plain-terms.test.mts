@@ -14,4 +14,6 @@ const out=plainDeep(src);
 t('plainDeep keeps ids, numbers, hashes, booleans and null',[out.id,out.score,out.weight,out.hash,out.flags],[src.id,src.score,src.weight,src.hash,src.flags]);
 t('plainDeep rewrites nested strings only',[out.nameMn,out.items[0].k],['Мэдээллийн аюулгүй байдлын удирдлага','Өгөгдөл хамгаалалт ба нууцлалын удирдлага']);
 t('plainDeep does not mutate its input',src.nameMn,'Мэдээллийн аюулгүй байдлын засаглал');
+t('robotic evidence prefix becomes a complete phrase',plainMn('Шаардлагатай нотолгоог бүрдүүлэх - Капитал хуваарилалтын удирдлага. Дутуу байгаа шууд нотолгоог асуулт, бүртгэл эсвэл бодит эх сурвалжаас нөхөх, тухайн асуудлыг найдвартай үнэлэх боломжтой болгох.'),'Хөрөнгийн хуваарилалт, зарцуулалтын удирдлага: дутуу баримтыг бүрдүүлэх. Дутуу байгаа мэдээллийг асуулт, бүртгэл эсвэл бодит баримтаас нөхөж, энэ асуудлыг найдвартай үнэлэх боломжтой болгоно.');
+t('unexplained finance terms get plain wording',plainMn('Капиталын өртөг ба доод шаардлагатай өгөөж'),'Хөрөнгийн өртөг ба хамгийн багадаа авах ёстой ашиг');
 console.log(`RESULT pass=${p} fail=${q}`);process.exit(q?1:0)

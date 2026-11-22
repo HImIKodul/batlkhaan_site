@@ -21,6 +21,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (
     Flowable,
+    Image,
     KeepTogether,
     LongTable,
     PageBreak,
@@ -458,6 +459,29 @@ def compact_finding_list(items, st, positive=True):
     return t
 
 
+def company_logo_flowable(source):
+    """The company logo (a validated PNG, <= 512 px) from the report's frozen snapshot, scaled to fit 26 x 17 mm keeping its aspect ratio and transparency. None when the report has no logo or the data is unusable (the report then renders exactly as before)."""
+    import base64
+    import io
+    b64 = (source.get("render") or {}).get("companyLogoPng")
+    if not b64 or not (source.get("companyLogo") or {}).get("sha256"):
+        return None
+    try:
+        raw = base64.b64decode(b64, validate=True)
+        from PIL import Image as PILImage
+        im = PILImage.open(io.BytesIO(raw))
+        w, h = im.size
+        if w < 1 or h < 1:
+            return None
+        box_w, box_h = 26 * mm, 17 * mm
+        scale = min(box_w / w, box_h / h)
+        flow = Image(io.BytesIO(raw), width=w * scale, height=h * scale, mask="auto")
+        flow.hAlign = "RIGHT"
+        return flow
+    except Exception:
+        return None
+
+
 def summary_page(source, st, content_width):
     SF = 1.0 if TIER_E < 2 else 0.5  # compact vertical gaps only when approved explanations need the room
     left = Table(
@@ -507,11 +531,22 @@ def summary_page(source, st, content_width):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5 * mm),
     ]))
 
-    story = [
-        Spacer(1, 3 * mm * SF),
+    title_block = [
         p("УДИРДЛАГЫН ТАЙЛАН", st["eyebrow"]),
         p(source.get("companyName"), st["title"]),
         p("Бизнесийн оношилгооны үр дүн, тэргүүлэх 5 ажил, 12 сарын төлөвлөгөө", st["body"]),
+    ]
+    logo = company_logo_flowable(source)
+    if logo is not None:
+        # The logo sits in its own right-hand column of the title block; the title text keeps the remaining width, so nothing overlaps and page height is unchanged.
+        logo_w = 30 * mm
+        title_block = [Table([[title_block, logo]], colWidths=[content_width - logo_w, logo_w], style=TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (0, 0), 3 * mm),
+            ("RIGHTPADDING", (1, 0), (1, 0), 0), ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("ALIGN", (1, 0), (1, 0), "RIGHT")]), hAlign="LEFT")]
+    story = [
+        Spacer(1, 3 * mm * SF),
+        *title_block,
         AccentBar(content_width),
         Spacer(1, 4 * mm * SF),
         hero,
@@ -616,7 +651,7 @@ def roadmap_summary_rows(source):
     return out
 
 
-def roadmap_grouped_table(entries, st):
+def roadmap_grouped_table(entries, st, source):
     """Compact layout for long plans (tier 2+): one block per recommendation, every milestone still on its own line with
     its own period, description, deliverable and measure, in chronological order. Nothing is merged or dropped."""
     _, _, pad = TIER_ROADMAP[TIER_R]
@@ -635,10 +670,10 @@ def roadmap_grouped_table(entries, st):
         left = Paragraph(f"<b>{text(first.get('titleMn') or '-')}</b><br/>{text(first.get('ownerRoleLabelMn') or '-')}", st["rm_body"])
         lines = []
         for horizon, m in items:
-            period = f"{horizon.get('dayStart', 0)}-{horizon.get('dayEnd', 0)} өдөр"
+            period = horizon_period_label(source, horizon)
             desc = text(m.get("milestoneMn") or "")
             lines.append(Paragraph(
-                f"<b>{text(period)}</b> ({text(horizon.get('nameMn') or '')}): {desc} <b>Гарц:</b> {text(m.get('deliverableMn') or '-')} <b>Хэмжүүр:</b> {text(m.get('kpiMn') or '-')}",
+                f"<b>{text(period)}</b> ({text(horizon_title(horizon))}): {desc} <b>Гарц:</b> {text(m.get('deliverableMn') or '-')} <b>Хэмжүүр:</b> {text(m.get('kpiMn') or '-')}",
                 st["rm_body"]))
         rows.append([left, lines])
     table = Table(rows, colWidths=[44 * mm, 126 * mm], repeatRows=1, hAlign="LEFT")
@@ -659,12 +694,49 @@ def roadmap_grouped_table(entries, st):
     return table
 
 
+HORIZON_TITLES = {
+    "H0": "Шууд эхлэх ажлууд",
+    "H1": "Эхний сарын ажлууд",
+    "H2": "Суурийг бий болгох үе",
+    "H3": "Хэрэгжилтийг бататгах үе",
+    "H4": "Жилийн хэрэгжилт ба дүгнэлт",
+}
+
+
+def _add_months_clamped(d, months):
+    import calendar
+    y = d.year + (d.month - 1 + months) // 12
+    m = (d.month - 1 + months) % 12 + 1
+    return d.replace(year=y, month=m, day=min(d.day, calendar.monthrange(y, m)[1]))
+
+
+def horizon_period_label(source, horizon):
+    """Calendar dates for a fallback-roadmap stage. Day 0 is the report date; the window ends the day before the same calendar date twelve months later (documented date policy), so the last stage never
+    runs past the twelve-month window. Falls back to the stored day bounds only for sources that carry no report date."""
+    import datetime
+    start_day, end_day = int(horizon.get("dayStart") or 0), int(horizon.get("dayEnd") or 0)
+    raw = str((source.get("render") or {}).get("reportDate") or "")
+    try:
+        base = datetime.date.fromisoformat(raw[:10])
+    except ValueError:
+        return f"{start_day}-{end_day} өдөр"
+    window_end = _add_months_clamped(base, 12) - datetime.timedelta(days=1)
+    s = min(base + datetime.timedelta(days=start_day), window_end)
+    e = min(base + datetime.timedelta(days=end_day), window_end)
+    f = lambda d: f"{d.year}.{d.month:02d}.{d.day:02d}"
+    return f"{f(s)} - {f(e)}"
+
+
+def horizon_title(horizon):
+    return HORIZON_TITLES.get(str(horizon.get("horizon") or ""), "")
+
+
 def roadmap_table(source, st, content_width):
     entries = roadmap_summary_rows(source)
     if not entries:
         return p("Энэ оношилгоонд 12 сарын төлөвлөгөө үүсээгүй байна.", st["body"])
     if TIER_R >= 2:
-        return roadmap_grouped_table(entries, st)
+        return roadmap_grouped_table(entries, st, source)
     _, _, pad = TIER_ROADMAP[TIER_R]
     head = [p("Хугацаа", st["table_head"]), p("Хийх ажил / үе шат", st["table_head"]), p("Хариуцагч", st["table_head"]), p("Гарц / хэмжүүр", st["table_head"])]
     rows = [head]
@@ -674,14 +746,14 @@ def roadmap_table(source, st, content_width):
     for horizon, milestone in entries:
         hid = (horizon.get("horizon"), horizon.get("dayStart"), horizon.get("dayEnd"))
         idx = len(rows)
-        period = f"{horizon.get('dayStart', 0)}-{horizon.get('dayEnd', 0)} өдөр"
+        period = horizon_period_label(source, horizon)
         first = hid != last_horizon
         if first:
             if start_row is not None and idx - 1 > start_row:
                 spans.append(("SPAN", (0, start_row), (0, idx - 1)))
             start_row = idx
             last_horizon = hid
-        label = Paragraph(f"<b>{text(period)}</b><br/>{text(horizon.get('nameMn') or '')}", st["rm_small_bold"]) if first else ""
+        label = Paragraph(f"<b>{text(period)}</b><br/>{text(horizon_title(horizon))}", st["rm_small_bold"]) if first else ""
         title = text(milestone.get("titleMn") or "-")
         desc = text(milestone.get("milestoneMn") or "")
         deliverable = text(milestone.get("deliverableMn") or "-")
@@ -712,6 +784,113 @@ def roadmap_table(source, st, content_width):
     return table
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# 12-month plan, page 3 (source["annualPlan"]): ONE connected vertical timeline, calendar labels computed by the backend.
+# Fixed readable sizes (never below 8.3 pt). Only page 3 is touched: pages 1-2 and the explanation tiers are unaffected. When the plan does not
+# fit at the smallest readable size the report falls back to the existing page 3 (the backend rejects such plans before they are stored).
+PLAN_BLUE = colors.HexColor("#1F5FBF")
+PLAN_BLUE_DARK = colors.HexColor("#123B7A")
+PLAN_BLUE_LIGHT = colors.HexColor("#EAF2FF")
+PLAN_LINE = colors.HexColor("#9DB9E6")
+PLAN_SIZES = ((10.4, 14.2, 11.8), (9.9, 13.4, 11.2), (9.3, 12.8, 10.6), (9.0, 12.3, 10.3), (8.7, 11.8, 10.0), (8.3, 11.2, 9.6))
+PLAN_DATE_W = 31 * mm
+PLAN_GUTTER = 9 * mm
+
+
+class PlanStage(Flowable):
+    def __init__(self, stage, size, is_first, is_last, width):
+        super().__init__()
+        base = getSampleStyleSheet()
+        fs, lead, hs = size
+        self.stage, self.is_first, self.is_last, self.avail = stage, is_first, is_last, width
+        self.date_style = ParagraphStyle("pl_date", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=8.3, leading=10.4, textColor=colors.white, alignment=TA_CENTER)
+        self.head_style = ParagraphStyle("pl_head", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=hs, leading=hs + 2.6, textColor=PLAN_BLUE_DARK)
+        self.note_style = ParagraphStyle("pl_note", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs - 0.6, leading=lead - 0.8, textColor=PLAN_BLUE)
+        self.body_style = ParagraphStyle("pl_body", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs, leading=lead, textColor=INK_2)
+        self.gap_after = 3.4 * mm
+
+    def wrap(self, availWidth, availHeight):
+        self.text_w = availWidth - PLAN_DATE_W - PLAN_GUTTER
+        self.parts = [Paragraph(text(self.stage.get("headingMn")), self.head_style)]
+        if self.stage.get("dependencyNoteMn"):
+            self.parts.append(Paragraph(text(self.stage["dependencyNoteMn"]), self.note_style))
+        for a in self.stage.get("actions") or []:
+            self.parts.append(Paragraph("&#8226;&nbsp;" + text(a.get("textMn")), self.body_style))
+        self.date_p = Paragraph(text(self.stage.get("dateLabel")), self.date_style)
+        h = 0
+        self.heights = []
+        for pp in self.parts:
+            _, ph = pp.wrap(self.text_w, 10000)
+            self.heights.append(ph)
+            h += ph + (1.2 * mm if pp is not self.parts[0] else 0.8 * mm)
+        _, dh = self.date_p.wrap(PLAN_DATE_W - 3 * mm, 1000)
+        self.pill_h = dh + 3.2 * mm
+        self.height = max(h, self.pill_h) + 0.6 * mm
+        self.width = availWidth
+        return self.width, self.height
+
+    def draw(self):
+        c = self.canv
+        top = self.height
+        # connected vertical line (passes through the gap to the next stage)
+        x = PLAN_DATE_W + PLAN_GUTTER / 2
+        dot_y = top - self.pill_h / 2
+        c.setStrokeColor(PLAN_LINE)
+        c.setLineWidth(1.6)
+        line_from = dot_y if self.is_first else top
+        line_to = dot_y if self.is_last else -self.gap_after
+        if line_from != line_to:
+            c.line(x, line_from, x, line_to)
+        # date pill
+        c.setFillColor(PLAN_BLUE)
+        c.roundRect(0, top - self.pill_h, PLAN_DATE_W, self.pill_h, 2.2 * mm, fill=1, stroke=0)
+        self.date_p.drawOn(c, 1.5 * mm, top - self.pill_h + 1.6 * mm)
+        # dot
+        c.setFillColor(colors.white)
+        c.setStrokeColor(PLAN_BLUE)
+        c.setLineWidth(1.8)
+        c.circle(x, dot_y, 1.9 * mm, fill=1, stroke=1)
+        # text column
+        y = top
+        tx = PLAN_DATE_W + PLAN_GUTTER
+        for i, (pp, ph) in enumerate(zip(self.parts, self.heights)):
+            y -= ph
+            pp.drawOn(c, tx, y)
+            y -= 0.8 * mm if i == 0 else 1.2 * mm
+
+
+def annual_plan_pages(source, st, content_width):
+    plan = source.get("annualPlan") or {}
+    stages = plan.get("stages") or []
+    head = [
+        p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
+        p("12 сарын хэрэгжилтийн төлөвлөгөө", st["page_title"]),
+        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Үе шат бүр өмнөх үе шатны үр дүн дээр тулгуурлана.", st["body"]),
+        Spacer(1, 3 * mm),
+    ]
+    avail = A4[1] - 18 * mm - 15 * mm - 1 * mm
+    used = 0
+    for fl in head:
+        _, h = fl.wrap(content_width, avail)
+        used += h + 1.5 * mm
+    for size in PLAN_SIZES:
+        flows = [PlanStage(s, size, i == 0, i == len(stages) - 1, content_width) for i, s in enumerate(stages)]
+        total = 0
+        for fl in flows:
+            _, h = fl.wrap(content_width, avail)
+            total += h + fl.gap_after
+        if used + total <= avail:
+            body = []
+            for fl in flows:
+                body.append(fl)
+                body.append(Spacer(1, fl.gap_after))
+            return head + body
+    print("annual plan does not fit page 3 at the smallest readable size", file=sys.stderr)
+    if STRICT:
+        raise SystemExit(4)  # approval/generation-time check: the plan must be shortened, never silently replaced or truncated
+    return None
+
+
 def roadmap_pages(source, st, content_width):
     return [
         p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
@@ -726,7 +905,8 @@ def build_story(source, st, content_width):
     story = []
     story += summary_page(source, st, content_width)
     story += actions_page(source, st, content_width)
-    story += roadmap_pages(source, st, content_width)
+    plan_pages = annual_plan_pages(source, st, content_width) if (source.get("annualPlan") or {}).get("stages") else None
+    story += plan_pages if plan_pages is not None else roadmap_pages(source, st, content_width)
     return story
 
 

@@ -1,4 +1,5 @@
 import { usePrismBody } from '../design/prismPage';
+import { CompanyLogoMark } from './CompanyLogo';
 import { asGlassDomain,useGlassSelected } from '../design/glassTheme';
 import { useDomainTheme } from '../design/domainTheme';
 import React, { useEffect, useRef, useState } from 'react';
@@ -289,12 +290,12 @@ export function ShellHeader({route}:{route:RouteName}){
       </button>
       {accountOpen&&<div id="mmri-account-menu" className="mmri-account-menu" role="menu" aria-label="Бүртгэлийн цэс" onKeyDown={handleMenuKeys}>
        <div className="mmri-account-context">
-        <span className="mmri-account-context-mark" aria-hidden="true">{initials(displayCompany)}</span>
+        <span className="mmri-account-context-mark" aria-hidden="true"><CompanyLogoMark companyId={session.companyId} fallback={<>{initials(displayCompany)}</>}/></span>
         <div><small>Байгууллага</small><strong>{displayCompany}</strong></div>
        </div>
        <a role="menuitem" href="#/settings?section=payments" onClick={closeMenus}><Icon name="receipt" size={19}/><span>Төлбөрийн түүх</span></a>
        <MenuLink route="profile" icon="building" onNavigate={closeMenus}>Байгууллагын мэдээлэл</MenuLink>
-       <a role="menuitem" href="#/settings?section=technical" onClick={closeMenus}><Icon name="gear" size={19}/><span>Тохиргоо</span></a>
+       <a role="menuitem" href="#/settings?section=data" onClick={closeMenus}><Icon name="shield" size={19}/><span>Өгөгдөл ба нууцлал</span></a>
        <div className="mmri-account-divider" aria-hidden="true"/>
        <button type="button" role="menuitem" className="mmri-account-logout" disabled={logoutBusy} onClick={()=>void logout()}><Icon name="logout" size={19}/><span>{logoutBusy?'Гарч байна…':'Системээс гарах'}</span></button>
       </div>}

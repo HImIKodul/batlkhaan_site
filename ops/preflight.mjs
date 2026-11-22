@@ -38,7 +38,9 @@ if(['true','1'].includes((process.env.MMRI_REPORT_REVIEW_REQUIRED??'').toLowerCa
 const replicas=Number(process.env.MMRI_API_REPLICA_COUNT??'1');if(!Number.isSafeInteger(replicas)||replicas!==1)errors.push('MMRI_API_REPLICA_COUNT must be 1 until a shared distributed rate limiter is configured');
 const shutdownDrain=Number(process.env.SHUTDOWN_DRAIN_MS??'5000');if(!Number.isSafeInteger(shutdownDrain)||shutdownDrain<0||shutdownDrain>30000)errors.push('SHUTDOWN_DRAIN_MS must be an integer from 0 to 30000');
 const shutdownForce=Number(process.env.SHUTDOWN_FORCE_TIMEOUT_MS??'45000');if(!Number.isSafeInteger(shutdownForce)||shutdownForce<30000||shutdownForce>120000||shutdownForce<=shutdownDrain)errors.push('SHUTDOWN_FORCE_TIMEOUT_MS must be 30000..120000 and greater than SHUTDOWN_DRAIN_MS');
-for(const name of ['MMRI_API_IMAGE','MMRI_WEB_IMAGE','MMRI_MIGRATE_IMAGE']){const ref=need(name); if(ref && !/@sha256:[a-f0-9]{64}$/i.test(ref))errors.push(`${name} must end with an immutable @sha256:<64-hex> digest`);}
+/* Immutable image digests apply to the container topology only. Native (Windows service / systemd) installs set MMRI_DEPLOY_MODE=native. */
+const nativeDeploy=(process.env.MMRI_DEPLOY_MODE??'container').trim().toLowerCase()==='native';
+for(const name of (nativeDeploy?[]:['MMRI_API_IMAGE','MMRI_WEB_IMAGE','MMRI_MIGRATE_IMAGE'])){const ref=need(name); if(ref && !/@sha256:[a-f0-9]{64}$/i.test(ref))errors.push(`${name} must end with an immutable @sha256:<64-hex> digest`);}
 
 const mailProvider=(process.env.MMRI_MAIL_PROVIDER??'disabled').trim().toLowerCase();
 if(mailProvider==='mock')errors.push('MMRI_MAIL_PROVIDER=mock is forbidden in production');
@@ -47,7 +49,11 @@ else if(mailProvider==='resend'){
   try{const u=new URL(process.env.MMRI_PUBLIC_APP_URL??'');if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)throw new Error();}catch{errors.push('MMRI_PUBLIC_APP_URL must be a clean public HTTPS URL for resend');}
   if(!/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test((process.env.MMRI_MAIL_FROM??'').trim()))errors.push('MMRI_MAIL_FROM must be a plain sender address');
 }
-else if(mailProvider!=='disabled')errors.push('MMRI_MAIL_PROVIDER must be resend or disabled');
+else if(mailProvider==='gmail'){
+  for(const n of ['GMAIL_CLIENT_ID','GMAIL_CLIENT_SECRET','GMAIL_REFRESH_TOKEN','GMAIL_USER'])if(!(process.env[n]??'').trim())errors.push(`${n} is required for MMRI_MAIL_PROVIDER=gmail`);
+  try{const u=new URL(process.env.MMRI_PUBLIC_APP_URL??'');if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)throw new Error();}catch{errors.push('MMRI_PUBLIC_APP_URL must be a clean public HTTPS URL for gmail');}
+}
+else if(mailProvider!=='disabled')errors.push('MMRI_MAIL_PROVIDER must be resend, gmail or disabled');
 else warnings.push('Password recovery e-mail is NOT delivered (MMRI_MAIL_PROVIDER=disabled). Configure and externally verify resend before launch.');
 if(!/^https:\/\//.test((process.env.MMRI_PUBLIC_APP_URL??'').trim()))warnings.push('MMRI_PUBLIC_APP_URL should be the public https URL used in password reset links (falls back to the first ALLOWED_ORIGINS entry)');
 const billingProvider=(process.env.MMRI_BILLING_PROVIDER??'').trim().toLowerCase();
