@@ -50,7 +50,9 @@ rm -f "$OUT/deploy/LOCAL_POSTGRES_LOOPBACK.md"   # development-container note (o
 find "$OUT" -name __pycache__ -prune -exec rm -rf {} +
 
 echo "[5/6] provenance"
-GIT=$(git -C "$BACKEND" rev-parse --short HEAD 2>/dev/null || echo unknown); DIRTY=$(git -C "$BACKEND" status --porcelain 2>/dev/null | wc -l)
+# A clean `git archive` extraction has no .git: take the commit from MMRI_BUILD_GIT_HEAD and report the dirty count as null (JSON) instead of failing under pipefail.
+GIT=${MMRI_BUILD_GIT_HEAD:-$(git -C "$BACKEND" rev-parse --short HEAD 2>/dev/null || echo unknown)}
+if git -C "$BACKEND" rev-parse --git-dir >/dev/null 2>&1; then DIRTY=$(git -C "$BACKEND" status --porcelain 2>/dev/null | wc -l); else DIRTY=null; fi
 cat > "$OUT/BUILD_INFO.json" <<EOF
 {"product":"BusinessMRI","version":"$LABEL","builtAt":"$(date -u +%FT%TZ)","node":"$(node -v)","npm":"$(npm -v)","gitHead":"$GIT","uncommittedEntries":$DIRTY,"generatorPdf":"MMRI-PDF-1.6-BUSINESSMRI-BRAND"}
 EOF
