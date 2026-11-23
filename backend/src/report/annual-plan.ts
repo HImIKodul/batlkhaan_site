@@ -47,8 +47,11 @@ export interface AnnualPlanProvider {
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) => `${d.getUTCFullYear()}.${pad(d.getUTCMonth() + 1)}.${pad(d.getUTCDate())}`;
 const iso = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+/** The plan starts on the report's generation date as a calendar date in Mongolia (Asia/Ulaanbaatar, UTC+8, no daylight saving), so a report generated at 23:30 in Ulaanbaatar does not start the plan a day early. A date-only value is taken as is. */
 export function planStartDate(generatedAt: string): Date {
-  const d = new Date(String(generatedAt).slice(0, 10) + "T00:00:00Z");
+  const raw = String(generatedAt);
+  const instant = /T\d{2}:\d{2}/.test(raw) ? new Date(raw) : null;
+  const d = instant && !Number.isNaN(instant.getTime()) ? new Date(new Date(instant.getTime() + 8 * 3_600_000).toISOString().slice(0, 10) + "T00:00:00Z") : new Date(raw.slice(0, 10) + "T00:00:00Z");
   if (Number.isNaN(d.getTime())) throw new Error("Invalid report generation date");
   return d;
 }

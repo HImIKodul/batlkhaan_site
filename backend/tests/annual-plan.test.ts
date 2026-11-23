@@ -47,3 +47,12 @@ describe('generateAnnualPlan boundary',()=>{
  it('a page-fit failure triggers one repair and otherwise rejects (never truncates)',async()=>{let calls=0;const fits=async()=>{calls++;return false};const r:any=await generateAnnualPlan(payload,'Маркетинг',prov([good(),good()]),{fits});expect(r.state).toBe('UNAVAILABLE');expect(calls).toBe(2)});
  it('a provider failure is reported as UNAVAILABLE with a reason',async()=>{const p:AnnualPlanProvider={generate:async()=>{throw new Error('HTTP 429 [insufficient_quota]')}};const r:any=await generateAnnualPlan(payload,'Маркетинг',p);expect(r.state).toBe('UNAVAILABLE');expect(r.reason).toContain('insufficient_quota')});
 });
+
+describe("plan start date follows the Mongolian calendar day", () => {
+  it("rolls an evening UTC instant to the next Ulaanbaatar day and keeps date-only values", async () => {
+    const { planStartDate } = await import("../src/report/annual-plan.js");
+    expect(planStartDate("2026-11-22T17:30:00.000Z").toISOString().slice(0, 10)).toBe("2026-11-23");
+    expect(planStartDate("2026-11-22T15:59:00.000Z").toISOString().slice(0, 10)).toBe("2026-11-22");
+    expect(planStartDate("2026-11-22").toISOString().slice(0, 10)).toBe("2026-11-22");
+  });
+});

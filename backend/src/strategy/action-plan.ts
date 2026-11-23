@@ -189,7 +189,7 @@ function genericMilestoneText(type: string): { milestone: string; deliverable: s
   if (type === "COLLECT_EVIDENCE") return {
     milestone: "Үлдсэн шууд нотолгооны замуудын мэдээллийг бүрдүүлж, оношлох боломжтой төлөвт хүргэх.",
     deliverable: "Нотолгооны багц",
-    kpi: "Хүчинтэй шууд нотолгооны замын тоо"
+    kpi: "Шууд нотолгоогоор баталгаажсан асуултын тоо"
   };
   return {
     milestone: "Нээлттэй нягтлах шаардлагатай төлөв болон ноцтой зөрчлийг эх сурвалжийн шалгалтаар шийдвэрлэх.",
