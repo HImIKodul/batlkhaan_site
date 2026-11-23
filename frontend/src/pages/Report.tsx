@@ -50,7 +50,7 @@ function parseDate(value:string){const direct=new Date(value);if(!Number.isNaN(d
 function addDays(date:Date,days:number){const d=new Date(date);d.setDate(d.getDate()+days);return d}
 function compactDate(d:Date){return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`}
 function phaseBounds(range:string,index:number){const nums=(range.match(/\d+/g)||[]).map(Number);if(nums.length>=2)return [nums[0],nums[1]] as const;const fallback:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[[0,14],[15,30],[31,90],[91,180],[181,365]];return fallback[Math.min(index,4)]}
-function stageDateRange(rawDate:string,stage:ReportPlanStage,index:number){/* ROOT CAUSE of dates like 2032.03.26 - 2026.09.17: real reports already carry calendar dates in stage.range (horizonDates), and this function parsed every number of that string (2026, 09, 08 ...) as DAY offsets. A range that already holds a calendar date is shown as is. */if(/\d{4}[.\-/]\d{2}[.\-/]\d{2}/.test(stage.range))return stage.range;const [start,end]=phaseBounds(stage.range,index);const base=parseDate(rawDate);return `${compactDate(addDays(base,start))} - ${compactDate(addDays(base,end))}`}
+function stageDateRange(rawDate:string,stage:ReportPlanStage,index:number){/* ROOT CAUSE of dates like 2032.03.26 - 2026.09.17: real reports already carry calendar dates in stage.range (horizonDates), and this function parsed every number of that string (2026, 09, 08 ...) as DAY offsets. A range that already holds a calendar date is shown as is. */if(/\d{4} оны|\d{4}[.\-/]\d{2}[.\-/]\d{2}/.test(stage.range))return stage.range;const [start,end]=phaseBounds(stage.range,index);const base=parseDate(rawDate);return `${compactDate(addDays(base,start))} - ${compactDate(addDays(base,end))}`}
 
 function demoModel(area:BusinessArea,company:string,historyIndex=0):ReportModel{
  const rawDate=DEMO_DATES[historyIndex]||DEMO_DATES[0];const base=clamp(area.demoScore-historyIndex*6);const names=demoCapabilityNames(area.id);const phase=historyIndex*.93;const scored:RankedCapability[]=names.map((name,i)=>({id:canonicalCapabilities[area.id][i]?.id||`${area.id}-${i+1}`,name,score:clamp(base+Math.round(Math.sin((i+2)*1.7+phase)*16)+Math.round(Math.cos((i+1)*(historyIndex+1)*.47)*5)+(i%5)-2),weightPct:0,evidenceCount:0,purposeMass:0,confidence:0,coverage:0,canonicalIndex:i}));const {positives,flaws}=selectFindingEnds(scored,area);
@@ -60,18 +60,23 @@ function demoModel(area:BusinessArea,company:string,historyIndex=0):ReportModel{
 function selectOutcomeWeakest(outcome:OutcomePriorityResult|undefined){if(!outcome?.topCategories?.length)return undefined;return [...outcome.topCategories].sort((a,b)=>a.categoryScore-b.categoryScore||a.rank-b.rank)[0]}
 /* Fallback 12-month roadmap labels: calendar dates (never day counts) and natural stage titles. Same date policy as the server PDF: day 0 = report date, the window ends the day before the same calendar date twelve months later. */
 const HORIZON_TITLES:Record<string,string>={H0:'Шууд эхлэх ажлууд',H1:'Эхний сарын ажлууд',H2:'Суурийг бий болгох үе',H3:'Хэрэгжилтийг бататгах үе',H4:'Жилийн хэрэгжилт ба дүгнэлт'};
+function monthDay(d:Date){return `${d.getUTCMonth()+1}-р сарын ${d.getUTCDate()}`}
+/** Natural period label (same rule as the server's planPeriodLabelMn): whole months "2027 оны 1-3-р сар", otherwise "2026 оны 9-р сарын 8 - 12-р сарын 7"; both years when the period crosses a year. */
+function periodLabelMn(a:Date,b:Date){const y1=a.getUTCFullYear(),y2=b.getUTCFullYear(),m1=a.getUTCMonth()+1,m2=b.getUTCMonth()+1,last=new Date(Date.UTC(y2,m2,0)).getUTCDate();
+ if(y1===y2){if(a.getUTCDate()===1&&b.getUTCDate()===last)return m1===m2?`${y1} оны ${m1}-р сар`:`${y1} оны ${m1}-${m2}-р сар`;return `${y1} оны ${monthDay(a)} - ${monthDay(b)}`}
+ return `${y1} оны ${monthDay(a)} - ${y2} оны ${monthDay(b)}`}
 function horizonDates(generatedAt:string|undefined,startDay:number,endDay:number):string{
  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(generatedAt||''));if(!m)return `${startDay}–${endDay} хоног`;
  const base=Date.UTC(+m[1],+m[2]-1,+m[3]);const y=+m[1]+1,mo=+m[2]-1,last=new Date(Date.UTC(y,mo+1,0)).getUTCDate();
- const windowEnd=Date.UTC(y,mo,Math.min(+m[3],last))-86_400_000;const f=(t:number)=>{const d=new Date(t);return `${d.getUTCFullYear()}.${String(d.getUTCMonth()+1).padStart(2,'0')}.${String(d.getUTCDate()).padStart(2,'0')}`};
- return `${f(Math.min(base+startDay*86_400_000,windowEnd))} - ${f(Math.min(base+endDay*86_400_000,windowEnd))}`;
+ const windowEnd=Date.UTC(y,mo,Math.min(+m[3],last))-86_400_000;
+ return periodLabelMn(new Date(Math.min(base+startDay*86_400_000,windowEnd)),new Date(Math.min(base+endDay*86_400_000,windowEnd)));
 }
 function reportPlanFromPayload(payload:FrozenReportPayload|undefined):ReportPlanStage[]{
  const fallbackBounds:Record<string,[number,number]>={H0:[0,14],H1:[15,30],H2:[31,90],H3:[91,180],H4:[181,365]};
- return (payload?.roadmap||[]).filter(row=>row.milestones?.length).map(row=>{
-  const fallback=fallbackBounds[row.horizon]||[0,365];
-  const start=Number.isFinite(row.dayStart)?Number(row.dayStart):fallback[0];
-  const end=Number.isFinite(row.dayEnd)?Number(row.dayEnd):fallback[1];
+ /* ROOT CAUSE of the 76 day hole: horizons without milestones (here H1 and H2) were dropped and the next stage kept its own start, so days 15-90 belonged to nobody. The whole year is accounted for: the first stage starts on day 0, each stage runs until the day before the next one starts, the last runs to the end of the window. */
+ const rows=(payload?.roadmap||[]).filter(row=>row.milestones?.length).map(row=>{const fb=fallbackBounds[row.horizon]||[0,365];return {row,start:Number.isFinite(row.dayStart)?Number(row.dayStart):fb[0],end:Number.isFinite(row.dayEnd)?Number(row.dayEnd):fb[1]}});
+ rows.forEach((r,i)=>{if(i===0)r.start=0;if(i<rows.length-1)r.end=Math.max(r.end,rows[i+1].start-1);else r.end=Math.max(r.end,365)});
+ return rows.map(({row,start,end})=>{
   const actions:ReportPlanAction[]=row.milestones.map(m=>({
    milestoneId:m.milestoneId,
    title:mnCustomerText(m.titleMn),
@@ -137,7 +142,7 @@ const ownerByArea:Record<BusinessAreaId,string>={it:'Мэдээллийн тех
 function lowerFirst(value:string){const v=String(value||'').trim().replace(/[.]+$/,'');return v?`${v.charAt(0).toLocaleLowerCase('mn-MN')}${v.slice(1)}`:v}
 function PlanActionCopy({m,stage,title,milestone,result,measure,owner:ownerLabel,index=0}:{m:ReportModel;stage:ReportPlanStage;title:string;milestone?:string;result:string;measure:string;owner?:string;index?:number}){const owner=mnCustomerText(ownerLabel||ownerByArea[m.area.id]);const action=mnCustomerText(title);const finished=lowerFirst(mnCustomerText(result));const metric=lowerFirst(mnCustomerText(measure));const work=mnCustomerText(milestone||'');const finishSentence=`Ажил дуусахад ${finished} бүрдсэн байна.`;return <div className="report-plan-action-copy"><div className="report-plan-action-copy__head"><span>{index+1}</span><h4>{action}</h4></div><p>{owner} холбогдох багтайгаа хамт хэрэгжүүлнэ. {work||finishSentence}</p>{work&&<p>{finishSentence}</p>}<p className="report-plan-action-copy__check"><Icon name="check" size={15}/><span>Ахицын хэмжүүр: {metric}.</span></p></div>}
 function PlanCard({m,stage,index,done,toggle}:{m:ReportModel;stage:ReportPlanStage;index:number;done:boolean;toggle:()=>void}){return <article className={`report-roadmap-card report-roadmap-card--natural ${done?'is-complete':''}`}><div className="report-roadmap-card__time"><span>{stageDateRange(m.rawDate,stage,index)}</span><h3>{stage.title}</h3><p>{stage.purpose}</p></div><div className="report-roadmap-card__work">{stage.actions.map((a,j)=><PlanActionCopy key={`${a.title}-${j}`} m={m} stage={stage} title={a.title} milestone={a.milestone} result={a.result} measure={a.measure} owner={a.owner} index={j}/>)}</div></article>}
-function AnnualTimeline({annual}:{annual:NonNullable<ReportModel['annual']>}){return <ol className="report-timeline" aria-label="12 сарын төлөвлөгөөний цагийн хуваарь">{annual.stages.map((s,i)=><li key={`${s.dateLabel}-${i}`} className="report-timeline__stage"><span className="report-timeline__dot" aria-hidden="true">{i+1}</span><div className="report-timeline__date">{s.dateLabel}</div><div className="report-timeline__body"><h3>{s.heading}</h3>{s.note&&<p className="report-timeline__note">{s.note}</p>}<ul>{s.actions.map((a,j)=><li key={j}>{a}</li>)}</ul></div></li>)}</ol>}
+function AnnualTimeline({annual}:{annual:NonNullable<ReportModel['annual']>}){return <ol className="report-timeline" aria-label="12 сарын төлөвлөгөөний цагийн хуваарь">{annual.stages.map((s,i)=><li key={`${s.dateLabel}-${i}`} className="report-timeline__stage"><span className="report-timeline__dot" aria-hidden="true"/><div className="report-timeline__body"><div className="report-timeline__date">{s.dateLabel}</div><h3>{s.heading}</h3>{s.note&&<p className="report-timeline__note">{s.note}</p>}<ul>{s.actions.map((a,j)=><li key={j}>{a}</li>)}</ul></div></li>)}</ol>}
 function PageThree({m,reviewer=false}:{m:ReportModel;reviewer?:boolean}){
  /* MMRI-25: real reports persist stage completion as milestone status through the action-plan API and show the acknowledged server state;
     the browser-storage record is kept only for the demo report, which has no server plan. A stage counts as done when all its milestones are DONE. */
@@ -155,7 +160,7 @@ function PageThree({m,reviewer=false}:{m:ReportModel;reviewer?:boolean}){
   setStatusById(prev=>({...prev,...Object.fromEntries(ids.map(id=>[id,status]))}));
   Promise.all(ids.map(id=>api.updateMilestone(m.assessmentId,id,status))).catch(()=>setStatusById(before));
  };
- return <section className="report-three-page page-three report-screen-page"><PrintMeta m={m} page={3}/><header><span>03</span><div><b>12 САРЫН ТӨЛӨВЛӨГӨӨ</b><h2>12 сарын хэрэгжилтийн төлөвлөгөө</h2></div></header><div className="report-roadmap-human">{m.annual?<AnnualTimeline annual={m.annual}/>:m.plan.length?m.plan.map((stage,i)=><PlanCard key={`${stage.range}-${stage.title}`} m={m} stage={stage} index={i} done={done.has(i)} toggle={()=>toggle(i)}/>):<div className="experience-state">Энэ оношилгоонд 12 сарын төлөвлөгөө үүсээгүй байна.</div>}</div></section>
+ return <section className="report-three-page page-three report-screen-page"><PrintMeta m={m} page={3}/><header><span>03</span><div><b>12 САРЫН ТӨЛӨВЛӨГӨӨ</b><h2>12 сарын хэрэгжилтийн төлөвлөгөө</h2></div></header><div className="report-roadmap-human">{!m.annual&&!m.isDemo&&m.plan.length>0&&<p className="report-plan-notice" role="note">Танай компанид зориулсан 12 сарын хувийн төлөвлөгөө энэ тайланд үүсээгүй байна. Доорх нь оношилгооны үр дүнгээс гарсан ерөнхий хугацааны дараалал бөгөөд хувийн төлөвлөгөө биш болно.</p>}{m.annual?<AnnualTimeline annual={m.annual}/>:m.plan.length?m.plan.map((stage,i)=><PlanCard key={`${stage.range}-${stage.title}`} m={m} stage={stage} index={i} done={done.has(i)} toggle={()=>toggle(i)}/>):<div className="experience-state">Энэ оношилгоонд 12 сарын төлөвлөгөө үүсээгүй байна.</div>}</div></section>
 }
 
 function shortRef(value:string){const v=String(value||'').trim();return v.length<=18?v:`${v.slice(0,8)}…${v.slice(-8)}`}

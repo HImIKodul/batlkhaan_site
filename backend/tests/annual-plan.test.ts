@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {buildPlanInput,planWindowDays,validateAnnualPlanDraft,materializeAnnualPlan,generateAnnualPlan,estimatePlanLines,planStartDate,addDays,PLAN_LINE_BUDGET,planJsonSchema,type AnnualPlanProvider} from '../src/report/annual-plan.js';
+import {planPeriodLabelMn,normaliseStageSchedule,buildPlanInput,planWindowDays,validateAnnualPlanDraft,materializeAnnualPlan,generateAnnualPlan,estimatePlanLines,planStartDate,addDays,PLAN_LINE_BUDGET,planJsonSchema,type AnnualPlanProvider} from '../src/report/annual-plan.js';
 const act=(i:number,band='P2')=>({id:`REC-${i}`,findingId:`ROOT-${i}`,categoryId:`CAT${i}`,cellId:'C02',type:'EXECUTION',titleMn:`Ажил ${i}`,objectiveMn:'Зорилго',actionMn:`Үйлдэл ${i}`,deliverableMn:'Гарц',kpiMn:'Хэмжүүр',ownerRoleId:'R01',sponsorRoleId:'R01',currentCellScore:40,targetCellScore:75,priorityBand:band});
 const payload:any={payloadHash:'h'.repeat(64),generatedAt:'2026-12-31T10:00:00.000Z',companyName:'Тест ХХК',overall:{score:60,confidence:.9,coverage:.9,band:'Дунд'},strengths:[],weaknesses:[],
  rootFindings:[{id:'ROOT-1',categoryId:'CAT1',downstreamCategoryIds:['CAT2']}],priorityActions:[act(1,'P1'),act(2),act(3)],evidenceActions:[],risks:[],requiredWarnings:[],displayDictionary:{R01:'Захирал'}};
@@ -15,7 +15,7 @@ describe('12-month plan validation',()=>{
  it('input uses opaque references and carries dependency hints from the root-cause graph',()=>{expect(Object.keys(refToRecommendationId)).toEqual(['F1','F2','F3']);expect(input.dependencyHints).toEqual([{first:'F1',then:'F2'}])});
  it('dates are computed in code, across a year boundary and a leap year',()=>{
   const plan=materializeAnnualPlan(good().stages as any,payload,{kind:'TEST_DOUBLE',model:'t'});
-  expect(plan.startDate).toBe('2026-12-31');expect(plan.stages[0].dateLabel).toBe('2026.12.31 - 2027.02.13');expect(plan.stages[2].endDate).toBe('2027-12-30');
+  expect(plan.startDate).toBe('2026-12-31');expect(plan.stages[0].dateLabel).toBe('2026 оны 12-р сарын 31 - 2027 оны 2-р сарын 13');expect(plan.stages[2].endDate).toBe('2027-12-30');
   expect(addDays(planStartDate('2028-02-28T00:00:00Z'),1).toISOString().slice(0,10)).toBe('2028-02-29');expect(addDays(planStartDate('2028-02-28T00:00:00Z'),366).toISOString().slice(0,10)).toBe('2029-02-28');
  });
  it('rejects invented numbers (budgets, percentages, targets)',()=>{const d=good();d.stages[1].actions[0].textMn='Зардлыг 25 хувиар бууруулж 5 саяын төсөвт багтаана.';expect(check(d)).toContain('INVENTED_NUMBER')});
@@ -69,4 +69,61 @@ describe("repeated catalogue sentences and punctuation tidy", () => {
     const r = validateAnnualPlanDraft(draft, { findings: [], evidenceChecks: [], dependencyHints: [], windowDays: 365 } as any, {});
     expect(r.issues.some(i => i.checkId === "REPEATED_SENTENCE")).toBe(true);
   });
+});
+
+/* ---- root-cause repair: capability-grounded input, coverage of the whole year, no document-collection plans ---- */
+const catalog={categories:{CAT1:'Маркетингийн стратеги боловсруулах чадвар',CAT2:'Зорилтот зах зээлийн сонголт',CAT3:'Кампанит ажлын удирдлага'},cells:{C02:{nameMn:'Хэрэглэгч, зах зээлийн хэрэгцээнд нийцэх байдал',groupMn:'Засаглал ба чиглэл'}}};
+const rich=buildPlanInput(payload,'Маркетинг',{catalog});
+const checkRich=(d:any)=>validateAnnualPlanDraft(d,rich.input,rich.refToRecommendationId).issues.map(i=>i.checkId);
+const goodRich=()=>({schemaVersion:'MMRI-ANNUAL-PLAN-DRAFT-1.0',stages:[
+ {id:'E1',headingMn:'Зах зээлд тулгуурласан стратегийн чиглэл',startDay:0,durationDays:60,dependsOnStageIds:[],dependencyNoteMn:null,actions:[act2('Маркетингийн стратеги боловсруулах чадварыг сайжруулахын тулд хэрэглэгчдийн хэрэгцээг зах зээл дээр шалгаж, стратегийн чиглэлээ шинэчилнэ.',['F1'])]},
+ {id:'E2',headingMn:'Зорилтот зах зээлээ тодорхой болгох',startDay:50,durationDays:140,dependsOnStageIds:['E1'],dependencyNoteMn:null,actions:[act2('Зорилтот зах зээлийн сонголтыг хэрэглэгчийн хэрэгцээнд нийцүүлэн сонгох бичгийн журам гарган, хоёр сегментэд туршина.',['F2'])]},
+ {id:'E3',headingMn:'Кампанит ажлын хэрэгжилтийг тогтворжуулах',startDay:190,durationDays:175,dependsOnStageIds:['E2'],dependencyNoteMn:null,actions:[act2('Кампанит ажлын удирдлагыг туршлагад тулгуурлан тогтмол хяналтад оруулж, үр дүнгээр нь дараагийн жилийн төлөвлөгөөг баталгаажуулна.',['F3'])]}]});
+describe('plan input is grounded in the diagnosed capability',()=>{
+ it('every finding carries its capability and dimension name and the template wording is only a hint',()=>{
+  expect(rich.input.findings[0].capabilityMn).toBe('Маркетингийн стратеги боловсруулах чадвар');expect(rich.input.findings[0].dimensionMn).toContain('Хэрэглэгч');
+  expect(rich.input.findings[0]).toHaveProperty('methodHintMn');expect(rich.input.findings[0]).not.toHaveProperty('titleMn');
+ });
+ it('findings that need the same kind of fix are offered as one shared initiative',()=>{
+  const p2:any={...payload,priorityActions:[{...act(1),interventionCode:'ESTABLISH_BASELINE'},{...act(2),interventionCode:'ESTABLISH_BASELINE'},{...act(3),interventionCode:'DEFINE_PROCESS'}]};
+  expect(buildPlanInput(p2,'Маркетинг',{catalog}).input.sharedInterventions).toEqual([{interventionCode:'ESTABLISH_BASELINE',methodHintMn:'Ажил 1',refs:['F1','F2']}]);
+ });
+ it('accepts a grounded, whole-year plan',()=>expect(checkRich(goodRich())).toEqual([]));
+ it('rejects actions that are not about the diagnosed capability',()=>{const d=goodRich();for(const s of d.stages)s.actions[0].textMn='Ажилтнуудтай уулзалт зохион байгуулж, санал бодлыг сонсоод дараагийн алхмаа шийднэ.';expect(checkRich(d)).toContain('NOT_GROUNDED')});
+ it('rejects a plan made of evidence and document collection',()=>{const d=goodRich();for(const s of d.stages)s.actions[0].textMn='Маркетингийн стратеги боловсруулах чадварт хамаарах нотолгоог цуглуулж баримт бичгийг бэлтгэнэ.';expect(checkRich(d)).toContain('EVIDENCE_OVERUSE')});
+ it('rejects the generic intervention titles as plan text',()=>{const d=goodRich();d.stages[0].actions[0].textMn='Хяналтын давтамжийг тохируулах ажлыг маркетингийн стратеги боловсруулах чадварт хийнэ.';expect(checkRich(d)).toContain('ROBOTIC_PHRASE')});
+});
+describe('the whole twelve months are accounted for (regression for the 76-day hole)',()=>{
+ it('rejects a plan with an unexplained gap, a late start or an early end',()=>{
+  const gap=goodRich();gap.stages[1].startDay=100;gap.stages[1].durationDays=90;expect(checkRich(gap)).toContain('SCHEDULE_GAP');
+  const late=goodRich();late.stages[0].startDay=30;late.stages[0].durationDays=30;expect(checkRich(late)).toContain('YEAR_START');
+  const early=goodRich();early.stages[2].durationDays=60;expect(checkRich(early)).toContain('YEAR_COVERAGE');
+ });
+ it('closes small gaps and runs the last stage to the last day of the window (365 and 366 day windows, leap year)',()=>{
+  for(const [gen,win] of [['2026-09-08T02:00:00Z',365],['2027-03-01T02:00:00Z',366],['2028-02-29T02:00:00Z',365],['2026-12-31T20:00:00Z',365]] as const){
+   const draft:any=[{id:'E1',headingMn:'a',startDay:0,durationDays:14,dependsOnStageIds:[],dependencyNoteMn:null,actions:[]},{id:'E2',headingMn:'b',startDay:20,durationDays:70,dependsOnStageIds:[],dependencyNoteMn:null,actions:[]},{id:'E3',headingMn:'c',startDay:100,durationDays:200,dependsOnStageIds:[],dependencyNoteMn:null,actions:[]}];
+   const s=normaliseStageSchedule(draft,win);expect(s[0].startDay).toBe(0);
+   const ends=s.map(x=>x.startDay+x.durationDays-1);expect(Math.max(...ends)).toBe(win-1);
+   for(let i=1;i<s.length;i++)expect(s[i].startDay).toBeLessThanOrEqual(Math.max(...s.slice(0,i).map(x=>x.startDay+x.durationDays))); // no uncovered day
+  }
+ });
+ it('keeps legitimate overlaps and never reorders or shortens real work',()=>{
+  const d:any=[{id:'E1',headingMn:'a',startDay:0,durationDays:90,dependsOnStageIds:[],dependencyNoteMn:null,actions:[]},{id:'E2',headingMn:'b',startDay:60,durationDays:305,dependsOnStageIds:[],dependencyNoteMn:null,actions:[]}];
+  const s=normaliseStageSchedule(d,365);expect(s[0].durationDays).toBe(90);expect(s[1].startDay).toBe(60);expect(s[1].startDay+s[1].durationDays-1).toBe(364);
+ });
+ it('the materialised plan for the saved Marketing report period (2026-09-08) is contiguous and ends on 2027-09-07',()=>{
+  const p:any={...payload,generatedAt:'2026-09-08T02:00:00.000Z'};
+  const plan=materializeAnnualPlan(goodRich().stages as any,p,{kind:'TEST_DOUBLE',model:'t'});
+  expect(plan.startDate).toBe('2026-09-08');expect(plan.endDate).toBe('2027-09-07');
+  for(let i=1;i<plan.stages.length;i++)expect(plan.stages[i].startDate<=addDays(new Date(plan.stages[i-1].endDate+'T00:00:00Z'),1).toISOString().slice(0,10)).toBe(true);
+ });
+ it('uses the Mongolian calendar day around midnight UTC+8',()=>{expect(planStartDate('2026-12-31T16:30:00.000Z').toISOString().slice(0,10)).toBe('2027-01-01');expect(planStartDate('2026-12-31T15:59:00.000Z').toISOString().slice(0,10)).toBe('2026-12-31')});
+});
+describe('natural single-line period labels',()=>{
+ const L=(a:string,b:string)=>planPeriodLabelMn(new Date(a+'T00:00:00Z'),new Date(b+'T00:00:00Z'));
+ it('whole months, partial months and year crossings',()=>{
+  expect(L('2027-01-01','2027-03-31')).toBe('2027 оны 1-3-р сар');expect(L('2027-02-01','2027-02-28')).toBe('2027 оны 2-р сар');
+  expect(L('2026-09-08','2026-12-07')).toBe('2026 оны 9-р сарын 8 - 12-р сарын 7');expect(L('2026-12-08','2027-03-07')).toBe('2026 оны 12-р сарын 8 - 2027 оны 3-р сарын 7');
+  expect(L('2028-02-29','2028-05-28')).toBe('2028 оны 2-р сарын 29 - 5-р сарын 28');expect(L('2027-01-31','2027-02-27')).toBe('2027 оны 1-р сарын 31 - 2-р сарын 27');
+ });
 });

@@ -792,71 +792,61 @@ PLAN_BLUE = colors.HexColor("#1F5FBF")
 PLAN_BLUE_DARK = colors.HexColor("#123B7A")
 PLAN_BLUE_LIGHT = colors.HexColor("#EAF2FF")
 PLAN_LINE = colors.HexColor("#9DB9E6")
-PLAN_SIZES = ((10.4, 14.2, 11.8), (9.9, 13.4, 11.2), (9.3, 12.8, 10.6), (9.0, 12.3, 10.3), (8.7, 11.8, 10.0), (8.3, 11.2, 9.6))
-PLAN_DATE_W = 31 * mm
+PLAN_SIZES = ((11.0, 15.2, 12.4), (10.6, 14.6, 11.9), (10.2, 14.0, 11.5), (9.8, 13.4, 11.0), (9.4, 12.9, 10.6), (9.0, 12.4, 10.2), (8.6, 11.8, 9.8), (8.3, 11.2, 9.6))
 PLAN_GUTTER = 9 * mm
 
 
 class PlanStage(Flowable):
+    """One stage: the period label on ONE line above the heading (natural Mongolian calendar words, computed by the backend), then the heading, the dependency note and the actions. The dot of the connected timeline sits on the period line."""
+
     def __init__(self, stage, size, is_first, is_last, width):
         super().__init__()
         base = getSampleStyleSheet()
         fs, lead, hs = size
         self.stage, self.is_first, self.is_last, self.avail = stage, is_first, is_last, width
-        self.date_style = ParagraphStyle("pl_date", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=8.3, leading=10.4, textColor=colors.white, alignment=TA_CENTER)
+        self.date_style = ParagraphStyle("pl_date", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=max(8.6, fs - 1.0), leading=max(11.0, fs + 1.6), textColor=PLAN_BLUE)
         self.head_style = ParagraphStyle("pl_head", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=hs, leading=hs + 2.6, textColor=PLAN_BLUE_DARK)
         self.note_style = ParagraphStyle("pl_note", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs - 0.6, leading=lead - 0.8, textColor=PLAN_BLUE)
         self.body_style = ParagraphStyle("pl_body", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs, leading=lead, textColor=INK_2)
-        self.gap_after = 3.4 * mm
+        self.gap_after = 4.2 * mm
 
     def wrap(self, availWidth, availHeight):
-        self.text_w = availWidth - PLAN_DATE_W - PLAN_GUTTER
-        self.parts = [Paragraph(text(self.stage.get("headingMn")), self.head_style)]
+        self.text_w = availWidth - PLAN_GUTTER
+        self.parts = [Paragraph(text(self.stage.get("dateLabel")), self.date_style), Paragraph(text(self.stage.get("headingMn")), self.head_style)]
         if self.stage.get("dependencyNoteMn"):
             self.parts.append(Paragraph(text(self.stage["dependencyNoteMn"]), self.note_style))
         for a in self.stage.get("actions") or []:
             self.parts.append(Paragraph("&#8226;&nbsp;" + text(a.get("textMn")), self.body_style))
-        self.date_p = Paragraph(text(self.stage.get("dateLabel")), self.date_style)
         h = 0
         self.heights = []
-        for pp in self.parts:
+        for i, pp in enumerate(self.parts):
             _, ph = pp.wrap(self.text_w, 10000)
             self.heights.append(ph)
-            h += ph + (1.2 * mm if pp is not self.parts[0] else 0.8 * mm)
-        _, dh = self.date_p.wrap(PLAN_DATE_W - 3 * mm, 1000)
-        self.pill_h = dh + 3.2 * mm
-        self.height = max(h, self.pill_h) + 0.6 * mm
+            h += ph + (0.6 * mm if i == 0 else 1.2 * mm)
+        self.height = h + 0.6 * mm
         self.width = availWidth
         return self.width, self.height
 
     def draw(self):
         c = self.canv
         top = self.height
-        # connected vertical line (passes through the gap to the next stage)
-        x = PLAN_DATE_W + PLAN_GUTTER / 2
-        dot_y = top - self.pill_h / 2
+        x = PLAN_GUTTER / 2
+        dot_y = top - self.heights[0] / 2
         c.setStrokeColor(PLAN_LINE)
         c.setLineWidth(1.6)
         line_from = dot_y if self.is_first else top
         line_to = dot_y if self.is_last else -self.gap_after
         if line_from != line_to:
             c.line(x, line_from, x, line_to)
-        # date pill
-        c.setFillColor(PLAN_BLUE)
-        c.roundRect(0, top - self.pill_h, PLAN_DATE_W, self.pill_h, 2.2 * mm, fill=1, stroke=0)
-        self.date_p.drawOn(c, 1.5 * mm, top - self.pill_h + 1.6 * mm)
-        # dot
         c.setFillColor(colors.white)
         c.setStrokeColor(PLAN_BLUE)
         c.setLineWidth(1.8)
         c.circle(x, dot_y, 1.9 * mm, fill=1, stroke=1)
-        # text column
         y = top
-        tx = PLAN_DATE_W + PLAN_GUTTER
         for i, (pp, ph) in enumerate(zip(self.parts, self.heights)):
             y -= ph
-            pp.drawOn(c, tx, y)
-            y -= 0.8 * mm if i == 0 else 1.2 * mm
+            pp.drawOn(c, PLAN_GUTTER, y)
+            y -= 0.6 * mm if i == 0 else 1.2 * mm
 
 
 def annual_plan_pages(source, st, content_width):
@@ -865,10 +855,10 @@ def annual_plan_pages(source, st, content_width):
     head = [
         p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
         p("12 сарын хэрэгжилтийн төлөвлөгөө", st["page_title"]),
-        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Үе шат бүр өмнөх үе шатны үр дүн дээр тулгуурлана.", st["body"]),
+        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна; зарим ажил зэрэгцэн явагдана.", st["body"]),
         Spacer(1, 3 * mm),
     ]
-    avail = A4[1] - 18 * mm - 15 * mm - 1 * mm
+    avail = A4[1] - 18 * mm - 15 * mm - 7 * mm   # 7 mm safety: the platypus frame adds its own padding and inter-flowable spacing
     used = 0
     for fl in head:
         _, h = fl.wrap(content_width, avail)
@@ -895,7 +885,7 @@ def roadmap_pages(source, st, content_width):
     return [
         p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
         p("12 сарын хэрэгжилтийн төлөвлөгөө", st["page_title"]),
-        p("Үе шат бүрийн хугацаа, ажил, хариуцагч, гарах үр дүн, хэмжүүрийг дарааллаар нь харуулав.", st["body"]),
+        p("Танай компанид зориулсан 12 сарын хувийн төлөвлөгөө энэ тайланд үүсээгүй байна. Доорх нь оношилгооны үр дүнгээс гарсан ерөнхий хугацааны дараалал бөгөөд хувийн төлөвлөгөө биш болно.", st["body"]),
         Spacer(1, 2 * mm),
         roadmap_table(source, st, content_width),
     ]

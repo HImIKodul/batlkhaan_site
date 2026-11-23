@@ -4,7 +4,7 @@
 # The owner's login is NOT used: a throwaway password for the clone's copy of the owner's account is generated into /tmp (mode 600), clone only.
 # usage: qa-ui-clone-stack.sh start [AI=disabled|fake] | stop
 set -u; cd "$(dirname "$0")/.."; P=mmri-v3-local-postgres-1; DB=mmri_qa_rc9_uiclone; ST=/tmp/claude-1000/uiclone; mkdir -p $ST
-FE=/home/kirby/MMRI_MASTER_2026-11-06/10_INTEGRATED_FRONTEND/frontend
+FE=${FE:-$(cd .. && pwd)/frontend}
 stop(){ for f in api fake vite; do [ -f $ST/$f.pid ] && kill $(cat $ST/$f.pid) 2>/dev/null; done; for port in 4396 4398 5190; do for x in $(ss -ltnp 2>/dev/null | sed -n "s/.*127.0.0.1:$port .*pid=\([0-9]*\).*/\1/p"); do kill $x 2>/dev/null; done; done; sleep 2; rm -f $ST/*.pid; docker exec $P psql -U mmri -d postgres -qAt -c "drop database if exists $DB with (force)" >/dev/null; echo stopped; }
 [ "${1:-}" = stop ] && { stop; exit 0; }
 AI=${2:-disabled}; stop >/dev/null

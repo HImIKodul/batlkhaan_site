@@ -8,6 +8,6 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 for(const d of (process.argv[2]||'marketing').split(',')){
   const cu=await customer('ui'+d);const co=(await api(B,'POST','/companies',{tok:cu.tok,body:{name:'Жишээ '+d+' ХХК'}})).d.id;const j=await journey(B,cu.tok,co,d);
   let st='';for(let i=0;i<60;i++){await sleep(2000);st=sql(`select "generationState" from report_snapshots where "assessmentId"='${j.a}' limit 1`);if(['PASS','AI_FALLBACK_USED','GENERATION_BLOCKED'].includes(st))break}
-  out[d]={email:cu.email,password:cu.password,assessmentId:j.a,companyId:co,state:st};console.log(d,st,j.a);
+  const plan=sql(`select coalesce(narrative->'annualPlan'->>'state','NONE') from report_snapshots where "assessmentId"='${j.a}' limit 1`);out[d]={email:cu.email,password:cu.password,assessmentId:j.a,companyId:co,state:st,plan};console.log(d,st,'plan:',plan,j.a);
   fs.writeFileSync('/tmp/claude-1000/uiclone/customers.json',JSON.stringify(out,null,1),{mode:0o600});
 }

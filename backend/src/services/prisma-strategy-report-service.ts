@@ -1,4 +1,4 @@
-import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, type PlanEvidenceLine } from "../report/annual-plan.js";
+import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, type PlanEvidenceLine, type PlanCatalog } from "../report/annual-plan.js";
 import { companyLogos } from "../company/company-logo-service.js";
 import { checkPdfLayoutBudget } from "../report/pdf-budget.js";
 import { randomUUID } from "node:crypto";
@@ -96,6 +96,14 @@ export class PrismaStrategyReportService {
   constructor(private readonly assessmentEngine: PrismaAssessmentEngine, private readonly narrativeProvider?: NarrativeProvider, private readonly annualPlanProvider?: AnnualPlanProvider) {}
 
   /** Compact questionnaire evidence per finding for the 12-month plan (answer counts and up to three answered examples). Optional input: any failure returns nothing. */
+  /** Capability and dimension names of the methodology this diagnosis was taken with, so every finding in the plan input says WHAT is weak and in which respect (read-only). */
+  private async planCatalog(assessmentId:string):Promise<PlanCatalog|undefined>{
+    try{
+      const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{methodologyVersionId:true}});if(!asm)return undefined;
+      const [cats,cells]=await Promise.all([prisma.category.findMany({where:{methodologyVersionId:asm.methodologyVersionId},select:{externalId:true,nameMn:true}}),prisma.cellTemplate.findMany({where:{methodologyVersionId:asm.methodologyVersionId},select:{externalId:true,nameMn:true,groupMn:true}})]);
+      return {categories:Object.fromEntries(cats.map((c:any)=>[c.externalId,c.nameMn])),cells:Object.fromEntries(cells.map((c:any)=>[c.externalId,{nameMn:c.nameMn,groupMn:c.groupMn??null}]))};
+    }catch{return undefined}
+  }
   private async planEvidence(assessmentId:string,payload:FrozenReportPayload):Promise<PlanEvidenceLine[]>{
     try{
       const out:PlanEvidenceLine[]=[];
@@ -487,7 +495,7 @@ export class PrismaStrategyReportService {
       if(this.annualPlanProvider){
         const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{domainCode:true}});
         const narrativeBase=result.narrative;
-        const plan=await generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload)},fits:async p=>(await checkPdfLayoutBudget(payload,{...narrativeBase,annualPlan:p})).fits});
+        const plan=await generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId)},fits:async p=>(await checkPdfLayoutBudget(payload,{...narrativeBase,annualPlan:p})).fits});
         if(plan.state==="READY"){result={...result,narrative:{...narrativeBase,annualPlan:plan}};planOutcome="READY";}else planOutcome=`UNAVAILABLE: ${plan.reason}`;
         mark("annual_plan");
       }
