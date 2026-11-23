@@ -13,15 +13,18 @@ const pages=(f:string)=>Number(/Pages:\s+(\d+)/.exec(execFileSync('pdfinfo',[f],
 const ptxt=(f:string,a:number,b:number)=>execFileSync('pdftotext',['-f',String(a),'-l',String(b),'-layout',f,'-'],{encoding:'utf8'});
 const render=(src:any,domain:string,out:string)=>{const i=out+'.json';fs.writeFileSync(i,JSON.stringify({...src,render:{domainCode:domain}}));execFileSync(PY,[RENDERER,'--input',i,'--output',out],{stdio:['ignore','ignore','pipe']});fs.unlinkSync(i)};
 const words=(t:string)=>new Set(t.toLowerCase().replace(/[^\p{L}\s]/gu,' ').split(/\s+/).filter(w=>w.length>3));
-const ids:Array<{id:string;label:string}>=[];
+const ids:Array<{id:string;label:string;mutate?:(p:any)=>any}>=[];
 const owner=await prisma.user.findUniqueOrThrow({where:{email:OWNER},select:{memberships:{select:{companyId:true}}}});
 const own=await prisma.assessment.findMany({where:{companyId:owner.memberships[0].companyId,status:'COMPLETED'},orderBy:[{domainCode:'asc'},{createdAt:'asc'}],select:{id:true,domainCode:true,previousAssessmentId:true}});
-for(const a of own)ids.push({id:a.id,label:`${a.domainCode}-${a.previousAssessmentId?'retake':'first'}`});
+for(const a of own){ids.push({id:a.id,label:`${a.domainCode}-${a.previousAssessmentId?'retake':'first'}`});
+ if(!a.previousAssessmentId){ /* structural variants of the SAME real diagnosis: fewer critical findings, and findings that call for the same kind of fix (shared initiative) */
+  ids.push({id:a.id,label:`${a.domainCode}-first-3findings`,mutate:(p:any)=>({...p,priorityActions:p.priorityActions.slice(0,3)})});
+  ids.push({id:a.id,label:`${a.domainCode}-first-shared-fix`,mutate:(p:any)=>({...p,priorityActions:p.priorityActions.map((x:any,i:number)=>({...x,interventionCode:i<3?p.priorityActions[0].interventionCode:p.priorityActions[3].interventionCode}))})});}}
 for(const [d,v] of Object.entries(JSON.parse(fs.readFileSync(JOURNEYS,'utf8')) as Record<string,any>))ids.push({id:v.assessmentId,label:`${d}-journey`});
 const results:any[]=[];let n=0;
-for(const {id,label} of ids.sort((a,b)=>a.label.localeCompare(b.label))){
+for(const {id,label,mutate} of ids.sort((a,b)=>a.label.localeCompare(b.label))){
  n++;const asm=await prisma.assessment.findUniqueOrThrow({where:{id},select:{domainCode:true,methodologyVersionId:true}});const domain=String(asm.domainCode);
- const snap=await prisma.reportSnapshot.findFirstOrThrow({where:{assessmentId:id},select:{payload:true}});const payload:any=snap.payload;
+ const snap=await prisma.reportSnapshot.findFirstOrThrow({where:{assessmentId:id},select:{payload:true}});let payload:any=snap.payload;if(mutate)payload=mutate(payload);
  const [cats,cells]=await Promise.all([prisma.category.findMany({where:{methodologyVersionId:asm.methodologyVersionId},select:{externalId:true,nameMn:true}}),prisma.cellTemplate.findMany({where:{methodologyVersionId:asm.methodologyVersionId},select:{externalId:true,nameMn:true,groupMn:true}})]);
  const catalog:PlanCatalog={categories:Object.fromEntries(cats.map(c=>[c.externalId,c.nameMn])),cells:Object.fromEntries(cells.map(c=>[c.externalId,{nameMn:c.nameMn,groupMn:c.groupMn??null}]))};
  const plan:any=await generateAnnualPlan(payload,NAMES[domain],sim as any,{extras:{catalog}});const again:any=await generateAnnualPlan(payload,NAMES[domain],sim as any,{extras:{catalog}});
