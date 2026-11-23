@@ -881,22 +881,26 @@ def annual_plan_pages(source, st, content_width):
         p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна; зарим ажил зэрэгцэн явагдана.", st["body"]),
         Spacer(1, 3 * mm),
     ]
-    avail = A4[1] - 18 * mm - 15 * mm - 7 * mm   # 7 mm safety: the platypus frame adds its own padding and inter-flowable spacing
+    # The platypus frame keeps 6 pt of padding on every side: measure with the width and height the frame really gives, otherwise text wraps into more
+    # lines than estimated and a plan that fits at a smaller size is rejected.
+    inner_w = content_width - 12
+    avail = A4[1] - 18 * mm - 15 * mm - 12 - 2 * mm
     used = 0
     for fl in head:
-        _, h = fl.wrap(content_width, avail)
-        used += h + 1.5 * mm
+        _, h = fl.wrap(inner_w, avail)
+        used += h + max(fl.getSpaceBefore(), 0) + max(fl.getSpaceAfter(), 0)
     for size in PLAN_SIZES:
-        flows = [PlanStage(s, size, i == 0, i == len(stages) - 1, content_width) for i, s in enumerate(stages)]
+        flows = [PlanStage(s, size, i == 0, i == len(stages) - 1, inner_w) for i, s in enumerate(stages)]
         total = 0
         for fl in flows:
-            _, h = fl.wrap(content_width, avail)
+            _, h = fl.wrap(inner_w, avail)
             total += h + fl.gap_after
         if used + total <= avail:
             body = []
-            for fl in flows:
+            for i, fl in enumerate(flows):
                 body.append(fl)
-                body.append(Spacer(1, fl.gap_after))
+                if i < len(flows) - 1:
+                    body.append(Spacer(1, fl.gap_after))
             return head + body
     print("annual plan does not fit page 3 at the smallest readable size", file=sys.stderr)
     if STRICT:

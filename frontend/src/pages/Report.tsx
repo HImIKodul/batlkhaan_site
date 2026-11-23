@@ -77,12 +77,15 @@ function reportPlanFromPayload(payload:FrozenReportPayload|undefined):ReportPlan
  /* ROOT CAUSE of the 76 day hole: horizons without milestones (here H1 and H2) were dropped and the next stage kept its own start, so days 15-90 belonged to nobody. The whole year is accounted for: the first stage starts on day 0, each stage runs until the day before the next one starts, the last runs to the end of the window. */
  const rows=(payload?.roadmap||[]).filter(row=>row.milestones?.length).map(row=>{const fb=fallbackBounds[row.horizon]||[0,365];return {row,start:Number.isFinite(row.dayStart)?Number(row.dayStart):fb[0],end:Number.isFinite(row.dayEnd)?Number(row.dayEnd):fb[1]}});
  rows.forEach((r,i)=>{if(i===0)r.start=0;if(i<rows.length-1)r.end=Math.max(r.end,rows[i+1].start-1);else r.end=Math.max(r.end,365)});
+ const upperFirst=(t:string)=>t?t.charAt(0).toLocaleUpperCase('mn-MN')+t.slice(1):t;const nameOf=new Map([...(payload?.weaknesses||[]),...(payload?.strengths||[])].map(w=>[w.categoryId,w.nameMn] as const));const recOf=new Map((payload?.priorityActions||[]).map(a=>[a.id,a] as const));
+ /* the catalogue title is the same for every capability, so the capability is named beside it */
+ const titleOf=(m:{titleMn:string;recommendationId?:string})=>{const t=mnCustomerText(m.titleMn),n=nameOf.get(recOf.get(m.recommendationId||'')?.categoryId||'');return n&&!t.includes('(')?`${t} (${mnCustomerText(n)})`:t};
  const said=new Set<string>();/* a catalogue sentence shared by several works is printed once */const once=(t:string)=>{if(said.has(t))return '';said.add(t);return t};
  return rows.map(({row,start,end})=>{
   const actions:ReportPlanAction[]=row.milestones.map(m=>({
    milestoneId:m.milestoneId,
-   title:mnCustomerText(m.titleMn),
-   milestone:once(mnCustomerText(m.milestoneMn)),
+   title:titleOf(m),
+   milestone:once(upperFirst(mnCustomerText(m.milestoneMn))),
    result:mnCustomerText(m.deliverableMn||m.milestoneMn),
    measure:mnCustomerText(m.kpiMn),
    owner:mnCustomerText(m.ownerRoleLabelMn||payload?.displayDictionary?.[m.ownerRoleId]||'Хариуцсан удирдлага')

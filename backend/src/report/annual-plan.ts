@@ -23,10 +23,10 @@ export function planWindowDays(start: Date): number {
 export const MIN_STAGES = 3, MAX_STAGES = 8, MAX_ACTIONS_PER_STAGE = 5;
 /** Upper bound on repair calls after the first generation, shared by validation and page-fit repairs (so at most three model calls per plan). */
 export const MAX_PLAN_REPAIRS = 2;
-/** Style findings: worth one repair call, but a plan that is otherwise valid is not thrown away for them. Everything else blocks publication. */
-export const SOFT_PLAN_CHECKS = new Set(["FORMULAIC", "LATE_YEAR"]);
-/** Cheap pre-filter in estimated text lines. Calibrated on the real renderer (plans up to ~69 estimated lines fit at the smallest readable size, ~77 do not); the renderer in --strict mode is the final authority. */
-export const PLAN_LINE_BUDGET = 70;
+/** Style findings, and the order of findings the diagnosis itself calls isolated (the capability map suggests an order but claims no cause): worth one repair call, but a plan that is otherwise valid is not thrown away for them. Everything else blocks publication. */
+export const SOFT_PLAN_CHECKS = new Set(["FORMULAIC", "LATE_YEAR", "SEQUENCE_HINT"]);
+/** Cheap pre-filter in estimated text lines. Calibrated on the real renderer with the current page-3 layout (77 layouts: all plans up to 54 estimated lines fit, none above 57); the renderer in --strict mode is the final authority. */
+export const PLAN_LINE_BUDGET = 57;
 const CHARS_PER_LINE = 86;
 
 export const PLAN_DOMAIN_NAME_MN: Record<string, string> = { marketing: "Маркетинг", finance: "Санхүү", people: "Хүний нөөц", it: "Мэдээллийн технологи", operations: "Үйлдвэрлэл ба үйл ажиллагаа" };
@@ -75,7 +75,7 @@ const clip = (t: string, n: number) => { const s = String(t).replace(/\s+/g, " "
 /** The answers that explain a finding: first those about the weak dimension itself, then the lowest-scored others of the same capability; deterministic order. */
 export function planEvidenceLine(findingRef: string, cellId: string, rows: PlanAnswerRow[]): PlanEvidenceLine {
   const answered = rows.filter(r => r.status === "ANSWERED");
-  const ranked = answered.filter(r => r.answerMn).map((r, i) => ({ r, i })).sort((a, b) => Number(b.r.cellId === cellId) - Number(a.r.cellId === cellId) || (a.r.score ?? 999) - (b.r.score ?? 999) || a.i - b.i).slice(0, 4);
+  const ranked = answered.filter(r => r.answerMn && r.score != null /* applicability and trend questions say nothing about how the work is done */).map((r, i) => ({ r, i })).sort((a, b) => Number(b.r.cellId === cellId) - Number(a.r.cellId === cellId) || (a.r.score ?? 999) - (b.r.score ?? 999) || a.i - b.i).slice(0, 4);
   return { findingRef, answered: answered.length, unknown: rows.filter(r => r.status === "DNK").length, notApplicable: rows.filter(r => r.status === "N_A_CLAIM").length, examplesMn: ranked.map(({ r }) => `${clip(r.questionMn, 240)} -> ${clip(r.answerMn!, 140)}`) };
 }
 /** Names from the methodology the diagnosis was taken with: capability (category) by external id, diagnostic dimension (cell) by external id. */
@@ -146,6 +146,7 @@ export function planSystemInstructions(): string {
     "EVIDENCE-TYPE FINDINGS: a finding whose kind is COLLECT_EVIDENCE, VALIDATE_CAUSE or RESOLVE_EVIDENCE means the diagnosis could NOT judge that capability, not that it is weak. Never invent a weakness for it. Plan it as a short, concrete self-review of that capability (who sits down with whom, what they compare, what one-page conclusion they write), followed by a conditional step that says what the company will change if the review confirms a problem and what it keeps if it does not. If most findings are of this kind, the programme is a structured review followed by decisions and a year-end check; it must still read as a business plan, never as a list of documents to collect.",
     "INFORMATION GAPS: evidenceChecks lists further capabilities where the diagnosis could not judge enough. Cover them with AT MOST ONE short action in the first or second stage that names those capabilities and says what the company should confirm. Do not build stages around collecting evidence or preparing documents, and do not write evidence collection for the findings F1..Fn.",
     "STRUCTURE: choose the number of stages (3 to 8) and their length from the findings; stages need not be equal and need not have the same number of actions (1 to 5). startDay 0 is the report date. The first stage starts on day 0 and contains concrete work that can begin at once. Stages may overlap when work runs in parallel, but together they must cover the whole year with no gap; the last stage runs to about day 365 as routine follow-up or a decision review. Do not repeat the same activity in a later stage: a continuing routine is described once and referred to as the continuation.",
+    "LENGTH: the whole plan must fit one printed page in readable type: normally 4 to 6 stages, 7 to 10 actions in all and no more than about 2600 characters of action text in total. Say the important thing in fewer words rather than adding actions.",
     "NUMBERS AND DATES: never write calendar dates, month names, durations in digits, scores, amounts, percentages or staff counts, neither in digits nor in words. Do not say 'эхний сард' in a later stage or 'жилийн эцэст' in an early one. The system computes the dates from startDay and durationDays.",
     "VERB FORM: describe what the company does, in the form 'тогтооно', 'харьцуулна', 'шийднэ'. Never use bare commands ('тогтоо', 'харьцуул', 'шийд') and never mix the two. Address the reader's organisation as 'компани' or with an implied subject, never 'эзэн'.",
     "STYLE: do not close every action with the same formula ('Ингэснээр ... болно') and do not reuse one sentence pattern with a different capability name; if two actions would read the same, merge them. Prefer ordinary words to compliance words (нотолгоо, баримт бүрдүүлэх, хүчинтэй). Vary sentence openings; no labels such as 'Хариуцагч:', 'Гарах үр дүн:', 'Шалгах нөхцөл:'; no unexplained abbreviations; Stage headings are short natural Mongolian phrases that state the purpose of the stage (not 'Үе шат 1', not codes, not the hint titles). Write only Mongolian Cyrillic; the only Latin text allowed is BusinessMRI.mn. F1, V2 and similar are internal references: put them ONLY in recommendationIds, never in text.",
@@ -234,7 +235,7 @@ export function validateAnnualPlanDraft(draft: any, input: PlanInput, refToRecom
   for (const [lead, n] of prefixes) if (n >= 3) bad("ROBOTIC_LABEL", `The label "${lead}:" repeats ${n} times`);
   for (const f of input.findings) if (!covered.has(f.ref)) bad("COVERAGE", `Finding ${f.ref} is not addressed by any action`);
   const stageOfRef = new Map<string, PlanStageDraft>(); for (const s of stages) for (const a of s.actions ?? []) for (const r of a.recommendationIds ?? []) if (!stageOfRef.has(r)) stageOfRef.set(r, s);
-  for (const h of input.dependencyHints) { const a = stageOfRef.get(h.first), b = stageOfRef.get(h.then); if (a && b && b.startDay < a.startDay) bad("SEQUENCE", `${h.then} is scheduled before ${h.first}, which it depends on`); }
+  for (const h of input.dependencyHints) { const a = stageOfRef.get(h.first), b = stageOfRef.get(h.then); if (a && b && b.startDay < a.startDay) { const role = input.findings.find(f => f.ref === h.first)?.rootRole ?? null; bad(role && !/^(PRIMARY_ROOT_CAUSE|CONTRIBUTING_CAUSE)$/.test(role) ? "SEQUENCE_HINT" : "SEQUENCE", `${h.then} starts before ${h.first}, which the diagnosis places before it; start ${h.first} first or handle both in one initiative`); } }
   const last = stages[stages.length - 1]; if (last && stageEndDay(last) < input.windowDays - 35) bad("YEAR_COVERAGE", "The plan must run to about the end of the 12 months");
   /* Schedule: starts on day 0 and the stages together cover the whole year; gaps are rejected here (and any remaining small gap is closed deterministically when the plan is materialised). */
   if (stages.length && Math.min(...stages.map(s => s.startDay)) > 7) bad("YEAR_START", "The first stage must start on day 0 with work that can begin at once");

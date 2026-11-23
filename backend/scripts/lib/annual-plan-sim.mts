@@ -60,7 +60,8 @@ const HEADS=['Эхний ажлууд','Тогтолцоог ажилд оруу
 export const sim:AnnualPlanProvider={async generate(input:PlanInput){
  const F=input.findings;const win=input.windowDays;const seed=F.reduce((a,f)=>a+(f.currentScore??0),0)+input.domainNameMn.length;
  const actF=F.filter(f=>!EV_KIND.test(f.kind));const evF=F.filter(f=>EV_KIND.test(f.kind));
- const order=[...actF].sort((a,b)=>{const da=input.dependencyHints.filter(h=>h.then===a.ref).length,db=input.dependencyHints.filter(h=>h.then===b.ref).length;return da-db||band(a.priorityBand)-band(b.priorityBand)||a.ref.localeCompare(b.ref)});
+ const order:typeof actF=[];const left=[...actF].sort((a,b)=>band(a.priorityBand)-band(b.priorityBand)||a.ref.localeCompare(b.ref));
+ while(left.length){const k=Math.max(0,left.findIndex(f=>!input.dependencyHints.some(h=>h.then===f.ref&&left.some(x=>x.ref===h.first))));order.push(...left.splice(k,1))}
  /* one initiative per fix type: findings of different capabilities that call for the same fix are merged */
  const groups:Array<{code:string;refs:string[];caps:string[];group:string}>=[];
  for(const f of order){const g=groups.find(x=>x.code===f.interventionCode);if(g){g.refs.push(f.ref);if(!g.caps.includes(f.capabilityMn))g.caps.push(f.capabilityMn)}else groups.push({code:f.interventionCode,refs:[f.ref],caps:[f.capabilityMn],group:f.dimensionGroupMn||''})}

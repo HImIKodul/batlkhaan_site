@@ -181,6 +181,10 @@ describe('questionnaire answers reach the planner',()=>{
   const rootFindings=[{id:'ROOT-1',categoryId:'CAT1',downstreamCategoryIds:['CAT2','CAT3']},{id:'ROOT-2',categoryId:'CAT2',downstreamCategoryIds:['CAT1','CAT3']}];
   expect(buildPlanInput(p,'Маркетинг',{catalog,rootFindings}).input.dependencyHints).toEqual([{first:'F1',then:'F2'},{first:'F1',then:'F3'},{first:'F2',then:'F3'}]);
  });
+ it('order is binding for confirmed causes and advisory for findings the diagnosis calls isolated',()=>{
+  const run=(c:string)=>{const b=buildPlanInput({...payload,rootFindings:[{id:'ROOT-1',categoryId:'CAT1',classification:c,downstreamCategoryIds:['CAT2']}]} as any,'Маркетинг');const d:any=good();d.stages[0].actions[0].recommendationIds=['F2'];d.stages[1].actions[0].recommendationIds=['F1'];return validateAnnualPlanDraft(d,b.input,b.refToRecommendationId).issues.map(i=>i.checkId)};
+  expect(run('PRIMARY_ROOT_CAUSE')).toContain('SEQUENCE');expect(run('ISOLATED_WEAKNESS')).toContain('SEQUENCE_HINT');expect(run('ISOLATED_WEAKNESS')).not.toContain('SEQUENCE');
+ });
  it('the plan input uses the Ulaanbaatar calendar day',()=>expect(buildPlanInput({...payload,generatedAt:'2026-12-31T20:00:00Z'},'Маркетинг').input.reportDate).toBe('2027-01-01'));
  it('the prompt asks for answers, verb form and no scores',()=>{const s=planSystemInstructions();for(const k of ['evidenceFromAnswers','тогтооно','rootRole'])expect(s).toContain(k)});
 });
