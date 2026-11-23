@@ -6,7 +6,7 @@ project's own scripts (`ops/`, `deploy/`). **Do not deploy, switch traffic, or e
 
 Status of the application for this target: the stack is containerised (`deploy/docker-compose.production.yml`: `migrate`, `api`, `web`) and expects an
 external PostgreSQL, immutable `@sha256` images, and a TLS-terminating proxy in front of the web container (port 8080, now bound to loopback).
-`MMRI_MAIL_PROVIDER` must stay `disabled` until a real mail provider is implemented (the preflight refuses anything else); see `EXTERNAL_REQUIREMENTS.md`.
+`MMRI_MAIL_PROVIDER` must be `gmail` (Gmail API with OAuth) or `resend`; `disabled` sends nothing (customers then cannot verify or recover accounts) and `mock` is refused in production. The preflight checks the provider's variables; see `EXTERNAL_REQUIREMENTS.md` section 2.
 
 ## 1. Hardware and site checklist
 
