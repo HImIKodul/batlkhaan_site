@@ -67,13 +67,16 @@ export const sim:AnnualPlanProvider={async generate(input:PlanInput){
  const evCaps=[...new Set(evF.map(f=>f.capabilityMn).filter(Boolean))];const gapCaps=[...new Set(input.evidenceChecks.map(v=>v.capabilityMn).filter(Boolean))].filter(c=>!evCaps.includes(c));
  const bodyCount=Math.max(2,Math.min(5,Math.ceil(groups.length/1.4)+(evF.length?1:0)+(seed%2)));
  const per=Math.max(1,Math.ceil(groups.length/Math.max(1,bodyCount-(evF.length?1:0))));
- const stages:any[]=[];let start=0;const firstLen=45+(seed%3)*15;const nBody=bodyCount;const restLen=Math.floor((win-firstLen)/Math.max(1,nBody-1));
+ const stages:any[]=[];let start=0;const firstLen=45+(seed%3)*15;const nBody=bodyCount;let restLen=Math.floor((win-firstLen)/Math.max(1,nBody-1));
  const chunks:any[][]=[];for(let i=0;i<groups.length;i+=per)chunks.push(groups.slice(i,i+per));
- if(evF.length){ /* review first, then the conditional decision */
-  const reviewText=`${q(evCaps.slice(0,3))} чиглэлийн одоогийн ажлыг хариуцсан хүнтэй хамт нэг цагийн ярилцлагаар нэг нэгээр нь дүгнэж, юу сайн ажиллаж, юу саатаж байгааг нэг хуудсаар тэмдэглэнэ.`;
-  chunks.unshift([{review:true,text:reviewText,refs:evF.map(f=>f.ref)}]);
+ if(evF.length){ /* evidence-type findings: pairs of capabilities, each reviewed in its own way, then a conditional decision about the same pair (one blanket action for everything is rejected by the validator) */
+  const pairs:any[][]=[];for(let i=0;i<evF.length;i+=2)pairs.push(evF.slice(i,i+2));const caps=(p:any[])=>q([...new Set(p.map(f=>f.capabilityMn).filter(Boolean))]);const refs=(p:any[])=>p.map(f=>f.ref);
+  const REVIEW=['{c} чиглэлийн сүүлийн шийдвэрүүдийг хариуцсан хүмүүстэй эргэн ярилцаж, аль нь бодит ажилд хэрэгжсэнийг ялгана.','{c} талаар захиалагч, үйлчлүүлэгчдээс товч санал асууж, дотоод багийн төсөөлөлтэй зэрэгцүүлнэ.','Нэг төлөөлөх ажлыг сонгож {c} хаана саатдагийг эхнээс нь төгсгөл хүртэл дагаж ажиглана.'];
+  const DECIDE=['Ярилцлагаар зөрүү илэрвэл {c} чиглэлд хамгийн түрүүнд өөрчлөх дүрмээ сонгож туршина; зөрүүгүй бол одоогийн журмаа хэвээр үлдээнэ.','Санал асуулгын дүн таамаглалыг үгүйсгэвэл {c} хүрээний дараагийн алхмыг шинэчилж, дэмжвэл өргөжүүлэх бэлтгэлээ эхлүүлнэ.','Ажиглалтаар давтагдах саад гарвал {c} дээр ажиллах дарааллаа цэгцэлж, эс бөгөөс жил бүр ижил аргаар нягталдаг дадал болгоно.'];
+  chunks.unshift(pairs.map((p,i)=>({review:true,text:REVIEW[i%3].replace('{c}',caps(p)),refs:refs(p)})));
+  pairs.slice(0,2).forEach((p,i)=>chunks.push([{decision:true,text:DECIDE[i%3].replace('{c}',caps(p)),refs:refs(p)}]));if(pairs[2])chunks[chunks.length-1].push({decision:true,text:DECIDE[2].replace('{c}',caps(pairs[2])),refs:refs(pairs[2])});
  }
- while(chunks.length<nBody&&evF.length)chunks.push([{decision:true,text:`${q(evCaps.slice(0,3))} чиглэлийн дүгнэлтээр тодорхой сул тал илэрвэл түүнийг засах нэг ажлыг сонгож хариуцагч, хугацаа тогтооно; илрээгүй бол одоогийн ажиллагааг хэвээр үргэлжлүүлнэ.`,refs:evF.map(f=>f.ref)}]);
+ if(chunks.length>nBody)restLen=Math.floor((win-30-firstLen)/Math.max(1,Math.min(5,chunks.length)-1));
  for(let s2=0;s2<chunks.length&&s2<5;s2++){
   const chunk=chunks[s2];const dur=s2===0?firstLen:Math.floor(restLen*(s2===chunks.length-1?0.9:1));
   const g0:any=chunk[0];const grp=g0.group?`: ${String(g0.group).toLowerCase()}`:'';

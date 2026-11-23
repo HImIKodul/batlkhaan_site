@@ -1,4 +1,4 @@
-import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, type PlanEvidenceLine, type PlanCatalog } from "../report/annual-plan.js";
+import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, planEvidenceLine, PLAN_CONTEXT_PROFILE_IDS, type PlanEvidenceLine, type PlanCatalog, type PlanRootFinding, type PlanUsage } from "../report/annual-plan.js";
 import { companyLogos } from "../company/company-logo-service.js";
 import { checkPdfLayoutBudget } from "../report/pdf-budget.js";
 import { randomUUID } from "node:crypto";
@@ -108,12 +108,24 @@ export class PrismaStrategyReportService {
     try{
       const out:PlanEvidenceLine[]=[];
       for(const [i,a] of payload.priorityActions.entries()){
-        const rows=await prisma.answer.findMany({where:{assessmentId,active:true,question:{categoryId:a.categoryId}},select:{status:true,optionIndex:true,question:{select:{textMn:true,options:{select:{optionIndex:true,labelMn:true}}}}},take:40});
-        const answered=rows.filter((r:any)=>r.status==="ANSWERED");
-        out.push({findingRef:`F${i+1}`,answered:answered.length,unknown:rows.filter((r:any)=>r.status==="DNK").length,notApplicable:rows.filter((r:any)=>r.status==="N_A_CLAIM").length,
-          examplesMn:answered.slice(0,3).map((r:any)=>`${String(r.question.textMn).slice(0,140)} -> ${String(r.question.options.find((o:any)=>o.optionIndex===r.optionIndex)?.labelMn??"").slice(0,90)}`)});
+        /* Findings carry methodology external ids ("MS01"); question.categoryId is a database id ("3.0.3:MS01"), so the join goes through the category. */
+        const rows=await prisma.answer.findMany({where:{assessmentId,active:true,question:{category:{externalId:a.categoryId}}},select:{status:true,optionIndex:true,question:{select:{externalId:true,textMn:true,primaryCell:{select:{cellTemplate:{select:{externalId:true}}}},options:{select:{optionIndex:true,labelMn:true,score:true}}}}},orderBy:{question:{externalId:"asc"}}});
+        out.push(planEvidenceLine(`F${i+1}`,a.cellId,rows.map((r:any)=>{const o=r.question.options.find((x:any)=>x.optionIndex===r.optionIndex);return {status:r.status,cellId:r.question.primaryCell.cellTemplate.externalId,questionMn:r.question.textMn,answerMn:o?.labelMn??null,score:o?.score==null?null:Number(o.score)}})));
       }
       return out;
+    }catch{return []}
+  }
+  /** Root-cause graph of the frozen strategy of this same diagnosis (all findings; the report payload keeps only three). */
+  private async planRootFindings(assessmentId:string):Promise<PlanRootFinding[]>{
+    try{const row=await prisma.strategyPlanSnapshot.findUnique({where:{assessmentId},select:{snapshot:true}});return ((row?.snapshot as any)?.rootCause?.findings??[]).map((x:any)=>({id:x.id,categoryId:x.categoryId,classification:x.classification,downstreamCategoryIds:x.downstreamCategoryIds}))}catch{return []}
+  }
+  /** Structured answers of the company profile that describe the business in general (what it offers, to whom, how it sells, its stage and its area). Option labels only: no names, no free text, no headcount. */
+  private async planCompanyContext(assessmentId:string):Promise<string[]>{
+    try{
+      const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{methodologyVersionId:true,profile:true}});if(!asm)return [];
+      const given=new Map(profileAnswers(asm.profile).map((x:any)=>[String(x.questionId),(x.optionIndexes??[]) as number[]]));
+      const questions=await prisma.profileQuestion.findMany({where:{methodologyVersionId:asm.methodologyVersionId,externalId:{in:PLAN_CONTEXT_PROFILE_IDS}},include:{options:true},orderBy:{externalId:"asc"}});
+      return questions.flatMap((q:any)=>{const picked=q.options.filter((o:any)=>(given.get(q.externalId)??[]).includes(o.optionIndex)).map((o:any)=>String(o.labelMn));return picked.length?[`${q.textMn} ${picked.join("; ")}`]:[]});
     }catch{return []}
   }
 
@@ -491,11 +503,11 @@ export class PrismaStrategyReportService {
       if(aiNarrativeRequired()&&result.state!=="PASS")throw new Error(`AI narrative is required but unavailable: ${String(result.providerError??"no provider result").slice(0,300)}`);
       mark("narrative_ai_and_validation");
       /* 12-month plan (page 3). Only when explicitly enabled; a plan that cannot be validated or does not fit is NOT stored (the report keeps its existing page 3). */
-      let planOutcome:string|null=null;
+      let planOutcome:string|null=null;const planCalls:Array<{attempt:number;model:string;usage:PlanUsage|null;issues:string[]}>=[];
       if(this.annualPlanProvider){
         const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{domainCode:true}});
         const narrativeBase=result.narrative;
-        const plan=await generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId)},fits:async p=>(await checkPdfLayoutBudget(payload,{...narrativeBase,annualPlan:p})).fits});
+        const plan=await generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId),companyCharacteristics:await this.planCompanyContext(assessmentId),rootFindings:await this.planRootFindings(assessmentId)},onCall:c=>planCalls.push(c),fits:async p=>(await checkPdfLayoutBudget(payload,{...narrativeBase,annualPlan:p})).fits});
         if(plan.state==="READY"){result={...result,narrative:{...narrativeBase,annualPlan:plan}};planOutcome="READY";}else planOutcome=`UNAVAILABLE: ${plan.reason}`;
         mark("annual_plan");
       }
@@ -519,7 +531,7 @@ export class PrismaStrategyReportService {
         if(changed.count!==1)throw new ReportGenerationInProgressError();
         await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_VALIDATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,bindingHash:payload.bindingHash,narrativeHash,validation:result.validation,leaseId}}});
         if(result.state==="AI_FALLBACK_USED")await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATION_FALLBACK",entityType:"ReportSnapshot",entityId:row.id,payload:{leaseId,providerError:result.providerError,providerAttempts:result.providerAttempts,providerHttpAttempts:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,nextAiRetryAt:nextAiRetryAt?.toISOString()??null}}});
-        await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,...(planOutcome?{annualPlan:planOutcome,annualPlanPromptVersion:MMRI_ANNUAL_PLAN_PROMPT_VERSION}:{}),diagnosisResultHash:payload.diagnosisResultHash,strategyHash:payload.strategyHash,planHash:payload.planHash,bindingHash:payload.bindingHash,narrativeHash,modelIdentifier:result.providerMetadata.modelIdentifier,promptVersion:result.providerMetadata.promptVersion,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,providerError:result.providerError,leaseId,trigger,authorizedBy:authorizedBy??null,usage:result.providerUsage??null,estimatedCostUsd:estimateCostUsd(result.providerUsage)}}});
+        await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATED",entityType:"ReportSnapshot",entityId:row.id,payload:{state:result.state,...(planOutcome?{annualPlan:planOutcome,annualPlanPromptVersion:MMRI_ANNUAL_PLAN_PROMPT_VERSION,annualPlanCalls:planCalls,annualPlanEstimatedCostUsd:estimateCostUsd(planCalls.reduce<PlanUsage|undefined>((t,c)=>c.usage?{inputTokens:(t?.inputTokens??0)+c.usage.inputTokens,outputTokens:(t?.outputTokens??0)+c.usage.outputTokens}:t,undefined))}:{}),diagnosisResultHash:payload.diagnosisResultHash,strategyHash:payload.strategyHash,planHash:payload.planHash,bindingHash:payload.bindingHash,narrativeHash,modelIdentifier:result.providerMetadata.modelIdentifier,promptVersion:result.providerMetadata.promptVersion,generationAttemptCount:result.providerAttempts,providerHttpAttemptCount:result.providerHttpAttempts,providerRetryCount:result.providerRetryCount,providerRequestIds:result.providerRequestIds,providerError:result.providerError,leaseId,trigger,authorizedBy:authorizedBy??null,usage:result.providerUsage??null,estimatedCostUsd:estimateCostUsd(result.providerUsage)}}});
         return tx.reportSnapshot.findUnique({where:{id:row.id}});
       },LONG_TX);
       mark("publish_transaction");emit(result.state);

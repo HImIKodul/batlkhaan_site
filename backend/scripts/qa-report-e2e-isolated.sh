@@ -10,6 +10,8 @@ export OPENAI_API_KEY=fake-local-key MMRI_AI_REPORT_PROVIDER=openai MMRI_AI_REPO
 [ -z "${E2E_STRICT:-}" ] && export API_RATE_LIMIT=100000 AUTH_IP_RATE_LIMIT=10000 AUTH_ACCOUNT_RATE_LIMIT=1000 REFRESH_RATE_LIMIT=10000
 [ -n "${E2E_ENV:-}" ] && export $E2E_ENV
 unset GMAIL_CLIENT_ID GMAIL_CLIENT_SECRET GMAIL_REFRESH_TOKEN GMAIL_USER MMRI_MAIL_RECIPIENT_ALLOWLIST
+# never the QA stack's own folders: the clone has the same assessment ids, so a re-rendered PDF would replace the QA artifact
+export MMRI_REPORT_STORAGE_DIR=$OUT/report-storage MMRI_MOCK_MAIL_DIR=$OUT/mailbox; mkdir -p "$MMRI_REPORT_STORAGE_DIR" "$MMRI_MOCK_MAIL_DIR"
 case "$DATABASE_URL" in *"/$DB"*) ;; *) echo ABORT db; exit 1;; esac
 [ -n "${E2E_MIGRATE:-}" ] && { echo "prisma migrate deploy on clone:"; npx prisma migrate deploy 2>&1 | tail -4; }
 if [ -z "${E2E_NOFAKE:-}" ]; then npx tsx scripts/lib/qa-fake-openai.mts 4398 > $OUT/fake.log 2>&1 & FP=$!; else FP=$$; fi

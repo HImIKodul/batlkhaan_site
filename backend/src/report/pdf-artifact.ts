@@ -1,3 +1,4 @@
+import { planForPayload } from "./annual-plan.js";
 import { createHash } from "node:crypto";
 import type { FrozenReportPayload, NarrativeDraft, NarrativeClaim } from "./types.js";
 import { sha256Json } from "../lib/hash.js";
@@ -149,6 +150,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
   if(flags.b4&&!flags.b7)throw new Error("B4 report placeholders require B7 immutable artifacts: enabling the proposed layout on an existing report would otherwise overwrite its historical PDF");
   validatePdfSourceInput(payload,narrative);
   const narrativeHash=sha256Json(narrative);
+  const plan=planForPayload(narrative.annualPlan,payload.payloadHash);
   const baseline=deterministicFallbackNarrative(payload);
   const strengths=payload.strengths.slice(0,5).map(s=>({
     id:s.id,nameMn:s.nameMn,score:s.score,...(s.basis?{basis:s.basis}:{}),
@@ -182,7 +184,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
     /* Identity of the frozen logo snapshot only (bytes are attached outside the hashed source at render time and verified against this hash). Absent without a snapshot, so existing sources and PDFs are unchanged. */
     ...(narrative.companyLogo?{companyLogo:{sha256:narrative.companyLogo.sha256}}:{}),
     /* Customer-safe projection of the validated 12-month plan: titles, calendar labels and Mongolian text only (no stage ids, finding references or provider details). Absent for reports without a READY plan, which keep the existing page 3. */
-    ...(narrative.annualPlan?.state==="READY"?{annualPlan:{periodLabel:narrative.annualPlan.periodLabel,stages:narrative.annualPlan.stages.map(st=>({headingMn:st.headingMn,dateLabel:st.dateLabel,dependencyNoteMn:st.dependencyNoteMn,actions:st.actions.map(x=>({textMn:x.textMn}))}))}}:{})
+    ...(plan?{annualPlan:{periodLabel:plan.periodLabel,stages:plan.stages.map(st=>({headingMn:st.headingMn,dateLabel:st.dateLabel,dependencyNoteMn:st.dependencyNoteMn,actions:st.actions.map(x=>({textMn:x.textMn}))}))}}:{})
   };
 }
 

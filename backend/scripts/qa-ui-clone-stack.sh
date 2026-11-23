@@ -12,6 +12,8 @@ docker exec $P psql -U mmri -d postgres -qAt -c "create database $DB owner mmri_
 docker exec $P pg_dump -U mmri -Fc -d mmri_fin_qa_20261116214738 | docker exec -i $P pg_restore -U mmri -d $DB --no-owner --role=mmri_qa_stack 2>&1 | tail -1
 set -a; . ~/mmri-qa-runtime/qa-backend.env; set +a
 export DATABASE_URL=$(echo "$DATABASE_URL" | sed "s#/mmri_fin_qa_20261116214738#/$DB#") DOTENV_CONFIG_PATH=/dev/null PORT=4396 PGDATABASE=$DB
+# never the QA stack's own folders: the clone has the same assessment ids, so a re-rendered PDF would replace the QA artifact
+export MMRI_REPORT_STORAGE_DIR=$ST/report-storage MMRI_MOCK_MAIL_DIR=$ST/mailbox; mkdir -p "$MMRI_REPORT_STORAGE_DIR" "$MMRI_MOCK_MAIL_DIR"
 case "$DATABASE_URL" in *"/$DB"*) ;; *) echo ABORT; exit 1;; esac
 unset GMAIL_CLIENT_ID GMAIL_CLIENT_SECRET GMAIL_REFRESH_TOKEN GMAIL_USER MMRI_MAIL_RECIPIENT_ALLOWLIST OPENAI_API_KEY
 export MMRI_MAIL_PROVIDER=mock MMRI_SUPPORT_MAIL_PROVIDER=off MMRI_AI_SCAN_PROVIDER=off MMRI_BILLING_PROVIDER=mock MMRI_BILLING_ENFORCEMENT=true API_RATE_LIMIT=100000 AUTH_IP_RATE_LIMIT=10000 AUTH_ACCOUNT_RATE_LIMIT=1000 REFRESH_RATE_LIMIT=10000 ALLOWED_ORIGINS=http://localhost:5190,http://127.0.0.1:5190

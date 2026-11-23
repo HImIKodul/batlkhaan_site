@@ -1,3 +1,4 @@
+import { planStartDate } from "../report/annual-plan.js";
 import { randomUUID } from "node:crypto";
 import { createReadStream, readFileSync } from "node:fs";
 import { access, chmod, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
@@ -111,7 +112,7 @@ export class ReportPdfArtifactService {
         const asset=await companyLogos.assetBytes(assessmentRow.companyId,narrative.companyLogo.assetId).catch(()=>null);
         if(asset&&asset.sha256===narrative.companyLogo.sha256&&sha256Buffer(asset.bytes)===asset.sha256)companyLogoPng=asset.bytes.toString("base64");
       }
-      await writeFile(sourcePath,JSON.stringify({...source,render:{domainCode:assessmentRow?.domainCode??null,reportDate:String(payload.generatedAt).slice(0,10),...(companyLogoPng?{companyLogoPng}:{})}}),{encoding:"utf8",mode:0o600});
+      await writeFile(sourcePath,JSON.stringify({...source,render:{domainCode:assessmentRow?.domainCode??null,reportDate:planStartDate(payload.generatedAt).toISOString().slice(0,10),...(companyLogoPng?{companyLogoPng}:{})}}),{encoding:"utf8",mode:0o600});
       await runPdfRenderer(sourcePath,tmpPdf);
       const buffer=await readFile(tmpPdf);assertPdfBuffer(buffer);if(buffer.length>MAX_PDF_BYTES)throw new Error("Generated PDF exceeds 50 MB safety limit");
       const contentHash=sha256Buffer(buffer);
@@ -154,7 +155,7 @@ export class ReportPdfArtifactService {
         if(asset&&asset.sha256===narrative.companyLogo.sha256&&sha256Buffer(asset.bytes)===asset.sha256)companyLogoPng=asset.bytes.toString("base64");
       }
       const sourcePath=path.join(dir,"report-source.json"),pdfPath=path.join(dir,"report.pdf");
-      await writeFile(sourcePath,JSON.stringify({...source,render:{domainCode:assessmentRow?.domainCode??null,reportDate:String(payload.generatedAt).slice(0,10),...(companyLogoPng?{companyLogoPng}:{})}}),{encoding:"utf8",mode:0o600});
+      await writeFile(sourcePath,JSON.stringify({...source,render:{domainCode:assessmentRow?.domainCode??null,reportDate:planStartDate(payload.generatedAt).toISOString().slice(0,10),...(companyLogoPng?{companyLogoPng}:{})}}),{encoding:"utf8",mode:0o600});
       await runPdfRenderer(sourcePath,pdfPath);
       const buffer=await readFile(pdfPath);assertPdfBuffer(buffer);if(buffer.length>MAX_PDF_BYTES)throw new Error("Generated PDF exceeds 50 MB safety limit");
       const pages=pdfPageCount(pdfPath,buffer);

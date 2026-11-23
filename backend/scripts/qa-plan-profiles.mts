@@ -3,7 +3,7 @@
    coverage of the year and the three-page contract. It does NOT test the quality of a real model's Mongolian. Needs DATABASE_URL of an isolated clone.
    usage: DATABASE_URL=... npx tsx scripts/qa-plan-profiles.mts <outDir> <ownerEmail> <journeyAssessmentsJson> */
 import fs from 'node:fs';import path from 'node:path';import {execFileSync} from 'node:child_process';
-import {prisma} from '../src/db.js';import {generateAnnualPlan,validateAnnualPlanDraft,buildPlanInput,type PlanCatalog} from '../src/report/annual-plan.js';import {buildReportPdfSource} from '../src/report/pdf-artifact.js';import {sim} from './lib/annual-plan-sim.mts';
+import {prisma} from '../src/db.js';import {generateAnnualPlan,validateAnnualPlanDraft,buildPlanInput,SOFT_PLAN_CHECKS,type PlanCatalog} from '../src/report/annual-plan.js';import {buildReportPdfSource} from '../src/report/pdf-artifact.js';import {sim} from './lib/annual-plan-sim.mts';
 const {deterministicFallbackNarrative}=await import(new URL('../dist-strategy/report/index.js',import.meta.url).href);
 const [OUT,OWNER,JOURNEYS]=process.argv.slice(2);fs.mkdirSync(OUT,{recursive:true});
 const db=decodeURIComponent(new URL(process.env.DATABASE_URL!).pathname.slice(1));if(!/qa/.test(db)||db==='mmri')throw new Error('REFUSED: isolated QA clone only');
@@ -27,12 +27,13 @@ for(const {id,label,mutate} of ids.sort((a,b)=>a.label.localeCompare(b.label))){
  const snap=await prisma.reportSnapshot.findFirstOrThrow({where:{assessmentId:id},select:{payload:true}});let payload:any=snap.payload;if(mutate)payload=mutate(payload);
  const [cats,cells]=await Promise.all([prisma.category.findMany({where:{methodologyVersionId:asm.methodologyVersionId},select:{externalId:true,nameMn:true}}),prisma.cellTemplate.findMany({where:{methodologyVersionId:asm.methodologyVersionId},select:{externalId:true,nameMn:true,groupMn:true}})]);
  const catalog:PlanCatalog={categories:Object.fromEntries(cats.map(c=>[c.externalId,c.nameMn])),cells:Object.fromEntries(cells.map(c=>[c.externalId,{nameMn:c.nameMn,groupMn:c.groupMn??null}]))};
- const plan:any=await generateAnnualPlan(payload,NAMES[domain],sim as any,{extras:{catalog}});const again:any=await generateAnnualPlan(payload,NAMES[domain],sim as any,{extras:{catalog}});
+ const rootFindings=((await prisma.strategyPlanSnapshot.findUnique({where:{assessmentId:id},select:{snapshot:true}}))?.snapshot as any)?.rootCause?.findings??[];
+ const plan:any=await generateAnnualPlan(payload,NAMES[domain],sim as any,{extras:{catalog,rootFindings}});const again:any=await generateAnnualPlan(payload,NAMES[domain],sim as any,{extras:{catalog,rootFindings}});
  const row:any={n,label,domain,generatedAt:String(payload.generatedAt).slice(0,10),score:payload.overall?.score,priorityTypes:[...new Set(payload.priorityActions.map((a:any)=>a.type))],state:plan.state};
  const base=path.join(OUT,`${String(n).padStart(2,'0')}-${label}`);
  if(plan.state!=='READY'){row.reason=plan.reason;results.push(row);continue}
- const {input}=buildPlanInput(payload,NAMES[domain],{catalog});
- row.deterministic=JSON.stringify(plan)===JSON.stringify(again);row.period=plan.periodLabel;row.stages=plan.stages.length;row.actionsPerStage=plan.stages.map((s:any)=>s.actions.length);
+ const {input}=buildPlanInput(payload,NAMES[domain],{catalog,rootFindings});
+ row.dependencyHints=input.dependencyHints.length;row.deterministic=JSON.stringify(plan)===JSON.stringify(again);row.period=plan.periodLabel;row.stages=plan.stages.length;row.actionsPerStage=plan.stages.map((s:any)=>s.actions.length);
  const ds=plan.stages.map((s:any)=>[s.startDay,s.endDay]);row.firstStartDay=ds[0][0];row.lastEndDay=Math.max(...ds.map((d:number[])=>d[1]));
  let reach=-1,gap=0,overlaps=0;for(const [s,e] of ds){if(s>reach+1)gap++;if(s<=reach)overlaps++;reach=Math.max(reach,e)}row.gaps=gap;row.overlaps=overlaps;row.coversWholeYear=gap===0&&row.firstStartDay===0&&row.lastEndDay===(new Date(plan.endDate).getTime()-new Date(plan.startDate).getTime())/86400000;
  row.chronological=plan.stages.every((s:any)=>s.startDate<=s.endDate)&&plan.stages.every((s:any,i:number)=>i===0||s.startDate>=plan.stages[i-1].startDate);
@@ -50,6 +51,6 @@ for(const {id,label,mutate} of ids.sort((a,b)=>a.label.localeCompare(b.label))){
  results.push(row);
 }
 const ok=results.filter(r=>r.state==='READY');
-const summary={profiles:results.length,ready:ok.length,deterministic:ok.every(r=>r.deterministic),wholeYear:ok.every(r=>r.coversWholeYear&&r.gaps===0),chronological:ok.every(r=>r.chronological),findingsCovered:ok.every(r=>r.findingsCovered),noIssues:ok.every(r=>!r.validatorIssues.length),threePages:ok.every(r=>r.pagesPlan===3&&r.pagesTemplate===3),pages12Identical:ok.every(r=>r.page12Identical),everyStageInPdf:ok.every(r=>r.pdfHasEveryStage),noLatin:ok.every(r=>r.noLatin),maxSimilarity:Math.max(...ok.map(r=>r.maxActionSimilarity)),maxEvidenceShare:Math.max(...ok.map(r=>r.evidenceActionShare)),stageCounts:[...new Set(ok.map(r=>r.stages))].sort(),shapes:[...new Set(ok.map(r=>r.stages+':'+r.actionsPerStage.join('')))].length,minWordHeightPt:Math.min(...ok.map(r=>r.medianWordHeightPt))};
+const summary={profiles:results.length,ready:ok.length,deterministic:ok.every(r=>r.deterministic),wholeYear:ok.every(r=>r.coversWholeYear&&r.gaps===0),chronological:ok.every(r=>r.chronological),findingsCovered:ok.every(r=>r.findingsCovered),noBlockingIssues:ok.every(r=>r.validatorIssues.every((c:string)=>SOFT_PLAN_CHECKS.has(c))),styleFindings:ok.filter(r=>r.validatorIssues.length).length,threePages:ok.every(r=>r.pagesPlan===3&&r.pagesTemplate===3),pages12Identical:ok.every(r=>r.page12Identical),everyStageInPdf:ok.every(r=>r.pdfHasEveryStage),noLatin:ok.every(r=>r.noLatin),maxSimilarity:Math.max(...ok.map(r=>r.maxActionSimilarity)),maxEvidenceShare:Math.max(...ok.map(r=>r.evidenceActionShare)),stageCounts:[...new Set(ok.map(r=>r.stages))].sort(),shapes:[...new Set(ok.map(r=>r.stages+':'+r.actionsPerStage.join('')))].length,minWordHeightPt:Math.min(...ok.map(r=>r.medianWordHeightPt))};
 fs.writeFileSync(path.join(OUT,'profiles-results.json'),JSON.stringify({summary,results},null,1));console.log(JSON.stringify(summary));for(const r of results)console.log(JSON.stringify({n:r.n,label:r.label,score:r.score,types:r.priorityTypes.join('/'),state:r.state,reason:r.reason,stages:r.stages,apS:r.actionsPerStage?.join(''),gaps:r.gaps,year:r.coversWholeYear,sim:r.maxActionSimilarity,ev:r.evidenceActionShare,named:r.capabilitiesNamed,pg:r.pagesPlan,h:r.medianWordHeightPt}));
 await prisma.$disconnect();

@@ -721,10 +721,33 @@ def horizon_period_label(source, horizon):
     except ValueError:
         return f"{start_day}-{end_day} өдөр"
     window_end = _add_months_clamped(base, 12) - datetime.timedelta(days=1)
+    start_day, end_day = _closed_horizon_bounds(source, horizon, start_day, end_day)
     s = min(base + datetime.timedelta(days=start_day), window_end)
     e = min(base + datetime.timedelta(days=end_day), window_end)
-    f = lambda d: f"{d.year}.{d.month:02d}.{d.day:02d}"
-    return f"{f(s)} - {f(e)}"
+    return period_label_mn(s, e)
+
+
+def _closed_horizon_bounds(source, horizon, start_day, end_day):
+    """Horizons without milestones are not printed, so the printed ones are stretched to cover the whole year (same rule as the web page): the first starts on
+    day 0, each runs to the day before the next one starts, the last to the end of the window."""
+    used = [h for h in source.get("roadmap") or [] if h.get("milestones")]
+    i = next((n for n, h in enumerate(used) if h is horizon or h.get("horizon") == horizon.get("horizon")), None)
+    if i is None:
+        return start_day, end_day
+    if i == 0:
+        start_day = 0
+    end_day = max(end_day, int(used[i + 1].get("dayStart") or 0) - 1) if i < len(used) - 1 else max(end_day, 365)
+    return start_day, end_day
+
+
+def period_label_mn(a, b):
+    """Same natural label as planPeriodLabelMn (backend) and periodLabelMn (web)."""
+    import calendar
+    if a.year == b.year:
+        if a.day == 1 and b.day == calendar.monthrange(b.year, b.month)[1]:
+            return f"{a.year} оны {a.month}-р сар" if a.month == b.month else f"{a.year} оны {a.month}-{b.month}-р сар"
+        return f"{a.year} оны {a.month}-р сарын {a.day} - {b.month}-р сарын {b.day}"
+    return f"{a.year} оны {a.month}-р сарын {a.day} - {b.year} оны {b.month}-р сарын {b.day}"
 
 
 def horizon_title(horizon):

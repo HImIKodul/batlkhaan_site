@@ -43,7 +43,7 @@ describe('generateAnnualPlan boundary',()=>{
  const prov=(drafts:any[]):AnnualPlanProvider=>{let i=0;return {generate:async()=>({draft:drafts[i++],provider:{kind:'TEST_DOUBLE',model:'t'}}),repair:async()=>({draft:drafts[i++],provider:{kind:'TEST_DOUBLE',model:'t'}})}};
  it('without a provider the plan is UNAVAILABLE and nothing is invented',async()=>{expect((await generateAnnualPlan(payload,'Маркетинг',undefined)).state).toBe('UNAVAILABLE')});
  it('a valid draft becomes READY with computed dates',async()=>{const p:any=await generateAnnualPlan(payload,'Маркетинг',prov([good()]));expect(p.state).toBe('READY');expect(p.stages.length).toBe(3);expect(p.provider.kind).toBe('TEST_DOUBLE')});
- it('one repair is allowed, then the plan is rejected rather than shipped',async()=>{const bad:any=good();bad.stages[1].actions[0].textMn='Plan with english words';expect((await generateAnnualPlan(payload,'Маркетинг',prov([bad,good()]))).state).toBe('READY');const r:any=await generateAnnualPlan(payload,'Маркетинг',prov([bad,bad]));expect(r.state).toBe('UNAVAILABLE');expect(r.reason).toContain('LANGUAGE')});
+ it('bounded repairs are allowed, then the plan is rejected rather than shipped',async()=>{const bad:any=good();bad.stages[1].actions[0].textMn='Plan with english words';expect((await generateAnnualPlan(payload,'Маркетинг',prov([bad,good()]))).state).toBe('READY');const r:any=await generateAnnualPlan(payload,'Маркетинг',prov([bad,bad,bad]));expect(r.state).toBe('UNAVAILABLE');expect(r.reason).toContain('LANGUAGE')});
  it('a page-fit failure triggers one repair and otherwise rejects (never truncates)',async()=>{let calls=0;const fits=async()=>{calls++;return false};const r:any=await generateAnnualPlan(payload,'Маркетинг',prov([good(),good()]),{fits});expect(r.state).toBe('UNAVAILABLE');expect(calls).toBe(2)});
  it('a provider failure is reported as UNAVAILABLE with a reason',async()=>{const p:AnnualPlanProvider={generate:async()=>{throw new Error('HTTP 429 [insufficient_quota]')}};const r:any=await generateAnnualPlan(payload,'Маркетинг',p);expect(r.state).toBe('UNAVAILABLE');expect(r.reason).toContain('insufficient_quota')});
 });
@@ -66,7 +66,7 @@ describe("repeated catalogue sentences and punctuation tidy", () => {
     const draft: any = { schemaVersion: "MMRI-ANNUAL-PLAN-DRAFT-1.0", stages: [
       { id: "E1", headingMn: "Суурь шийдвэр ба эхний тогтолцоо", startDay: 0, durationDays: 100, dependsOnStageIds: [], dependencyNoteMn: null, actions: [{ textMn: s, recommendationIds: ["F1"] }] },
       { id: "E2", headingMn: "Хэмжилтээр баталгаажуулах үе", startDay: 100, durationDays: 100, dependsOnStageIds: ["E1"], dependencyNoteMn: null, actions: [{ textMn: s, recommendationIds: ["F2"] }] }] };
-    const r = validateAnnualPlanDraft(draft, { findings: [], evidenceChecks: [], dependencyHints: [], windowDays: 365 } as any, {});
+    const r = validateAnnualPlanDraft(draft, { domainNameMn: "Маркетинг", findings: [], strengths: [], evidenceChecks: [], dependencyHints: [], windowDays: 365 } as any, {});
     expect(r.issues.some(i => i.checkId === "REPEATED_SENTENCE")).toBe(true);
   });
 });
@@ -125,5 +125,75 @@ describe('natural single-line period labels',()=>{
   expect(L('2027-01-01','2027-03-31')).toBe('2027 оны 1-3-р сар');expect(L('2027-02-01','2027-02-28')).toBe('2027 оны 2-р сар');
   expect(L('2026-09-08','2026-12-07')).toBe('2026 оны 9-р сарын 8 - 12-р сарын 7');expect(L('2026-12-08','2027-03-07')).toBe('2026 оны 12-р сарын 8 - 2027 оны 3-р сарын 7');
   expect(L('2028-02-29','2028-05-28')).toBe('2028 оны 2-р сарын 29 - 5-р сарын 28');expect(L('2027-01-31','2027-02-27')).toBe('2027 оны 1-р сарын 31 - 2-р сарын 27');
+ });
+});
+
+/* ---- second independent repair: wording rules, real grounding, questionnaire answers, version binding, bounded repairs ---- */
+import fs from 'node:fs';
+import {planEvidenceLine,planForPayload,MAX_PLAN_REPAIRS,planSystemInstructions} from '../src/report/annual-plan.js';
+import {checkPlanLanguage} from '../src/report/annual-plan-language.js';
+import {plainMn} from '../src/report/plain-terms.js';
+const lang=(texts:string[],opt?:{starts?:number[];names?:string[]})=>checkPlanLanguage(texts.map((t,i)=>({id:`E${i+1}`,startDay:opt?.starts?.[i]??i*40,durationDays:40,headingMn:'Гарчиг',dependencyNoteMn:null,actions:[{textMn:t}]})),365,opt?.names??[]).map(i=>i.checkId);
+describe('wording rules of the plan',()=>{
+ it('a diagnostic score or a date digit does not license an invented number',()=>{
+  const p:any={...payload,overall:{score:25}};const b=buildPlanInput({...p,priorityActions:p.priorityActions.map((x:any)=>({...x,currentCellScore:25}))},'Маркетинг',{catalog});
+  for(const t of ['Хэрэглэгчийн хэрэгцээг судалж стратегийн чанарыг 25 оноогоор нэмэгдүүлнэ.','Маркетингийн стратегийг 12 дахь долоо хоногт шинэчилж хэрэглэгчид танилцуулна.']){const d=goodRich();d.stages[0].actions[0].textMn=t;expect(validateAnnualPlanDraft(d,b.input,b.refToRecommendationId).issues.map(i=>i.checkId)).toContain('INVENTED_NUMBER')}
+ });
+ it('rejects amounts, percentages, staff counts and promised results written in words',()=>{
+  for(const t of ['Борлуулалтыг хорин хувиар өсгөнө.','Энэ ажилд арван сая төгрөг зарцуулна.','Гурван мэргэжилтэн томилж ажиллуулна.','Шинээр ажилтан авч энэ ажлыг хариуцуулна.','Ингэснээр борлуулалт заавал өснө.'])expect(lang([t]),t).toContain('UNSUPPORTED_CLAIM');
+  expect(lang(['Нэг хүн энэ ажлыг ахалж, долоо хоног бүр явцыг тайлагнана.'])).toEqual([]);
+ });
+ it('rejects bare commands, accepts the descriptive form',()=>{
+  expect(lang(['Хэрэглэгчийн бүлгийг хооронд нь харьцуул.','Сонгосон чиглэлээ удирдлагатай ярилц.','Үр дүнг тэмдэглэнэ.'])).toContain('VERB_FORM');
+  expect(lang(['Хэрэглэгчийн бүлгийг хооронд нь харьцуулна.','Сонгосон чиглэлээ удирдлагатай ярилцаж батална.'])).toEqual([]);
+ });
+ it('rejects the same advice under another capability name',()=>{
+  const t=(c:string)=>`${c} чиглэлийн ажлын дарааллыг хамтран зурж, давхардсан алхмыг хасаад шинэчилсэн зааврыг багийн гишүүдэд танилцуулж туршина.`;
+  expect(lang([t('Кампанит ажлын удирдлага'),t('Үнэ тогтоох бодлого')],{names:['Кампанит ажлын удирдлага','Үнэ тогтоох бодлого']})).toContain('SAME_ADVICE');
+ });
+ it('flags one formula carried through the plan',()=>{expect(lang(['Захиалгыг ангилна. Ингэснээр саатлыг олно.','Үнийг хянана. Ингэснээр алдагдлыг мэднэ.','Гэрээг шалгана. Ингэснээр эрсдэлийг харна.','Нөөцийг тоолно. Ингэснээр дутлыг илрүүлнэ.'])).toContain('FORMULAIC')});
+ it('time words must agree with the schedule',()=>{expect(lang(['Эхний сард багийн гишүүд хэрэглэгчидтэй ярилцана.'],{starts:[120]})).toContain('TIME_REFERENCE');expect(lang(['Жилийн эцэст хийсэн ажлаа дүгнэнэ.'],{starts:[0]})).toContain('TIME_REFERENCE')});
+ it('compliance wording is rejected',()=>{expect(lang(['Шаардлагатай нотолгоог бүрдүүлж хадгална.'])).toContain('ROBOTIC_PHRASE')});
+});
+describe('grounding cannot be satisfied by the domain name or by a reference list',()=>{
+ it('the domain word alone does not ground an action',()=>{const d=goodRich();for(const s of d.stages)s.actions[0].textMn='Маркетингийн багийн уулзалтыг тогтмолжуулж дараагийн алхмаа хамтран шийднэ.';expect(checkRich(d)).toContain('NOT_GROUNDED')});
+ it('a finding that is cited but never discussed is reported',()=>{const d:any=goodRich();d.stages[2].actions[0]={textMn:'Зорилтот зах зээлийн сонголтыг хэрэглэгчийн хэрэгцээнд нийцүүлэн дахин тулгаж, дараагийн жилийн чиглэлээ шийднэ.',recommendationIds:['F3','F2']};expect(checkRich(d)).toContain('FINDING_NOT_DISCUSSED')});
+ it('a capability named only with everyday words is still recognised when it is named',()=>{
+  const cat={...catalog,categories:{...catalog.categories,CAT3:'Маркетингийн зорилго ба чиглэл'}};const b=buildPlanInput(payload,'Маркетинг',{catalog:cat});const run=(t:string)=>{const d:any=goodRich();d.stages[2].actions[0]={textMn:t,recommendationIds:['F3']};return validateAnnualPlanDraft(d,b.input,b.refToRecommendationId).issues.map(i=>i.checkId)};
+  expect(run('Маркетингийн зорилго, чиглэлээ удирдлагын багтай дахин ярилцаж, дараагийн жилийн сонголтоо шийднэ.')).not.toContain('FINDING_NOT_DISCUSSED');
+  expect(run('Маркетингийн багийн уулзалтыг тогтмолжуулж, дараагийн алхмаа хамтран шийднэ.')).toContain('FINDING_NOT_DISCUSSED');
+ });
+ it('a stage cannot depend on results of work that has barely started',()=>{const d=goodRich();d.stages[1].startDay=10;d.stages[1].durationDays=180;expect(checkRich(d)).toContain('DEPENDENCY')});
+ it('early work stretched over the whole year is reported',()=>{const d:any=goodRich();d.stages[1].startDay=40;d.stages[2].startDay=100;d.stages[2].durationDays=265;d.stages[1].durationDays=100;d.stages[2].dependsOnStageIds=[];expect(checkRich(d)).toContain('LATE_YEAR')});
+});
+describe('questionnaire answers reach the planner',()=>{
+ const row=(cellId:string,score:number|null,answer:string|null,status='ANSWERED')=>({status,cellId,questionMn:`Асуулт ${answer}`,answerMn:answer,score});
+ it('answers about the weak dimension come first, then the weakest others; unknown answers are only counted',()=>{
+  const l=planEvidenceLine('F1','C05',[row('C01',80,'а'),row('C02',10,'б'),row('C05',60,'в'),row('C03',null,null,'DNK'),row('C05',20,'г'),row('C04',40,'д')]);
+  expect(l.examplesMn.map(x=>x.split('-> ')[1])).toEqual(['г','в','б','д']);expect([l.answered,l.unknown]).toEqual([5,1]);
+ });
+ it('root role and affected capabilities are part of the input',()=>{
+  const p:any={...payload,rootFindings:[{id:'ROOT-1',categoryId:'CAT1',classification:'PRIMARY_ROOT_CAUSE',downstreamCategoryIds:['CAT2','CAT1']}]};
+  const f=buildPlanInput(p,'Маркетинг',{catalog}).input.findings[0];expect(f.rootRole).toBe('PRIMARY_ROOT_CAUSE');expect(f.affectsMn).toEqual(['Зорилтот зах зээлийн сонголт']);
+ });
+ it('the full root-cause graph gives the dependencies of the priorities (the payload keeps only three root findings); reciprocal pairs are dropped',()=>{
+  const p:any={...payload,rootFindings:[{id:'OTHER',categoryId:'CAT9',downstreamCategoryIds:[]}]};expect(buildPlanInput(p,'Маркетинг',{catalog}).input.dependencyHints).toEqual([]);
+  const rootFindings=[{id:'ROOT-1',categoryId:'CAT1',downstreamCategoryIds:['CAT2','CAT3']},{id:'ROOT-2',categoryId:'CAT2',downstreamCategoryIds:['CAT1','CAT3']}];
+  expect(buildPlanInput(p,'Маркетинг',{catalog,rootFindings}).input.dependencyHints).toEqual([{first:'F1',then:'F2'},{first:'F1',then:'F3'},{first:'F2',then:'F3'}]);
+ });
+ it('the plan input uses the Ulaanbaatar calendar day',()=>expect(buildPlanInput({...payload,generatedAt:'2026-12-31T20:00:00Z'},'Маркетинг').input.reportDate).toBe('2027-01-01'));
+ it('the prompt asks for answers, verb form and no scores',()=>{const s=planSystemInstructions();for(const k of ['evidenceFromAnswers','тогтооно','rootRole'])expect(s).toContain(k)});
+});
+describe('bounded repairs and version binding',()=>{
+ const provider=(drafts:any[])=>{const calls={n:0};const next=async()=>{const d=drafts[Math.min(calls.n,drafts.length-1)];calls.n++;return {draft:d,usage:{inputTokens:10,outputTokens:5},provider:{kind:'TEST_DOUBLE' as const,model:'t'}}};return {calls,p:{generate:next,repair:next} as AnnualPlanProvider}};
+ it('never makes more than one generation and the allowed repairs, and reports each call',async()=>{const bad:any=goodRich();bad.stages[0].actions[0].textMn='English plan text that must be rejected';const {calls,p}=provider([bad]);const log:any[]=[];const r=await generateAnnualPlan(payload,'Маркетинг',p,{extras:{catalog},onCall:c=>log.push(c)});expect(r.state).toBe('UNAVAILABLE');expect(calls.n).toBe(1+MAX_PLAN_REPAIRS);expect(log.length).toBe(calls.n);expect(log[0].usage).toEqual({inputTokens:10,outputTokens:5})});
+ it('a style finding costs at most one repair and does not discard a valid plan',async()=>{const soft:any=goodRich();soft.stages[1].startDay=40;soft.stages[1].durationDays=70;soft.stages[2].startDay=105;soft.stages[2].durationDays=260;expect(checkRich(soft)).toEqual(['LATE_YEAR']);const {calls,p}=provider([soft]);const r=await generateAnnualPlan(payload,'Маркетинг',p,{extras:{catalog}});expect(r.state).toBe('READY');expect(calls.n).toBe(2)});
+ it('malformed model output never becomes a plan',async()=>{for(const d of [null,'текст',{},{schemaVersion:'MMRI-ANNUAL-PLAN-DRAFT-1.0',stages:[]},{schemaVersion:'MMRI-ANNUAL-PLAN-DRAFT-1.0',stages:[{id:'E1'}]},{schemaVersion:'MMRI-ANNUAL-PLAN-DRAFT-1.0',stages:[null]}])expect((await generateAnnualPlan(payload,'Маркетинг',provider([d]).p)).state).toBe('UNAVAILABLE')});
+ it('a plan generated for another payload is not used',()=>{const plan=materializeAnnualPlan(good().stages as any,payload,{kind:'TEST_DOUBLE',model:'t'});expect(planForPayload(plan,payload.payloadHash)).toBe(plan);expect(planForPayload(plan,'x'.repeat(64))).toBeNull();expect(planForPayload(undefined,'x')).toBeNull()});
+ it('stored plan text already uses the plain terms the web page shows, so web and PDF read the same',()=>{
+  const st:any=good().stages;st[0].headingMn='Капитал хуваарилалтын засаглал';const plan=materializeAnnualPlan(st,payload,{kind:'TEST_DOUBLE',model:'t'});expect(plan.stages[0].headingMn).toBe('Хөрөнгийн хуваарилалт, зарцуулалтын удирдлага');
+  const web=fs.readFileSync(new URL('../../frontend/src/data/plainTerms.ts',import.meta.url),'utf8');const own=fs.readFileSync(new URL('../src/report/plain-terms.ts',import.meta.url),'utf8');
+  for(const m of own.matchAll(/\["([^"]+)", "([^"]+)"\]/g))expect(web).toContain(`['${m[1]}','${m[2]}']`);
+  expect(plainMn(plainMn('засаглалын'))).toBe('удирдлагын');
  });
 });
