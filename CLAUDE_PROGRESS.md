@@ -924,3 +924,9 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 ## 2026-11-23 follow-up after RC8
 - Customer login: owner e-mail has no account in the QA DB; QA mail allow-list (5 @businessmri.mn addresses) drops codes to other recipients. Procedures in ~/Downloads/BUSINESSMRI_FINAL_INTEGRATED_RELEASE/01_FOLLOW_UP_AND_APPROVAL_TABLE.md. No account record modified.
 - Guide alt-texts/notes rewritten as sentences; hero cards variant opt-in (?hero=cards) from MMRI_APPROVED_LIQUID_GLASS_REFERENCE.png (needs owner confirmation); 12-month branch inspected read-only: 6 conflicts with RC8, not ready.
+
+## 2026-11-23 second independent 12-month plan repair (branch feature/report-plan-account2)
+- Two input defects fixed: questionnaire answers never reached the planner (external id compared with database id) and dependency hints were always empty (payload keeps three root findings). Planner input now has answers of the weak dimension, company profile options, full root graph.
+- New `src/report/annual-plan-language.ts` (wording rules calibrated on 29 saved real-model plans), stricter grounding and numbers, plan bound to payload hash, at most 2 repairs shared, plan usage in the audit event, prompt 2.1. PDF page-3 fit measured with the real frame; line budget 57.
+- QA clone scripts wrote into the shared QA report-storage/mailbox; now isolated. No paid call made; real model quality still UNVERIFIED.
+- Reports: ~/Downloads/BUSINESSMRI_PLAN_ACCOUNT2_REPAIR/.
