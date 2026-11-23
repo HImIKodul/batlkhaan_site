@@ -56,3 +56,17 @@ describe("plan start date follows the Mongolian calendar day", () => {
     expect(planStartDate("2026-11-22").toISOString().slice(0, 10)).toBe("2026-11-22");
   });
 });
+
+describe("repeated catalogue sentences and punctuation tidy", () => {
+  it("flags the same long sentence in two stages and tidies doubled full stops", async () => {
+    const { validateAnnualPlanDraft, tidyPlanText } = await import("../src/report/annual-plan.js");
+    expect(tidyPlanText(" Бодит алхам хийнэ.. Дараа нь шалгана ,. ")).toBe("Бодит алхам хийнэ. Дараа нь шалгана.");
+    expect(tidyPlanText("Үнэлэх боломжтой болгох., дараа нь тооцно.")).toBe("Үнэлэх боломжтой болгох, дараа нь тооцно.");
+    const s = "Дутуу байгаа шууд нотолгоог асуулт бүртгэл эсвэл бодит эх сурвалжаас нөхөж тухайн асуудлыг найдвартай үнэлэх боломжтой болгох.";
+    const draft: any = { schemaVersion: "MMRI-ANNUAL-PLAN-DRAFT-1.0", stages: [
+      { id: "E1", headingMn: "Суурь шийдвэр ба эхний тогтолцоо", startDay: 0, durationDays: 100, dependsOnStageIds: [], dependencyNoteMn: null, actions: [{ textMn: s, recommendationIds: ["F1"] }] },
+      { id: "E2", headingMn: "Хэмжилтээр баталгаажуулах үе", startDay: 100, durationDays: 100, dependsOnStageIds: ["E1"], dependencyNoteMn: null, actions: [{ textMn: s, recommendationIds: ["F2"] }] }] };
+    const r = validateAnnualPlanDraft(draft, { findings: [], evidenceChecks: [], dependencyHints: [], windowDays: 365 } as any, {});
+    expect(r.issues.some(i => i.checkId === "REPEATED_SENTENCE")).toBe(true);
+  });
+});

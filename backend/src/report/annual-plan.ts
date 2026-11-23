@@ -181,6 +181,19 @@ export function validateAnnualPlanDraft(draft: any, input: PlanInput, refToRecom
     const inter = [...acts[i].w].filter(w => acts[j].w.has(w)).length; const uni = new Set([...acts[i].w, ...acts[j].w]).size;
     if (uni >= 6 && inter / uni >= 0.7) bad("DUPLICATE_ACTION", `Near-identical action text in ${acts[i].id} and ${acts[j].id}`);
   }
+  /* The same (or almost the same) long sentence must not recur in different actions (copied catalogue wording): each action says what is specific to ITS finding. */
+  const sentences: Array<{ id: string; w: Set<string> }> = [];
+  for (const st of stages) for (const a of st.actions ?? []) {
+    for (const sent of String(a?.textMn ?? "").split(/(?<=[.!?])\s+/)) {
+      const w = new Set(sent.toLowerCase().replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter(x => x.length > 2));
+      if (w.size < 8) continue;
+      for (const prev of sentences) {
+        const inter = [...w].filter(x => prev.w.has(x)).length;
+        if (inter / Math.min(w.size, prev.w.size) >= 0.8 && !issues.some(i => i.checkId === "REPEATED_SENTENCE" && i.message.endsWith(`${prev.id} and ${st.id}`))) bad("REPEATED_SENTENCE", `Same sentence repeated in ${prev.id} and ${st.id}`);
+      }
+      sentences.push({ id: st.id, w });
+    }
+  }
   for (const [lead, n] of prefixes) if (n >= 3) bad("ROBOTIC_LABEL", `The label "${lead}:" repeats ${n} times`);
   for (const f of input.findings) if (!covered.has(f.ref)) bad("COVERAGE", `Finding ${f.ref} is not addressed by any action`);
   const stageOfRef = new Map<string, PlanStageDraft>(); for (const s of stages) for (const a of s.actions ?? []) for (const r of a.recommendationIds ?? []) if (!stageOfRef.has(r)) stageOfRef.set(r, s);
@@ -190,12 +203,14 @@ export function validateAnnualPlanDraft(draft: any, input: PlanInput, refToRecom
   return { issues, stages };
 }
 
+/** Display-only punctuation clean-up of model text: doubled full stops and stray comma-full-stop pairs read as errors. */
+export const tidyPlanText = (s: string): string => String(s).trim().replace(/\.{2,}(?!\.)/g, ".").replace(/\.,/g, ",").replace(/,\s*\./g, ".").replace(/\s+([.,;:!?])/g, "$1");
 export function materializeAnnualPlan(stages: PlanStageDraft[], payload: FrozenReportPayload, provider: AnnualPlanReady["provider"]): AnnualPlanReady {
   const start = planStartDate(payload.generatedAt);
   const out: PlanStage[] = stages.map(s => {
     const a = addDays(start, s.startDay), b = addDays(start, stageEndDay(s));
     return { id: s.id, headingMn: s.headingMn.trim(), startDay: s.startDay, endDay: stageEndDay(s), startDate: iso(a), endDate: iso(b), dateLabel: `${ymd(a)} - ${ymd(b)}`,
-      dependsOnStageIds: s.dependsOnStageIds ?? [], dependencyNoteMn: s.dependencyNoteMn ? s.dependencyNoteMn.trim() : null, actions: s.actions.map(x => ({ textMn: x.textMn.trim(), recommendationIds: x.recommendationIds })) };
+      dependsOnStageIds: s.dependsOnStageIds ?? [], dependencyNoteMn: s.dependencyNoteMn ? s.dependencyNoteMn.trim() : null, actions: s.actions.map(x => ({ textMn: tidyPlanText(x.textMn), recommendationIds: x.recommendationIds })) };
   });
   const end = addDays(start, Math.max(...out.map(s => s.endDay)));
   return { schemaVersion: MMRI_ANNUAL_PLAN_VERSION, state: "READY", sourcePayloadHash: payload.payloadHash, startDate: iso(start), endDate: iso(end), periodLabel: `${ymd(start)} - ${ymd(end)}`,

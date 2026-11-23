@@ -4,7 +4,7 @@ html body .mmri-shell-main:has(.diagnosis-square-page){margin-inline:clamp(10px,
 .diagnosis-square-page{max-width:1680px;margin-inline:auto;padding:6px 22px 14px;display:flex;flex-direction:column;gap:14px;height:calc(100dvh - var(--mmri-chrome));color:var(--wp-ink)}
 .diagnosis-square-page>.diagnosis-square-grid{flex:1 1 auto}
 /* A banner (profile gate / error) takes its own row and its height comes out of the cards, so nothing overlaps or leaves the screen. */
-.diagnosis-square-page:has(>.mmri-support-alert) .diagnosis-square{height:clamp(260px,calc(100dvh - 360px),380px)}
+.diagnosis-square-page:has(>.mmri-support-alert) .diagnosis-square{height:clamp(300px,calc(100dvh - 360px),520px)}
 .diagnosis-square-head{text-align:center}
 .diagnosis-square-head__title{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}.diagnosis-square-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;align-content:center;min-height:0;max-height:100%;gap:clamp(12px,1.7vw,28px)}
 /* Diagnosis card = .cat-tile (glass.css): big icon on the family gradient, light label strip with title, compact status, CTA. */
