@@ -102,9 +102,9 @@ html:root body.mmri-prism-page .cat-tile__name::before{background:radial-gradien
 /* diagnosis cards: layout, label, entrance (mounts once per visit; hover/state updates never replay it) */
 html:root body.mmri-prism-page button.diagnosis-square.cat-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:0;padding:0;border-radius:26px;overflow:hidden;isolation:isolate;text-align:left;width:100%;font:inherit;color:#08205a;grid-template-rows:none;animation:cat-in .5s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--n,0)*85ms)}
 html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(1){--n:0}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(2){--n:1}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(3){--n:2}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(4){--n:3}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(5){--n:4}
-@media (min-width:1001px){html:root body.mmri-prism-page .diagnosis-square.cat-tile{height:clamp(380px,58vh,540px)}}
-@media (max-width:1000px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:190px;border-radius:22px}}
-@media (min-width:701px) and (max-width:1000px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:340px}html:root body.mmri-prism-page .diagnosis-square-grid{align-content:start}}
+@media (min-width:1001px){html:root body.mmri-prism-page .diagnosis-square.cat-tile{height:clamp(400px,66vh,640px)}}
+@media (max-width:1000px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:240px;border-radius:22px}}
+@media (min-width:701px) and (max-width:1000px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:420px}html:root body.mmri-prism-page .diagnosis-square-grid{align-content:start}}
 html:root body.mmri-prism-page .diagnosis-square-grid{align-items:center}
 html:root body.mmri-prism-page .diagnosis-square-grid:has(.cat-tile:hover) .cat-tile:not(:hover){opacity:1}
 html:root body.mmri-prism-page .cat-tile__name{position:relative;z-index:3;display:flex;align-items:flex-end;gap:calc(1.6*6.5px);width:auto;margin:0;min-height:0;padding:0 calc(2.6*6.5px) calc(1.9*6.5px);border:0;background:none;box-shadow:none;font-size:clamp(15px,1.2vw,17px);font-weight:700;letter-spacing:-.01em;line-height:1.15;text-align:left;color:#08205a;text-shadow:0 1px 0 rgba(255,255,255,.6);text-wrap:balance}
