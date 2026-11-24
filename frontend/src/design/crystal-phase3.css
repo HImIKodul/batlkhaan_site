@@ -53,6 +53,7 @@ html:root body.mmri-prism-page .mmri-shell::after{display:block;opacity:1;backgr
 html:root body.mmri-prism-page .mmri-shell-inner{background:none;border:0;box-shadow:none;border-radius:0}
 html:root body.mmri-prism-page .mmri-shell-inner::before,html:root body.mmri-prism-page .mmri-shell-inner::after{display:none}
 html:root body.mmri-prism-page .mmri-brand strong{font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--gm-navy);text-shadow:none}
+@media (max-width:360px){html:root body.mmri-prism-page .mmri-brand strong{font-size:17px}}
 html:root body.mmri-prism-page .mmri-primary-nav{padding:4px;gap:2px;border-radius:999px;background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 16px -10px rgba(2,10,90,.55)}
 html:root body.mmri-prism-page .mmri-primary-nav a{border-radius:999px;padding-inline:16px;font-size:15px;font-weight:600;letter-spacing:0;color:#0a2358;transition:background-color .2s,color .2s,box-shadow .2s}
 html:root body.mmri-prism-page .mmri-primary-nav a:hover:not(.is-active){background:rgba(255,255,255,.55)}

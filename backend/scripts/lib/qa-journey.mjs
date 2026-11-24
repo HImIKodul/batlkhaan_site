@@ -24,7 +24,7 @@ export async function journey(base,tok,companyId,domain,planCode='DIAGNOSTIC',op
     const r=await http(base,'POST',`/assessments/${a}/answers`,{tok,h:hdr,body:{questionId:q.id,optionIndex:c.optionIndex,questionIssueId:route.questionIssueId,expectedAssessmentRevision:route.assessmentRevision,clientRequestId:crypto.randomUUID()}});
     if(r.s!==200)throw new Error('answer failed '+r.s+' '+JSON.stringify(r.e));route=r.d.routing;n++;
     if(n%40===0)await http(base,'POST',`/assessments/${a}/writer-lease/heartbeat`,{tok,h:hdr,body:{}});
-    let st=(await http(base,'GET',`/assessments/${a}/status`,{tok})).d;if(st.lifecycle?.isTerminal)break;
+    const sr=await http(base,'GET',`/assessments/${a}/status`,{tok});if(!sr.d)throw new Error('status failed: HTTP '+sr.s+' '+JSON.stringify(sr.e));let st=sr.d;if(st.lifecycle?.isTerminal)break;
     if(st.lifecycle?.canRequestCompletion){await http(base,'POST',`/assessments/${a}/complete`,{tok,h:hdr,body:{expectedAssessmentRevision:st.assessmentRevision}});break}
     if(!route?.nextQuestion)route=(await http(base,'GET',`/assessments/${a}/next-question`,{tok,h:hdr})).d}
   let st=(await http(base,'GET',`/assessments/${a}/status`,{tok})).d;

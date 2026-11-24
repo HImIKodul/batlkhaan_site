@@ -10,7 +10,7 @@ export async function registerVerifiedFixture(apiBase,{email,password,displayNam
  const reg=await post('/auth/register',{email,password,displayName});const accepted=await reg.json();
  if(reg.status!==202||accepted.data?.accepted!==true||accepted.data?.accessToken||reg.headers.get('set-cookie'))throw new Error('Registration must be pending without a session');
  const code=fixtureVerificationCode(email);
- const verified=await post('/auth/email-verification/confirm',{email,code});if(verified.status!==200)throw new Error('Ownership confirmation failed');
+ const verified=await post("/auth/email-verification/confirm",{email,code});if(verified.status!==200)throw new Error(`Ownership confirmation failed: HTTP ${verified.status} ${(await verified.text()).slice(0,200)}`);
  const login=await post('/auth/login',{email,password});if(login.status!==200)throw new Error('Verified fixture login failed');return login;
 }
 

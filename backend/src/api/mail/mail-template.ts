@@ -23,7 +23,7 @@ export function renderMailHtml(m: MailBodyInput): string {
       // Label lines such as "Төрөл: ..." keep their own paragraph; the link itself becomes the button, with the address below for clients that block buttons.
       if (lead) body.push(`<p style="${P}">${esc(lead).replace(/\n/g, "<br>")}</p>`);
       const safe = esc(url);
-      body.push(`<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px;"><tr><td style="border-radius:12px;background:#1559e6;"><a href="${safe}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">${esc(BUTTON[m.kind] ?? "Нээх")}</a></td></tr></table><p style="margin:0 0 18px;font-size:13px;line-height:1.5;color:#5a6a86;word-break:break-all;">Товч ажиллахгүй бол энэ холбоосыг хуулж нээнэ үү:<br>${safe}</p>`);
+      body.push(`<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px;"><tr><td style="border-radius:12px;background:#1559e6;"><a href="${safe}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">${esc(BUTTON[m.kind] ?? "Нээх")}</a></td></tr></table><p style="margin:0 0 18px;font-size:13px;line-height:1.5;color:#5a6a86;overflow-wrap:anywhere;">Товч ажиллахгүй бол энэ холбоосыг хуулж нээнэ үү:<br>${safe}</p>`);
       continue;
     }
     body.push(`<p style="${P}">${esc(b).replace(/\n/g, "<br>")}</p>`);

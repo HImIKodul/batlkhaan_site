@@ -64,7 +64,7 @@ export default function Billing(){
   await refresh()}}}catch(e:any){autoCreateRef.current='';setError(e?.message||'Төлбөрийн мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
  useEffect(()=>{void load()},[areaId,code]);
  const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');setErrorCode('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
-  await refresh()}catch(e:any){setErrorCode(e instanceof ApiError?e.code??'':'');setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
+  await refresh()}catch(e:any){setErrorCode(String(e?.code??''));setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
  const check=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{
   // Ask the server to verify with the payment provider; the cached status alone could lag behind a real payment. Invoices the provider cannot check (mock/manual) fall back to a plain status read.
   let latest:BillingInvoice;
@@ -125,7 +125,7 @@ export default function Billing(){
   <section className="billing-qr" data-area={areaId} style={{'--c':`var(--mmri-domain-${areaId})`} as React.CSSProperties} aria-labelledby="billing-qr-title">
    <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title"><DomainBadge id={area.id}/> <span>{domainNameMn(area.id)}</span></h1><strong className="billing-qr__price">{money(amount)}</strong></header>
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
-   {noCode?(errorCode==='RETAKE_REQUIRED'?<Button onClick={()=>{sessionStorage.setItem('business:billingMode','retake');window.location.reload()}}>Дахин оношилгооны төлбөр рүү</Button>:<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>):<div className="billing-qr__box">
+   {noCode?(errorCode==='RETAKE_REQUIRED'?<Button onClick={()=>{sessionStorage.setItem('business:billingMode','retake');window.location.reload()}}>Дахин оношилгоо сонгох</Button>:<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>):<div className="billing-qr__box">
     {expired&&!demo?<div className="billing-qr__wait" role="status"><span>Кодын хугацаа дууссан</span></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
      :demo?<div className="billing-qr__demo-box"><QrCode text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
      :codeText?<QrCode text={codeText} label={`${area.name} оношилгооны төлбөрийн QR`}/>
