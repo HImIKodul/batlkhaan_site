@@ -54,7 +54,7 @@ echo "[5/6] provenance"
 GIT=${MMRI_BUILD_GIT_HEAD:-$(git -C "$BACKEND" rev-parse --short HEAD 2>/dev/null || echo unknown)}
 if git -C "$BACKEND" rev-parse --git-dir >/dev/null 2>&1; then DIRTY=$(git -C "$BACKEND" status --porcelain 2>/dev/null | wc -l); else DIRTY=null; fi
 cat > "$OUT/BUILD_INFO.json" <<EOF
-{"product":"BusinessMRI","version":"$LABEL","builtAt":"$(date -u +%FT%TZ)","node":"$(node -v)","npm":"$(npm -v)","gitHead":"$GIT","uncommittedEntries":$DIRTY,"generatorPdf":"MMRI-PDF-1.6-BUSINESSMRI-BRAND"}
+{"product":"BusinessMRI","version":"$LABEL","builtAt":"$(date -u +%FT%TZ)","node":"$(node -v)","npm":"$(npm -v)","gitHead":"$GIT","uncommittedEntries":$DIRTY,"generatorPdf":"MMRI-PDF-1.7-BUSINESSMRI-PLAN"}
 EOF
 (cd "$OUT" && find . -type f ! -name SHA256SUMS.txt -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
 
