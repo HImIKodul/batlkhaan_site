@@ -22,7 +22,7 @@ Evidence in the project records (public headers, Nov 2026) says the live site ru
 1. `df -h` / `Get-PSDrive`: keep > 20 % free.
 2. Unzip the package into a NEW folder, e.g. `C:\MMRI\releases\1.0.0-rc2\`. Verify the archive: `certutil -hashfile <zip> SHA256` equals the `.zip.sha256` file; then in the folder `SHA256SUMS.txt` must match (PowerShell: `Get-FileHash`; Linux: `sha256sum -c SHA256SUMS.txt`) **[VERIFIED: 0 mismatches of 317 files]**.
 3. Database state, run as the DB owner against the production DB (read-only):
-   `select count(*) from _prisma_migrations;` (31 expected) and
+   `select count(*) from _prisma_migrations;` (record the number; 39 after the migration of this release) and
    `select status, count(*) from report_reviews group by 1;`
    **Known data issue:** the development `mmri` database holds 3 legacy reviews in `APPROVED` with `approvedRevision IS NULL` (approved on 2026-11-05, before approval binding existed). They can never publish, and the API logs `review_publish_retry_failed` for each at every maintenance cycle. Check the production DB for the same pattern: `select id from report_reviews where status='APPROVED' and ("approvedRevision" is null or "approvedNarrativeHash" is null);` Resolve each with an administrator (re-open and approve again, or return for correction) **before** go-live. **[OWNER]**
 4. Confirm the owner has decided the items in section 12.

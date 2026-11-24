@@ -329,3 +329,7 @@ html:root body.mmri-prism-page .report-three-pages button{-webkit-user-select:no
 .report-plan-generic>summary::-webkit-details-marker{display:none}
 .report-plan-generic>summary:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:12px}
 .report-plan-generic>div{padding-bottom:16px}
+
+/* loading frame: same header and toolbar boxes as the loaded report, without an extra wrapper box (keeps the page gap) */
+.report-loading-frame{display:contents}
+.report-loading-frame .report-top-download{visibility:hidden}
