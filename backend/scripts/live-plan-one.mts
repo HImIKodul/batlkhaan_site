@@ -9,10 +9,10 @@ if (mode === "prepare") {
   const { prisma } = await import("../src/db.js"); const { PrismaAssessmentEngine } = await import("../src/services/prisma-assessment-engine.js"); const { PrismaStrategyReportService } = await import("../src/services/prisma-strategy-report-service.js");
   const { buildPlanInput, planSystemInstructions, planUserInput, PLAN_DOMAIN_NAME_MN } = await import("../src/report/annual-plan.js");
   const svc: any = new PrismaStrategyReportService(new PrismaAssessmentEngine()); const payload = await svc.freezeReportPayload(a); const asm = await prisma.assessment.findUniqueOrThrow({ where: { id: a }, select: { domainCode: true } });
-  const extras = { evidenceFromAnswers: await svc.planEvidence(a, payload), catalog: await svc.planCatalog(a), companyCharacteristics: await svc.planCompanyContext(a), rootFindings: await svc.planRootFindings(a) };
+  const extras = { evidenceFromAnswers: await svc.planEvidence(a, payload), catalog: await svc.planCatalog(a), companyCharacteristics: await svc.planCompanyContext(a), answersOverview: await svc.planOverview(a, payload), rootFindings: await svc.planRootFindings(a) };
   const domain = PLAN_DOMAIN_NAME_MN[String(asm.domainCode)]; const { input } = buildPlanInput(payload, domain, extras); const chars = planSystemInstructions().length + planUserInput(input).length;
   const raw = JSON.stringify(input); const leaks = [payload.companyName, payload.assessmentId, "@"].filter(x => x && raw.includes(x));
-  fs.mkdirSync(b, { recursive: true, mode: 0o700 }); fs.writeFileSync(path.join(b, "case.json"), JSON.stringify({ payload, extras, domain }), { mode: 0o600 }); fs.writeFileSync(path.join(b, "what-would-be-sent.json"), JSON.stringify(input, null, 1), { mode: 0o600 });
+  fs.mkdirSync(b, { recursive: true, mode: 0o700 }); fs.writeFileSync(path.join(b, "case.json"), JSON.stringify({ payload, extras, domain, domainCode: asm.domainCode }), { mode: 0o600 }); fs.writeFileSync(path.join(b, "what-would-be-sent.json"), JSON.stringify(input, null, 1), { mode: 0o600 });
   console.log(JSON.stringify({ domain, chars, answersIncluded: extras.evidenceFromAnswers.length, profileAnswers: extras.companyCharacteristics.length, companyNameOrIdInInput: leaks })); await prisma.$disconnect();
 } else if (mode === "run") {
   if (process.env.MMRI_LIVE_PLAN_APPROVED !== "YES_ONE_REQUEST") throw new Error("NOT APPROVED: paid request refused"); if (process.env.DATABASE_URL) throw new Error("REFUSED: run without a database");
@@ -25,4 +25,10 @@ if (mode === "prepare") {
   const plan: any = await generateAnnualPlan(payload, domain, once, { extras, onCall: c => calls.push(c) }); const u = calls[0]?.usage;
   const rec = { model: process.env.MODEL, requests: used, usage: u ?? null, costUsd: u ? (u.inputTokens * pi + u.outputTokens * po) / 1e6 : null, checks: calls, plan, draft };
   fs.writeFileSync(out, JSON.stringify(rec, null, 1), { mode: 0o600 }); console.log(JSON.stringify({ state: plan.state, reason: plan.reason ?? null, requests: used, usage: u ?? null, costUsd: rec.costUsd, issues: calls[0]?.issues })); 
-} else throw new Error("prepare | run");
+} else if (mode === "render") {
+  /* offline: the plan of result.json in the real three-page PDF (deterministic narrative), no key, no database */
+  const { buildReportPdfSource } = await import("../src/report/pdf-artifact.js"); const { deterministicFallbackNarrative } = await import("../src/report/fallback-renderer.js"); const { execFileSync } = await import("node:child_process"); const { planStartDate } = await import("../src/report/annual-plan.js");
+  const { payload, domainCode } = JSON.parse(fs.readFileSync(path.join(a, "case.json"), "utf8")); const { plan } = JSON.parse(fs.readFileSync(path.join(a, "result.json"), "utf8")); if (plan.state !== "READY") throw new Error("no accepted plan to render");
+  fs.writeFileSync(path.join(a, "source.json"), JSON.stringify({ ...buildReportPdfSource(payload, { ...deterministicFallbackNarrative(payload), annualPlan: plan } as any), render: { domainCode, reportDate: planStartDate(payload.generatedAt).toISOString().slice(0, 10) } }));
+  execFileSync("python3", ["pdf_renderer/render_report_pdf.py", "--input", path.join(a, "source.json"), "--output", path.join(a, "report.pdf")]); console.log(execFileSync("pdfinfo", [path.join(a, "report.pdf")], { encoding: "utf8" }).match(/Pages:\s+\d+/)![0]);
+} else throw new Error("prepare | run | render");

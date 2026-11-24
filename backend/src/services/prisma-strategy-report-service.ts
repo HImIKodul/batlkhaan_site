@@ -1,5 +1,5 @@
 import { ApiError } from "../api/errors.js";
-import { planForPayload } from "../report/annual-plan.js";
+import { planForPayload, planAnswersOverview } from "../report/annual-plan.js";
 import { readAiProfileConsent } from "../company/ai-profile-consent.js";
 import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, planEvidenceLine, PLAN_CONTEXT_PROFILE_IDS, type PlanEvidenceLine, type PlanCatalog, type PlanRootFinding, type PlanUsage } from "../report/annual-plan.js";
 import { companyLogos } from "../company/company-logo-service.js";
@@ -117,6 +117,14 @@ export class PrismaStrategyReportService {
       }
       return out;
     }catch{return []}
+  }
+  /** Every active answer of this diagnosis, reduced to capability names by how they were answered (see planAnswersOverview). */
+  private async planOverview(assessmentId:string,payload:FrozenReportPayload){
+    try{
+      const rows=await prisma.answer.findMany({where:{assessmentId,active:true},select:{status:true,optionIndex:true,question:{select:{textMn:true,category:{select:{externalId:true,nameMn:true}},options:{select:{optionIndex:true,labelMn:true,score:true}}}}},orderBy:{question:{externalId:"asc"}}});
+      if(!rows.length)return undefined;
+      return planAnswersOverview(rows.map((r:any)=>{const o=r.question.options.find((x:any)=>x.optionIndex===r.optionIndex);return {status:r.status,cellId:"",categoryId:r.question.category.externalId,categoryMn:r.question.category.nameMn,questionMn:r.question.textMn,answerMn:o?.labelMn??null,score:o?.score==null?null:Number(o.score)}}),payload.priorityActions.map(a=>a.categoryId));
+    }catch{return undefined}
   }
   /** Root-cause graph of the frozen strategy of this same diagnosis (all findings; the report payload keeps only three). */
   private async planRootFindings(assessmentId:string):Promise<PlanRootFinding[]>{
@@ -554,7 +562,7 @@ export class PrismaStrategyReportService {
 
   private async runAnnualPlan(assessmentId:string,payload:FrozenReportPayload,narrative:NarrativeDraft,calls:Array<{attempt:number;model:string;usage:PlanUsage|null;issues:string[]}>){
     const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{domainCode:true}});
-    return generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId),companyCharacteristics:await this.planCompanyContext(assessmentId),rootFindings:await this.planRootFindings(assessmentId)},onCall:c=>calls.push(c),fits:async p=>(await checkPdfLayoutBudget(payload,{...narrative,annualPlan:p})).fits});
+    return generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId),companyCharacteristics:await this.planCompanyContext(assessmentId),answersOverview:await this.planOverview(assessmentId,payload),rootFindings:await this.planRootFindings(assessmentId)},onCall:c=>calls.push(c),fits:async p=>(await checkPdfLayoutBudget(payload,{...narrative,annualPlan:p})).fits});
   }
 
   /** Authorised recovery of a MISSING 12-month plan (the only way to get one after the report exists). Never replaces a stored plan, never runs from a customer request, at most MMRI_AI_PLAN_MAX_RECOVERIES (2) paid attempts

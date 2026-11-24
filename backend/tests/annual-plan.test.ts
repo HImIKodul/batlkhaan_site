@@ -1,3 +1,4 @@
+import { planAnswersOverview } from "../src/report/annual-plan.js";
 import {describe,it,expect} from 'vitest';
 import {planPeriodLabelMn,normaliseStageSchedule,buildPlanInput,planWindowDays,validateAnnualPlanDraft,materializeAnnualPlan,generateAnnualPlan,estimatePlanLines,planStartDate,addDays,PLAN_LINE_BUDGET,planJsonSchema,type AnnualPlanProvider} from '../src/report/annual-plan.js';
 const act=(i:number,band='P2')=>({id:`REC-${i}`,findingId:`ROOT-${i}`,categoryId:`CAT${i}`,cellId:'C02',type:'EXECUTION',titleMn:`Ажил ${i}`,objectiveMn:'Зорилго',actionMn:`Үйлдэл ${i}`,deliverableMn:'Гарц',kpiMn:'Хэмжүүр',ownerRoleId:'R01',sponsorRoleId:'R01',currentCellScore:40,targetCellScore:75,priorityBand:band});
@@ -200,4 +201,17 @@ describe('bounded repairs and version binding',()=>{
   for(const m of own.matchAll(/\["([^"]+)", "([^"]+)"\]/g))expect(web).toContain(`['${m[1]}','${m[2]}']`);
   expect(plainMn(plainMn('засаглалын'))).toBe('удирдлагын');
  });
+});
+
+describe("whole-diagnosis overview for the planner", () => {
+  const row = (categoryId: string, categoryMn: string, score: number | null, status = "ANSWERED") => ({ categoryId, categoryMn, cellId: "", status, questionMn: `Асуулт ${categoryMn}`, answerMn: score == null ? null : "Хариулт", score });
+  it("keeps every answered capability exactly once, in words, and quotes the weakest outside the findings", () => {
+    const o = planAnswersOverview([row("A", "Нэг", 10), row("A", "Нэг", 30), row("B", "Хоёр", 60), row("C", "Гурав", 90), row("D", "Дөрөв", null, "DNK"), row("E", "Тав", 0)], ["A"]);
+    expect([o.weakMn, o.mixedMn, o.goodMn, o.unclearMn]).toEqual([["Нэг", "Тав"], ["Хоёр"], ["Гурав"], ["Дөрөв"]]);
+    expect(o.weakestAnswersMn).toEqual(["Тав: Асуулт Тав -> Хариулт"]);
+  });
+  it("is deterministic and bounded", () => {
+    const rows = Array.from({ length: 64 }, (_, i) => row(`K${i}`, `Чадавх ${String(i).padStart(2, "0")}`, i % 50));
+    expect(planAnswersOverview(rows, [])).toEqual(planAnswersOverview([...rows].reverse(), [])); expect(planAnswersOverview(rows, []).weakestAnswersMn.length).toBe(8);
+  });
 });

@@ -9,7 +9,7 @@ import { plainMn } from "./plain-terms.js";
    before this feature, and their PDFs, are byte-for-byte unaffected. If no reliable plan can be produced the state is UNAVAILABLE and the report keeps its
    existing page 3; a generic fallback is never presented as personalised AI planning. */
 export const MMRI_ANNUAL_PLAN_VERSION = "MMRI-ANNUAL-PLAN-1.0" as const;
-export const MMRI_ANNUAL_PLAN_PROMPT_VERSION = "MMRI-ANNUAL-PLAN-PROMPT-2.1" as const;
+export const MMRI_ANNUAL_PLAN_PROMPT_VERSION = "MMRI-ANNUAL-PLAN-PROMPT-2.2" as const;
 /** DATE POLICY (documented, tested): the plan covers twelve CALENDAR months. Day 0 is the report date as a calendar date in Ulaanbaatar (planStartDate); the window ends on the day before the same calendar date twelve months later
  *  (2026-11-20 -> 2027-11-19; a window spanning 29 February has 366 days). A start of 29 February ends on 28 February of the next year after the leap day rule (anniversary clamped to the month end).
  *  Stage dates are inclusive: endDay = startDay + durationDays - 1. The system, never the model, performs every date calculation. */
@@ -78,6 +78,20 @@ export function planEvidenceLine(findingRef: string, cellId: string, rows: PlanA
   const ranked = answered.filter(r => r.answerMn && r.score != null /* applicability and trend questions say nothing about how the work is done */).map((r, i) => ({ r, i })).sort((a, b) => Number(b.r.cellId === cellId) - Number(a.r.cellId === cellId) || (a.r.score ?? 999) - (b.r.score ?? 999) || a.i - b.i).slice(0, 4);
   return { findingRef, answered: answered.length, unknown: rows.filter(r => r.status === "DNK").length, notApplicable: rows.filter(r => r.status === "N_A_CLAIM").length, examplesMn: ranked.map(({ r }) => `${clip(r.questionMn, 240)} -> ${clip(r.answerMn!, 140)}`) };
 }
+/** The WHOLE questionnaire in compact form: every answered capability by how the company answered it (words only, no scores), and one telling answer for the weakest ones outside the findings. */
+export interface PlanAnswersOverview { weakMn: string[]; mixedMn: string[]; goodMn: string[]; unclearMn: string[]; weakestAnswersMn: string[] }
+export function planAnswersOverview(rows: Array<PlanAnswerRow & { categoryId: string; categoryMn: string }>, findingCategoryIds: string[]): PlanAnswersOverview {
+  const by = new Map<string, { name: string; scores: number[]; asked: number; low: { s: number; t: string } | null }>();
+  for (const r of rows) {
+    const c = by.get(r.categoryId) ?? { name: r.categoryMn, scores: [], asked: 0, low: null }; by.set(r.categoryId, c); c.asked++;
+    if (r.status !== "ANSWERED" || r.score == null) continue;
+    c.scores.push(r.score); if (r.answerMn && (!c.low || r.score < c.low.s)) c.low = { s: r.score, t: `${clip(r.questionMn, 170)} -> ${clip(r.answerMn, 110)}` };
+  }
+  const avg = (x: { scores: number[] }) => x.scores.reduce((n, v) => n + v, 0) / x.scores.length; const all = [...by.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name, "mn"));
+  const scored = all.filter(([, c]) => c.scores.length), pick = (f: (v: number) => boolean) => scored.filter(([, c]) => f(avg(c))).map(([, c]) => c.name);
+  return { weakMn: pick(v => v < 45), mixedMn: pick(v => v >= 45 && v < 70), goodMn: pick(v => v >= 70), unclearMn: all.filter(([, c]) => !c.scores.length).map(([, c]) => c.name),
+    weakestAnswersMn: scored.filter(([id, c]) => !findingCategoryIds.includes(id) && c.low && avg(c) < 45).sort((a, b) => avg(a[1]) - avg(b[1]) || a[1].name.localeCompare(b[1].name, "mn")).slice(0, 8).map(([, c]) => `${c.name}: ${c.low!.t}`) };
+}
 /** Names from the methodology the diagnosis was taken with: capability (category) by external id, diagnostic dimension (cell) by external id. */
 export interface PlanCatalog { categories: Record<string, string>; cells: Record<string, { nameMn: string; groupMn: string | null }> }
 export interface PlanInput {
@@ -95,9 +109,11 @@ export interface PlanInput {
   dependencyHints: Array<{ first: string; then: string }>;
   evidenceFromAnswers: PlanEvidenceLine[];
   companyCharacteristics: string[];
+  /** Present for real diagnoses; absent only when the answers could not be read. */
+  answersOverview?: PlanAnswersOverview;
   risksMn: string[]; warningsMn: string[];
 }
-export function buildPlanInput(payload: FrozenReportPayload, domainNameMn: string, extras?: { evidenceFromAnswers?: PlanEvidenceLine[]; companyCharacteristics?: string[]; catalog?: PlanCatalog; rootFindings?: PlanRootFinding[] }): { input: PlanInput; refToRecommendationId: Record<string, string> } {
+export function buildPlanInput(payload: FrozenReportPayload, domainNameMn: string, extras?: { evidenceFromAnswers?: PlanEvidenceLine[]; companyCharacteristics?: string[]; answersOverview?: PlanAnswersOverview; catalog?: PlanCatalog; rootFindings?: PlanRootFinding[] }): { input: PlanInput; refToRecommendationId: Record<string, string> } {
   const refToRecommendationId: Record<string, string> = {};
   const owner = (id: string) => payload.displayDictionary[id] || "Хариуцсан ахлах албан тушаалтан";
   const nameByCategory: Record<string, string> = { ...(extras?.catalog?.categories ?? {}) };
@@ -129,7 +145,7 @@ export function buildPlanInput(payload: FrozenReportPayload, domainNameMn: strin
     strengths: payload.strengths.slice(0, 5).map(s => ({ nameMn: s.nameMn, score: s.score ?? null })),
     weaknesses: payload.weaknesses.slice(0, 5).map(w => ({ nameMn: w.nameMn, score: w.score ?? null })),
     findings, sharedInterventions, evidenceChecks, dependencyHints,
-    evidenceFromAnswers: extras?.evidenceFromAnswers ?? [], companyCharacteristics: extras?.companyCharacteristics ?? [],
+    evidenceFromAnswers: extras?.evidenceFromAnswers ?? [], companyCharacteristics: extras?.companyCharacteristics ?? [], ...(extras?.answersOverview ? { answersOverview: extras.answersOverview } : {}),
     risksMn: payload.risks.map(r => r.messageMn).slice(0, 6), warningsMn: payload.requiredWarnings.slice(0, 4)
   };
   return { input, refToRecommendationId };
@@ -143,6 +159,7 @@ export function planSystemInstructions(): string {
     "COMBINE, DO NOT LIST: sharedInterventions lists findings that need the same kind of fix in different capabilities: handle them as ONE initiative that names the capabilities. dependencyHints say what must come first; rootRole tells which findings are causes of others and affectsMn which other capabilities benefit, so begin with causes and explain that link in plain words when it decides the order. When dependencyHints is empty, decide the order yourself from what each step needs (a rule before its control, a trial before wider use). Group related weaknesses into a few initiatives with a clear purpose, then sequence them: what starts immediately, what is prepared in parallel, what depends on the results of earlier work, and what continues as a routine until the end of the year. Strengths (strengths) may be used as the starting point for improvements. Every finding F1..Fn must be addressed by at least one action (list its reference in that action's recommendationIds); one action may serve several findings.",
     "PRACTICAL ACTIONS: each action is one or two natural Mongolian sentences that say concretely what the company does, how it approaches it (for example a review meeting, a short customer survey, a written selection rule, a trial with a small group, a weekly check of the load), who leads it in plain words when ownerMn supports it, and which decision or improvement it enables. State a condition naturally when a later step depends on an earlier result (for example, 'if the trial confirms ...'). Never promise success. Forbidden as actions: general objectives ('improve management', 'develop marketing', 'increase staff skills') and generic verification or document collection.",
     "ANSWERS: evidenceFromAnswers shows how the company itself answered questions about each finding. Use these answers to decide what exactly to change (for example, if the answer says a rule exists but is not followed, plan how to make it followed, not how to write it). companyCharacteristics, when present, describes the business; choose methods that suit it. Do not quote answers, scores or the fact of the diagnosis ('оношилгоогоор сул гэж үнэлэгдсэн'): the reader already knows them from the previous pages.",
+    "WHOLE DIAGNOSIS: answersOverview, when present, sorts every capability the company answered about into weak, mixed, good and unclear, and quotes one answer for the weakest others. Read all of it before planning: build on what is good, never plan something the company already does well, never contradict it, and choose methods and order that also help the weak neighbours of the findings. recommendationIds may still cite only F and V references, and a capability that is not a finding is not a separate initiative.",
     "EVIDENCE-TYPE FINDINGS: a finding whose kind is COLLECT_EVIDENCE, VALIDATE_CAUSE or RESOLVE_EVIDENCE means the diagnosis could NOT judge that capability, not that it is weak. Never invent a weakness for it. Plan it as a short, concrete self-review of that capability (who sits down with whom, what they compare, what one-page conclusion they write), followed by a conditional step that says what the company will change if the review confirms a problem and what it keeps if it does not. If most findings are of this kind, the programme is a structured review followed by decisions and a year-end check; it must still read as a business plan, never as a list of documents to collect.",
     "INFORMATION GAPS: evidenceChecks lists further capabilities where the diagnosis could not judge enough. Cover them with AT MOST ONE short action in the first or second stage that names those capabilities and says what the company should confirm. Do not build stages around collecting evidence or preparing documents, and do not write evidence collection for the findings F1..Fn.",
     "STRUCTURE: choose the number of stages (3 to 8) and their length from the findings; stages need not be equal and need not have the same number of actions (1 to 5). startDay 0 is the report date. The first stage starts on day 0 and contains concrete work that can begin at once. Stages may overlap when work runs in parallel, but together they must cover the whole year with no gap; the last stage runs to about day 365 as routine follow-up or a decision review. Do not repeat the same activity in a later stage: a continuing routine is described once and referred to as the continuation.",
