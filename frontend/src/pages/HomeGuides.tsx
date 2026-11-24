@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useState} from 'react';
-import { api } from '../api/client';
+import { api,session } from '../api/client';
+import { go as routeGo } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { type BusinessAreaId } from '../data/businessEvaluation';
 import { DOMAIN_ORDER,DOMAIN_NAME_MN,DOMAIN_ABBR,domainWithAbbr } from '../data/domainOrder';
@@ -126,8 +127,8 @@ const walkSteps:WalkStep[]=[
   note:'Зураг зөвхөн жишээ. Байгууллагын нэр, QR код нь бодит төлбөрийн мэдээлэл биш.'},
  {title:'Асуултад хариулах',shot:'4-questions',alt:'Асуултын хуудсанд хариултын сонголтууд, «Буцах» ба «Үргэлжлүүлэх» товчнууд байна',
   text:'Асуулт бүрт нэг хариулт сонгоод «Үргэлжлүүлэх» товчийг дарна. Мэдэхгүй асуултад «Мэдэхгүй» гэж хариулж болно. Хариулт автоматаар хадгалагдах тул дараа үргэлжлүүлэх боломжтой.'},
- {deliver:true,title:'Тайлангаа авах',shot:'5-report',alt:'Тайлангийн хуудсанд нийт үнэлгээ, давуу ба сул тал, PDF татах товч харагдана',
-  text:'Сүүлийн асуултад хариулж оношилгоогоо илгээсний дараа тайлан шинжээчийн хяналтад орно. Хяналтын явцад тайланд нэвтрэх боломжгүй бөгөөд баталгаажсан тайлан бэлэн болмогц танд мэдэгдэл ирнэ. Бэлэн болсон тайланд нийт үнэлгээ, 5 давуу тал, 5 сул тал, 5 тэргүүлэх ажил, 12 сарын төлөвлөгөө гарах бөгөөд «PDF татах» товчоор өөрийн компьютерт хадгална.'},
+ {deliver:true,title:'Тайлангаа хүлээн авах',shot:'5-report',alt:'Тайлангийн хуудсанд нийт үнэлгээ, давуу ба сул тал, PDF татах товч харагдана',
+  text:'Сүүлийн асуултад хариулмагц оношилгоо илгээгдэнэ. Бид тайланг шалгаж, 24 цагийн дотор хүргэнэ. Бэлэн болмогц имэйл очно.'},
 ];
 
 function shotSrc(name:string,kind:'d'|'m'){return `${import.meta.env.BASE_URL}guide-shots/${name}-${kind}.jpg`}
@@ -185,16 +186,14 @@ export function HowToGuide(){
      <div className="mmri-guide2__walk-controls">
       <button type="button" className="mmri-guide2__nav-btn" onClick={()=>go(index-1)} disabled={index===0}><Icon name="back" size={18}/>Өмнөх</button>
       <span className="mmri-guide2__counter-sr" role="status" aria-live="polite">Алхам {index+1} / {total}: {step.title}</span>
-      <button type="button" className="mmri-guide2__nav-btn is-primary" onClick={()=>go(index+1)} disabled={index===last}>Дараах<Icon name="arrow" size={18}/></button>
+      {index===last?<button type="button" className="mmri-guide2__nav-btn is-primary" onClick={()=>routeGo(session.accessToken?'analysis':'login')}>Эхлүүлэх<Icon name="arrow" size={18}/></button>:<button type="button" className="mmri-guide2__nav-btn is-primary" onClick={()=>go(index+1)}>Дараах<Icon name="arrow" size={18}/></button>}
      </div>
     </div>
     
     <div className="mmri-guide2__walk-body" key={index}>
      <div className="mmri-guide2__card mmri-guide2__walk-copy"><p>{step.text}</p>{step.note&&<small>{step.note}</small>}</div>
-     {step.deliver&&<div className="mmri-guide2__deliver" role="note" aria-label="Тайлан хүргэгдэх хугацаа">
-      <div className="mmri-guide2__deliver-item"><span className="mmri-guide2__deliver-bell" aria-hidden="true">●</span><div><strong>Тайлан хянагдаж байна</strong><p>Таны оношилгоо илгээгдлээ. Тайлан шинжээчийн хяналтад орлоо. Баталгаажсан тайлан бэлэн болмогц танд мэдэгдэнэ.</p></div></div>
-      <ol className="mmri-guide2__deliver-flow" aria-label="Тайлан бэлэн болох дараалал"><li>Оношилгоо илгээгдэнэ</li><li>Шинжээч хянана</li><li>Мэдэгдэл ирнэ</li><li>Тайлан нээгдэнэ</li></ol>
-      <small>Жишээ мэдэгдэл. Мэдэгдлийг толгой хэсгийн хонхоор харна. Хяналтын хугацаа тайлан бүрд өөр байж болно.</small>
+     {step.deliver&&<div className="mmri-guide2__deliver">
+      <ol className="mmri-guide2__deliver-flow" aria-label="Тайлан хүлээн авах дараалал"><li>Хариултаа илгээнэ</li><li>Тайлан бэлтгэгдэнэ</li><li>Имэйл очно</li><li>Тайлангаа үзэж, PDF татна</li></ol>
      </div>}
      {!step.noShot&&<figure className="mmri-guide2__devices" style={{'--arw':1.6} as React.CSSProperties}>
       {<div className="mmri-guide2__browser"><div className="mmri-guide2__browser-bar" aria-hidden="true"><i/><i/><i/><span>businessmri.mn</span></div><img src={shotSrc(step.shot,'d')} alt={step.alt} width={1440} height={900} decoding="async"/></div>}

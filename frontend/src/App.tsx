@@ -70,7 +70,7 @@ function locationLabel(route:RouteName,hash:string){
  if(route==='settings'){
   const query=hash.split('?')[1]||'';
   const section=new URLSearchParams(query).get('section');
-  return section==='payments'?'Төлбөрийн түүх':section==='data'?'Өгөгдөл ба нууцлал':'Тохиргоо';
+  return section==='payments'?'Төлбөрийн түүх':section==='data'?'Бүртгэлийн удирдлага':'Тохиргоо';
  }
  return routeLabels[route];
 }

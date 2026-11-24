@@ -455,9 +455,9 @@ export class PrismaStrategyReportService {
     return canonical;
   }
 
-  async generateReport(assessmentId:string,opts:{trigger?:ReportGenerationTrigger;authorizedBy?:string}={}){
+  async generateReport(assessmentId:string,opts:{trigger?:ReportGenerationTrigger;authorizedBy?:string;withoutAi?:boolean}={}){
     const inFlight=this.reportGenerationInFlight.get(assessmentId); if(inFlight)return inFlight;
-    const run=this.generateReportInternal(assessmentId,false,opts.trigger??"VIEW",opts.authorizedBy).finally(()=>{if(this.reportGenerationInFlight.get(assessmentId)===run)this.reportGenerationInFlight.delete(assessmentId);});
+    const run=this.generateReportInternal(assessmentId,false,opts.trigger??"VIEW",opts.authorizedBy,opts.withoutAi===true).finally(()=>{if(this.reportGenerationInFlight.get(assessmentId)===run)this.reportGenerationInFlight.delete(assessmentId);});
     this.reportGenerationInFlight.set(assessmentId,run); return run;
   }
 
@@ -467,7 +467,7 @@ export class PrismaStrategyReportService {
     this.fallbackUpgradesInFlight.set(assessmentId,run);
   }
 
-  private async generateReportInternal(assessmentId:string,upgradeInline:boolean,trigger:ReportGenerationTrigger="VIEW",authorizedBy?:string){
+  private async generateReportInternal(assessmentId:string,upgradeInline:boolean,trigger:ReportGenerationTrigger="VIEW",authorizedBy?:string,withoutAi=false){
     const timing:Record<string,number>={};const t0=Date.now();let tp=t0;
     const mark=(phase:string)=>{const now=Date.now();timing[phase]=(timing[phase]??0)+(now-tp);tp=now};
     const emit=(outcome:string)=>console.log(JSON.stringify({ts:new Date().toISOString(),level:"info",event:"report_generation_timing",assessmentId,outcome,totalMs:Date.now()-t0,phasesMs:timing}));
@@ -518,15 +518,16 @@ export class PrismaStrategyReportService {
     let usageSoFar:{inputTokens:number;outputTokens:number}|null=null;
     try{
       mark("lease_and_audit");
-      let result=await generateValidatedNarrative(payload,this.narrativeProvider);
+      let result=await generateValidatedNarrative(payload,withoutAi?undefined:this.narrativeProvider);
       usageSoFar=result.providerUsage??null;
       /* MMRI_AI_REPORT_REQUIRED=true: a report is never published from the generic deterministic fallback. The attempt fails closed (GENERATION_BLOCKED, retried later,
          audited by the catch block below), so no customer or reviewer can mistake generic text for the personalised AI narrative. */
-      if(aiNarrativeRequired()&&result.state!=="PASS")throw new Error(`AI narrative is required but unavailable: ${String(result.providerError??"no provider result").slice(0,300)}`);
+      // `withoutAi`: an administrator starts a working draft by hand; it stays behind the review gate and is published only after a person edited and approved it.
+      if(!withoutAi&&aiNarrativeRequired()&&result.state!=="PASS")throw new Error(`AI narrative is required but unavailable: ${String(result.providerError??"no provider result").slice(0,300)}`);
       mark("narrative_ai_and_validation");
       /* 12-month plan (page 3). Only when explicitly enabled; a plan that cannot be validated or does not fit is NOT stored (the report keeps its existing page 3). */
       let planOutcome:string|null=null;const planCalls:Array<{attempt:number;model:string;usage:PlanUsage|null;issues:string[]}>=[];
-      if(this.annualPlanProvider){
+      if(this.annualPlanProvider&&!withoutAi){
         const narrativeBase=result.narrative;
         const plan=await this.runAnnualPlan(assessmentId,payload,narrativeBase,planCalls);
         if(plan.state==="READY"){result={...result,narrative:{...narrativeBase,annualPlan:plan}};planOutcome="READY";}else planOutcome=`UNAVAILABLE: ${plan.reason}`;

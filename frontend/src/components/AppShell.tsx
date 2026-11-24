@@ -295,7 +295,7 @@ export function ShellHeader({route}:{route:RouteName}){
        </div>
        <a role="menuitem" href="#/settings?section=payments" onClick={closeMenus}><Icon name="receipt" size={19}/><span>Төлбөрийн түүх</span></a>
        <MenuLink route="profile" icon="building" onNavigate={closeMenus}>Байгууллагын мэдээлэл</MenuLink>
-       <a role="menuitem" href="#/settings?section=data" onClick={closeMenus}><Icon name="shield" size={19}/><span>Өгөгдөл ба нууцлал</span></a>
+       <a role="menuitem" href="#/settings?section=data" onClick={closeMenus}><Icon name="user" size={19}/><span>Бүртгэлийн удирдлага</span></a>
        <div className="mmri-account-divider" aria-hidden="true"/>
        <button type="button" role="menuitem" className="mmri-account-logout" disabled={logoutBusy} onClick={()=>void logout()}><Icon name="logout" size={19}/><span>{logoutBusy?'Гарч байна…':'Системээс гарах'}</span></button>
       </div>}
@@ -342,7 +342,7 @@ export function AppShell({route,children}:{route:RouteName;children:React.ReactN
   <ShellHeader route={route}/>
   {!online&&<div className="mmri-offline-banner" role="status"><Icon name="offline" size={18}/><div><b>Сүлжээний холболт тасарсан</b><span>Баталгаажаагүй өөрчлөлтийг хадгалагдсан гэж үзэхгүй.</span></div></div>}
   <main id="main-content" className="mmri-shell-main" tabIndex={-1}>{children}</main>
-  <footer className="mmri-legal-footer" aria-label="Хууль зүйн холбоосууд"><span>© BusinessMRI.mn</span><nav aria-label="Хууль зүй"><a href="#/privacy">Нууцлалын бодлого</a><a href="#/terms">Үйлчилгээний нөхцөл</a></nav><small>Хуулийн хяналт хүлээгдэж буй төсөл</small></footer>
+  <footer className="mmri-legal-footer" aria-label="Хууль зүйн холбоосууд"><span>© BusinessMRI.mn</span><nav aria-label="Хууль зүй"><a href="#/privacy">Нууцлалын бодлого</a><a href="#/terms">Үйлчилгээний нөхцөл</a></nav></footer>
   {loggedIn&&<nav className="mmri-bottom-nav" aria-label="Мобайл үндсэн цэс">
    {primaryNav.map(([target,label])=>{
     const active=mainActive(route,target);

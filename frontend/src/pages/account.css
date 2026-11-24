@@ -179,3 +179,12 @@ body.mmri-prism-page :is(.company-detail-editor__grid>label,.company-detail-edit
 /* Long e-mail addresses and Mongolian names wrap inside table cells instead of being cut at narrow widths. */
 .mmri-table td,.mmri-table th{overflow-wrap:anywhere;min-width:0}
 @media (max-width:640px){.mmri-table td:has(.mmri-choice-select){min-width:150px}}
+
+/* Account management: members and deletion only; data rights and policies stay reachable as quiet links */
+.account-manage{max-width:880px}
+.account-manage__fold{border-top:1px solid rgba(255,255,255,.2);padding:4px 0}
+.account-manage__fold>summary{min-height:48px;display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;color:#fff}
+.account-manage__fold>summary::-webkit-details-marker{display:none}.account-manage__fold>summary::before{content:"+";font-size:20px;width:18px}.account-manage__fold[open]>summary::before{content:"-"}
+.account-manage__fold>summary:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10px}
+.account-manage__links{display:flex;flex-wrap:wrap;gap:8px 22px;padding:6px 4px 12px}
+.account-manage__links :is(a,button){min-height:44px;display:inline-flex;align-items:center;padding:0;border:0;background:none;font:inherit;font-size:15px;color:#b9d8ff;text-decoration:underline;text-underline-offset:3px;cursor:pointer}

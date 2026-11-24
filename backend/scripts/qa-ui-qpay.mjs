@@ -1,0 +1,52 @@
+/* Browser test of the payment journey against the local QPay stand-in, on a disposable database. Needs API (qpay mode) and web preview already running.
+   env: WEB=http://127.0.0.1:5291 API=http://127.0.0.1:4497/api/v1 PGDATABASE=mmri_qa_acc2_ui SHOTS=<dir> */
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { chromium } = require('/home/kirby/MMRI_TOOLS/pw/node_modules/playwright-core');
+if (!/^mmri_qa_acc2_/.test(process.env.PGDATABASE || '')) throw new Error('REFUSED');
+const { customer, B, sql } = await import('./lib/admin-qa.mjs'); const { http } = await import('./lib/qa-journey.mjs');
+const WEB = process.env.WEB, S = process.env.SHOTS; let fail = 0;
+const ok = (n, c, x = '') => { if (!c) fail++; console.log(`${c ? 'PASS' : 'FAIL'} ${n} ${c ? '' : JSON.stringify(x).slice(0, 250)}`); };
+const cu = await customer('qpayui'); const co = (await http(B, 'POST', '/companies', { tok: cu.tok, body: { name: 'Төлбөр тест ХХК' } })).d.id;
+const pq = (await http(B, 'GET', '/methodology/current/profile-questions', { tok: cu.tok })).d;
+await http(B, 'PUT', `/companies/${co}/profile-answers`, { tok: cu.tok, body: { profileAnswers: pq.map(q => ({ questionId: q.id, optionIndexes: [Number(q.options[0].optionIndex)] })), basicInfoAnswers: Array.from({ length: 20 }, (_, i) => ({ questionId: `B${String(i + 1).padStart(2, '0')}`, optionIndexes: [1] })) } });
+const st = async () => (await fetch('http://127.0.0.1:4499/__state')).json();
+const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+const areas = ['marketing', 'it', 'finance', 'people', 'operations'];
+for (const [W, H, m] of [[390, 844, true], [1440, 900, false]]) {
+  const c = await b.newContext({ viewport: { width: W, height: H }, isMobile: m, hasTouch: m }); const p = await c.newPage(); const reqs = [];
+  p.on('request', r => { if (/billing\/(invoices\/|status)/.test(r.url())) reqs.push(r.url().slice(-40)); });
+  await p.goto(WEB + '/#/login', { timeout: 60000 }); await p.waitForTimeout(2500); await p.fill('input[type=email]', cu.email); await p.fill('input[type=password]', cu.password); await p.click('form button[type=submit]'); await p.waitForTimeout(3500);
+  await p.goto(WEB + '/#/analysis'); await p.waitForTimeout(2500);
+  const a = m ? 0 : 2, before = (await st()).n.invoice;
+  await (await p.$$('.diagnosis-square'))[a].click(); await p.waitForTimeout(3500);
+  ok(`${W}: one click from the category to its QR`, p.url().includes('billing') && !!(await p.$('.billing-qr__box svg')), p.url());
+  ok(`${W}: exactly one new invoice`, (await st()).n.invoice === before + 1, await st());
+  ok(`${W}: countdown from the real lifetime`, /^(30:00|29:\d\d)$/.test(await p.$eval('.billing-qr__expiry b', e => e.textContent).catch(() => '')));
+  const vis = await p.$eval('.billing-qr__banks ul', e => getComputedStyle(e).display !== 'none').catch(() => false);
+  ok(`${W}: bank apps ${m ? 'shown on the phone' : 'hidden on the desktop'}`, vis === m, vis);
+  ok(`${W}: no overflow`, (await p.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0);
+  await p.screenshot({ path: `${S}/qr-${W}.png`, fullPage: true });
+  const box = await p.$('.billing-qr__box'); if (box) await box.screenshot({ path: `${S}/qrcode-${W}.png` });
+  const row = sql(`select id||' '||"providerInvoiceId" from billing_invoices where "companyId"='${co}' and status='PENDING' and "domainCode"='${areas[a]}'`).split(' ');
+  console.log(`INFO ${W} qr_text ${sql(`select "qrText" from billing_invoices where id='${row[0]}'`)}`);
+  const t0 = reqs.length; await p.waitForTimeout(16000);
+  ok(`${W}: own backend asked about every 5 s`, reqs.length - t0 >= 2 && reqs.length - t0 <= 8, reqs.slice(t0));
+  sql(`update billing_invoices set "createdAt"=now()-interval '29 minutes 56 seconds' where id='${row[0]}'`); await p.waitForTimeout(14000);
+  ok(`${W}: expired state with a refresh control, no QR`, !!(await p.$('.billing-qr__wait.is-expired button')) && !(await p.$('.billing-qr__box svg')));
+  await p.screenshot({ path: `${S}/qr-expired-${W}.png`, fullPage: true });
+  const t1 = reqs.length, i1 = (await st()).n.invoice; await p.waitForTimeout(13000);
+  ok(`${W}: polling stopped, no automatic new invoice`, reqs.length === t1 && (await st()).n.invoice === i1, reqs.slice(t1));
+  await p.click('.billing-qr__wait.is-expired button'); await p.waitForTimeout(3500);
+  const s2 = await st(); ok(`${W}: refresh cancels the old code and shows one new one`, s2.n.invoice === i1 + 1 && s2.cancelled.includes(row[1]) && !!(await p.$('.billing-qr__box svg')), s2);
+  ok(`${W}: old invoice kept in history`, sql(`select status from billing_invoices where id='${row[0]}'`) === 'CANCELLED');
+  const pid = sql(`select "providerInvoiceId" from billing_invoices where "companyId"='${co}' and status='PENDING' and "domainCode"='${areas[a]}'`); await fetch('http://127.0.0.1:4499/__pay/' + pid);
+  await p.click('text=Төлбөр шалгах'); await p.waitForTimeout(7000);
+  ok(`${W}: payment verified, diagnosis opens`, !p.url().includes('billing') && Number(sql(`select count(*) from company_entitlements where "companyId"='${co}' and "domainCode"='${areas[a]}'`)) === 1, p.url());
+  ok(`${W}: other domains still closed`, sql(`select count(*) from company_entitlements where "companyId"='${co}' and "domainCode"='operations'`) === '0');
+  await p.evaluate(d => { sessionStorage.setItem('business:billingArea', d); sessionStorage.setItem('business:billingMode', 'first'); }, areas[a]);
+  const i2 = (await st()).n.invoice; await p.goto(WEB + '/#/settings'); await p.waitForTimeout(800); await p.goto(WEB + '/#/billing'); await p.waitForTimeout(4500);
+  ok(`${W}: an owned domain never asks for payment again`, !p.url().includes('billing') && (await st()).n.invoice === i2, p.url());
+  await c.close();
+}
+await b.close(); console.log(fail ? `RESULT FAIL ${fail}` : 'RESULT PASS');

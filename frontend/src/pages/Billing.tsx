@@ -11,6 +11,7 @@ import { ApiError,api,session } from '../api/client';
 import type { BillingCatalogPlan,BillingInvoice,BillingInvoiceStatus,BillingPlanCode,BillingStatus } from '../api/types';
 import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
 import { heroIntent } from '../components/HeroCrystal';
+import { REPORT_AREA_KEY } from '../data/experience';
 import { areaReportPalette } from '../data/reportExperience';
 import { isTestBusiness } from '../data/experience';
 
@@ -52,7 +53,7 @@ function useSecondsLeft(expiresAt?:string|null){
 
 export default function Billing(){
  const requestedArea=((sessionStorage.getItem('business:billingArea')||'marketing') as BusinessAreaId);const area=businessAreaById(requestedArea);const areaId=area.id;useAmbientEnvironment(areaId);const mode=sessionStorage.getItem('business:billingMode')==='retake'?'retake':'first';const code:BillingPlanCode=mode==='retake'?'RETAKE':'DIAGNOSTIC';const palette=areaReportPalette[area.id];
- const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [errorCode,setErrorCode]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
+ const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
  const autoCreateRef=useRef('');const left=useSecondsLeft(invoice&&openStatuses.has(invoice.status)?invoice.expiresAt:null);const expired=left===0;
  const plan=useMemo(()=>plans.find(p=>p.code===code)??null,[plans,code]);const amount=plan?.amountMnt??300000;
  const refresh=async()=>{if(!session.companyId)return null;const s=await api.getBillingStatus(session.companyId);setStatus(s);return s};
@@ -60,11 +61,13 @@ export default function Billing(){
  /* MMRI-27: an open invoice can become FAILED/CANCELLED while this page is open (recovery, cancel in another tab). Drop the dead code so the existing "create code" start view returns. */
  const deadInvoice=(latest:BillingInvoice)=>{if(latest.status!=='FAILED'&&latest.status!=='CANCELLED')return false;setInvoice(null);setError('Төлбөрийн код хүчингүй болсон. Шинэ төлбөрийн код үүсгэнэ үү.');return true};
  const readInvoice=async(current:BillingInvoice)=>{const latest=await api.getBillingInvoice(current.id);if(deadInvoice(latest)){await refresh();return latest}setInvoice(latest);if(latest.status==='PAID'){sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}await refresh();return latest};
+ /* Already bought or finished: never ask for money again, open the right place instead. */
+ const alreadyOwned=(e:any)=>{const c=String(e?.code??'');if(c==='ENTITLEMENT_ALREADY_ACTIVE'||c==='ASSESSMENT_ALREADY_ACTIVE'){heroIntent.area=areaId;heroIntent.at=Date.now();go('analysis');return true}if(c==='RETAKE_REQUIRED'){sessionStorage.setItem(REPORT_AREA_KEY,areaId);go('report');return true}return false};
  const load=async()=>{if(!session.accessToken){go('login');return}if(!session.companyId){go('profile');return}setLoading(true);setError('');try{const company=await api.getCompany(session.companyId);const done=new Set(((company.profile?.assessmentProfileAnswers??[]) as {questionId:string;optionIndexes?:number[]}[]).filter(x=>/^P(?:0[1-9]|1\d|20)$/.test(x.questionId)&&(x.optionIndexes?.length??0)>0).map(x=>x.questionId));if(done.size!==20&&!isTestBusiness(company.name)){go('profile');return}const [p,s]=await Promise.all([api.getBillingPlans(),api.getBillingStatus(session.companyId)]);setPlans(p);setStatus(s);const existing=s.invoices.find(x=>x.domainCode===areaId&&x.planCode===code&&openStatuses.has(x.status));if(existing){const full=await api.getBillingInvoice(existing.id);setInvoice(full);if(full.status==='PAID')openSuccess()}else{/* No extra step: the payment panel (QR or QA mock button) is shown immediately. One invoice per page visit even under StrictMode double effects. */const key=`${areaId}.${code}`;if(autoCreateRef.current!==key){autoCreateRef.current=key;const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
-  await refresh()}}}catch(e:any){autoCreateRef.current='';setError(e?.message||'Төлбөрийн мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
+  await refresh()}}}catch(e:any){autoCreateRef.current='';if(!alreadyOwned(e))setError(e?.message||'Төлбөрийн мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
  useEffect(()=>{void load()},[areaId,code]);
- const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');setErrorCode('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
-  await refresh()}catch(e:any){setErrorCode(String(e?.code??''));setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
+ const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
+  await refresh()}catch(e:any){if(!alreadyOwned(e))setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
  const check=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{
   // Ask the server to verify with the payment provider; the cached status alone could lag behind a real payment. Invoices the provider cannot check (mock/manual) fall back to a plain status read.
   let latest:BillingInvoice;
@@ -94,7 +97,7 @@ export default function Billing(){
   return()=>{document.body.classList.remove('mmri-modal-open');document.removeEventListener('keydown',onKey);requestAnimationFrame(()=>{const target=successRestoreRef.current;if(target?.isConnected)target.focus()})};
  },[showSuccess]);
  useEffect(()=>{
-  if(!invoice||!openStatuses.has(invoice.status))return;
+  if(!invoice||!openStatuses.has(invoice.status)||expired)return;
   let active=true;
   let running=false;
   const poll=async()=>{
@@ -104,18 +107,19 @@ export default function Billing(){
    finally{running=false}
   };
   const resume=()=>{if(document.visibilityState==='visible'&&navigator.onLine!==false)void poll()};
-  const t=window.setInterval(()=>void poll(),3000);
+  const t=window.setInterval(()=>void poll(),5000);
   document.addEventListener('visibilitychange',resume);
   window.addEventListener('online',resume);
   return()=>{active=false;window.clearInterval(t);document.removeEventListener('visibilitychange',resume);window.removeEventListener('online',resume)};
- },[invoice?.id,invoice?.status]);
+ },[invoice?.id,invoice?.status,expired]);
+ /* The moment a code ends: one last server check, so a payment made in the final seconds is found before a new code is offered. */
+ useEffect(()=>{if(!expired||!invoice||invoice.provider!=='QPAY')return;let live=true;api.reconcileBillingInvoice(invoice.id).then(latest=>{if(!live)return;if(latest.status==='PAID'){setInvoice(latest);void refresh()}}).catch(()=>undefined);return()=>{live=false}},[expired,invoice?.id]);
 /* QR view opens immediately: create the invoice as soon as the page is ready (no button). */
  useEffect(()=>{if(loading||invoice||busy||error||!plan||!session.companyId)return;const key=`${areaId}:${code}`;if(autoCreateRef.current===key)return;autoCreateRef.current=key;void create()},[loading,plan,invoice,busy,error,areaId,code]);
  /* Access is granted by the payment provider confirmation or by an authorised administrator: poll the entitlement, then close this view and open the diagnosis. */
- useEffect(()=>{if(loading||!session.companyId)return;const t=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>undefined)},3000);return()=>window.clearInterval(t)},[loading,areaId]);
+ useEffect(()=>{if(loading||!session.companyId||expired||invoice)return;const t=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>undefined)},10_000);return()=>window.clearInterval(t)},[loading,areaId,expired,invoice?.id]);
  /* DEMO provider only (testing UX, no server call): an example QR validity countdown and an example payment action that never counts as a payment. */
- const [demoSent,setDemoSent]=useState(false);const [demoLeft,setDemoLeft]=useState(600);
- useEffect(()=>{if(invoice?.provider!=='MOCK')return;setDemoLeft(600);const t=window.setInterval(()=>setDemoLeft(v=>v>0?v-1:0),1000);return()=>window.clearInterval(t)},[invoice?.id,invoice?.provider]);
+ const [demoSent,setDemoSent]=useState(false);
  useEffect(()=>{const ent=status?.entitlements?.find(e=>e.domainCode===areaId&&e.status==='ACTIVE'&&e.planCode===code);if(!ent)return;sessionStorage.setItem(`business:paid.${areaId}`,mode);heroIntent.area=areaId;heroIntent.at=Date.now();go('analysis')},[status,areaId,code]);
  if(loading)return <AppShell route="billing"><PageContainer className="billing-domain-page mmri-skel"><SkeletonHost label="Төлбөрийг бэлтгэж байна…"><BillingSkeletonBody/></SkeletonHost></PageContainer></AppShell>;
  if(error&&!status)return <AppShell route="billing"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
@@ -125,24 +129,22 @@ export default function Billing(){
   <section className="billing-qr" data-area={areaId} style={{'--c':`var(--mmri-domain-${areaId})`} as React.CSSProperties} aria-labelledby="billing-qr-title">
    <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title"><DomainBadge id={area.id}/> <span>{domainNameMn(area.id)}</span></h1><strong className="billing-qr__price">{money(amount)}</strong></header>
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
-   {noCode?(errorCode==='RETAKE_REQUIRED'?<Button onClick={()=>{sessionStorage.setItem('business:billingMode','retake');window.location.reload()}}>Дахин оношилгоо сонгох</Button>:<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>):<div className="billing-qr__box">
-    {expired&&!demo?<div className="billing-qr__wait" role="status"><span>Кодын хугацаа дууссан</span></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
+   {noCode?<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>:<div className="billing-qr__box">
+    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><Button loading={busy} onClick={()=>void create()}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
      :demo?<div className="billing-qr__demo-box"><QrCode text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
      :codeText?<QrCode text={codeText} label={`${area.name} оношилгооны төлбөрийн QR`}/>
      :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
      :<NoPayableCode invoice={invoice}/>}
    </div>}
    {demo&&<div className="billing-qr__test" role="group" aria-label="Тест төлбөрийн жишээ">
-    <p className={`billing-qr__expiry${demoLeft===0?' is-expired':''}`}>{demoLeft>0?<>QR хүчинтэй хугацаа: <b>{String(Math.floor(demoLeft/60)).padStart(2,'0')}:{String(demoLeft%60).padStart(2,'0')}</b> <small>(жишээ)</small></>:<>QR-ийн хугацаа дууссан <small>(жишээ)</small></>}</p>
-    <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||demoLeft===0}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
+    <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||expired}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
    </div>}
-   {demo&&<p className="billing-qr__demo-note" role="note">Энэ бол туршилтын (DEMO) QR бөгөөд уншуулах шаардлагагүй. «Тест төлбөр хийх» товчийг дарахад тест төлбөр баталгаажиж, оношилгоо өөрөө нээгдэнэ.</p>}
-   {!demo&&invoice&&left!==null&&<p className={`billing-qr__expiry${expired?' is-expired':''}`}>{expired?'Энэ кодын хугацаа дууссан.':<>Кодын хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
+   {demo&&<p className="billing-qr__demo-note" role="note">Туршилтын QR. Уншуулах шаардлагагүй. «Тест төлбөр хийх» товч дарахад оношилгоо нээгдэнэ.</p>}
+   {invoice&&left!==null&&!expired&&<p className="billing-qr__expiry">{<>QR код хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
    {!demo&&invoice&&!expired&&<BankLinks invoice={invoice}/>}
-   {!demo&&invoice&&expired&&<Button loading={busy} onClick={()=>void create()}>Шинэ код үүсгэх</Button>}
-   {invoice&&<p className="billing-qr__how">Банкныхаа аппликейшнээр QR кодыг уншуулж төлбөрөө хийнэ. Төлбөр баталгаажмагц оношилгоо автоматаар нээгдэнэ.</p>}
-   <p className={`billing-qr__status${invoice?' is-waiting':''}`} role="status" aria-live="polite">{invoice?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөрийн баталгаажуулалтыг хүлээж байна…'):''}</p>
-   {invoice&&!demo&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}
+   {invoice&&!expired&&!demo&&<p className="billing-qr__how">Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөр баталгаажмагц оношилгоо нээгдэнэ.</p>}
+   <p className={`billing-qr__status${invoice&&!expired?' is-waiting':''}`} role="status" aria-live="polite">{invoice&&!expired?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөр хүлээж байна…'):''}</p>
+   {invoice&&!demo&&!expired&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}
   </section>
  </PageContainer></AppShell>;
 }

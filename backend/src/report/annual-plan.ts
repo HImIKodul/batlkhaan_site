@@ -37,7 +37,7 @@ export interface AnnualPlanDraft { schemaVersion: "MMRI-ANNUAL-PLAN-DRAFT-1.0"; 
 export interface PlanStage { id: string; headingMn: string; startDay: number; endDay: number; startDate: string; endDate: string; dateLabel: string; dependsOnStageIds: string[]; dependencyNoteMn: string | null; actions: PlanActionDraft[] }
 export interface AnnualPlanReady {
   schemaVersion: typeof MMRI_ANNUAL_PLAN_VERSION; state: "READY"; sourcePayloadHash: string; startDate: string; endDate: string; periodLabel: string;
-  provider: { kind: "OPENAI_RESPONSES" | "TEST_DOUBLE"; model: string }; promptVersion: string; stages: PlanStage[]; lineEstimate: number;
+  provider: { kind: "OPENAI_RESPONSES" | "TEST_DOUBLE" | "REVIEWER"; model: string }; promptVersion: string; stages: PlanStage[]; lineEstimate: number;
 }
 export interface AnnualPlanUnavailable { schemaVersion: typeof MMRI_ANNUAL_PLAN_VERSION; state: "UNAVAILABLE"; reason: string }
 export type AnnualPlan = AnnualPlanReady | AnnualPlanUnavailable;
@@ -320,6 +320,28 @@ export function materializeAnnualPlan(stages: PlanStageDraft[], payload: FrozenR
   const end = addDays(start, Math.max(...out.map(s => s.endDay)));
   return { schemaVersion: MMRI_ANNUAL_PLAN_VERSION, state: "READY", sourcePayloadHash: payload.payloadHash, startDate: iso(start), endDate: iso(end), periodLabel: `${ymd(start)} - ${ymd(end)}`,
     provider, promptVersion: MMRI_ANNUAL_PLAN_PROMPT_VERSION, stages: out, lineEstimate: estimatePlanLines(out) };
+}
+
+/** A plan written or corrected by the report reviewer (no model call). Structure, references, dates and language are enforced; the number and style checks of generated text do not apply to a person who has read the diagnosis. */
+export function reviewerAnnualPlan(raw: any, payload: FrozenReportPayload): { plan: AnnualPlanReady | null; issues: PlanIssue[] } {
+  const issues: PlanIssue[] = []; /* stored plans refer to the diagnosis actions by the short references of buildPlanInput */ const known = new Set([...payload.priorityActions.map((_, i) => `F${i + 1}`), ...payload.evidenceActions.map((_, i) => `V${i + 1}`)]); const windowDays = planWindowDays(planStartDate(payload.generatedAt));
+  const text = (v: unknown, max: number) => String(v ?? "").replace(/\s*[\u2014\u2015\u2013]\s*/g, " - ").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  const stages: PlanStageDraft[] = (Array.isArray(raw?.stages) ? raw.stages.slice(0, MAX_STAGES + 1) : []).map((s: any, i: number) => ({ id: `E${i + 1}`, headingMn: text(s?.headingMn, 120), startDay: Math.trunc(Number(s?.startDay)), durationDays: Math.trunc(Number(s?.durationDays)), dependsOnStageIds: [], dependencyNoteMn: text(s?.dependencyNoteMn, 200) || null,
+    actions: (Array.isArray(s?.actions) ? s.actions.slice(0, MAX_ACTIONS_PER_STAGE + 1) : []).map((a: any) => ({ textMn: text(a?.textMn, 600), recommendationIds: [...new Set((Array.isArray(a?.recommendationIds) ? a.recommendationIds : []).map(String))] as string[] })) }));
+  if (stages.length < MIN_STAGES || stages.length > MAX_STAGES) issues.push({ checkId: "STAGE_COUNT", message: `Төлөвлөгөө ${MIN_STAGES}-${MAX_STAGES} үе шаттай байна.` });
+  stages.forEach((s, i) => {
+    const n = i + 1;
+    if (s.headingMn.length < 6 || s.headingMn.length > 90) issues.push({ checkId: "HEADING", message: `${n}-р үе шатны нэр 6-90 тэмдэгт байна.` });
+    if (!Number.isInteger(s.startDay) || !Number.isInteger(s.durationDays) || s.startDay < 0 || s.durationDays < 7 || s.startDay + s.durationDays > windowDays) issues.push({ checkId: "STAGE_DATES", message: `${n}-р үе шатны хугацаа төлөвлөгөөний жилээс гадуур эсвэл 7 хоногоос богино байна.` });
+    if (!s.actions.length || s.actions.length > MAX_ACTIONS_PER_STAGE) issues.push({ checkId: "ACTION_COUNT", message: `${n}-р үе шат 1-${MAX_ACTIONS_PER_STAGE} ажилтай байна.` });
+    for (const a of s.actions) {
+      if (a.textMn.length < 20 || a.textMn.length > 480) issues.push({ checkId: "ACTION_LENGTH", message: `${n}-р үе шатны ажлын тайлбар 20-480 тэмдэгт байна.` });
+      if (!/[А-Яа-яЁёӨөҮү]/.test(a.textMn)) issues.push({ checkId: "LANGUAGE", message: `${n}-р үе шатны ажлыг монголоор бичнэ үү.` });
+      if (!a.recommendationIds.length || a.recommendationIds.some(r => !known.has(r))) issues.push({ checkId: "REFERENCE", message: `${n}-р үе шатны ажил бүрийг оношилгооны ажилтай холбоно уу.` });
+    }
+  });
+  for (const [i, p] of payload.priorityActions.entries()) if (!stages.some(s => s.actions.some(a => a.recommendationIds.includes(`F${i + 1}`)))) issues.push({ checkId: "COVERAGE", message: `«${text(p.titleMn, 120)}» ажил төлөвлөгөөнд ороогүй байна.` });
+  return { plan: issues.length ? null : materializeAnnualPlan(stages, payload, { kind: "REVIEWER", model: "reviewer" }), issues };
 }
 
 /** A stored plan belongs to the payload it was generated from; a plan copied from another report or diagnosis version is never shown. */

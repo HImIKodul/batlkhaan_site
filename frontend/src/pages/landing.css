@@ -12,7 +12,7 @@
 
 /* Hero: editorial copy left, the single MMRI graphic right. */
 .mmri-home2__hero{display:grid;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);align-items:center;gap:clamp(8px,2vw,40px)}
-.mmri-home2__copy{position:relative;z-index:1;display:grid;justify-items:start;gap:clamp(20px,3.6dvh,34px);animation:mmri-rise .6s var(--wp-ease) both}
+.mmri-home2__copy{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:clamp(20px,3.6dvh,34px);animation:mmri-rise .6s var(--wp-ease) both}
 .mmri-home2__copy h1{margin:0;display:grid;gap:clamp(12px,2.2dvh,20px);color:var(--wp-ink)}
 .mmri-home2__copy h1 span{display:block;max-width:12em;font-size:clamp(40px,min(4.6vw,7.4dvh),64px);line-height:1.04;font-weight:650;letter-spacing:-.04em;text-wrap:balance}
 
@@ -490,16 +490,14 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 /* Phones: a deliberate arrangement, not a shrunken desktop: wider plates, a small diagonal step, a steeper elevated view, label type 11-14px. */
 @media (max-width:560px){.hx{--pw:72;--ph:19;--t:4.2;--x0:15;--y0:3;--pitch:23.6;--fan:3.2;--orb:9.5cqw;--fs:3.9cqw;width:min(100%,400px);margin:10px auto 12px;aspect-ratio:1.14;top:0}
  .hx__scene{perspective:1000cqw;perspective-origin:50% 0%}.hx__stack{transform:rotateX(50deg) rotateZ(0deg)}.hx3{--r:4cqw}.hx3__left,.hx3__right{display:none}.hx3__top{padding:0 calc(var(--orb) * 1.5);border-radius:4cqw}.hx3__name{font-size:clamp(11px,var(--fs),14px);white-space:normal;text-wrap:balance}}
-/* HERO: five liquid-glass cards on one three-column grid: THREE across the top, TWO below on the left (owner layout). Principles applied: one shared column grid and gutter (proximity, alignment), reading order
-   top-left to bottom-right equal to the domain order, equal card size (equal importance of the five areas) and one open cell at the lower right that the glow of the five cards fills, so the weight of the headline
-   on the left is answered by the dense corner of the cards (asymmetric balance). Both rows step down to the right like the earlier approved cascade, and the whole group is one slightly turned crystal plane.
-   Same markup, category colours, glow family and click behaviour as before; the old 3D box faces are not drawn. Hover never changes geometry: it brightens the rim and fades in an extra outer glow layer (::before). */
-.hx{--cw:31;--ch:36;--gx:2.4;--gy:2.8;--step:6.5;--r:4.2cqw;--orb:1.9cqw;--fs:2.05cqw;top:0;width:min(100%,clamp(340px,calc((100dvh - 345px)*1.2),800px));aspect-ratio:1.2}
+/* HERO: five liquid-glass cards as ONE closed block: three across the top, two below starting at the left edge and sharing the same total width, so nothing reads as a missing sixth card. One gutter everywhere,
+   domain order left to right, one slightly turned crystal plane. Colours are the diagnosis-card tokens (--mmri-domain-*). Hover never changes geometry: it brightens the rim and fades in an outer glow (::before). */
+.hx{--cw:31;--ch:37;--gx:2.4;--gy:2.8;--step:0;--bw:47.7;--bh:33;--r:4.2cqw;--orb:1.9cqw;--fs:2.05cqw;top:0;width:min(100%,clamp(340px,calc((100dvh - 345px)*1.31),800px));aspect-ratio:1.31}
 .hx__scene{perspective:150cqw;perspective-origin:30% 45%}
 .hx__stack{transform:rotateY(-9deg) rotateX(3deg);transform-origin:40% 50%;height:100%;top:0;transform-style:flat}
 .hx__scene::before{content:"";position:absolute;right:-4cqw;bottom:-2cqw;width:56cqw;height:50cqw;pointer-events:none;background:radial-gradient(closest-side,rgba(70,150,255,.3),rgba(120,90,255,.12) 55%,transparent)}
 .hx3{--col:var(--i);--row:0;left:calc((1.2 + var(--col) * (var(--cw) + var(--gx))) * 1cqw);top:calc((1 + var(--col) * var(--step) + var(--row) * (var(--ch) + var(--gy))) * 1cqw);width:calc(var(--cw) * 1cqw);height:calc(var(--ch) * 1cqw);transform-style:flat;transform:none;filter:drop-shadow(0 1.6cqw 2.4cqw rgba(0,8,40,.4))}
-.hx3:nth-child(4){--col:0;--row:1}.hx3:nth-child(5){--col:1;--row:1}
+.hx3:nth-child(n+4){left:calc((1.2 + (var(--i) - 3) * (var(--bw) + var(--gx))) * 1cqw);width:calc(var(--bw) * 1cqw);height:calc(var(--bh) * 1cqw);top:calc((1 + var(--ch) + var(--gy)) * 1cqw)}.hx3:nth-child(n+4) .hx3__name{max-width:calc((var(--bw) - 8) * 1cqw)}
 .hx3__face,.hx3__shadow{display:none}
 .hx3__top{transform:none;align-items:flex-end;justify-content:flex-start;text-align:left;gap:1.2cqw;padding:0 1.6cqw 2.6cqw 2cqw;border-radius:var(--r);border:.3cqw solid rgba(255,255,255,.78);-webkit-backdrop-filter:blur(.7cqw) saturate(1.6);backdrop-filter:blur(.7cqw) saturate(1.6);transition:border-color .28s ease,filter .28s ease;
  background:radial-gradient(90% 60% at 78% 24%,rgba(255,255,255,.2),transparent 62%),linear-gradient(125deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.18) 24%,rgba(255,255,255,0) 44%),linear-gradient(165deg,color-mix(in srgb,var(--c) 66%,rgba(255,255,255,.34)) 0,color-mix(in srgb,var(--c) 38%,rgba(10,24,96,.4)) 100%);
@@ -515,7 +513,7 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 .hx3__name{position:relative;z-index:2;font-size:round(max(11px,var(--fs)),.5px);max-width:calc((var(--cw) - 7) * 1cqw);overflow-wrap:normal;word-break:keep-all;text-wrap:balance;text-shadow:0 1px 2px rgba(0,8,40,.9),0 0 .7em rgba(0,8,40,.55),0 0 1em color-mix(in srgb,var(--c) 55%,transparent)}
 @media (max-width:1000px){.hx{width:min(100%,620px)}}
 /* Phones: the same three-plus-two grid, flatter cards; labels stay at least 11px. */
-@media (max-width:560px){.hx{--cw:32.2;--ch:34;--gx:1.7;--gy:3;--step:0;--r:4.6cqw;--orb:0cqw;--fs:2.9cqw;width:100%;max-width:440px;aspect-ratio:1.36}.hx3{left:calc(var(--col) * (var(--cw) + var(--gx)) * 1cqw);top:calc((1 + var(--row) * (var(--ch) + var(--gy))) * 1cqw)}.hx__scene{perspective:none}.hx__stack{transform:none}.hx3__orb{display:none}.hx3__top{justify-content:center;text-align:center;padding:0 1.4cqw 3cqw}.hx3__name{max-width:100%;font-size:clamp(10.5px,var(--fs),12.5px);line-height:1.2;letter-spacing:-.01em;hyphens:none}}
+@media (max-width:560px){.hx{--cw:32.2;--ch:37;--gx:1.7;--gy:1.7;--bw:49.15;--bh:31;--r:4.6cqw;--orb:0cqw;--fs:2.9cqw;width:100%;max-width:440px;aspect-ratio:1.4}.hx3{left:calc(var(--col) * (var(--cw) + var(--gx)) * 1cqw);top:1cqw}.hx3:nth-child(n+4){left:calc((var(--i) - 3) * (var(--bw) + var(--gx)) * 1cqw)}.hx3:nth-child(n+4) .hx3__name{max-width:100%}.hx__scene{perspective:none}.hx__stack{transform:none}.hx3__orb{display:none}.hx3__top{justify-content:center;text-align:center;padding:0 1.4cqw 3cqw}.hx3__name{max-width:100%;font-size:clamp(10.5px,var(--fs),12.5px);line-height:1.2;letter-spacing:-.01em;hyphens:none}}
 /* Chrome counts the projected (perspective) box of a 3D stack as scrollable overflow even when every plate is inside the viewport. Guard at the viewport edge only (the shell is as wide as the viewport), so nothing visible can be cut mid-page; plate positions are verified separately. */
 .mmri-shell:has(.mmri-home2){overflow-x:clip}
 @media (max-width:360px){.mmri-home2__start{max-width:100%;box-sizing:border-box;gap:8px;padding-inline:14px}.mmri-home2__start>span:not(.mmri-shell-glint){min-width:0;font-size:12.5px;letter-spacing:.04em}}

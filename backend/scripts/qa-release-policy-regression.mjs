@@ -37,7 +37,7 @@ const notifCount=(a)=>Number(sql(`select count(*) from customer_notifications wh
  rec('IN_REVIEW report still withheld',(await customerReport(a)).s===409);
  const ed=(await adm('GET',`/reviews/${rid}`)).d;const rv=ed.revision;
  const rdy=await adm('POST',`/reviews/${rid}/ready`);rec('mark ready',rdy.s===200,String(rdy.s));
- const ret=await adm('POST',`/reviews/${rid}/return`);rec('return for revision -> IN_REVIEW and still withheld',ret.s===200&&stat(rid)==='IN_REVIEW'&&(await customerReport(a)).s===409&&(await pdf(a)).s===409,String(ret.s));
+ const ret=await adm('POST',`/reviews/${rid}/return`,{reason:'QA буцаалт'});rec('return for revision -> IN_REVIEW and still withheld',ret.s===200&&stat(rid)==='IN_REVIEW'&&(await customerReport(a)).s===409&&(await pdf(a)).s===409,String(ret.s));
  await adm('POST',`/reviews/${rid}/ready`);
  let upd='ok';try{sql(`update report_review_revisions set reason='x' where "reviewId"='${rid}'`)}catch{upd='blocked'}
  rec('revision rows are immutable (database trigger refuses UPDATE)',upd==='blocked');

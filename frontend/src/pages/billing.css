@@ -104,3 +104,10 @@
 @media (pointer:coarse),(max-width:767px){.billing-qr__banks ul{display:grid}.billing-qr__banks h2{display:block}}
 .billing-qr__head h1{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
 .billing-qr .billing-domain-error svg{flex:none;width:20px;height:20px}
+
+/* payment page in the colour of the chosen category (same tokens as the diagnosis cards); the code itself stays black on white for scanning */
+html:root body.mmri-prism-page:not(.mmri-admin) .billing-qr .mmri-button--primary{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));border-color:color-mix(in srgb,var(--c) 45%,#fff);box-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent);color:#04122e}
+html:root body.mmri-prism-page:not(.mmri-admin) .billing-qr .mmri-button--secondary{border-color:color-mix(in srgb,var(--c) 70%,#fff)}
+.billing-qr__status.is-waiting::before{border-top-color:var(--c)}
+.billing-qr__wait.is-expired{gap:14px;color:#06194a;text-align:center}
+.billing-qr__box:has(.is-expired){aspect-ratio:auto;min-height:190px}

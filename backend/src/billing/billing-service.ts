@@ -301,7 +301,12 @@ export class BillingService {
       const claim=await prisma.billingInvoice.updateMany({where:{id:row.id,status:row.status,lastVerifiedAt:row.lastVerifiedAt},data:{lastVerifiedAt:now}});
       if(claim.count!==1)continue;
       out.checked++;
-      try{const latest=await this.reconcileInvoice(row.id);if(latest.status==="PAID")out.activated++}
+      try{
+        const latest=await this.reconcileInvoice(row.id);
+        if(latest.status==="PAID")out.activated++;
+        // The countdown shown to the customer is real: an unpaid code past its lifetime is cancelled at QPay too (cancelInvoice asks for a payment once more first). Late money is still honoured by later sweeps.
+        else if(latest.status==="PENDING"&&latest.expiresAt&&new Date(latest.expiresAt).getTime()<=now.getTime()){try{await this.cancelInvoice(row.id)}catch(error:any){if(error?.code!=="PAID_INVOICE_CANNOT_BE_CANCELLED")throw error;out.activated++}}
+      }
       catch(error:any){out.failed++;console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"payment_sweep_failed",invoiceId:row.id,code:String(error?.code??"ERROR").slice(0,60)}))}
     }
     return out;

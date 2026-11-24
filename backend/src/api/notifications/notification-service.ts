@@ -126,7 +126,7 @@ export class CustomerNotificationService {
     await this.emitToCompany(a.companyId, ALL_MEMBER_ROLES, { type: "ASSESSMENT_COMPLETED", title: "Оношилгоо дууслаа", message: `${d} чиглэлийн оношилгоо амжилттай дууслаа.`, destination: "results", payload, eventRef: `assessment:${assessmentId}`, dedupeKey: `ASSESSMENT_COMPLETED:${assessmentId}` }, tx);
     const review = await tx.reportReview.findUnique({ where: { assessmentId }, select: { id: true } });
     if (review) {
-      await this.emitToCompany(a.companyId, ALL_MEMBER_ROLES, { type: "REPORT_UNDER_REVIEW", title: "Тайлан хянагдаж байна", message: `${d} чиглэлийн тайлан шинжээчийн хяналтад орлоо. Баталгаажсан тайлан бэлэн болмогц мэдэгдэнэ.`, destination: "report", payload, eventRef: `assessment:${assessmentId}`, dedupeKey: `REPORT_UNDER_REVIEW:${assessmentId}` }, tx);
+      await this.emitToCompany(a.companyId, ALL_MEMBER_ROLES, { type: "REPORT_UNDER_REVIEW", title: "Таны тайланг бэлтгэж байна", message: `${d} чиглэлийн тайланг 24 цагийн дотор хүргэнэ. Бэлэн болмогц мэдэгдэнэ.`, destination: "report", payload, eventRef: `assessment:${assessmentId}`, dedupeKey: `REPORT_UNDER_REVIEW:${assessmentId}` }, tx);
     } else {
       // Review workflow off: the report is available as soon as the assessment is complete.
       await this.reportReleased(a.companyId, assessmentId, a.domainCode, tx);

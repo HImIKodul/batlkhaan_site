@@ -2,6 +2,8 @@ import React,{useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import { adminApi,AdminApiError,fmt,type AdminMe } from './adminApi';
 import { Page,Empty,Err,Loading,useAsync,adminHref } from './AdminApp';
 import { buildReportModel,mnCustomerText,PageOne,PageTwo,PageThree } from '../pages/Report';
+import AnnualPlanEditor from './AnnualPlanEditor';
+import { Evidence } from './AdminReports';
 import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
 import { useDomainTheme } from '../design/domainTheme';
 
@@ -23,7 +25,7 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
  const meta=useAsync(()=>adminApi.get(`/reviews/${id}`),[id,tick]);
  const [edits,setEdits]=useState<Record<string,string>>({});const [editing,setEditing]=useState<{claimId:string;text:string}|null>(null);
  const [busy,setBusy]=useState(false);const [msg,setMsg]=useState<{t:'ok'|'err';m:string}|null>(null);const [lockMsg,setLockMsg]=useState('');const [confirm,setConfirm]=useState(false);const [checked,setChecked]=useState(false);
- const [scan,setScan]=useState<Scan|null>(null);const [scanBusy,setScanBusy]=useState(false);const [dismissed,setDismissed]=useState<Set<string>>(new Set());const [showScan,setShowScan]=useState(false);
+ const [scan,setScan]=useState<Scan|null>(null);const [scanBusy,setScanBusy]=useState(false);const [dismissed,setDismissed]=useState<Set<string>>(new Set());const [showScan,setShowScan]=useState(false);const [panel,setPanel]=useState<''|'plan'|'answers'|'reject'>('');const [rejectReason,setRejectReason]=useState('');
  const wrap=useRef<HTMLDivElement>(null);const can=(p:string)=>me.permissions.includes(p);
  const r=meta.data?.review;const status:string=r?.status??'';const allClaims:any[]=meta.data?.claims??[];const claims:any[]=allClaims.filter(c=>c.editable!==false);const fixedCount=allClaims.length-claims.length;
  const editableState=['IN_REVIEW','READY_FOR_APPROVAL','APPROVED'].includes(status)&&can('reports.edit');
@@ -51,7 +53,7 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
  const doScan=async()=>{setShowScan(true);setScanBusy(true);try{setScan(await adminApi.post(`/reviews/${id}/scan`,{}));setDismissed(new Set())}catch(e){setMsg({t:'err',m:(e as Error).message})}finally{setScanBusy(false)}};
  const goTo=(claimId:string)=>{const el=wrap.current?.querySelector<HTMLElement>(`[data-claim="${claimId}"]`);if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('ad-flash');window.setTimeout(()=>el.classList.remove('ad-flash'),1600)}else{const c=claims.find(x=>x.claimId===claimId);if(c&&!viewOnly&&editableState)setEditing({claimId,text:claimText(c)})}};
  if((view.loading&&!view.data)||(meta.loading&&!meta.data))return <Page title="Тайлан"><Loading/></Page>;
- if(view.error||meta.error||!view.data||!meta.data||!model)return <Page title="Тайлан"><Err text={view.error||meta.error||'Тайлан ачаалж чадсангүй.'} retry={reload}/></Page>;
+ if(view.error||meta.error||!view.data||!meta.data||!model)return <Page title="Тайлан"><Err text={view.error||meta.error||'Тайлан ачаалж чадсангүй.'} retry={reload}/>{['GENERATION_FAILED','SUBMITTED'].includes(status)&&can('reports.edit')&&<div className="adm-card"><p>Төсөл автоматаар үүсээгүй байна. Хиймэл оюунгүйгээр эхлүүлж, гараар засаж болно. Нэмэлт төлбөр гарахгүй.</p><button type="button" className="adm-btn adm-btn--primary" disabled={busy} onClick={()=>void run(()=>adminApi.post(`/reviews/${id}/draft-without-ai`),()=>'Төсөл үүслээ.')}>Гараар эхлэх</button></div>}<Evidence id={id}/></Page>;
  const published=status==='PUBLISHED';const awaiting=status==='AWAITING_REVIEW';
  const canEdit=editableState&&!viewOnly;
  return <div className="ad-review">
@@ -59,6 +61,10 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
    <a className="adm-btn" href={adminHref('reports')}>Буцах</a>
    <div className="ad-bar__title"><b>{view.data.companyName}</b><small>{area.name} · {published?'Илгээсэн':awaiting?'Шинэ':'Хянаж байна'}{r?.deadlineAt&&!published?` · зорилтот хугацаа ${fmt(r.deadlineAt)}`:''}</small></div>
    {awaiting&&can('reports.edit')&&<button type="button" className="adm-btn adm-btn--primary" disabled={busy} onClick={()=>void run(()=>adminApi.post(`/reviews/${id}/claim`),()=>'Хяналтыг авлаа. Одоо засах боломжтой.')}>Хяналтыг авах</button>}
+   <button type="button" className="adm-btn" aria-pressed={panel==='answers'} onClick={()=>setPanel(p=>p==='answers'?'':'answers')}>Хариултууд</button>
+   <button type="button" className="adm-btn" aria-pressed={panel==='plan'} onClick={()=>setPanel(p=>p==='plan'?'':'plan')}>12 сарын төлөвлөгөө</button>
+   <a className="adm-btn" href={adminHref('reports',id)+'?advanced=1'}>PDF харах</a>
+   {editableState&&<button type="button" className="adm-btn" disabled={busy||viewOnly} onClick={()=>setPanel(p=>p==='reject'?'':'reject')}>Батлахгүй</button>}
    {editableState&&<button type="button" className="adm-btn" disabled={scanBusy||viewOnly} onClick={()=>void doScan()}>{scanBusy?'Шалгаж байна…':'AI шалгах'}</button>}
    {editableState&&<button type="button" className="adm-btn" disabled={busy||!dirty||viewOnly} onClick={()=>void save()}>Хадгалах{dirty?` (${dirty})`:''}</button>}
    {editableState&&can('reports.approve')&&<button type="button" className="adm-btn adm-btn--primary adm-btn--release" disabled={busy||dirty>0||viewOnly||!concOk} title={dirty>0?'Эхлээд хадгална уу':!concOk?'Ерөнхий дүгнэлтийн үгийн тоо 80-160 байх ёстой':undefined} onClick={()=>setConfirm(true)}>{busy?'Илгээж байна…':status==='APPROVED'?'Илгээлтийг дуусгах':'Батлах, илгээх'}</button>}
@@ -68,6 +74,10 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
   {msg&&<div className={msg.t==='ok'?'adm-note adm-note--ok':'adm-error'} role={msg.t==='ok'?'status':'alert'}>{msg.m}</div>}
   {published&&<div className="adm-note" role="status">Тайлан илгээгдсэн ({fmt(r.publishedAt)}). Энд өөрчлөх боломжгүй.</div>}
   {canEdit&&<p className="adm-note ad-hint">Тайлангийн текст дээр дарж шууд засна. Засвар «Хадгалах» дарсны дараа хадгалагдана.</p>}
+  {panel==='answers'&&<Evidence id={id}/>}
+  {panel==='plan'&&<AnnualPlanEditor id={id} canEdit={canEdit&&dirty===0} onSaved={m=>{setMsg({t:'ok',m});reload()}} onClose={()=>setPanel('')}/>}
+  {panel==='plan'&&dirty>0&&<p className="adm-note">Эхлээд текстийн засвараа хадгална уу.</p>}
+  {panel==='reject'&&<section className="adm-card" aria-label="Тайланг батлахгүй"><h2>Тайланг батлахгүй</h2><p className="adm-note">Тайлан хэрэглэгчид нээгдэхгүй, засварт үлдэнэ. Шалтгаан бүртгэгдэнэ.</p><label className="adm-reason">Шалтгаан<input value={rejectReason} maxLength={400} onChange={e=>setRejectReason(e.target.value)}/></label><div className="adm-actions"><button type="button" className="adm-btn" onClick={()=>setPanel('')}>Болих</button><button type="button" className="adm-btn adm-btn--primary" disabled={busy||rejectReason.trim().length<5} onClick={()=>void run(()=>adminApi.post(`/reviews/${id}/return`,{reason:rejectReason.trim()}),()=>{setPanel('');setRejectReason('');return 'Шалтгааныг бүртгэлээ. Тайлан засварт үлдлээ.'})}>Бүртгэх</button></div></section>}
   <div className="ad-body">
    <div ref={wrap} className={`ad-report report-v3${canEdit?' is-editable':''}`} onClick={onWrapClick}><main className="report-three-pages report-screen-only"><PageOne m={model}/><PageTwo m={model}/><PageThree m={model} reviewer/></main></div>
    {showScan&&<aside className="ad-scan" aria-label="AI шалгалтын үр дүн"><header><b>AI шалгах</b><button type="button" className="adm-link" onClick={()=>setShowScan(false)}>Хаах</button></header>
@@ -80,7 +90,7 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
   </div>
   {canEdit&&fixedCount>0&&<p className="ad-quiet ad-fixed">Тайлан дээрх оноо, тооцоолсон утга, заавал оруулах анхааруулга ({fixedCount} мөр) засагдахгүй: тэдгээр нь баталгаажсан хэмжилтээс гардаг.</p>}
   {unmatched.length>0&&<details className="adm-card ad-other" open><summary>Тайлан дээр шууд олдоогүй засах боломжтой текст ({unmatched.length})</summary><p className="adm-note">Дараах тайлбар текстийг энд засна.</p><ul>{unmatched.map(cid=>{const c=claims.find(x=>x.claimId===cid)!;return <li key={cid}><small>{c.sectionTitle}</small><p className={edits[cid]!==undefined?'ad-dirty':''}>{claimText(c)}</p>{canEdit&&<button type="button" className="adm-link" onClick={()=>setEditing({claimId:cid,text:claimText(c)})}>Засах</button>}</li>})}</ul></details>}
-  {r&&['READY_FOR_APPROVAL','APPROVED'].includes(status)&&can('reports.edit')&&!viewOnly&&<p className="ad-quiet"><button type="button" className="adm-link" onClick={()=>void run(()=>adminApi.post(`/reviews/${id}/return`),()=>'Засварт буцаалаа.')}>Засварт буцаах</button> · <a className="adm-link" href={adminHref('reports',id)+'?advanced=1'}>Дэвшилтэт засвар (хуучин багаж)</a></p>}
+  {r&&['READY_FOR_APPROVAL','APPROVED'].includes(status)&&can('reports.edit')&&!viewOnly&&<p className="ad-quiet"><a className="adm-link" href={adminHref('reports',id)+'?advanced=1'}>Дэвшилтэт засвар (хуучин багаж)</a></p>}
   {editing&&<div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="ed-title"><div className="adm-modal__box ad-edit-box"><h2 id="ed-title">Текст засах</h2><textarea autoFocus rows={8} maxLength={4000} value={editing.text} onChange={e=>setEditing({...editing,text:e.target.value})}/>{(()=>{const c=claims.find(x=>x.claimId===editing.claimId);const isC=c?.sectionId==='S10';const n=wc(editing.text);const ok=!isC||(n>=CONC_MIN&&n<=CONC_MAX);return <small className={ok?'':'ad-conc is-bad'}>{isC?`${n} үг · зөвшөөрөгдөх хэмжээ ${CONC_MIN}-${CONC_MAX}${n>CONC_MAX?` · ${n-CONC_MAX} үгээр илүү (үг сольж эсвэл богиносгоно уу)`:n<CONC_MIN?` · ${CONC_MIN-n} үг дутуу`:' · хэвийн'} · `:''}{editing.text.length}/4000 · Зөвхөн тайлангийн тайлбар текст өөрчлөгдөнө. Оноо, хариулт, нотолгоо өөрчлөгдөхгүй.</small>})()}
    <div className="adm-modal__row"><button type="button" className="adm-btn" onClick={()=>setEditing(null)}>Болих</button><button type="button" className="adm-btn adm-btn--primary" disabled={!editing.text.trim()||(claims.find(x=>x.claimId===editing.claimId)?.sectionId==='S10'&&(wc(editing.text)<CONC_MIN||wc(editing.text)>CONC_MAX))} onClick={()=>{const c=claims.find(x=>x.claimId===editing.claimId);const same=c&&editing.text.trim()===c.text;setEdits(e=>{const n={...e};if(same)delete n[editing.claimId];else n[editing.claimId]=editing.text.trim();return n});setEditing(null)}}>Хэрэглэх</button></div></div></div>}
   {confirm&&<div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="rel-title"><div className="adm-modal__box adm-confirm"><h2 id="rel-title">Батлах, илгээх үү?</h2>

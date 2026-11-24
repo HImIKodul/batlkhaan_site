@@ -14,6 +14,9 @@ export function sortByDomain<T>(rows:readonly T[],id:(row:T)=>string):T[]{return
 export const domainNameMn=(id:string)=>(DOMAIN_NAME_MN as Record<string,string>)[id]??id;
 /** Short code shown next to each domain (display only). */
 export const DOMAIN_ABBR:Record<DomainCode,string>={marketing:'MMRI',it:'ITMRI',finance:'FINMRI',people:'HRMRI',operations:'POMMRI'};
+/** Initials shown inside the category-coloured boxes (owner 2026-11-24). The diagnosis names keep their own abbreviation. */
+export const DOMAIN_CODE:Record<DomainCode,string>={marketing:'MKT',it:'IT',finance:'FIN',people:'HR',operations:'OPS'};
+export const domainCode=(id:string)=>(DOMAIN_CODE as Record<string,string>)[id]??'';
 /** Full customer-facing diagnosis names with the code, used in diagnosis and report sections. */
 export const DOMAIN_FULL_NAME:Record<DomainCode,string>={marketing:'Маркетингийн оношилгоо (MMRI)',it:'Мэдээллийн технологийн оношилгоо (ITMRI)',finance:'Санхүүгийн оношилгоо (FINMRI)',people:'Хүний нөөцийн оношилгоо (HRMRI)',operations:'Үйлдвэрлэл ба үйл ажиллагааны оношилгоо (POMMRI)'};
 export const domainAbbr=(id:string)=>(DOMAIN_ABBR as Record<string,string>)[id]??'';

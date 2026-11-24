@@ -85,7 +85,7 @@ const ap0=await cc('POST',`/admin/reviews/${rvId}/approve`,R,{baseRevision:cur2}
 rec('RV-25 a draft with forbidden wording/validation problems cannot be approved; the original wording that remained is reported',ap0.s===409||ap0.s===422||ap0.s===200,`state ${ap0.s} ${ap0.e?.code??''} (${blockedWording.s})`);
 // make the draft clean: restore terminology fix by editing the same claim
 const det2=await cc('GET',`/admin/reviews/${rvId}`,R);const c2=det2.d.claims.find(c=>c.claimId===cl0.claimId);const fixed=c2.text.replace(/хүчтэй тал/gi,'давуу тал').replace(/\s{2,}/g,' ').replace(/\s+\./g,'.');
-if(det2.d.review.status==='READY_FOR_APPROVAL'||det2.d.review.status==='APPROVED')await cc('POST',`/admin/reviews/${rvId}/return`,R,{});
+if(det2.d.review.status==='READY_FOR_APPROVAL'||det2.d.review.status==='APPROVED')await cc('POST',`/admin/reviews/${rvId}/return`,R,{reason:'QA буцаалт'});
 const rbase=Number(sql(`select "currentRevision" from report_reviews where id='${rvId}'`));
 const e3=await cc('PUT',`/admin/reviews/${rvId}/draft`,R,{baseRevision:rbase,reason:'Нэр томьёо, зай засав. Хянагч нэмэлт тайлбар: тайлан нийтлэхэд бэлэн.',edits:[{claimId:cl0.claimId,text:fixed+' Хянагчийн нэмэлт тайлбар: хэрэгжилтийг улирал бүр хянана.'}]});
 const rbase2=e3.d.revision;await cc('POST',`/admin/reviews/${rvId}/ready`,R,{});await reauth(rv,R);

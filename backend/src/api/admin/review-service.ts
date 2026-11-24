@@ -9,6 +9,7 @@ import { ApiError } from "../errors.js";
 import { derivedContentWithheld, enqueueReviewInTx, REVIEW_HOURS as POLICY_REVIEW_HOURS } from "../../services/report-review-policy.js";
 import { sha256Json } from "../../lib/hash.js";
 import { validateNarrativeDraft } from "../../report/validator.js";
+import { planForPayload, planStartDate, planWindowDays, reviewerAnnualPlan } from "../../report/annual-plan.js";
 import { checkPdfLayoutBudget } from "../../report/pdf-budget.js";
 import type { NarrativeDraft } from "../../report/types.js";
 import type { PrismaStrategyReportService } from "../../services/prisma-strategy-report-service.js";
@@ -38,7 +39,7 @@ const TRANSITIONS: Record<string, ReviewStatus[]> = {
   SUBMITTED: ["GENERATING_DRAFT"], GENERATING_DRAFT: ["AWAITING_REVIEW", "GENERATION_FAILED"], GENERATION_FAILED: ["GENERATING_DRAFT"],
   AWAITING_REVIEW: ["IN_REVIEW"], IN_REVIEW: ["READY_FOR_APPROVAL"], READY_FOR_APPROVAL: ["IN_REVIEW", "APPROVED"], APPROVED: ["PUBLISHING", "IN_REVIEW"], PUBLISHING: ["PUBLISHED", "APPROVED"], PUBLISHED: []
 };
-export const CUSTOMER_PENDING_MESSAGE = "Таны тайлан хянагдаж байна. Администратор баталгаажуулсны дараа тайланг харах боломжтой болно.";
+export const CUSTOMER_PENDING_MESSAGE = "Таны тайланг бэлтгэж байна. Тайланг 24 цагийн дотор хүргэнэ.";
 const FORBIDDEN = /хүчтэй тал|анхаарах тал/i;
 const noDash = (t: string) => t.replace(/\s*[—―]\s*/g, " - ");
 const nums = (t: string) => new Set((t.match(/\d+(?:[.,]\d+)?/g) ?? []).map(x => x.replace(",", ".")));
@@ -65,13 +66,13 @@ export class ReviewService {
     return r.count === 1;
   }
 
-  async generateDraft(reviewId: string, trigger: "COMPLETION" | "RETRY" | "ADMIN" = "COMPLETION", authorizedBy?: string) {
+  async generateDraft(reviewId: string, trigger: "COMPLETION" | "RETRY" | "ADMIN" = "COMPLETION", authorizedBy?: string, withoutAi = false) {
     const review = await prisma.reportReview.findUnique({ where: { id: reviewId } });
     if (!review || review.status === "PUBLISHED" || review.status === "APPROVED") return;
     // Atomic claim: only one run can move SUBMITTED/GENERATION_FAILED to GENERATING_DRAFT, so duplicate triggers (double completion, restarts) cannot race.
     if (!(await this.setStatus(reviewId, ["SUBMITTED", "GENERATION_FAILED"], "GENERATING_DRAFT", { lastError: null }))) return;
     try {
-      const report: any = await this.reports.generateReport(review.assessmentId, { trigger, authorizedBy });
+      const report: any = await this.reports.generateReport(review.assessmentId, { trigger, authorizedBy, withoutAi });
       let narrative = report.narrative as NarrativeDraft;
       if (!narrative?.sections?.length) throw new Error("Draft has no narrative sections");
       // Display rule: no em dash in customer-visible text. Frozen recommendation titles contain them (hash-bound), so the editable draft is normalised
@@ -80,7 +81,7 @@ export class ReviewService {
       if (JSON.stringify(cleaned) !== JSON.stringify(narrative) && (await this.validate(review.assessmentId, cleaned)).state !== "GENERATION_BLOCKED") narrative = cleaned;
       await prisma.$transaction(async tx => {
         const existing = await tx.reportReviewRevision.count({ where: { reviewId } });
-        if (existing === 0) await tx.reportReviewRevision.create({ data: { reviewId, revision: 1, narrative: narrative as any, source: "GENERATED", reason: "Автоматаар үүссэн анхны төсөл" } });
+        if (existing === 0) await tx.reportReviewRevision.create({ data: { reviewId, revision: 1, narrative: narrative as any, source: "GENERATED", reason: withoutAi ? "Хиймэл оюунгүй эхлүүлсэн төсөл" : "Автоматаар үүссэн анхны төсөл" } });
         else if (existing > 1) throw new Error("unexpected state: revisions already exist");
         await tx.reportReview.update({ where: { id: reviewId }, data: { status: "AWAITING_REVIEW", draftGeneratedAt: new Date(), currentRevision: Math.max(1, existing), version: { increment: 1 } } });
       });
@@ -221,10 +222,12 @@ export class ReviewService {
     this.assertCanEdit(r, adminId, role); await this.assertLockHeld(reviewId, adminId);
     if (!(await this.setStatus(reviewId, ["IN_REVIEW"], "READY_FOR_APPROVAL", { remindersSent: Object.fromEntries(Object.entries((r.remindersSent ?? {}) as Record<string, unknown>).filter(([k]) => k !== "returnedAt")) }))) throw new ApiError(409, "INVALID_STATE", "Энэ төлөвөөс батлахад бэлэн болгох боломжгүй.");
   }
-  async returnToReview(reviewId: string, adminId: string, role: string) {
+  /** Not approved: the report goes back to editing with the recorded reason (audit trail + notification). It stays closed for the customer. */
+  async returnToReview(reviewId: string, adminId: string, role: string, reason = "") {
     const r: any = await prisma.reportReview.findUnique({ where: { id: reviewId } }); if (!r) throw new ApiError(404, "NOT_FOUND", "Олдсонгүй.");
     await this.assertLockHeld(reviewId, adminId);
-    if (!(await this.setStatus(reviewId, ["READY_FOR_APPROVAL", "APPROVED"], "IN_REVIEW", { approvedAt: null, approvedByAdminId: null, approvedRevision: null, approvedNarrativeHash: null, remindersSent: { ...(r.remindersSent ?? {}), returnedAt: new Date().toISOString() } }))) throw new ApiError(409, "INVALID_STATE", "Энэ төлөвөөс буцаах боломжгүй.");
+    if (reason) await this.notify("SYSTEM_WARNING", `REJECTED:${reviewId}:${r.version}`, { type: "REVIEW", id: reviewId }, "Тайлан батлагдаагүй", `Шалтгаан: ${reason}`.slice(0, 400));
+    if (!(await this.setStatus(reviewId, ["IN_REVIEW", "READY_FOR_APPROVAL", "APPROVED"], "IN_REVIEW", { approvedAt: null, approvedByAdminId: null, approvedRevision: null, approvedNarrativeHash: null, remindersSent: { ...(r.remindersSent ?? {}), returnedAt: new Date().toISOString() } }))) throw new ApiError(409, "INVALID_STATE", "Энэ төлөвөөс буцаах боломжгүй.");
     void adminId; void role;
   }
   // ---------- visual editor (annotations on the three PDF pages) ----------
@@ -239,6 +242,22 @@ export class ReviewService {
     if (set.items.length) narrative.visualAnnotations = set; else delete narrative.visualAnnotations;
     const out = await this.saveEdits(reviewId, adminId, role, baseRevision, [], reason, "MANUAL", narrative as NarrativeDraft);
     return { ...out, annotationCount: set.items.length };
+  }
+
+  /** What the plan editor needs: the current plan (or none) and the diagnosis actions every plan action must refer to. */
+  async annualPlanState(reviewId: string) {
+    const r: any = await prisma.reportReview.findUnique({ where: { id: reviewId } }); if (!r) throw new ApiError(404, "NOT_FOUND", "Хяналтын даалгавар олдсонгүй.");
+    const rev = await this.latestRevision(reviewId); const payload = (await this.reports.readPublishedReport(r.assessmentId) as any).payload; const plan = planForPayload((rev.narrative as any).annualPlan, payload.payloadHash); const start = planStartDate(payload.generatedAt);
+    return { revision: rev.revision, status: r.status, startDate: start.toISOString().slice(0, 10), windowDays: planWindowDays(start), plan: plan ? { periodLabel: plan.periodLabel, stages: plan.stages.map(s => ({ headingMn: s.headingMn, startDay: s.startDay, durationDays: s.endDay - s.startDay + 1, dateLabel: s.dateLabel, dependencyNoteMn: s.dependencyNoteMn, actions: s.actions })) } : null,
+      actions: [...payload.priorityActions.map((a: any, i: number) => ({ id: `F${i + 1}`, titleMn: a.titleMn, required: true })), ...payload.evidenceActions.map((a: any, i: number) => ({ id: `V${i + 1}`, titleMn: a.titleMn, required: false }))] };
+  }
+  /** Reviewer correction (or first version) of the 12-month plan: no AI call. Scores, findings and answers are untouched; the three-page fit is checked with the real renderer before saving. */
+  async saveAnnualPlan(reviewId: string, adminId: string, role: string, baseRevision: number, raw: unknown, reason: string) {
+    const r: any = await prisma.reportReview.findUnique({ where: { id: reviewId } }); if (!r) throw new ApiError(404, "NOT_FOUND", "Хяналтын даалгавар олдсонгүй.");
+    const latest = await this.latestRevision(reviewId); const payload = (await this.reports.readPublishedReport(r.assessmentId) as any).payload;
+    const { plan, issues } = reviewerAnnualPlan(raw, payload); if (!plan) throw new ApiError(422, "PLAN_INVALID", issues[0].message, { issues: issues.slice(0, 12) });
+    const out = await this.saveEdits(reviewId, adminId, role, baseRevision, [], reason, "MANUAL", { ...(latest.narrative as any), annualPlan: plan });
+    return { revision: out.revision, periodLabel: plan.periodLabel, stages: plan.stages.length };
   }
 
   /** Authorised recovery of a missing 12-month plan (one paid generation). Open review: a new revision the reviewer still has to approve. Published: a new version of the published report, the earlier one archived. */

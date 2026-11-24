@@ -60,8 +60,8 @@ export default function Login(){
      {error&&<div className="mmri-support-alert is-error" role="alert">{error}</div>}
      <Button type="submit" fullWidth loading={busy} disabled={!canSubmit}>{mode==='login'?'Нэвтрэх':'Бүртгэл үүсгэх'}</Button>
      {mode==='login'&&<a className="auth__forgot" href="#/forgot-password">Нууц үгээ мартсан уу?</a>}
-     {mode==='login'&&<p className="auth__legal"><a href="#/privacy" target="_blank" rel="noopener">Нууцлалын бодлого</a> · <a href="#/terms" target="_blank" rel="noopener">Үйлчилгээний нөхцөл</a> <small>(Хуулийн хяналт хүлээгдэж буй төсөл)</small></p>}
-     {mode==='register'&&<p className="auth__legal">Бүртгүүлэхийн өмнө <a href="#/terms" target="_blank" rel="noopener">Үйлчилгээний нөхцөл</a> болон <a href="#/privacy" target="_blank" rel="noopener">Нууцлалын бодлого</a>-той танилцана уу. <small>(Хуулийн хяналт хүлээгдэж буй төсөл)</small></p>}
+     {mode==='login'&&<p className="auth__legal"><a href="#/privacy" target="_blank" rel="noopener">Нууцлалын бодлого</a> · <a href="#/terms" target="_blank" rel="noopener">Үйлчилгээний нөхцөл</a></p>}
+     {mode==='register'&&<p className="auth__legal">Бүртгүүлэхийн өмнө <a href="#/terms" target="_blank" rel="noopener">Үйлчилгээний нөхцөл</a> болон <a href="#/privacy" target="_blank" rel="noopener">Нууцлалын бодлого</a>-той танилцана уу.</p>}
      {import.meta.env.DEV&&import.meta.env.VITE_MMRI_SHOW_DEMO_LOGIN==='true'&&mode==='login'&&<button className="auth__demo" type="button" onClick={()=>{setEmail('demo@mmri.mn');setPassword('Demo2026!!')}}>Тест бүртгэл бөглөх</button>}
      {selectedPlan&&<div className="auth__plan" role="status"><span>{selectedPlan.name}</span><b>{formatMnt(selectedPlan.priceMnt)}</b></div>}
     </form>

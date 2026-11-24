@@ -29,7 +29,7 @@ export function buildCustomerMail(type: string, ctx: { company: string; domainLa
   const c = oneLine(ctx.company, 80), d = oneLine(ctx.domainLabel, 60), base = ctx.appUrl.replace(/\/+$/, "");
   const sign = "\n\nBusinessMRI.mn\nЭнэ мэйл автоматаар илгээгдсэн. Хариу бичих шаардлагагүй.";
   if (type === "ASSESSMENT_COMPLETED") return { kind: "ASSESSMENT_COMPLETED", subject: "BusinessMRI.mn: оношилгоо дууслаа", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн оношилгоо амжилттай дууслаа. Хариулт бүрэн хадгалагдсан.\n\nҮр дүнг эндээс харна уу: ${base}/#/results${sign}` };
-  if (type === "REPORT_UNDER_REVIEW") return { kind: "REPORT_UNDER_REVIEW", subject: "BusinessMRI.mn: тайлан хянагдаж байна", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн тайлан шинжээчийн хяналтад орлоо. Баталгаажсан тайлан бэлэн болмогц танд дахин мэдэгдэнэ. Хяналтын явцад тайланд нэвтрэх боломжгүй.${sign}` };
+  if (type === "REPORT_UNDER_REVIEW") return { kind: "REPORT_UNDER_REVIEW", subject: "BusinessMRI.mn: оношилгоо хүлээн авлаа", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн оношилгоог хүлээн авлаа. Таны тайланг бэлтгэж байна.\n\nТайланг 24 цагийн дотор хүргэнэ. Бэлэн болмогц танд имэйлээр мэдэгдэнэ.${sign}` };
   if (type === "REPORT_RELEASED") return { kind: "REPORT_RELEASED", subject: "BusinessMRI.mn: тайлан бэлэн боллоо", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн тайлан бэлэн боллоо. Тайланг үзэх, PDF хэлбэрээр татах боломжтой (нэвтэрсний дараа нээгдэнэ):\n\n${base}/#/report${ctx.contact && /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(ctx.contact) ? `\n\nАсуулт байвал ${ctx.contact} хаягаар бидэнтэй холбогдоно уу.` : ""}${sign}` };
   if (type === "PAYMENT_CONFIRMED") return { kind: "PAYMENT_CONFIRMED", subject: "BusinessMRI.mn: төлбөр баталгаажлаа", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн оношилгооны төлбөр баталгаажиж, эрх нээгдлээ.\n\nОношилгоог эндээс эхлүүлнэ үү: ${base}/#/analysis\n\nТөлбөрийн түүх таны бүртгэлийн «Тохиргоо» хэсэгт хадгалагдсан.${sign}` };
   return null;
@@ -91,6 +91,8 @@ export class LifecycleMailService {
       const skip = await done(rows.map(r => `CN:${r.id}`));
       for (const n of rows.filter(r => !skip.has(`CN:${r.id}`)).slice(0, BATCH)) {
         const key = `CN:${n.id}`;
+        // One submission mail per report: when the report goes to review, REPORT_UNDER_REVIEW is that mail and "completed, see the results" would promise something that is still closed.
+        if (n.type === "ASSESSMENT_COMPLETED") { const aid = String((n.payload as any)?.assessmentId ?? ""); if (aid && await prisma.reportReview.findUnique({ where: { assessmentId: aid }, select: { id: true } })) { if (await this.claim(key, "ASSESSMENT_COMPLETED")) await this.sent(key); continue; } }
         const msg = buildCustomerMail(n.type, { company: n.company?.name ?? "Таны", domainLabel: DOMAIN_LABEL[String((n.payload as any)?.domainCode ?? "").toLowerCase()] ?? "Оношилгооны", appUrl: this.config.publicAppUrl, contact: this.config.gmail?.user ?? this.config.mailFrom });
         if (!msg || n.company?.erasedAt) continue;
         if (!(await this.claim(key, msg.kind))) continue;

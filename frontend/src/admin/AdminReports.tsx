@@ -36,7 +36,7 @@ function Queue({query}:{query:URLSearchParams}){
  </Page>
 }
 
-function Evidence({id}:{id:string}){
+export function Evidence({id}:{id:string}){
  const [cap,setCap]=useState('');const [state,setState]=useState('');const [finding,setFinding]=useState('');const [q,setQ]=useState('');const [open,setOpen]=useState<string|null>(null);
  const {loading,error,data,reload}=useAsync(()=>adminApi.get(`/reviews/${id}/evidence?${new URLSearchParams({...(cap?{capability:cap}:{}),...(state?{state}:{}),...(finding?{finding}:{}),...(q?{q}:{})})}`),[id,cap,state,finding,q]);
  const [all,setAll]=useState<any[]>([]);useEffect(()=>{if(data&&!cap&&!state&&!finding&&!q)setAll(data.capabilities)},[data,cap,state,finding,q]);
@@ -95,7 +95,7 @@ function Editor({id,me}:{id:string;me:AdminMe}){
      {r.status==='GENERATION_FAILED'&&can('reports.edit')&&<button type="button" className="adm-btn" disabled={busy} onClick={()=>void run(()=>adminApi.post(`/reviews/${id}/regenerate-draft`),'Төсөл дахин үүсгэж байна.')}>Төсөл дахин үүсгэх</button>}
      {editable&&<><label className="adm-reason">Засварын шалтгаан<input value={reason} onChange={e=>setReason(e.target.value)} placeholder="Яагаад засав?" maxLength={500}/></label>
       <button type="button" className="adm-btn adm-btn--primary" disabled={busy||dirty.length===0||reason.trim().length<3} onClick={()=>void save()}>Хадгалах{dirty.length?` (${dirty.length})`:''}</button></>}
-     {(r.status==='READY_FOR_APPROVAL'||r.status==='APPROVED')&&can('reports.edit')&&<button type="button" className="adm-btn" disabled={busy} onClick={()=>void run(()=>adminApi.post(`/reviews/${id}/return`),'Засварт буцаалаа.')}>Засварт буцаах</button>}
+     {(r.status==='READY_FOR_APPROVAL'||r.status==='APPROVED')&&can('reports.edit')&&<button type="button" className="adm-btn" disabled={busy} onClick={()=>{const reason=window.prompt('Батлаагүй шалтгаан:');if(reason&&reason.trim().length>=5)void run(()=>adminApi.post(`/reviews/${id}/return`,{reason:reason.trim()}),'Засварт буцаалаа.')}}>Засварт буцаах</button>}
      {['IN_REVIEW','READY_FOR_APPROVAL','APPROVED'].includes(r.status)&&can('reports.approve')&&<button type="button" className="adm-btn adm-btn--primary adm-btn--release" disabled={busy||dirty.length>0} title={dirty.length>0?'Эхлээд хадгална уу':undefined} onClick={()=>setConfirmRelease(true)}>{busy?'Илгээж байна…':r.status==='APPROVED'?'Илгээлтийг дуусгах':'Батлах, илгээх'}</button>}
      {editable&&dirty.length>0&&<button type="button" className="adm-link" onClick={()=>setEdits({})}>Хадгалаагүй өөрчлөлтийг болих</button>}
      {editable&&<button type="button" className="adm-btn" disabled={aiBusy} onClick={()=>void suggest()}>AI санал авах (бүх хэсэг)</button>}
