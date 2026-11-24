@@ -32,7 +32,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-GENERATOR_VERSION = "MMRI-PDF-1.6-BUSINESSMRI-BRAND"
+GENERATOR_VERSION = "MMRI-PDF-1.7-BUSINESSMRI-PLAN"
 # Noto Sans (SIL OFL 1.1) ships next to this script so the renderer does not depend on the server's font packages.
 # Resolution order: environment override, bundled fonts/, legacy Linux system path.
 _FONT_DIR = Path(__file__).resolve().parent / "fonts"

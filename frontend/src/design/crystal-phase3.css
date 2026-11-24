@@ -104,6 +104,7 @@ html:root body.mmri-prism-page button.diagnosis-square.cat-tile{display:flex;fle
 html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(1){--n:0}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(2){--n:1}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(3){--n:2}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(4){--n:3}html:root body.mmri-prism-page button.diagnosis-square.cat-tile:nth-child(5){--n:4}
 @media (min-width:1001px){html:root body.mmri-prism-page .diagnosis-square.cat-tile{height:clamp(400px,66vh,640px)}}
 @media (max-width:1000px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:240px;border-radius:22px}}
+@media (max-width:700px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:172px}}/* phones: about four categories are visible at once */
 @media (min-width:701px) and (max-width:1000px){html:root body.mmri-prism-page button.diagnosis-square.cat-tile{min-height:420px}html:root body.mmri-prism-page .diagnosis-square-grid{align-content:start}}
 html:root body.mmri-prism-page .diagnosis-square-grid{align-items:center}
 html:root body.mmri-prism-page .diagnosis-square-grid:has(.cat-tile:hover) .cat-tile:not(:hover){opacity:1}
@@ -179,7 +180,7 @@ html:root body.mmri-prism-page .mmri-questionnaire__reload{flex:none;padding:6px
  html:root body.mmri-prism-page .report-domain-switcher button:hover{box-shadow:inset 0 1px 0 #fff,inset 0 0 12px color-mix(in srgb,var(--dc) 90%,transparent),0 0 20px color-mix(in srgb,var(--dc) 85%,transparent),0 8px 14px -8px color-mix(in srgb,var(--dc) 90%,#000)}
  html:root body.mmri-prism-page .report-domain-switcher button:focus-visible{outline:3px solid var(--gm-navy);outline-offset:3px}
  html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__state{display:none}
- html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon{display:flex;align-items:center;justify-content:center;flex:none;width:43px;height:100%;max-width:none;overflow:hidden;background:none;border:0;box-shadow:none;padding:0;color:#fff;font-size:15px;font-weight:800;letter-spacing:0;line-height:1;text-indent:0;text-shadow:0 1px 3px rgba(0,20,80,.55);transition:width .4s cubic-bezier(.22,1,.36,1),opacity .2s ease}
+ html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon{display:flex;align-items:center;justify-content:center;flex:none;width:76px;letter-spacing:.03em;height:100%;max-width:none;overflow:hidden;background:none;border:0;box-shadow:none;padding:0;color:#fff;font-size:15px;font-weight:800;letter-spacing:0;line-height:1;text-indent:0;text-shadow:0 1px 3px rgba(0,20,80,.55);transition:width .4s cubic-bezier(.22,1,.36,1),opacity .2s ease}
  html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon>*{display:none}
  html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon::before{content:attr(data-initial)}
  html:root body.mmri-prism-page .report-domain-switcher button.is-active .report-domain-switcher__icon{width:0;opacity:0}
@@ -202,7 +203,7 @@ html:root body.mmri-prism-page .mmri-questionnaire__reload{flex:none;padding:6px
  html:root body.mmri-prism-page .report-balance-v3>.report-finding-column{display:grid;grid-row:1/span 6;grid-template-rows:subgrid;row-gap:0;align-content:start}
  html:root body.mmri-prism-page .report-balance-v3>.report-finding-column>ol{display:contents}
 }
-@media (max-width:640px){html:root body.mmri-prism-page .report-domain-switcher{gap:8px}html:root body.mmri-prism-page .report-domain-switcher button{height:40px;min-width:40px}html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon{width:37px;font-size:13px}html:root body.mmri-prism-page .report-domain-switcher button.is-active{min-height:40px;order:1;flex:1 0 100%}html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__active-copy strong{min-height:37px;padding:6px 16px;white-space:normal;font-size:13.5px}}
+@media (max-width:640px){html:root body.mmri-prism-page .report-domain-switcher{gap:8px}html:root body.mmri-prism-page .report-domain-switcher button{height:40px;min-width:40px}html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__icon{width:64px;font-size:12.5px}html:root body.mmri-prism-page .report-domain-switcher button.is-active{min-height:40px;order:1;flex:1 0 100%}html:root body.mmri-prism-page .report-domain-switcher .report-domain-switcher__active-copy strong{min-height:37px;padding:6px 16px;white-space:normal;font-size:13.5px}}
 
 /* ---- 7. notifications: simple list, newest first, unread prominent, read subdued, order never changes ---- */
 

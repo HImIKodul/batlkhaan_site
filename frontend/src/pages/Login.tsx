@@ -43,7 +43,7 @@ export default function Login(){
   setBusy(false);go(destination);
  };
  return <div className="auth">
-  <a className="auth__brand" href={routeHref('home')} aria-label="BusinessMRI.mn - Нүүр">BusinessMRI</a>
+  <a className="auth__brand" href={routeHref('home')} aria-label="BusinessMRI.mn - Нүүр">BusinessMRI.mn</a>
   <PageContainer className="auth__layout">
    <section className="auth__message">
     <h1 tabIndex={-1} data-route-heading>Бизнесээ бүхэлд нь оношлуул.<br/><em>Дараагийн 12 сарынхаа замыг тодорхой болго.</em></h1>

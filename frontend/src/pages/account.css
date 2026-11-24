@@ -113,7 +113,9 @@
  .account-payment-history>section>article>.payment-history-area{grid-column:1/-1}
 }
 
-.payment-history-swatch{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(168deg,var(--domain-secondary,#999),var(--domain-primary,#666) 60%,var(--domain-deep,#444) 130%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6)}
+.payment-history-icon:has(.domain-badge){width:auto;height:auto;padding:0;border:0;border-radius:9px;background:none;box-shadow:none}
+.payment-history-area .payment-history-icon .domain-badge{min-width:72px;min-height:44px;color:#04122e;font-size:13px}
+
 
 /* legal documents (privacy policy, terms): readable column, draft status always visible */
 .legal-doc{display:grid;gap:18px;max-width:880px;margin-inline:auto;padding-block:8px 28px}

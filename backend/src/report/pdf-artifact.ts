@@ -5,7 +5,7 @@ import { sha256Json } from "../lib/hash.js";
 import { deterministicFallbackNarrative } from "./fallback-renderer.js";
 import { readPolicyFlags, type PolicyFlags } from "../engine/policy-flags.js";
 
-export const MMRI_PDF_GENERATOR_VERSION="MMRI-PDF-1.6-BUSINESSMRI-BRAND" as const;
+export const MMRI_PDF_GENERATOR_VERSION="MMRI-PDF-1.7-BUSINESSMRI-PLAN" as const;
 export const MMRI_PDF_SOURCE_VERSION="MMRI-PDF-SOURCE-1.0" as const;
 
 export interface ReportPdfFinding {

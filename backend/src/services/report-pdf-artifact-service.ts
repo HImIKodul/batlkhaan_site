@@ -84,6 +84,18 @@ export class ReportPdfArtifactService {
     const stale=Boolean(existing&&existing.sourceHash!==sourceHash);
     // B7 (flag ON only): a stored historical PDF is never regenerated just because the generator version changed; an operator must opt in explicitly.
     const b7=readPolicyFlags().b7,upgradeAllowed=process.env.MMRI_PDF_ALLOW_GENERATOR_UPGRADE==="YES";
+    /* Historical PDFs are immutable. A PDF made by an earlier generator is served exactly as stored, also on a forced request and also when the source schema has changed since, as long as the published report
+       text itself has not been replaced after the file was made. If that file is lost or damaged it is NOT quietly re-drawn with today's layout: the limitation is reported, and only an operator decision
+       (MMRI_PDF_ALLOW_GENERATOR_UPGRADE=YES) creates a new version under a new path, with the old identity kept in the audit trail. */
+    if(existing&&existing.generatorVersion!==generatorVersionFor()&&!upgradeAllowed){
+      const snap=await (prisma as any).reportSnapshot.findUnique({where:{id:reportSnapshotId},select:{generationCompletedAt:true}});
+      const textReplacedLater=Boolean(snap?.generationCompletedAt&&snap.generationCompletedAt.getTime()>existing.generatedAt.getTime());
+      if(!textReplacedLater){
+        const verified=await this.verifyExisting(existing,payload).catch(()=>null);if(verified)return verified;
+        console.error(JSON.stringify({ts:new Date().toISOString(),level:"error",event:"legacy_pdf_unavailable",reportSnapshotId,generatorVersion:existing.generatorVersion}));
+        throw new ApiError(409,"LEGACY_PDF_UNAVAILABLE","Энэ тайлангийн анхны PDF файл олдсонгүй. Тайланг сайтаас үзэх боломжтой хэвээр байна. PDF сэргээлгэх бол тусламжийн багт хандана уу.");
+      }
+    }
     if(existing&&!stale&&!force&&(existing.generatorVersion===generatorVersionFor()||(b7&&!upgradeAllowed))){
       const verified=await this.verifyExisting(existing,payload).catch(()=>null);if(verified)return verified;
     }
@@ -120,7 +132,7 @@ export class ReportPdfArtifactService {
       const relDir=path.posix.join("pdf",safeSegment(payload.assessmentId,"assessment id"));
       const b7=readPolicyFlags().b7;
       // B7 (flag ON only): generator version + content hash are part of the identity, so a different PDF can never share a path.
-      const storageKey=b7?path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}-${safeSegment(generatorVersionFor().replace(/[^A-Za-z0-9_-]/g,"_"),"generator version")}-${contentHash.slice(0,16)}.pdf`):path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}.pdf`);
+      const storageKey=b7?path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}-${safeSegment(generatorVersionFor().replace(/[^A-Za-z0-9_-]/g,"_"),"generator version")}-${contentHash.slice(0,16)}.pdf`):path.posix.join(relDir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${sourceHash.slice(0,16)}-${safeSegment(generatorVersionFor().replace(/[^A-Za-z0-9_-]/g,"_"),"generator version")}.pdf`);// generator version in the path: a newer layout can never overwrite an older file
       const finalPath=resolveStorageKey(storageKey);await mkdir(path.dirname(finalPath),{recursive:true,mode:0o700});
       // B7 (flag ON only): write-once. An existing file at this identity-derived path must already be byte-identical; anything else is a conflict, never an overwrite.
       if(b7){const present=await readFile(finalPath).catch(()=>null);if(present&&sha256Buffer(present)!==contentHash)throw new ApiError(409,"IMMUTABLE_ARTIFACT_CONFLICT","Энэ тайлангийн хадгалагдсан PDF өөр агуулгатай тул дарж бичихгүй.");}
@@ -137,6 +149,19 @@ export class ReportPdfArtifactService {
     }finally{await rm(tmp,{recursive:true,force:true}).catch(()=>undefined);}
   }
 
+
+  /** Permanent copy (outside the swept "pdf/" tree, inside the backed-up storage root) of what customers could download before an authorised change of a published report. Write-once. */
+  async archivePublished(reportSnapshotId:string,assessmentId:string,meta:{narrative:unknown;narrativeHash:string|null;payloadHash:string}):Promise<void>{
+    const row=await (prisma as any).reportArtifact.findUnique({where:{reportSnapshotId_kind:{reportSnapshotId,kind:"PDF"}}});
+    const dir=path.join(storageRoot(),"archive",safeSegment(assessmentId,"assessment id"));await mkdir(dir,{recursive:true,mode:0o700});
+    const base=path.join(dir,`${safeSegment(reportSnapshotId,"report snapshot id")}-${String(meta.narrativeHash??"none").slice(0,16)}`);
+    if(row){
+      const buffer=await readFile(resolveStorageKey(row.storageKey));
+      if(sha256Buffer(buffer)!==row.contentHash)throw new ApiError(409,"IMMUTABLE_ARTIFACT_CONFLICT","Хадгалагдсан PDF-ийн шалгалт амжилтгүй тул тайланг өөрчлөхгүй.");
+      await writeFile(`${base}.pdf`,buffer,{mode:0o400,flag:"wx"}).catch((e:any)=>{if(e?.code!=="EEXIST")throw e});
+    }
+    await writeFile(`${base}.json`,JSON.stringify({archivedAt:new Date().toISOString(),...meta,artifact:row?{generatorVersion:row.generatorVersion,contentHash:row.contentHash,sourceHash:row.sourceHash,generatedAt:row.generatedAt}:null}),{mode:0o400,flag:"wx"}).catch((e:any)=>{if(e?.code!=="EEXIST")throw e});
+  }
 
   /* ---- REP-02: recoverable publication ----
      stage():  render + verify a CANDIDATE pdf (exactly three A4 pages, valid PDF, hash) into a private staging directory. Nothing in the database or the published storage changes.

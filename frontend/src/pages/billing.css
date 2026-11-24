@@ -91,3 +91,15 @@
 .billing-qr__status.is-waiting::before{content:"";width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:billing-spin 1s linear infinite;flex:none}
 @keyframes billing-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.billing-qr__status.is-waiting::before{animation:none}}
+
+/* bank apps of one QPay invoice (phones: app schemes; everywhere: the short address) */
+.billing-qr__banks{width:100%;display:grid;gap:10px}
+.billing-qr__banks h2{margin:0;font-size:16px;font-weight:800;color:#fff}
+.billing-qr__banks ul{display:none;margin:0;padding:0;list-style:none;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.billing-qr__banks a{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1px solid rgba(160,205,255,.5);border-radius:14px;background:rgba(8,30,92,.6);color:#fff;text-decoration:none;text-align:left;font-size:14px;font-weight:700;line-height:1.2}
+.billing-qr__banks a:hover{border-color:#fff}.billing-qr__banks a:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.billing-qr__banks img{flex:none;border-radius:9px;background:#fff}
+.billing-qr__short{justify-content:center}
+.billing-qr__banks h2{display:none}
+@media (pointer:coarse),(max-width:767px){.billing-qr__banks ul{display:grid}.billing-qr__banks h2{display:block}}
+.billing-qr__head h1 .domain-badge{font-size:13px}

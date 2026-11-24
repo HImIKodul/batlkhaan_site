@@ -28,7 +28,7 @@ for(const domain of domains){
   check(`${domain} PDF reasonable size`,ba.length>10000,ba.length);
   rendered.push({domain,path:a,hash:sha256Buffer(ba),bytes:ba.length,pages:pageCount(ba)});
 }
-check('ReportLab generator version',MMRI_PDF_GENERATOR_VERSION==='MMRI-PDF-1.6-BUSINESSMRI-BRAND');
+check('ReportLab generator version',MMRI_PDF_GENERATOR_VERSION==='MMRI-PDF-1.7-BUSINESSMRI-PLAN');
 check('five domain render accents affect binary',new Set(rendered.map(x=>x.hash)).size===5,rendered.map(x=>x.hash).join(' '));
 const sample=path.resolve('../STEP12_BACKEND_SAMPLE_REPORT.pdf');fs.copyFileSync(rendered[0].path,sample);
 fs.rmSync(tmp,{recursive:true,force:true});

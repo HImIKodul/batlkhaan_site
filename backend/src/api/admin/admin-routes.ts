@@ -137,6 +137,13 @@ export function registerAdminRoutes(d: AdminDeps) {
   route("POST", "/reviews/:id/ready", "reports.edit", async (c, p, fp) => { await reviews.markReady(c.params.id, p.adminId, p.role); await aud(p, fp, "REVIEW_MARKED_READY", "REVIEW", c.params.id); ok(c.res, { status: "READY_FOR_APPROVAL" }); }, { body: false });
   route("POST", "/reviews/:id/return", "reports.edit", async (c, p, fp) => { await reviews.returnToReview(c.params.id, p.adminId, p.role); await aud(p, fp, "REVIEW_RETURNED", "REVIEW", c.params.id); ok(c.res, { status: "IN_REVIEW" }); }, { body: false });
   route("POST", "/reviews/:id/regenerate-draft", "reports.edit", async (c, p, fp) => { const r = await prisma.reportReview.findUnique({ where: { id: c.params.id } }); if (!r || r.status !== "GENERATION_FAILED") throw new ApiError(409, "INVALID_STATE", "Зөвхөн амжилтгүй болсон төсөл дахин үүснэ."); void reviews.generateDraft(r.id, "ADMIN", p.adminId); await aud(p, fp, "DRAFT_REGENERATION_STARTED", "REVIEW", r.id); ok(c.res, { started: true }); }, { body: false });
+  /* Spends money on the AI provider, so: publish permission, recent password + MFA, a written reason and an explicit confirmation. */
+  route("POST", "/reviews/:id/annual-plan", "reports.publish", async (c, p, fp, b) => {
+    const reason = clean(b.reason, 300); if (reason.length < 5) throw badRequest("Шалтгаан шаардлагатай."); if (b.confirmSpend !== true) throw badRequest("Төлбөртэй боловсруулалтыг баталгаажуулна уу.");
+    await aud(p, fp, "ANNUAL_PLAN_RECOVERY_REQUESTED", "REVIEW", c.params.id, { reason });
+    const out = await reviews.recoverAnnualPlan(c.params.id, p.adminId, p.role, reason);
+    await aud(p, fp, "ANNUAL_PLAN_RECOVERED", "REVIEW", c.params.id, out); ok(c.res, out);
+  }, { sensitive: true });
   route("POST", "/reviews/:id/approve", "reports.approve", async (c, p, fp, b) => { const out = await reviews.approveAndRelease(c.params.id, p.adminId, p.role, Number(b.baseRevision)); if (out.approvedNow) await aud(p, fp, "REPORT_APPROVED", "REVIEW", c.params.id, { revision: b.baseRevision }); if (!out.alreadyPublished) await aud(p, fp, "REPORT_PUBLISHED", "REVIEW", c.params.id, { publishedRevision: out.publishedRevision }); // Send the release e-mail now instead of waiting for the next maintenance pass, then report the real delivery state (never claim more than happened).
     if (!out.alreadyPublished) await reviews.afterMaintenance?.().catch(() => undefined);
     const rv: any = await prisma.reportReview.findUnique({ where: { id: c.params.id }, select: { assessmentId: true } });

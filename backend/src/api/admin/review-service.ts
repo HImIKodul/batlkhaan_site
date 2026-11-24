@@ -241,6 +241,19 @@ export class ReviewService {
     return { ...out, annotationCount: set.items.length };
   }
 
+  /** Authorised recovery of a missing 12-month plan (one paid generation). Open review: a new revision the reviewer still has to approve. Published: a new version of the published report, the earlier one archived. */
+  async recoverAnnualPlan(reviewId: string, adminId: string, role: string, reason: string) {
+    const r: any = await prisma.reportReview.findUnique({ where: { id: reviewId } }); if (!r) throw new ApiError(404, "NOT_FOUND", "Хяналтын даалгавар олдсонгүй.");
+    if (r.status === "PUBLISHED") { const out = await this.reports.recoverPublishedPlan(r.assessmentId, adminId, reason); return { published: true, ...out }; }
+    // Everything that could refuse the result is checked before any money is spent.
+    this.assertCanEdit(r, adminId, role); await this.assertLockHeld(reviewId, adminId);
+    if (!["IN_REVIEW", "READY_FOR_APPROVAL"].includes(r.status)) throw new ApiError(409, "INVALID_STATE", "Төлөвлөгөөг зөвхөн хяналтын явцад эсвэл нийтлэгдсэн тайланд нэмнэ.");
+    const latest = await this.latestRevision(reviewId);
+    const narrative = await this.reports.generateMissingPlan(r.assessmentId, latest.narrative as unknown as NarrativeDraft, adminId, reason);
+    const out = await this.saveEdits(reviewId, adminId, role, latest.revision, [], reason, "MANUAL", narrative);
+    return { published: false, state: "READY", revision: out.revision };
+  }
+
   async editorState(reviewId: string) {
     const review: any = await prisma.reportReview.findUnique({ where: { id: reviewId }, select: { id: true, status: true, currentRevision: true, assignedAdminId: true, approvedRevision: true, domainCode: true } });
     if (!review) throw new ApiError(404, "NOT_FOUND", "Хяналтын даалгавар олдсонгүй.");

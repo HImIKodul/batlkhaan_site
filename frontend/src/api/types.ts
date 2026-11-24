@@ -78,7 +78,7 @@ export type BillingInvoiceStatus='CREATED'|'PENDING'|'PAID'|'CANCELLED'|'FAILED'
 export interface BillingCatalogPlan { code:BillingPlanCode;name:string;billingLabel:string;description:string;amountMnt:number|null;currency:'MNT'|string;available:boolean;provider:BillingProvider;testMode:boolean;manualMode:boolean;grantMode?:boolean; }
 export interface BillingDeeplink { name?:string;description?:string;logo?:string;link:string; }
 export interface BillingHistoryItem { id:string;companyId:string;domainCode:DomainCode;planCode:BillingPlanCode;amountMnt:number;currency:string;provider:BillingProvider;status:BillingInvoiceStatus;senderInvoiceNo:string;paidAt?:string|null;refundedAt?:string|null;lastVerifiedAt?:string|null;createdAt:string;updatedAt:string;testMode:boolean;manualMode:boolean; }
-export interface BillingInvoice extends BillingHistoryItem { qrText?:string|null;qrImage?:string|null;shortUrl?:string|null;deeplinks:BillingDeeplink[];callbackReceivedAt?:string|null;refundReason?:string|null; }
+export interface BillingInvoice extends BillingHistoryItem { /** when an open provider code stops being offered (null: no limit) */expiresAt?:string|null;qrText?:string|null;qrImage?:string|null;shortUrl?:string|null;deeplinks:BillingDeeplink[];callbackReceivedAt?:string|null;refundReason?:string|null; }
 export interface CompanyEntitlement { id:string;domainCode:DomainCode;planCode:BillingPlanCode;status:'ACTIVE'|'CONSUMED'|'EXPIRED'|'REVOKED'|string;startsAt:string;endsAt?:string|null;assessmentLimit?:number|null;assessmentsUsed:number; }
 export interface BillingStatus { enforcement:boolean;entitlements:CompanyEntitlement[];invoices:BillingHistoryItem[];summary:{totalPaidMnt:number;paidCount:number;pendingCount:number}; }
 

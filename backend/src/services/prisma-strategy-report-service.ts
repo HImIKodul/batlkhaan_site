@@ -1,3 +1,6 @@
+import { ApiError } from "../api/errors.js";
+import { planForPayload } from "../report/annual-plan.js";
+import { readAiProfileConsent } from "../company/ai-profile-consent.js";
 import { generateAnnualPlan, MMRI_ANNUAL_PLAN_PROMPT_VERSION, PLAN_DOMAIN_NAME_MN, type AnnualPlanProvider, planEvidenceLine, PLAN_CONTEXT_PROFILE_IDS, type PlanEvidenceLine, type PlanCatalog, type PlanRootFinding, type PlanUsage } from "../report/annual-plan.js";
 import { companyLogos } from "../company/company-logo-service.js";
 import { checkPdfLayoutBudget } from "../report/pdf-budget.js";
@@ -122,7 +125,9 @@ export class PrismaStrategyReportService {
   /** Structured answers of the company profile that describe the business in general (what it offers, to whom, how it sells, its stage and its area). Option labels only: no names, no free text, no headcount. */
   private async planCompanyContext(assessmentId:string):Promise<string[]>{
     try{
-      const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{methodologyVersionId:true,profile:true}});if(!asm)return [];
+      const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{methodologyVersionId:true,profile:true,companyId:true}});if(!asm)return [];
+      // Data minimisation: without the company's recorded consent no profile answer leaves the system.
+      if(!(await readAiProfileConsent(asm.companyId)).granted)return [];
       const given=new Map(profileAnswers(asm.profile).map((x:any)=>[String(x.questionId),(x.optionIndexes??[]) as number[]]));
       const questions=await prisma.profileQuestion.findMany({where:{methodologyVersionId:asm.methodologyVersionId,externalId:{in:PLAN_CONTEXT_PROFILE_IDS}},include:{options:true},orderBy:{externalId:"asc"}});
       return questions.flatMap((q:any)=>{const picked=q.options.filter((o:any)=>(given.get(q.externalId)??[]).includes(o.optionIndex)).map((o:any)=>String(o.labelMn));return picked.length?[`${q.textMn} ${picked.join("; ")}`]:[]});
@@ -505,9 +510,8 @@ export class PrismaStrategyReportService {
       /* 12-month plan (page 3). Only when explicitly enabled; a plan that cannot be validated or does not fit is NOT stored (the report keeps its existing page 3). */
       let planOutcome:string|null=null;const planCalls:Array<{attempt:number;model:string;usage:PlanUsage|null;issues:string[]}>=[];
       if(this.annualPlanProvider){
-        const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{domainCode:true}});
         const narrativeBase=result.narrative;
-        const plan=await generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId),companyCharacteristics:await this.planCompanyContext(assessmentId),rootFindings:await this.planRootFindings(assessmentId)},onCall:c=>planCalls.push(c),fits:async p=>(await checkPdfLayoutBudget(payload,{...narrativeBase,annualPlan:p})).fits});
+        const plan=await this.runAnnualPlan(assessmentId,payload,narrativeBase,planCalls);
         if(plan.state==="READY"){result={...result,narrative:{...narrativeBase,annualPlan:plan}};planOutcome="READY";}else planOutcome=`UNAVAILABLE: ${plan.reason}`;
         mark("annual_plan");
       }
@@ -546,6 +550,51 @@ export class PrismaStrategyReportService {
       },LONG_TX).catch(()=>undefined);
       throw error;
     }
+  }
+
+  private async runAnnualPlan(assessmentId:string,payload:FrozenReportPayload,narrative:NarrativeDraft,calls:Array<{attempt:number;model:string;usage:PlanUsage|null;issues:string[]}>){
+    const asm=await prisma.assessment.findUnique({where:{id:assessmentId},select:{domainCode:true}});
+    return generateAnnualPlan(payload,PLAN_DOMAIN_NAME_MN[String(asm?.domainCode)]??String(asm?.domainCode),this.annualPlanProvider,{extras:{evidenceFromAnswers:await this.planEvidence(assessmentId,payload),catalog:await this.planCatalog(assessmentId),companyCharacteristics:await this.planCompanyContext(assessmentId),rootFindings:await this.planRootFindings(assessmentId)},onCall:c=>calls.push(c),fits:async p=>(await checkPdfLayoutBudget(payload,{...narrative,annualPlan:p})).fits});
+  }
+
+  /** Authorised recovery of a MISSING 12-month plan (the only way to get one after the report exists). Never replaces a stored plan, never runs from a customer request, at most MMRI_AI_PLAN_MAX_RECOVERIES (2) paid attempts
+      per report, one at a time (report generation lease). Every attempt is audited with its token usage. Returns the narrative with the plan; storing it is the caller's job. */
+  async generateMissingPlan(assessmentId:string,narrative:NarrativeDraft,authorizedBy:string,reason:string):Promise<NarrativeDraft>{
+    if(!this.annualPlanProvider)throw new ApiError(409,"PLAN_PROVIDER_DISABLED","12 сарын төлөвлөгөө боловсруулах үйлчилгээ идэвхгүй байна.");
+    const payload=await this.freezeReportPayload(assessmentId);
+    if(planForPayload(narrative.annualPlan,payload.payloadHash))throw new ApiError(409,"PLAN_ALREADY_EXISTS","Энэ тайланд 12 сарын төлөвлөгөө аль хэдийн байна.");
+    const row=await prisma.reportSnapshot.findFirst({where:{assessmentId,externalId:payload.reportId}});if(!row)throw new ApiError(409,"REPORT_NOT_READY","Тайлан хараахан бэлэн болоогүй байна.");
+    const leaseId=randomUUID(),now=new Date();
+    const leased=await prisma.reportSnapshot.updateMany({where:{id:row.id,OR:[{generationLeaseId:null},{generationLeaseExpiresAt:null},{generationLeaseExpiresAt:{lt:now}}]},data:{generationLeaseId:leaseId,generationLeaseExpiresAt:new Date(now.getTime()+AI_GENERATION_LEASE_MS())}});
+    if(leased.count!==1)throw new ReportGenerationInProgressError();
+    const calls:Array<{attempt:number;model:string;usage:PlanUsage|null;issues:string[]}>=[];
+    try{
+      // Counted after the lease is held, so parallel requests cannot both pass the limit.
+      const used=await prisma.auditEvent.count({where:{assessmentId,eventType:"REPORT_GENERATION_STARTED",payload:{path:["operation"],equals:"ANNUAL_PLAN_RECOVERY"}}});
+      if(used>=boundedEnvInt("MMRI_AI_PLAN_MAX_RECOVERIES",2,1,5))throw new ApiError(409,"PLAN_RECOVERY_LIMIT","Энэ тайланд төлөвлөгөө дахин боловсруулах оролдлогын хязгаар дууссан.");
+      const meta={operation:"ANNUAL_PLAN_RECOVERY",authorizedBy,reason:reason.slice(0,300),promptVersion:MMRI_ANNUAL_PLAN_PROMPT_VERSION,leaseId};
+      await prisma.auditEvent.create({data:{assessmentId,eventType:"REPORT_GENERATION_STARTED",entityType:"ReportSnapshot",entityId:row.id,payload:meta}});
+      const plan=await this.runAnnualPlan(assessmentId,payload,narrative,calls);
+      const cost=estimateCostUsd(calls.reduce<PlanUsage|undefined>((t,c)=>c.usage?{inputTokens:(t?.inputTokens??0)+c.usage.inputTokens,outputTokens:(t?.outputTokens??0)+c.usage.outputTokens}:t,undefined));
+      await prisma.auditEvent.create({data:{assessmentId,eventType:plan.state==="READY"?"REPORT_GENERATED":"REPORT_GENERATION_FAILED",entityType:"ReportSnapshot",entityId:row.id,payload:{...meta,annualPlan:plan.state==="READY"?"READY":`UNAVAILABLE: ${plan.reason}`,annualPlanCalls:calls,annualPlanEstimatedCostUsd:cost} as any}});
+      if(plan.state!=="READY")throw new ApiError(422,"PLAN_NOT_ACCEPTED","Боловсруулсан төлөвлөгөө шалгалтад тэнцээгүй тул хадгалсангүй.");
+      return {...narrative,annualPlan:plan};
+    }finally{await prisma.reportSnapshot.updateMany({where:{id:row.id,generationLeaseId:leaseId},data:{generationLeaseId:null,generationLeaseExpiresAt:null}}).catch(()=>undefined);}
+  }
+
+  /** Adds a missing plan to an already published report as a NEW version: the earlier PDF and narrative are archived for good before the published pair changes. */
+  async recoverPublishedPlan(assessmentId:string,authorizedBy:string,reason:string):Promise<{state:"READY";contentHash:string}>{
+    const published=await this.readPublishedReport(assessmentId);
+    const row=await prisma.reportSnapshot.findFirst({where:{assessmentId,publishedAt:{not:null}},orderBy:{publishedAt:"desc"}});
+    if(!row)throw new ApiError(409,"REPORT_NOT_READY","Тайлан хараахан бэлэн болоогүй байна.");
+    const narrative=await this.generateMissingPlan(assessmentId,published.narrative,authorizedBy,reason);
+    await this.pdfArtifacts.archivePublished(row.id,assessmentId,{narrative:published.narrative,narrativeHash:row.narrativeHash,payloadHash:row.payloadHash});
+    const staged=await this.pdfArtifacts.stage(row.id,published.payload,narrative);
+    const before=row.narrativeHash;
+    const artifact=await this.pdfArtifacts.commit(staged,{narrative,narrativeHash:sha256Json(narrative),validation:row.validation},async(tx:any)=>{
+      await tx.auditEvent.create({data:{assessmentId,eventType:"REPORT_VALIDATED",entityType:"ReportSnapshot",entityId:row.id,payload:{operation:"ANNUAL_PLAN_RECOVERY",authorizedBy,previousNarrativeHash:before,narrativeHash:sha256Json(narrative)}}});
+    });
+    return {state:"READY",contentHash:artifact.contentHash};
   }
 
   async readPublishedReport(assessmentId:string){

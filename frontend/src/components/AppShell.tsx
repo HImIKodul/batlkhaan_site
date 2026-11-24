@@ -264,7 +264,7 @@ export function ShellHeader({route}:{route:RouteName}){
    <span className="mmri-shell-glint" aria-hidden="true"><i/></span>
    <a className="mmri-brand" href="#/" onClick={closeMenus} aria-label="BusinessMRI.mn - Нүүр">
     <span className="mmri-brand-copy">
-     <strong>BusinessMRI</strong>
+     <strong>BusinessMRI.mn</strong>
     </span>
    </a>
 

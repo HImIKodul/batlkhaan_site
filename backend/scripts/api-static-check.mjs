@@ -29,7 +29,11 @@ const expected=[
 // 2026-11-06: admin system customer-side endpoints
 "GET /api/v1/assessments/:assessmentId/review-status","POST /api/v1/billing/invoices/:invoiceId/dispute","GET /api/v1/companies/:companyId/disputes","POST /api/v1/support/cases",
   // Added by the functional-repair phase (MMRI-23, MMRI-24); security-reviewed: all three require a company-admin role, limit/offset are clamped, removal is advisory-locked with a last-owner guard.
-  "GET /api/v1/companies/:companyId/billing/invoices","GET /api/v1/companies/:companyId/members","DELETE /api/v1/companies/:companyId/members/:userId"
+  "GET /api/v1/companies/:companyId/billing/invoices","GET /api/v1/companies/:companyId/members","DELETE /api/v1/companies/:companyId/members/:userId",
+  // company logo (2026-11-22)
+  "GET /api/v1/companies/:companyId/logo","PUT /api/v1/companies/:companyId/logo","DELETE /api/v1/companies/:companyId/logo","GET /api/v1/assessments/:assessmentId/report/logo",
+  // consent for the five profile answers (decision 2): administrators read, the owner changes
+  "GET /api/v1/companies/:companyId/ai-profile-consent","PUT /api/v1/companies/:companyId/ai-profile-consent"
 ];
 // Admin routes are registered through a wrapper that authenticates and checks the permission server-side. Every route must name a permission
 // (only the /auth/ session routes may use null, and they still require a valid admin session).

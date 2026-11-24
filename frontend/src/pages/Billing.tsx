@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import { domainWithAbbr } from '../data/domainOrder';
+import { domainNameMn } from '../data/domainOrder';
+import DomainBadge from '../components/DomainBadge';
 import qrcode from 'qrcode-generator';
 import { AppShell,PageContainer,go } from '../components/AppShell';
 import { useAmbientEnvironment } from '../design/environment';
@@ -34,10 +35,25 @@ function NoPayableCode({invoice}:{invoice:BillingInvoice}){
  return <div className="billing-domain-qr__unavailable" role="status"><b>{invoice.provider==='MOCK'?'Туршилтын горим':'Төлбөрийн код бэлэн биш'}</b><span>{invoice.provider==='MOCK'?'Энэ нь бодит төлбөрийн код биш. Доорх туршилтын товчоор төлбөрийг баталгаажуулна.':invoice.provider==='MANUAL'?'Төлбөрийн код тохируулагдаагүй байна. Оператортой холбогдож төлбөрийн заавар авна уу.':'Банкнаас төлбөрийн код ирсэнгүй. Дахин оролдох эсвэл тусламжид хандана уу.'}</span>{links.map(u=><a key={u} href={u} target="_blank" rel="noopener noreferrer">Төлбөр хийх холбоос</a>)}</div>;
 }
 
+/** Same rule as the server: any app scheme except those a browser could execute. Links are used exactly as the provider sent them. */
+const payLink=(u:string)=>/^[a-z][a-z0-9+.-]{1,40}:\/\//i.test(u)&&!/^(javascript|data|vbscript|file|blob|about):/i.test(u);
+/** Bank apps that open this exact invoice. Custom app schemes only work on a phone, so the list is shown on touch devices; the short address works everywhere. */
+function BankLinks({invoice}:{invoice:BillingInvoice}){
+ const links=invoice.deeplinks.filter(x=>x.link&&payLink(x.link));const short=invoice.shortUrl&&/^https:\/\//i.test(invoice.shortUrl)?invoice.shortUrl:'';
+ if(!links.length&&!short)return null;
+ return <div className="billing-qr__banks">{links.length>0&&<><h2>Банкны аппаар төлөх</h2><ul>{links.map((x,i)=><li key={`${x.link}-${i}`}><a href={x.link} rel="noopener noreferrer">{x.logo&&/^https:\/\//i.test(x.logo)&&<img src={x.logo} alt="" width={36} height={36} loading="lazy" referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display='none'}}/>}<span>{x.description||x.name||'Банкны апп'}</span></a></li>)}</ul></>}{short&&<a className="billing-qr__short" href={short} target="_blank" rel="noopener noreferrer">Төлбөрийн холбоос нээх</a>}</div>;
+}
+/** Remaining validity of a provider code (server time limit). */
+function useSecondsLeft(expiresAt?:string|null){
+ const read=()=>expiresAt?Math.max(0,Math.floor((new Date(expiresAt).getTime()-Date.now())/1000)):null;const [left,setLeft]=useState<number|null>(read);
+ useEffect(()=>{setLeft(read());if(!expiresAt)return;const t=window.setInterval(()=>setLeft(read()),1000);return()=>window.clearInterval(t)},[expiresAt]);
+ return left;
+}
+
 export default function Billing(){
  const requestedArea=((sessionStorage.getItem('business:billingArea')||'marketing') as BusinessAreaId);const area=businessAreaById(requestedArea);const areaId=area.id;useAmbientEnvironment(areaId);const mode=sessionStorage.getItem('business:billingMode')==='retake'?'retake':'first';const code:BillingPlanCode=mode==='retake'?'RETAKE':'DIAGNOSTIC';const palette=areaReportPalette[area.id];
  const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
- const autoCreateRef=useRef('');
+ const autoCreateRef=useRef('');const left=useSecondsLeft(invoice&&openStatuses.has(invoice.status)?invoice.expiresAt:null);const expired=left===0;
  const plan=useMemo(()=>plans.find(p=>p.code===code)??null,[plans,code]);const amount=plan?.amountMnt??300000;
  const refresh=async()=>{if(!session.companyId)return null;const s=await api.getBillingStatus(session.companyId);setStatus(s);return s};
  const openSuccess=()=>{const active=document.activeElement;successRestoreRef.current=active instanceof HTMLElement?active:null;setShowSuccess(true)};
@@ -107,10 +123,10 @@ export default function Billing(){
  return <AppShell route="billing"><PageContainer className="billing-domain-page billing-domain-page--qr">
   <button type="button" className="billing-domain-back" onClick={()=>{window.location.hash='#/analysis'}}><span className="billing-domain-back__icon"><Icon name="back" size={20}/></span><span>Оношилгоо руу буцах</span></button>
   <section className="billing-qr" data-area={areaId} style={{'--c':`var(--mmri-domain-${areaId})`} as React.CSSProperties} aria-labelledby="billing-qr-title">
-   <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title">{domainWithAbbr(area.id)}</h1><strong className="billing-qr__price">{money(amount)}</strong></header>
+   <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title"><DomainBadge id={area.id}/> {domainNameMn(area.id)}</h1><strong className="billing-qr__price">{money(amount)}</strong></header>
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
    <div className="billing-qr__box">
-    {!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
+    {expired&&!demo?<div className="billing-qr__wait" role="status"><span>Кодын хугацаа дууссан</span></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
      :demo?<div className="billing-qr__demo-box"><QrCode text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
      :codeText?<QrCode text={codeText} label={`${area.name} оношилгооны төлбөрийн QR`}/>
      :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
@@ -121,6 +137,9 @@ export default function Billing(){
     <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||demoLeft===0}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
    </div>}
    {demo&&<p className="billing-qr__demo-note" role="note">Энэ бол туршилтын (DEMO) QR бөгөөд уншуулах шаардлагагүй. «Тест төлбөр хийх» товчийг дарахад тест төлбөр баталгаажиж, оношилгоо өөрөө нээгдэнэ.</p>}
+   {!demo&&invoice&&left!==null&&<p className={`billing-qr__expiry${expired?' is-expired':''}`}>{expired?'Энэ кодын хугацаа дууссан.':<>Кодын хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
+   {!demo&&invoice&&!expired&&<BankLinks invoice={invoice}/>}
+   {!demo&&invoice&&expired&&<Button loading={busy} onClick={()=>void create()}>Шинэ код үүсгэх</Button>}
    <p className="billing-qr__how">Банкныхаа аппликейшнээр QR кодыг уншуулж төлбөрөө хийнэ. Төлбөр баталгаажмагц оношилгоо автоматаар нээгдэнэ.</p>
    <p className={`billing-qr__status${invoice?' is-waiting':''}`} role="status" aria-live="polite">{invoice?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөрийн баталгаажуулалтыг хүлээж байна…'):''}</p>
    {invoice&&!demo&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}

@@ -34,6 +34,7 @@ import { AssessmentQueryService } from "./services/query-service.js";
 import { PrismaStrategyReportService, ReportGenerationInProgressError, ReportRegenerationNotAuthorizedError } from "../services/prisma-strategy-report-service.js";
 import { isResultTerminalAssessmentStatus } from "../services/assessment-lifecycle.js";
 import { createNarrativeProviderFromEnv, createAnnualPlanProviderFromEnv } from "./ai-report-provider.js";
+import { AI_PROFILE_CONSENT_VERSION, readAiProfileConsent, writeAiProfileConsent } from "../company/ai-profile-consent.js";
 import { BillingService } from "../billing/billing-service.js";
 import { TARGET_METHODOLOGY_VERSION } from "../methodology-target.js";
 import { OperationalMetrics, databaseReady, reportStorageReady, structuredRequestLog, validMetricsCredential } from "./observability.js";
@@ -278,6 +279,18 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   },false);
 
   /* MMRI-07: every company role that may use diagnosis/reports needs entitlement state + paid summary; invoice history stays OWNER/ADMIN-only (MMRI-23: paged). */
+  // Consent for sending five general profile answers to the AI provider. Reading: company administrators. Changing: the owner only.
+  router.add("GET","/api/v1/companies/:companyId/ai-profile-consent",async({res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN);
+    ok(res,await readAiProfileConsent(params.companyId));
+  });
+  router.add("PUT","/api/v1/companies/:companyId/ai-profile-consent",async({req,res,principal,params})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,["OWNER"]);
+    const body=await readJson(req,config.requestBodyLimitBytes);
+    if(typeof body.granted!=="boolean"||body.version!==AI_PROFILE_CONSENT_VERSION)throw badRequest("Зөвшөөрлийн мэдээлэл буруу байна. Хуудсаа шинэчилнэ үү.");
+    ok(res,await writeAiProfileConsent(params.companyId,principal!.userId,body.granted));
+  });
+
   router.add("GET","/api/v1/companies/:companyId/billing/status",async({res,principal,params,query})=>{
     const membership=await requireCompanyRole(principal!.userId,params.companyId,ALL_ROLES);
     ok(res,await billing.getCompanyStatus(params.companyId,{includeInvoices:COMPANY_ADMIN.includes(membership.role as CompanyRole),limit:Number(query.get("limit")??50),offset:Number(query.get("offset")??0)}));
