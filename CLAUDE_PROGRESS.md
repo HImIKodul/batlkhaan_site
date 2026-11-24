@@ -943,3 +943,5 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - Report gate: four domains ran on c77101a (52 PASS), Operations on this branch (13 PASS).
 - Plan evaluation in five domains used the local stand-in model: it proves schedule/coverage/references, not the writing of a real model.
 - Two stale static expectations updated (locked-payment label is sentence case; check button has a variant attribute).
+- Hero replaced (owner 2026-11-24, later brief): five equal overlapping cards in one row, column on phones, labels at the bottom; no emphasised centre.
+- Production env template: MMRI_AI_ANNUAL_PLAN=on is now explicit (was only a comment). Real-model case: ~/mmri-live-ai-case-marketing-v2; `live-plan-one.mts narrative` is a second capped request; Gmail token is revoked until the owner signs in again.
