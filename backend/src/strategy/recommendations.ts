@@ -301,7 +301,7 @@ export function buildRecommendations(
       // A reported absence names its capability and the company's own answer, so the priority states a fact of this diagnosis (original question and answer wording, unchanged).
       const said = absence && type === "LOCAL_IMPROVEMENT" ? absenceStatement(methodology, cell, absence[0]) : null;
       const op = absence && type === "LOCAL_IMPROVEMENT"
-        ? { ...opBase, title: `${opBase.title} (${category.nameMn})`, action: said ? `${said} ${opBase.action}` : opBase.action }
+        ? { ...opBase, title: `${opBase.title} (${category.nameMn})` }
         : (type === "EXECUTION" || type === "LOCAL_IMPROVEMENT")
         ? opBase
         : { ...opBase, title: `${opBase.title} (${category.nameMn})` };
@@ -334,7 +334,7 @@ export function buildRecommendations(
         sourceTraceIds: [...finding.sourceTraceIds, `recommendation:${id}`],
         affectedScopes: [{ findingId: finding.id, categoryId: finding.categoryId, cellId: finding.cellId }],
         causalInterpretation: "DIAGNOSTIC_HYPOTHESIS_NOT_CAUSAL",
-        ...(absence && type === "LOCAL_IMPROVEMENT" ? { basis: "REPORTED_ABSENCE" as const, absenceQuestionIds: absence } : {})
+        ...(absence && type === "LOCAL_IMPROVEMENT" ? { basis: "REPORTED_ABSENCE" as const, absenceQuestionIds: absence, ...(said ? { statedMn: said } : {}) } : {})
       });
     }
   }

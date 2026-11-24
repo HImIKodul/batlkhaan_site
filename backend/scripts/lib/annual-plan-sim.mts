@@ -64,7 +64,7 @@ export const sim:AnnualPlanProvider={async generate(input:PlanInput){
  while(left.length){const k=Math.max(0,left.findIndex(f=>!input.dependencyHints.some(h=>h.then===f.ref&&left.some(x=>x.ref===h.first))));order.push(...left.splice(k,1))}
  /* one initiative per fix type: findings of different capabilities that call for the same fix are merged */
  const groups:Array<{code:string;refs:string[];caps:string[];group:string}>=[];
- for(const f of order){const g=groups.find(x=>x.code===f.interventionCode);if(g){g.refs.push(f.ref);if(!g.caps.includes(f.capabilityMn))g.caps.push(f.capabilityMn)}else groups.push({code:f.interventionCode,refs:[f.ref],caps:[f.capabilityMn],group:f.dimensionGroupMn||''})}
+ for(const f of order){const g=groups.find(x=>x.code===f.interventionCode&&x.refs.length<3);if(g){g.refs.push(f.ref);if(!g.caps.includes(f.capabilityMn))g.caps.push(f.capabilityMn)}else groups.push({code:f.interventionCode,refs:[f.ref],caps:[f.capabilityMn],group:f.dimensionGroupMn||''})}
  const evCaps=[...new Set(evF.map(f=>f.capabilityMn).filter(Boolean))];const gapCaps=[...new Set(input.evidenceChecks.map(v=>v.capabilityMn).filter(Boolean))].filter(c=>!evCaps.includes(c));
  const bodyCount=Math.max(2,Math.min(5,Math.ceil(groups.length/1.4)+(evF.length?1:0)+(seed%2)));
  const per=Math.max(1,Math.ceil(groups.length/Math.max(1,bodyCount-(evF.length?1:0))));
@@ -82,7 +82,7 @@ export const sim:AnnualPlanProvider={async generate(input:PlanInput){
   const chunk=chunks[s2];const dur=s2===0?firstLen:Math.floor(restLen*(s2===chunks.length-1?0.9:1));
   const g0:any=chunk[0];const grp=g0.group?`: ${String(g0.group).toLowerCase()}`:'';
   const heading=s2===0?`${HEADS[0]}${grp}`:s2===1?`${HEADS[1]}${grp}`:HEADS[Math.min(s2,HEADS.length-1)];
-  const actions=chunk.map((g:any)=>g.review||g.decision?{textMn:g.text,recommendationIds:g.refs}:{textMn:(HOW[g.code]??FALLBACK).replace('{c}',q(g.caps)),recommendationIds:g.refs});
+  const actions=chunk.map((g:any)=>g.review||g.decision?{textMn:g.text,recommendationIds:g.refs}:{textMn:(groups.find(x=>x.code===g.code)!==g?'Туршилтаар батлагдсан богино ажлын дарааллыг {c} багт танилцуулж, тэдний ачаалал, хэрэглэгчид тааруулан өөрчилсний дараа өдөр тутмын хэрэглээнд оруулна.':HOW[g.code]??FALLBACK).replace('{c}',q(g.caps)),recommendationIds:g.refs});
   if(s2===0&&gapCaps.length)actions.push({textMn:`${q(gapCaps.slice(0,3))} чиглэлд одоогийн байдлыг үнэлэхэд мэдээлэл дутуу байгаа тул эхний сард ажлын хэсэг хуралдаж, юуг тодруулах шаардлагатайг нэг хуудсаар тэмдэглэнэ.`,recommendationIds:input.evidenceChecks.map(v=>v.ref)});
   const prev=stages.length?stages[stages.length-1].id:null;
   stages.push({id:`E${stages.length+1}`,headingMn:heading,startDay:start,durationDays:Math.max(21,dur),dependsOnStageIds:prev?[prev]:[],dependencyNoteMn:prev&&s2%2===1?'Энэ шатны шийдвэр өмнөх шатанд туршсан зүйлийн үр дүнд тулгуурлана.':null,actions:actions.slice(0,5)});

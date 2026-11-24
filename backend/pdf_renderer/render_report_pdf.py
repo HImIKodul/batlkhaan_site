@@ -611,7 +611,7 @@ def action_card(action, index, st, content_width):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     facts = Table([
-        [p("Хийх ажил", st["small_bold"]), p(sentence_case(action.get("actionMn") or action.get("narrativeMn") or "-"), st["body_compact"])],
+        [p("Хийх ажил", st["small_bold"]), p(((action.get("statedMn") + " ") if action.get("statedMn") else "") + sentence_case(action.get("actionMn") or action.get("narrativeMn") or "-"), st["body_compact"])],
         [p("Гарц", st["small_bold"]), p(sentence_case(action.get("deliverableMn") or "-"), st["body_compact"])],
         [p("Хэмжүүр", st["small_bold"]), p(sentence_case(action.get("kpiMn") or "-"), st["body_compact"])],
     ] + ([[p("Тайлбар", st["small_bold"]), p(explanation_text(action.get("explanationMn"), 300), st["explain"])]] if explanation_text(action.get("explanationMn"), 300) else []), colWidths=[24 * mm, 144 * mm])

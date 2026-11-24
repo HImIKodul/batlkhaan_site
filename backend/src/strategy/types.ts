@@ -87,6 +87,8 @@ export interface Recommendation {
   /** Present when the action rests on the company's own statement that a practice is not done (too little evidence for a score-based judgement); absent for measured weaknesses. */
   basis?: "REPORTED_ABSENCE";
   absenceQuestionIds?: string[];
+  /** The company's own answer in the original wording, shown once with the priority on page 2. */
+  statedMn?: string;
 }
 
 export interface RecommendationResult {

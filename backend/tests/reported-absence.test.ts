@@ -9,8 +9,8 @@ describe("Marketing: explicit 'not done' answers become concrete priorities", ()
   const x = load("marketing"), before = x.run({ reportedAbsence: false }), after = x.run();
   it("before: five generic evidence requests, four of them about explicitly answered absences", () => { expect(critical(before).map(r => r.id)).toEqual(x.f.legacyCritical); expect(critical(before).every(r => r.type === "COLLECT_EVIDENCE")).toBe(true); });
   it("after: five distinct capabilities, each quoting the company's own answer", () => {
-    const c = critical(after); expect(c.length).toBe(5); expect(new Set(c.map(r => r.categoryId)).size).toBe(5); expect(new Set(c.map(r => r.actionMn)).size).toBe(5);
-    for (const r of c) { expect([r.type, r.basis]).toEqual(["LOCAL_IMPROVEMENT", "REPORTED_ABSENCE"]); const cell: any = x.snapshot.cells.get(`${r.categoryId}:${r.cellId}`); const e = cell.directEvidence.find((q: any) => q.questionId === r.absenceQuestionIds![0]); expect(e.score).toBe(0); expect(r.actionMn).toContain(e.optionLabel.replace(/\.$/, "")); expect(r.actionMn).toContain(x.m.questions.find((q: any) => q.id === e.questionId).textMn.replace(/[.?]+$/, "")); expect(r.priority).toBeLessThanOrEqual(55); }
+    const c = critical(after); expect(c.length).toBe(5); expect(new Set(c.map(r => r.categoryId)).size).toBe(5); expect(new Set(c.map(r => r.statedMn)).size).toBe(5);
+    for (const r of c) { expect([r.type, r.basis]).toEqual(["LOCAL_IMPROVEMENT", "REPORTED_ABSENCE"]); const cell: any = x.snapshot.cells.get(`${r.categoryId}:${r.cellId}`); const e = cell.directEvidence.find((q: any) => q.questionId === r.absenceQuestionIds![0]); expect(e.score).toBe(0); expect(r.statedMn).toContain(e.optionLabel.replace(/\.$/, "")); expect(r.statedMn).toContain(x.m.questions.find((q: any) => q.id === e.questionId).textMn.replace(/[.?]+$/, "")); expect(r.priority).toBeLessThanOrEqual(55); }
   });
   it("every confirmed absence leaves the evidence list, nothing else does", () => {
     const abs = after.candidates.filter(r => r.basis); expect(abs.length).toBe(10); const key = (r: any) => `${r.categoryId}:${r.cellId}`; const absKeys = new Set(abs.map(key));

@@ -27,6 +27,8 @@ export interface ReportPdfAction {
   actionMn:string;
   deliverableMn:string;
   kpiMn:string;
+  /** Present only for a reported absence (newer reports), so earlier sources and their hashes are unchanged. */
+  statedMn?:string;
   ownerRoleLabelMn:string;
   narrativeMn:string;
   /** Approved S06 explanation (reviewer or AI wording) when it differs from the deterministic default. MMRI-13. */
@@ -167,7 +169,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
       claimTextByTrace(baseline,"S05",`weakness:${w.id}`)||claimTextByTrace(baseline,"S05",`category:${w.categoryId}`))
   }));
   const criticalActions=payload.priorityActions.slice(0,5).map(a=>({
-    id:a.id,titleMn:a.titleMn,actionMn:a.actionMn,deliverableMn:a.deliverableMn,kpiMn:a.kpiMn,
+    id:a.id,titleMn:a.titleMn,actionMn:a.actionMn,...(a.statedMn?{statedMn:a.statedMn}:{}),deliverableMn:a.deliverableMn,kpiMn:a.kpiMn,
     ownerRoleLabelMn:payload.displayDictionary[a.ownerRoleId]||a.ownerRoleId,currentScore:a.currentCellScore,targetScore:a.targetCellScore,
     narrativeMn:claimTextByRef(narrative,"S06","recommendationId",a.id)||`${a.titleMn}. ${a.actionMn}`,
     explanationMn:editedExplanation(claimTextByRef(narrative,"S06","recommendationId",a.id),claimTextByRef(baseline,"S06","recommendationId",a.id))
