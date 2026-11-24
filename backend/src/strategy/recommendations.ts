@@ -1,4 +1,5 @@
 import type { MethodologyDefinition, ProfileAnswer, RuntimeSnapshot } from "../engine/types.js";
+import { reportedAbsence } from "./reported-absence.js";
 import type { PriorityBand, Recommendation, RecommendationResult, RecommendationType, RootCauseResult } from "./types.js";
 
 const clamp = (v: number, lo = 0, hi = 1): number => Math.min(hi, Math.max(lo, v));
@@ -103,6 +104,12 @@ function recommendationOwner(methodology: MethodologyDefinition, categoryId: str
   return bestRole !== defaultOwner && bestFit - defaultFit >= 0.20 ? bestRole : defaultOwner;
 }
 
+/** "Та «question» асуултад «answer» гэж хариулсан." from the frozen question bank wording; null when the question is not in the definition. */
+function absenceStatement(methodology: MethodologyDefinition, cell: { directEvidence: Array<{ questionId: string; optionLabel: string }> }, questionId: string): string | null {
+  const question = methodology.questions.find(q => q.id === questionId)?.textMn; const answer = cell.directEvidence.find(e => e.questionId === questionId)?.optionLabel;
+  return question && answer ? `Та «${question.trim().replace(/[.?]+$/, "")}» гэсэн асуултад «${answer.trim().replace(/\.$/, "")}» гэж хариулсан.` : null;
+}
+
 function mergeRecommendation(primary: Recommendation, other: Recommendation): Recommendation {
   const affectedScopes = [...new Map([...scopesOf(primary), ...scopesOf(other)].map(x => [`${x.findingId}:${x.categoryId}:${x.cellId}`, x])).values()];
   const affectedCategories = unique(affectedScopes.map(x => x.categoryId));
@@ -202,7 +209,9 @@ export function buildRecommendations(
   methodology: MethodologyDefinition,
   snapshot: RuntimeSnapshot,
   rootResult: RootCauseResult,
-  profileAnswers?: ProfileAnswer[]
+  profileAnswers?: ProfileAnswer[],
+  /** `reportedAbsence: false` reproduces strategies made before the rule existed (historical diagnoses only). */
+  options: { reportedAbsence?: boolean } = {}
 ): RecommendationResult {
   const contract = methodology.contracts.recommendation;
   const rootContract = methodology.contracts.rootCause;
@@ -230,8 +239,12 @@ export function buildRecommendations(
     const unresolved = cell.status === "UNRESOLVED" || finding.classification === "EVIDENCE_GAP";
     const conflicted = cell.status === "REVIEW_REQUIRED" || cell.hasHardContradiction;
 
+    // Confirmed absence is not missing evidence (see reported-absence.ts). Applies only where the cell would otherwise become a generic evidence request; conflicts still come first.
+    const absence = !conflicted && unresolved && options.reportedAbsence !== false ? reportedAbsence(cell, Number(contract.eligibility.localImprovement.cellValueBelow)) : null;
+
     // Evidence problems must be resolved before this finding can generate an execution recommendation.
     if (conflicted) types.push("RESOLVE_EVIDENCE");
+    else if (absence) types.push("LOCAL_IMPROVEMENT"); // still capped by localImprovement.priorityCap; the low evidence factor keeps lowering its priority
     else if (unresolved) types.push("COLLECT_EVIDENCE");
     else {
       if (["PRIMARY_ROOT_CAUSE", "CONTRIBUTING_CAUSE"].includes(finding.classification) && evidence >= Number(contract.eligibility.execution.minimumEvidenceFactor)) types.push("EXECUTION");
@@ -285,7 +298,11 @@ export function buildRecommendations(
       const opBase = (type === "EXECUTION" || type === "LOCAL_IMPROVEMENT")
         ? { title: iv.title, action: iv.action, deliverable: iv.deliverable, kpi: iv.kpi }
         : evidenceOperation(type);
-      const op = (type === "EXECUTION" || type === "LOCAL_IMPROVEMENT")
+      // A reported absence names its capability and the company's own answer, so the priority states a fact of this diagnosis (original question and answer wording, unchanged).
+      const said = absence && type === "LOCAL_IMPROVEMENT" ? absenceStatement(methodology, cell, absence[0]) : null;
+      const op = absence && type === "LOCAL_IMPROVEMENT"
+        ? { ...opBase, title: `${opBase.title} (${category.nameMn})`, action: said ? `${said} ${opBase.action}` : opBase.action }
+        : (type === "EXECUTION" || type === "LOCAL_IMPROVEMENT")
         ? opBase
         : { ...opBase, title: `${opBase.title} (${category.nameMn})` };
       const target = type === "EXECUTION" || type === "LOCAL_IMPROVEMENT"
@@ -316,13 +333,16 @@ export function buildRecommendations(
         components,
         sourceTraceIds: [...finding.sourceTraceIds, `recommendation:${id}`],
         affectedScopes: [{ findingId: finding.id, categoryId: finding.categoryId, cellId: finding.cellId }],
-        causalInterpretation: "DIAGNOSTIC_HYPOTHESIS_NOT_CAUSAL"
+        causalInterpretation: "DIAGNOSTIC_HYPOTHESIS_NOT_CAUSAL",
+        ...(absence && type === "LOCAL_IMPROVEMENT" ? { basis: "REPORTED_ABSENCE" as const, absenceQuestionIds: absence } : {})
       });
     }
   }
 
   // Keep one visible action for identical intervention templates across categories, while preserving all source traces/scopes.
-  let execution = consolidate(candidates.filter(x => x.type === "EXECUTION" || x.type === "LOCAL_IMPROVEMENT"), x => x.interventionCode);
+  let execution = consolidate(candidates.filter(x => (x.type === "EXECUTION" || x.type === "LOCAL_IMPROVEMENT") && x.basis !== "REPORTED_ABSENCE"), x => x.interventionCode);
+  // Reported absences: one per capability and intervention (contract ordering.deduplicateBy), then one per capability, strongest first. They never displace a measured action (see below).
+  const absenceActions = consolidate(consolidate(candidates.filter(x => x.basis === "REPORTED_ABSENCE"), x => `${x.categoryId}:${x.interventionCode}`), x => x.categoryId);
   const evidenceActions = consolidate(candidates.filter(x => x.type === "VALIDATE_CAUSE" || x.type === "COLLECT_EVIDENCE" || x.type === "RESOLVE_EVIDENCE"), x => `${x.type}:${x.categoryId}`);
 
   const suppressed: Recommendation[] = [];
@@ -352,6 +372,10 @@ export function buildRecommendations(
 
   execution = dependencyAwareSort(execution, rootContract, Number(contract.ordering.dependencyPrecedenceWhenPriorityDifferenceBelow ?? 10))
     .slice(0, visibleExecutionLimit);
+  // Measured actions keep their places and order; free places go to reported absences of capabilities not shown yet, before any generic evidence request.
+  const shownCategories = new Set(execution.map(x => x.categoryId));
+  execution = [...execution, ...dependencyAwareSort(absenceActions.filter(x => !shownCategories.has(x.categoryId)), rootContract, Number(contract.ordering.dependencyPrecedenceWhenPriorityDifferenceBelow ?? 10)).slice(0, Math.max(0, visibleExecutionLimit - execution.length))];
+  const absenceCategories = new Set(absenceActions.map(x => x.categoryId));
 
   // If the diagnosis is not yet strong enough to support five execution/local
   // interventions, evidence-resolution work is itself the correct grounded next
@@ -359,7 +383,10 @@ export function buildRecommendations(
   const baseEvidenceLimit = Number(contract.ordering.maxValidationEvidenceActions ?? 2);
   const evidenceFillNeeded = Math.max(0, contractExecutionLimit - execution.length);
   const visibleEvidenceLimit = Math.max(baseEvidenceLimit, evidenceFillNeeded);
-  const evidence = dependencyAwareSort(evidenceActions, rootContract, Number(contract.ordering.dependencyPrecedenceWhenPriorityDifferenceBelow ?? 10))
+  // A generic request about a capability whose missing practice is already known comes last (stable otherwise).
+  const evidenceLast = (x: Recommendation): boolean => x.type === "COLLECT_EVIDENCE" && absenceCategories.has(x.categoryId);
+  const evidenceSorted = dependencyAwareSort(evidenceActions, rootContract, Number(contract.ordering.dependencyPrecedenceWhenPriorityDifferenceBelow ?? 10));
+  const evidence = [...evidenceSorted.filter(x => !evidenceLast(x)), ...evidenceSorted.filter(evidenceLast)]
     .slice(0, visibleEvidenceLimit);
 
   return {

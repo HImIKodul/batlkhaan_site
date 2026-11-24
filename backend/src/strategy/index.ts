@@ -8,10 +8,11 @@ export * from "./root-cause.js";
 export * from "./recommendations.js";
 export * from "./action-plan.js";
 export * from "./frozen-plan.js";
+export * from "./reported-absence.js";
 
-export function runStrategyPipeline(input: StrategyInput): StrategyResult {
+export function runStrategyPipeline(input: StrategyInput, options: { reportedAbsence?: boolean } = {}): StrategyResult {
   const rootCause = analyzeRootCauses(input.methodology, input.snapshot);
-  const recommendations = buildRecommendations(input.methodology, input.snapshot, rootCause, input.profileAnswers);
+  const recommendations = buildRecommendations(input.methodology, input.snapshot, rootCause, input.profileAnswers, options);
   const actionPlan = buildActionPlan(input.methodology, recommendations, input.profileAnswers);
   return { rootCause, recommendations, actionPlan };
 }

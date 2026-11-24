@@ -84,6 +84,9 @@ export interface Recommendation {
   affectedScopes: Array<{ findingId: string; categoryId: string; cellId: string }>;
   causalInterpretation: "DIAGNOSTIC_HYPOTHESIS_NOT_CAUSAL";
   suppressedReason?: string;
+  /** Present when the action rests on the company's own statement that a practice is not done (too little evidence for a score-based judgement); absent for measured weaknesses. */
+  basis?: "REPORTED_ABSENCE";
+  absenceQuestionIds?: string[];
 }
 
 export interface RecommendationResult {

@@ -44,7 +44,7 @@ Run targeted checks while working. At meaningful milestones:
 4. update `CLAUDE_PROGRESS.md`
 5. create a git checkpoint
 
-For Report/PDF changes also run the existing targeted backend PDF/report regressions and verify a real generated PDF. Current PDF generator baseline: `MMRI-PDF-1.7-BUSINESSMRI-PLAN`, exactly 3 A4 pages; executive conclusion target 80–160 words. Never weaken a regression merely to make it green; first determine whether the expectation is stale or production behavior is wrong.
+For Report/PDF changes also run the existing targeted backend PDF/report regressions and verify a real generated PDF. Current PDF generator baseline: `MMRI-PDF-1.8-BUSINESSMRI-PLAN`, exactly 3 A4 pages; executive conclusion target 80–160 words. Never weaken a regression merely to make it green; first determine whether the expectation is stale or production behavior is wrong.
 
 ## Safe workflow
 Work one coherent surface/batch at a time. Preserve business behavior. If source differs from the latest checkpoint, inspect the diff before overwriting. Do not delete user data, reset PostgreSQL, change `.env`, or alter production credentials for a design task.

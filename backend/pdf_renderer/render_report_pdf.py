@@ -32,7 +32,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-GENERATOR_VERSION = "MMRI-PDF-1.7-BUSINESSMRI-PLAN"
+GENERATOR_VERSION = "MMRI-PDF-1.8-BUSINESSMRI-PLAN"
 # Noto Sans (SIL OFL 1.1) ships next to this script so the renderer does not depend on the server's font packages.
 # Resolution order: environment override, bundled fonts/, legacy Linux system path.
 _FONT_DIR = Path(__file__).resolve().parent / "fonts"
@@ -60,12 +60,12 @@ ACCENT = colors.HexColor("#1F7A55")
 ACCENT_DARK = colors.HexColor("#14523B")
 ACCENT_LIGHT = colors.HexColor("#E8F4EE")
 # Domain colour (fills/strokes/eyebrows). Strength/risk tones stay green/red so domain colour never reads as status.
-DOMAIN_COLORS = {
-    "marketing": ("#FF3D8D", "#D81B70", "#FFE9F2"),
-    "it": ("#00A6FF", "#007AC0", "#E0F4FF"),
-    "finance": ("#FFD000", "#8F6B00", "#FFF6CC"),
-    "people": ("#7C4DFF", "#5A31D6", "#EFE9FF"),
-    "operations": ("#FF6A00", "#C24E00", "#FFEBDC"),
+DOMAIN_COLORS = {  # same accent and ink as the website (frontend/src/design/tokens.ts); third value: pale tint of the accent
+    "marketing": ("#34D3A0", "#075F4C", "#E6F9F2"),
+    "it": ("#38B6FF", "#0F6E8C", "#E6F6FF"),
+    "finance": ("#F5B335", "#80500A", "#FEF5E3"),
+    "people": ("#9A7DFF", "#5B33A6", "#F2EEFF"),
+    "operations": ("#E63F9A", "#841E70", "#FCE7F3"),
 }
 DOMAIN = ACCENT
 DOMAIN_INK = ACCENT

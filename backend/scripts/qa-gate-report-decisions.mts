@@ -21,7 +21,7 @@ const S = snaps.filter((s: any) => !(s.narrative as any)?.annualPlan)[0] as any;
 const A = S.assessmentId, root = path.resolve(process.env.MMRI_REPORT_STORAGE_DIR!);
 // make it a genuine current file, then label it as made by the earlier generator
 process.env.MMRI_PDF_ALLOW_GENERATOR_UPGRADE = "YES"; let art = await svc.getOrCreateReportPdf(A); delete process.env.MMRI_PDF_ALLOW_GENERATOR_UPGRADE;
-ok("new reports carry the new generator version", art.generatorVersion === MMRI_PDF_GENERATOR_VERSION && art.storageKey.includes("1_7"), art);
+ok("new reports carry the new generator version", art.generatorVersion === MMRI_PDF_GENERATOR_VERSION && art.storageKey.includes("1_8"), art);
 await prisma.reportArtifact.update({ where: { reportSnapshotId_kind: { reportSnapshotId: S.id, kind: "PDF" } } as any, data: { generatorVersion: "MMRI-PDF-1.6-BUSINESSMRI-BRAND", sourceHash: "0".repeat(64) } });
 const before = sha(art.absolutePath);
 const served = await svc.getOrCreateReportPdf(A), forced = await svc.getOrCreateReportPdf(A, true);

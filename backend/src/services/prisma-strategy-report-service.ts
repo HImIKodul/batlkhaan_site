@@ -110,10 +110,13 @@ export class PrismaStrategyReportService {
   private async planEvidence(assessmentId:string,payload:FrozenReportPayload):Promise<PlanEvidenceLine[]>{
     try{
       const out:PlanEvidenceLine[]=[];
+      const seenCategories=new Set<string>();
       for(const [i,a] of payload.priorityActions.entries()){
         /* Findings carry methodology external ids ("MS01"); question.categoryId is a database id ("3.0.3:MS01"), so the join goes through the category. */
         const rows=await prisma.answer.findMany({where:{assessmentId,active:true,question:{category:{externalId:a.categoryId}}},select:{status:true,optionIndex:true,question:{select:{externalId:true,textMn:true,primaryCell:{select:{cellTemplate:{select:{externalId:true}}}},options:{select:{optionIndex:true,labelMn:true,score:true}}}}},orderBy:{question:{externalId:"asc"}}});
-        out.push(planEvidenceLine(`F${i+1}`,a.cellId,rows.map((r:any)=>{const o=r.question.options.find((x:any)=>x.optionIndex===r.optionIndex);return {status:r.status,cellId:r.question.primaryCell.cellTemplate.externalId,questionMn:r.question.textMn,answerMn:o?.labelMn??null,score:o?.score==null?null:Number(o.score)}})));
+        /* Two findings of one capability: the second shows only the answers about its own dimension, so no answer is given twice. */
+        const again=seenCategories.has(a.categoryId);seenCategories.add(a.categoryId);
+        out.push(planEvidenceLine(`F${i+1}`,a.cellId,rows.filter((r:any)=>!again||r.question.primaryCell.cellTemplate.externalId===a.cellId).map((r:any)=>{const o=r.question.options.find((x:any)=>x.optionIndex===r.optionIndex);return {status:r.status,cellId:r.question.primaryCell.cellTemplate.externalId,questionMn:r.question.textMn,answerMn:o?.labelMn??null,score:o?.score==null?null:Number(o.score)}})));
       }
       return out;
     }catch{return []}
@@ -157,7 +160,13 @@ export class PrismaStrategyReportService {
     if(!TERMINAL.has(assessment.status))throw new Error(`Strategy/report requires terminal assessment; current status ${assessment.status}`);
     const methodology=await this.cache.get(assessment.methodologyVersionId);
     const snapshot=await this.assessmentEngine.getRuntimeSnapshot(assessmentId) as RuntimeSnapshot;
-    const strategy=runStrategyPipeline({methodology,snapshot,profileAnswers:profileAnswers(assessment.profile)});
+    let strategy=runStrategyPipeline({methodology,snapshot,profileAnswers:profileAnswers(assessment.profile)});
+    /* A strategy already stored for this diagnosis keeps the rule it was made with: if the stored recommendation ids are not the ones computed now, the earlier rule is used, so nothing historical is re-decided. */
+    const stored=await prisma.strategyRun.findUnique({where:{assessmentId},select:{recommendations:{select:{externalId:true}}}});
+    if(stored){
+      const have=new Set(stored.recommendations.map((r:any)=>r.externalId));
+      if(have.size!==strategy.recommendations.candidates.length||strategy.recommendations.candidates.some((c:any)=>!have.has(c.id)))strategy=runStrategyPipeline({methodology,snapshot,profileAnswers:profileAnswers(assessment.profile)},{reportedAbsence:false});
+    }
     const snapshotHash=sha256Json(snapshotHashable(snapshot));
     return {assessment,methodology,snapshot,strategy,snapshotHash,profileAnswers:profileAnswers(assessment.profile)};
   }
