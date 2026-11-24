@@ -365,7 +365,10 @@ body.mmri-prism-page :is(.mmri-guide2__track-btn,.mmri-guide2__nav-btn,.mmri-gui
 
 /* Guide 1: the three steps all sit on the right (route + stations on the left edge of that column); the five facts stack on the left (desktop). */
 .mmri-guide2__about:not([data-paged]) .mmri-guide2__metric{min-height:clamp(96px,15vh,132px)}.mmri-guide2__notice{grid-area:notice;display:grid;gap:2px;padding:10px 14px 11px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.9);border-left:3px solid #E2B03C;background:var(--wp-spec) top/100% 45% no-repeat,var(--hg-l1);box-shadow:inset 0 1.5px 0 #fff,0 14px 26px -20px rgba(30,60,120,.4);align-self:start}
-@media (min-width:1001px) and (min-height:741px){.mmri-guide2__howto:not([data-compact]) .mmri-guide2__devices{grid-template-columns:max-content max-content}}.mmri-guide2__tab.is-active{color:#0a1f4d;border-color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 0 18px -2px var(--acc);background:#fff}
+/* The two pictures always fit their own column (they used to spill over the step list). */
+.mmri-guide2__howto:not([data-compact]) .mmri-guide2__walk-body{container-type:inline-size}
+@media (min-width:1001px) and (min-height:741px){.mmri-guide2__howto:not([data-compact]) .mmri-guide2__devices{--H:min(clamp(380px,calc(100dvh - 400px),520px),calc((100cqw + 20px) / 2.1));grid-template-columns:max-content max-content}.mmri-guide2__howto:not([data-compact]) .mmri-guide2__walk-copy:has(.mmri-guide2__deliver)~.mmri-guide2__devices,.mmri-guide2__howto:not([data-compact]) .mmri-guide2__deliver~.mmri-guide2__devices{--H:min(clamp(320px,calc(100dvh - 530px),460px),calc((100cqw + 20px) / 2.1))}}
+.mmri-guide2__tab.is-active{color:#0a1f4d;border-color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 0 18px -2px var(--acc);background:#fff}
 @media (max-width:1000px),(max-height:740px){.mmri-guide2__tabs{display:flex;flex-wrap:wrap;overflow:visible;gap:6px;padding-bottom:2px}.mmri-guide2__tab{flex:0 0 auto;white-space:nowrap;padding:4px 12px}}
 
 .mmri-home2__guide .mmri-shell-glint{z-index:1}
@@ -490,33 +493,39 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 /* Phones: a deliberate arrangement, not a shrunken desktop: wider plates, a small diagonal step, a steeper elevated view, label type 11-14px. */
 @media (max-width:560px){.hx{--pw:72;--ph:19;--t:4.2;--x0:15;--y0:3;--pitch:23.6;--fan:3.2;--orb:9.5cqw;--fs:3.9cqw;width:min(100%,400px);margin:10px auto 12px;aspect-ratio:1.14;top:0}
  .hx__scene{perspective:1000cqw;perspective-origin:50% 0%}.hx__stack{transform:rotateX(50deg) rotateZ(0deg)}.hx3{--r:4cqw}.hx3__left,.hx3__right{display:none}.hx3__top{padding:0 calc(var(--orb) * 1.5);border-radius:4cqw}.hx3__name{font-size:clamp(11px,var(--fs),14px);white-space:normal;text-wrap:balance}}
-/* HERO: five liquid-glass cards as ONE closed block: three across the top, two below starting at the left edge and sharing the same total width, so nothing reads as a missing sixth card. One gutter everywhere,
-   domain order left to right, one slightly turned crystal plane. Colours are the diagnosis-card tokens (--mmri-domain-*). Hover never changes geometry: it brightens the rim and fades in an outer glow (::before). */
-.hx{--cw:31;--ch:37;--gx:2.4;--gy:2.8;--step:0;--bw:47.7;--bh:33;--r:4.2cqw;--orb:1.9cqw;--fs:2.05cqw;top:0;width:min(100%,clamp(340px,calc((100dvh - 345px)*1.31),800px));aspect-ratio:1.31}
-.hx__scene{perspective:150cqw;perspective-origin:30% 45%}
-.hx__stack{transform:rotateY(-9deg) rotateX(3deg);transform-origin:40% 50%;height:100%;top:0;transform-style:flat}
-.hx__scene::before{content:"";position:absolute;right:-4cqw;bottom:-2cqw;width:56cqw;height:50cqw;pointer-events:none;background:radial-gradient(closest-side,rgba(70,150,255,.3),rgba(120,90,255,.12) 55%,transparent)}
-.hx3{--col:var(--i);--row:0;left:calc((1.2 + var(--col) * (var(--cw) + var(--gx))) * 1cqw);top:calc((1 + var(--col) * var(--step) + var(--row) * (var(--ch) + var(--gy))) * 1cqw);width:calc(var(--cw) * 1cqw);height:calc(var(--ch) * 1cqw);transform-style:flat;transform:none;filter:drop-shadow(0 1.6cqw 2.4cqw rgba(0,8,40,.4))}
-.hx3:nth-child(n+4){left:calc((1.2 + (var(--i) - 3) * (var(--bw) + var(--gx))) * 1cqw);width:calc(var(--bw) * 1cqw);height:calc(var(--bh) * 1cqw);top:calc((1 + var(--ch) + var(--gy)) * 1cqw)}.hx3:nth-child(n+4) .hx3__name{max-width:calc((var(--bw) - 8) * 1cqw)}
+/* HERO: five identical liquid-glass cards, two above, one in the centre, two below. The centre card lies over the inner corners of the other four; each label is centred in the part of its card that stays free, so no label
+   is ever covered. --w/--h size of every card, --g gap between the columns, --o vertical overlap (all in cqw). Colours are the diagnosis-card tokens (--mmri-domain-*). Hover never changes geometry. */
+.hx{--w:48.5;--h:28;--o:6.5;--g:3;--r:4cqw;--orb:0cqw;--fs:2.65cqw;top:0;width:min(100%,clamp(340px,calc((100dvh - 345px)*1.4),612px));margin-inline:auto 0;aspect-ratio:100/71}
+.hx__scene{perspective:none}
+.hx__stack{transform:none;height:100%;top:0;transform-style:flat}
+.hx3__orb{display:none}
+.hx__scene::before{content:"";position:absolute;inset:12% 18%;pointer-events:none;background:radial-gradient(closest-side,rgba(70,150,255,.3),rgba(120,90,255,.12) 55%,transparent)}
+.hx3{--x:0;--y:0;left:calc(var(--x) * (var(--w) + var(--g)) * 1cqw);top:calc(var(--y) * (var(--h) - var(--o)) * 1cqw);width:calc(var(--w) * 1cqw);height:calc(var(--h) * 1cqw);transform-style:flat;transform:none;filter:none}
+.hx3:nth-child(2){--x:1}.hx3:nth-child(3){--x:.5;--y:1;z-index:2}.hx3:nth-child(4){--y:2}.hx3:nth-child(5){--x:1;--y:2}
+.hx3:nth-child(-n+2) .hx3__top{padding-bottom:calc(var(--o) * 1cqw)}.hx3:nth-child(n+4) .hx3__top{padding-top:calc(var(--o) * 1cqw)}
 .hx3__face,.hx3__shadow{display:none}
-.hx3__top{transform:none;align-items:flex-end;justify-content:flex-start;text-align:left;gap:1.2cqw;padding:0 1.6cqw 2.6cqw 2cqw;border-radius:var(--r);border:.3cqw solid rgba(255,255,255,.78);-webkit-backdrop-filter:blur(.7cqw) saturate(1.6);backdrop-filter:blur(.7cqw) saturate(1.6);transition:border-color .28s ease,filter .28s ease;
+.hx3__top{transform:none;align-items:center;justify-content:center;text-align:center;gap:1.2cqw;padding:0 2cqw;border-radius:var(--r);border:.3cqw solid rgba(255,255,255,.78);-webkit-backdrop-filter:blur(.7cqw) saturate(1.6);backdrop-filter:blur(.7cqw) saturate(1.6);transition:border-color .28s ease,filter .28s ease;
  background:radial-gradient(90% 60% at 78% 24%,rgba(255,255,255,.2),transparent 62%),linear-gradient(125deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.18) 24%,rgba(255,255,255,0) 44%),linear-gradient(165deg,color-mix(in srgb,var(--c) 66%,rgba(255,255,255,.34)) 0,color-mix(in srgb,var(--c) 38%,rgba(10,24,96,.4)) 100%);
- box-shadow:inset 0 0 0 .2cqw rgba(255,255,255,.38),inset 0 .7cqw .9cqw rgba(255,255,255,.65),inset 0 -1.4cqw 2.2cqw color-mix(in srgb,var(--c) 55%,rgba(0,10,60,.5)),0 .9cqw 0 -.2cqw color-mix(in srgb,var(--c) 70%,#fff),0 0 3.4cqw .2cqw color-mix(in srgb,var(--c) 60%,transparent),0 0 7cqw color-mix(in srgb,var(--c) 30%,transparent)}
+ box-shadow:inset 0 0 0 .2cqw rgba(255,255,255,.38),inset 0 .7cqw .9cqw rgba(255,255,255,.65),inset 0 -1.4cqw 2.2cqw color-mix(in srgb,var(--c) 55%,rgba(0,10,60,.5)),0 .9cqw 0 -.2cqw color-mix(in srgb,var(--c) 70%,#fff),0 0 3.4cqw .2cqw color-mix(in srgb,var(--c) 60%,transparent),0 0 7cqw color-mix(in srgb,var(--c) 30%,transparent),0 1.6cqw 2.6cqw rgba(0,8,40,.4)}
 /* Extra glow layer: opacity only, so hover is a smooth intensification and nothing moves. */
 .hx3__top::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .28s ease;box-shadow:0 0 5cqw .6cqw color-mix(in srgb,var(--c) 85%,transparent),inset 0 0 3cqw color-mix(in srgb,var(--c) 55%,transparent)}
 .hx3__top:is(:hover,:focus-visible){border-color:#fff;filter:brightness(1.1) saturate(1.12)}
 .hx3__top:is(:hover,:focus-visible)::before{opacity:1}
+/* Amber turns brown over the navy page, so the centre card carries more of its own colour. */
+.hx3:nth-child(3) .hx3__top{background:radial-gradient(90% 60% at 78% 24%,rgba(255,255,255,.2),transparent 62%),linear-gradient(125deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.18) 24%,rgba(255,255,255,0) 44%),linear-gradient(165deg,color-mix(in srgb,var(--c) 84%,rgba(255,255,255,.34)) 0,color-mix(in srgb,var(--c) 72%,rgba(120,50,0,.6)) 100%)}
 .hx3__top:focus-visible{outline:3px solid #fff;outline-offset:3px}
 /* One quiet diagonal sheen across the upper part of each card. */
 .hx3__top::after{content:"";position:absolute;left:0;right:0;top:0;height:60%;border-radius:var(--r) var(--r) 0 0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.06) 55%,rgba(255,255,255,0) 100%)}
-.hx3__orb{position:relative;left:auto;top:auto;translate:none;flex:none;width:var(--orb);margin-bottom:.35cqw;z-index:2}
-.hx3__name{position:relative;z-index:2;font-size:round(max(11px,var(--fs)),.5px);max-width:calc((var(--cw) - 7) * 1cqw);overflow-wrap:normal;word-break:keep-all;text-wrap:balance;text-shadow:0 1px 2px rgba(0,8,40,.9),0 0 .7em rgba(0,8,40,.55),0 0 1em color-mix(in srgb,var(--c) 55%,transparent)}
-@media (max-width:1000px){.hx{width:min(100%,620px)}}
-/* Phones: the same three-plus-two grid, flatter cards; labels stay at least 11px. */
-@media (max-width:560px){.hx{--cw:32.2;--ch:37;--gx:1.7;--gy:1.7;--bw:49.15;--bh:31;--r:4.6cqw;--orb:0cqw;--fs:2.9cqw;width:100%;max-width:440px;aspect-ratio:1.4}.hx3{left:calc(var(--col) * (var(--cw) + var(--gx)) * 1cqw);top:1cqw}.hx3:nth-child(n+4){left:calc((var(--i) - 3) * (var(--bw) + var(--gx)) * 1cqw)}.hx3:nth-child(n+4) .hx3__name{max-width:100%}.hx__scene{perspective:none}.hx__stack{transform:none}.hx3__orb{display:none}.hx3__top{justify-content:center;text-align:center;padding:0 1.4cqw 3cqw}.hx3__name{max-width:100%;font-size:clamp(10.5px,var(--fs),12.5px);line-height:1.2;letter-spacing:-.01em;hyphens:none}}
+.hx3__orb{position:relative;left:auto;top:auto;translate:none;flex:none;width:var(--orb);z-index:2}
+.hx3__name{position:relative;z-index:2;font-size:round(max(11px,var(--fs)),.5px);max-width:calc((var(--w) - 8) * 1cqw);overflow-wrap:normal;word-break:keep-all;text-wrap:balance;text-shadow:0 1px 2px rgba(0,8,40,.9),0 0 .7em rgba(0,8,40,.55),0 0 1em color-mix(in srgb,var(--c) 55%,transparent)}
+@media (max-width:1000px){.hx{width:min(100%,580px);margin-inline:auto}}
+@media (min-width:561px) and (max-width:1000px){.mmri-shell:has(.mmri-home2) .mmri-legal-footer{padding-bottom:40px}html:root body.mmri-prism-page .mmri-home2__stage{gap:36px}.hx{margin-block:34px 0}}
+.mmri-home2__copy{grid-template-columns:minmax(0,1fr)}.mmri-home2__copy h1{justify-self:center}
+/* Phones: the same arrangement, a little taller and tighter so every label stays at 12px or more. */
+@media (max-width:560px){.hx{--w:48.5;--h:30;--o:5;--g:3;--r:4.6cqw;--orb:0cqw;--fs:3.7cqw;width:100%;max-width:400px;margin:20px auto 0;aspect-ratio:100/80}.hx3__orb{display:none}.hx3__top{padding-inline:1.4cqw;border-width:1px}.hx3__name{max-width:100%;font-size:clamp(12px,var(--fs),13.5px);line-height:1.18;letter-spacing:-.01em;hyphens:none}}
 /* Chrome counts the projected (perspective) box of a 3D stack as scrollable overflow even when every plate is inside the viewport. Guard at the viewport edge only (the shell is as wide as the viewport), so nothing visible can be cut mid-page; plate positions are verified separately. */
 .mmri-shell:has(.mmri-home2){overflow-x:clip}
-@media (max-width:360px){.mmri-home2__start{max-width:100%;box-sizing:border-box;gap:8px;padding-inline:14px}.mmri-home2__start>span:not(.mmri-shell-glint){min-width:0;font-size:12.5px;letter-spacing:.04em}}
+@media (max-width:360px){body.mmri-prism-page .mmri-home2__guide{height:auto;min-height:50px;padding-block:6px}.mmri-home2__start{max-width:100%;box-sizing:border-box;gap:6px;padding-inline:14px 6px}.mmri-home2__start>span:not(.mmri-shell-glint){min-width:0;font-size:11.5px;letter-spacing:.01em}}
 
 /* Guide 3, step 5: the "wait up to 24 hours" notice (same glass family as the real notification panel) */
 .mmri-guide2__deliver{display:grid;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(140,190,255,.55);background:linear-gradient(165deg,rgba(40,100,230,.34),rgba(6,22,70,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 26px -14px rgba(0,0,0,.6);color:#fff}

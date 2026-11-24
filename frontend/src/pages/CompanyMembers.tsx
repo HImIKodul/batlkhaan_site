@@ -16,7 +16,7 @@ export default function CompanyMembers({companyId}:{companyId:string}){
  const run=async(key:string,ok:string,fn:()=>Promise<unknown>)=>{setBusy(key);setMsg(null);try{await fn();await load();setMsg({tone:'ok',text:ok})}catch(e:any){setMsg({tone:'error',text:e?.message||'Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.'})}finally{setBusy('')}};
  if(!allowed)return null;
  return <section className="account-data__card lg lg--soft"><h2>Байгууллагын гишүүд</h2>
-  <p>Зөвхөн системд бүртгэлтэй хэрэглэгчийг имэйлээр нэмнэ. Эзэмшигчийн эрхийг зөвхөн эзэмшигч олгоно; сүүлчийн эзэмшигчийг хасах боломжгүй.</p>
+  <p>Зөвхөн системд бүртгэлтэй хэрэглэгчийг имэйлээр нэмнэ. Эзэмшигчийн эрхийг зөвхөн эзэмшигч олгоно. Сүүлчийн эзэмшигчийг хасах боломжгүй.</p>
   {msg&&<div className={`mmri-support-alert ${msg.tone==='error'?'is-error':''}`} role={msg.tone==='error'?'alert':'status'}>{msg.text}</div>}
   {rows&&<Table caption="Гишүүд"><thead><tr><th>Имэйл</th><th>Эрх</th><th><span className="mmri-visually-hidden">Үйлдэл</span></th></tr></thead><tbody>
    {rows.map(m=><tr key={m.userId}><td>{m.displayName?`${m.displayName} · `:''}{m.email}</td>

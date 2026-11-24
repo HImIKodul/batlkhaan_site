@@ -125,7 +125,7 @@ check('report critical score comparison has no arrow','report-purpose-arrow' not
 check('report roadmap: plan stages render as plain selectable cards with dated ranges (completion toggle was removed in RC6)','<article className={`report-roadmap-card' in report and 'stageDateRange(' in report and 'report-roadmap-card__work' in report and '<button' not in report.split('function PlanCard',1)[1].split('}\n',1)[0].split('function ',1)[0])
 check('report reading surface uses the dedicated reading tokens (ink contrast tokens defined, no raw blur on the page rule)','.report-three-page{--report-accent-light' in reportcss and 'backdrop-filter' not in reportcss.split('.report-three-page{--report-accent-light',1)[1].split('}',1)[0] and '--mmri-reading-ink' in tokens_css and '--mmri-reading-glass' in tokens_css)
 check('report category colour is never a sheet fill','color-mix(in srgb,var(--report-accent) 20%,rgba(14,18,80' not in reportcss and 'mmri-area-tint-legacy' not in reportcss)
-check('report locked payment shows price','ТӨЛБӨР ТӨЛӨХ · 300,000₮' in report)
+check('report locked payment shows price','Төлбөр төлөх · 300,000₮' in report)
 check('report domain icons use accessible ink token',"'--domain-ink':p.ink" in report and '.report-domain-switcher__icon{flex:none' in reportcss)
 check('PDF browser fallback isolated from screen', '.report-print-only{display:none}' in reportcss and 'body.mmri-print-report .report-screen-only' in reportcss and 'body.mmri-print-report .report-print-only{display:block!important' in reportcss)
 check('PDF browser fallback fixed A4 three-page surface', 'width:210mm!important' in reportcss and 'height:297mm!important' in reportcss and 'page-break-after:always!important' in reportcss and 'pdf-report-page:last-child' in reportcss)

@@ -934,3 +934,12 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 ## 2026-11-24 release candidate rc/account2-final
 - QPay V2 completed (timestamp token expiry, refresh, one re-auth, exact amount, sweep), HTML mail + payment mail (migration 20261124120000), consent for profile answers, PDF generator 1.7 with immutable older files, missing-plan state and authorised recovery, hero 3+2, DomainBadge.
 - Report: ~/Downloads/BUSINESSMRI_FINAL_PUBLICATION_ACCOUNT2/RELEASE_REPORT.md. Run QA gates under systemd-inhibit (sleep expires tokens). Live AI, QPay and inbox delivery are NOT verified.
+
+## 2026-11-24 final targeted corrections (rc/account2-final)
+- Hero: five identical glass cards, 2-1-2, the centre card over the inner corners; `.hx` variables --w/--h/--o/--g in landing.css. Labels are centred in the free part of each card. Sizes, gaps and label visibility measured at 8 widths.
+- Guide 3: pictures sized from their own column (container query), no overlap in 5 steps x 6 widths.
+- 24 h delivery with administrator approval, plan editing without AI, payment code lifetime/refresh: see commit 07d326d. Browser tests: scripts/qa-ui-qpay.mjs (26), scripts/qa-gate-review-publish.mjs (21).
+- Admin wide tables fit from 1280 px; narrow cards keep badges in the value column.
+- Report gate: four domains ran on c77101a (52 PASS), Operations on this branch (13 PASS).
+- Plan evaluation in five domains used the local stand-in model: it proves schedule/coverage/references, not the writing of a real model.
+- Two stale static expectations updated (locked-payment label is sentence case; check button has a variant attribute).
