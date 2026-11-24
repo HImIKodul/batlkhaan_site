@@ -53,7 +53,7 @@ const blk=(w?:number|string,h?:number|string,n?:number):React.CSSProperties=>({w
 export function SkeletonHost({label,children}:{label:string;children:React.ReactNode}){return <><span className="mmri-skeleton__sr" role="status" aria-live="polite" aria-busy="true">{label}</span>{children}<LoadingFact/></>}
 export function HubSkeletonBody(){
  return <><header className="diagnosis-square-head" aria-hidden="true"><h1 className="diagnosis-square-head__title mmri-sk">Оношилгоо</h1></header>
-  <section className="diagnosis-square-grid" aria-hidden="true">{[0,1,2,3,4].map(i=><button key={i} type="button" disabled tabIndex={-1} className="diagnosis-square cat-tile"><span className="cat-tile__name"><span className="mmri-sk" style={blk(150)}>{'\u00a0'}</span></span></button>)}</section></>;
+  <section className="diagnosis-square-grid" aria-hidden="true">{[0,1,2,3,4].map(i=><button key={i} type="button" disabled tabIndex={-1} className="diagnosis-square cat-tile"><span className="cat-tile__foot"><i className="cat-tile__orb mmri-skeleton__orb"/><span className="cat-tile__name"><span className="mmri-sk" style={blk('100%')}>{'\u00a0'}</span></span><i className="cat-tile__orb cat-tile__orb--spacer"/></span></button>)}</section></>;
 }
 export function QuestionnaireSkeletonBody(){
  return <><header className="mmri-questionnaire__top" aria-hidden="true"><div className="mmri-questionnaire__top-row"><strong className="mmri-questionnaire__count mmri-sk">Асуулт 00 / 000</strong><div className="mmri-questionnaire__session-actions"><span className="mmri-sk" style={blk(112,40)}>{'\u00a0'}</span></div></div><span className="mmri-sk mmri-skel__progress">{'\u00a0'}</span></header>
@@ -65,11 +65,11 @@ export function HistorySkeletonBody(){
  return <><header><span className="mmri-sk" style={blk(64,64)}>{'\u00a0'}</span><div><b className="mmri-sk">МИНИЙ ХЭСЭГ</b><h1 className="mmri-sk">Төлбөрийн түүх</h1><p className="mmri-sk">Өмнөх төлбөрүүд болон тэдгээрийн төлөв</p></div></header>
   <section aria-hidden="true">{[0,1,2,3,4,5].map(i=><article key={i} className="lg"><div className="payment-history-area"><span className="payment-history-icon mmri-sk">{'\u00a0'}</span><strong className="mmri-sk" style={blk('60%')}>{'\u00a0'}</strong><span className="mmri-sk" style={blk('40%')}>{'\u00a0'}</span></div><div className="payment-history-date"><small className="mmri-sk">Огноо</small><b className="mmri-sk" style={blk('80%')}>{'\u00a0'}</b></div><div className="payment-history-amount"><small className="mmri-sk">Дүн</small><b className="mmri-sk" style={blk('80%')}>{'\u00a0'}</b></div><span className="mmri-badge mmri-sk" style={blk(91,35)}>{'\u00a0'}</span></article>)}</section></>;
 }
+/* Same elements as the loaded payment page (back control, one centred card: kicker, title, price, code box, two lines). */
 export function BillingSkeletonBody(){
  return <><span className="billing-domain-back mmri-sk" style={blk(240,44)}>{'\u00a0'}</span>
-  <header><div className="billing-domain-icon mmri-sk">{'\u00a0'}</div><div><span className="mmri-sk">АНХНЫ ОНОШИЛГОО</span><h1 className="mmri-sk">Marketing MRI</h1><p className="mmri-sk">Төлбөрөөс эхлэн энэ чиглэлийн нэг удаагийн оношилгоонд хамаарна.</p></div><strong className="mmri-sk">300,000 ₮</strong></header>
-  <section className="billing-domain-flow">{[0,1,2].map(i=><div key={i}><b className="mmri-sk">{'\u00a0'}</b><span className="mmri-sk">Төлбөр хийх</span></div>)}</section>
-  <span className="mmri-sk" style={blk('100%',240)}>{'\u00a0'}</span></>;
+  <section className="billing-qr" aria-hidden="true"><header className="billing-qr__head"><span className="mmri-sk">ОНОШИЛГОО</span><h1 className="mmri-sk">ЧИГЛЭЛИЙН НЭР</h1><strong className="billing-qr__price mmri-sk">300,000 ₮</strong></header>
+   <div className="billing-qr__box mmri-sk">{'\u00a0'}</div><p className="billing-qr__how mmri-sk" style={blk('80%',undefined,2)}>{'\u00a0'}</p><p className="billing-qr__status mmri-sk" style={blk('60%')}>{'\u00a0'}</p></section></>;
 }
 export function ProfileSkeletonBody(){
  return <><header><span className="profile-avatar mmri-sk">{'\u00a0'}</span><div><b className="mmri-sk">МИНИЙ ХЭСЭГ</b><h1 className="mmri-sk">Байгууллагын мэдээлэл</h1><p className="mmri-sk">Анхны мэдээллээ шалгаж, шаардлагатай бол засна уу.</p><span className="mmri-badge mmri-sk" style={blk(111,35)}>{'\u00a0'}</span></div></header>
@@ -80,7 +80,7 @@ export function ProfileSkeletonBody(){
 /* Home skeleton: the real home layout classes (copy column, five stacked plates, three guide pills). */
 export function HomeSkeletonBody(){
  return <div className="mmri-home2 mmri-skel mmri-home-skel" aria-hidden="true"><main className="mmri-home2__stage"><section className="mmri-home2__hero"><div className="mmri-home2__copy"><h1 className="mmri-home-skel__title"><span className="mmri-sk">{'\u00a0'}</span><span className="mmri-sk">{'\u00a0'}</span><span className="mmri-sk">{'\u00a0'}</span></h1><span className="mmri-sk mmri-home-skel__cta">{'\u00a0'}</span></div>
-  <div className="mmri-home2__art mmri-skeleton__plates">{[0,1,2,3,4].map(i=><span key={i} className="mmri-skeleton__plate mmri-sk" style={{['--i' as string]:i} as React.CSSProperties}/>)}</div></section>
+  <div className="mmri-home2__art"><div className="hx"><div className="hx__scene"><div className="hx__stack">{[0,1,2,3,4].map(i=><div key={i} className="hx3" style={{['--i' as string]:i} as React.CSSProperties}><span className="mmri-sk mmri-home-skel__card"/></div>)}</div></div></div></div></section>
   <nav className="mmri-home2__guides">{[0,1,2].map(i=><span key={i} className="mmri-sk mmri-home-skel__pill">{'\u00a0'}</span>)}</nav></main></div>;
 }
 export function SkeletonScreen({label='Өгөгдлийг бэлтгэж байна...',description,variant='generic',className=''}:{label?:string;description?:string;variant?:SkeletonVariant;className?:string}){

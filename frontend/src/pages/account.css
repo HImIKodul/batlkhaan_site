@@ -2,6 +2,7 @@
    Panels use the shared liquid-glass material (.lg .lg--soft from components/glass.css). */
 .technical-settings,.account-payment-history,.company-detail-editor,.profile-onboarding,.profile-login-required{width:min(960px,calc(100% - 32px));max-width:960px;margin-inline:auto;display:grid;gap:18px;padding:22px 0 40px}
 .technical-settings>header,.account-payment-history>header,.company-detail-editor>header{display:flex;align-items:center;gap:18px;padding:2px}
+.account-payment-history>header{padding:18px 20px}
 .technical-settings>header>span,.account-payment-history>header>span,.company-detail-editor>header>span{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:22px;color:var(--mmri-color-text-strong);background:linear-gradient(155deg,var(--mmri-surface-raised,rgba(244,247,252,.85)),var(--mmri-surface-raised,rgba(244,247,252,.85)));border:1px solid rgba(130,145,170,.32);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),0 10px 24px rgba(8,22,42,.3)}
 .company-detail-editor>header>span.profile-avatar{font-size:22px;font-weight:800;letter-spacing:.02em;background:linear-gradient(155deg,#7FA6FF,#7A55E0);border-radius:50%}
 .technical-settings>header b,.account-payment-history>header b,.company-detail-editor>header b{display:block;font-size:var(--mmri-type-meta-size);letter-spacing:.12em;color:var(--mmri-color-text-muted)}
@@ -111,10 +112,11 @@
  .company-detail-editor__bar{bottom:calc(var(--mmri-bottom-nav-height) + 10px)}
  .account-payment-history>section>article{grid-template-columns:1fr 1fr;gap:10px 14px;padding:14px}
  .account-payment-history>section>article>.payment-history-area{grid-column:1/-1}
+ .account-payment-history>section>article .mmri-badge{justify-self:start;grid-column:1/-1}
 }
 
 .payment-history-icon:has(.domain-badge){width:auto;height:auto;padding:0;border:0;border-radius:9px;background:none;box-shadow:none}
-.payment-history-area .payment-history-icon .domain-badge{min-width:72px;min-height:44px;color:#04122e;font-size:13px}
+.payment-history-area .payment-history-icon .domain-badge{min-width:84px;min-height:44px;color:#04122e;font-size:13px}
 
 
 /* legal documents (privacy policy, terms): readable column, draft status always visible */

@@ -102,4 +102,5 @@
 .billing-qr__short{justify-content:center}
 .billing-qr__banks h2{display:none}
 @media (pointer:coarse),(max-width:767px){.billing-qr__banks ul{display:grid}.billing-qr__banks h2{display:block}}
-.billing-qr__head h1 .domain-badge{font-size:13px}
+.billing-qr__head h1{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.billing-qr .billing-domain-error svg{flex:none;width:20px;height:20px}
