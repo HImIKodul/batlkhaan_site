@@ -930,3 +930,7 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - New `src/report/annual-plan-language.ts` (wording rules calibrated on 29 saved real-model plans), stricter grounding and numbers, plan bound to payload hash, at most 2 repairs shared, plan usage in the audit event, prompt 2.1. PDF page-3 fit measured with the real frame; line budget 57.
 - QA clone scripts wrote into the shared QA report-storage/mailbox; now isolated. No paid call made; real model quality still UNVERIFIED.
 - Reports: ~/Downloads/BUSINESSMRI_PLAN_ACCOUNT2_REPAIR/.
+
+## 2026-11-24 release candidate rc/account2-final
+- QPay V2 completed (timestamp token expiry, refresh, one re-auth, exact amount, sweep), HTML mail + payment mail (migration 20261124120000), consent for profile answers, PDF generator 1.7 with immutable older files, missing-plan state and authorised recovery, hero 3+2, DomainBadge.
+- Report: ~/Downloads/BUSINESSMRI_FINAL_PUBLICATION_ACCOUNT2/RELEASE_REPORT.md. Run QA gates under systemd-inhibit (sleep expires tokens). Live AI, QPay and inbox delivery are NOT verified.
