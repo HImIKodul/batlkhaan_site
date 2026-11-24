@@ -37,7 +37,7 @@ for (const u of [owner, viewer, gone, erased]) await prisma.companyMembership.cr
 let seq = 0;
 const note = async (userId: string, type: string, extra: any = {}) => { const r = await prisma.customerNotification.create({ data: { userId, companyId: company.id, type, title: "t", message: "m", destination: "report", payload: { domainCode: "finance" }, dedupeKey: `${tag}:${type}:${seq++}`, ...extra } }); createdIds.push(r.id); return r; };
 const nOwner = { completed: await note(owner.id, "ASSESSMENT_COMPLETED"), review: await note(owner.id, "REPORT_UNDER_REVIEW"), released: await note(owner.id, "REPORT_RELEASED") };
-await note(owner.id, "PAYMENT_CONFIRMED"); await note(owner.id, "REPORT_APPROVED"); await note(owner.id, "ACCOUNT_PASSWORD_CHANGED"); // never e-mailed by this service
+/* payment confirmation is e-mailed since 2026-11-24 (owner request) */ await note(owner.id, "PAYMENT_CONFIRMED"); await note(owner.id, "REPORT_APPROVED"); await note(owner.id, "ACCOUNT_PASSWORD_CHANGED"); // the last two are never e-mailed by this service
 const nOld = await note(owner.id, "REPORT_RELEASED", { createdAt: new Date(Date.now() - 60 * 3_600_000) }); // outside the 48 h window
 await note(gone.id, "REPORT_RELEASED"); await note(erased.id, "REPORT_RELEASED"); // inactive / erased recipients
 const nErasedCompany = await prisma.customerNotification.create({ data: { userId: viewer.id, companyId: company2.id, type: "REPORT_RELEASED", title: "t", message: "m", destination: "report", payload: { domainCode: "it" }, dedupeKey: `${tag}:ec` } }); createdIds.push(nErasedCompany.id);
@@ -56,10 +56,10 @@ rec("ML-02 a disabled mail provider sends nothing and creates no claims (callers
 // ---------------------------------------------------------------- ML-03/04/05 exactly once
 const first = await svc.dispatchPending();
 const kinds = mine().filter(m => m.to === owner.email).map(m => m.kind).sort();
-rec("ML-03 only the three lifecycle types are e-mailed, to the right eligible recipients, once each (the pass also sent other recent notifications present in this QA database)", kinds.join() === "ASSESSMENT_COMPLETED,REPORT_RELEASED,REPORT_UNDER_REVIEW" && !mine().some(m => [gone.email, erased.email].includes(m.to)), `${first.customer} total sent this pass; own: ${kinds.join()}`);
-rec("ML-04 outside the 48 h window, to inactive / erased users, and for an erased company: no e-mail", !(await marks()).some(m => m.dedupeKey === `CN:${nOld.id}` || m.dedupeKey === `CN:${nErasedCompany.id}`) && mine().length === 3);
+rec("ML-03 only the four lifecycle types (incl. payment) are e-mailed, to the right eligible recipients, once each (the pass also sent other recent notifications present in this QA database)", kinds.join() === "ASSESSMENT_COMPLETED,PAYMENT_CONFIRMED,REPORT_RELEASED,REPORT_UNDER_REVIEW" && !mine().some(m => [gone.email, erased.email].includes(m.to)), `${first.customer} total sent this pass; own: ${kinds.join()}`);
+rec("ML-04 outside the 48 h window, to inactive / erased users, and for an erased company: no e-mail", !(await marks()).some(m => m.dedupeKey === `CN:${nOld.id}` || m.dedupeKey === `CN:${nErasedCompany.id}`) && mine().length === 4);
 const again = await svc.dispatchPending();
-rec("ML-05 a second pass sends nothing (exactly once)", again.customer === 0 && mine().length === 3);
+rec("ML-05 a second pass sends nothing (exactly once)", again.customer === 0 && mine().length === 4);
 const row = (await marks()).find(m => m.dedupeKey === `CN:${nOwner.completed.id}`)!;
 rec("ML-06 the claim records the time the provider accepted the message", Boolean(row.sentAt) && row.attempts === 0 && row.lastError === null);
 
@@ -85,7 +85,7 @@ rec(`ML-12 after ${MAX_ATTEMPTS} failed attempts the message is abandoned (never
 const mail = mine().find(m => m.kind === "REPORT_RELEASED" && m.to === owner.email)!;
 rec("ML-13 the company name cannot inject headers or lines (single line), the subject carries no customer data, links use the configured public URL", !/Bcc:/.test(mail.subject) && !/[\r\n]Bcc:/.test(mail.text) && !mail.subject.includes(tag) && mail.text.includes("https://app.example.test/#/report") && mail.subject === "BusinessMRI.mn: тайлан бэлэн боллоо");
 const injected = buildCustomerMail("REPORT_RELEASED", { company: "A\r\nSubject: spoof\u0000", domainLabel: "Санхүү", appUrl: "https://x.test//" })!;
-rec("ML-14 control characters are stripped from interpolated values and the base URL has no double slash", !/[\r\u0000]/.test(injected.text.split("Тайланг үзэх")[0]) && injected.text.includes("https://x.test/#/report") && buildCustomerMail("PAYMENT_CONFIRMED", { company: "c", domainLabel: "d", appUrl: "https://x.test" }) === null);
+rec("ML-14 control characters are stripped from interpolated values and the base URL has no double slash", !/[\r\u0000]/.test(injected.text.split("Тайланг үзэх")[0]) && injected.text.includes("https://x.test/#/report") && buildCustomerMail("REPORT_APPROVED", { company: "c", domainLabel: "d", appUrl: "https://x.test" }) === null);
 
 // ---------------------------------------------------------------- ML-15/16 administrator alerts
 env("MMRI_ADMIN_ALERT_EMAILS", `a1.${tag}@mmri.test, a2.${tag}@mmri.test ,not-an-address,`);

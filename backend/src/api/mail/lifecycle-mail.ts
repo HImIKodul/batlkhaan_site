@@ -46,7 +46,10 @@ export class LifecycleMailService {
 
   /** Take (or re-take after its retry time) the claim for one message. Returns false when someone else owns it, it is already sent, or attempts are exhausted. */
   async claim(key: string, kind: MailKind): Promise<boolean> {
-    const fresh = await prisma.mailDispatchMark.createMany({ data: [{ dedupeKey: key, kind }], skipDuplicates: true });
+    let fresh: { count: number };
+    // One message that cannot be claimed (for example a kind the database does not know yet) must never stop the others.
+    try { fresh = await prisma.mailDispatchMark.createMany({ data: [{ dedupeKey: key, kind }], skipDuplicates: true }); }
+    catch (e: any) { console.error(JSON.stringify({ ts: new Date().toISOString(), level: "error", event: "mail_claim_failed", kind, code: String(e?.code ?? "UNKNOWN") })); return false; }
     if (fresh.count === 1) return true;
     const now = new Date();
     // Lease: while this attempt runs nobody else may take it; the result below replaces the lease with the real next time.

@@ -33,6 +33,8 @@ for(const d of (process.env.E2E_DOMAINS||'marketing,it,finance,people,operations
   const hAfter=await hits();rec(`${d}: viewing the old report after the retake made no model call (new calls only for the retake: ${hAfter.narrative-h0.narrative} narrative)`,hAfter.narrative-h0.narrative===1);
   const lst=await api(B,'GET',`/companies/${co}/assessments`,{tok:cu.tok});const items=lst.d?.items||lst.d||[];const A1=items.find(x=>x.id===j1.a),A2=items.find(x=>x.id===j2.a);
   rec(`${d}: the company history lists both diagnoses, the retake points to the first, both carry their own score`,lst.s===200&&A1&&A2&&A2.previousAssessmentId===j1.a&&A1.previousAssessmentId==null&&A1.overall&&A2.overall,`items=${items.length}`);
+  // fresh session of the second customer: an expired token would be refused for the wrong reason (401) and prove nothing about tenant isolation
+  intruder.tok=(await api(B,'POST','/auth/login',{body:{email:intruder.email,password:intruder.password}})).d?.accessToken;
   for(const [lab,path] of [['report',`/assessments/${j1.a}/report`],['results',`/assessments/${j1.a}/results`],['pdf',`/assessments/${j1.a}/report/pdf`],['diagnosis',`/assessments/${j1.a}/diagnosis`]]){
     const o=await api(B,'GET',path,{tok:intruder.tok}),n=await fetch(B+path);await n.arrayBuffer();
     rec(`${d}: another customer cannot read ${lab} (${o.s}); no token gets 401 (${n.status})`,[403,404].includes(o.s)&&n.status===401)}
