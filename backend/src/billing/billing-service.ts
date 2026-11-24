@@ -15,6 +15,7 @@ const PLAN_META:Record<BillingPlanCode,{name:string;billingLabel:string;descript
   DIAGNOSTIC:{name:"Анхны оношилгоо",billingLabel:"Нэг удаагийн төлбөр",description:"Сонгосон бизнесийн чиглэлийн нэг бүрэн оношилгоо, тайлан, 365 хоногийн төлөвлөгөө."},
   RETAKE:{name:"Дахин оношилгоо",billingLabel:"Дахин оношилгооны төлбөр",description:"Өмнөх тайланг хадгалж, шинэ оношилгоо болон шинэ тайлан үүсгэх нэг удаагийн эрх."}
 };
+const DOMAIN_INVOICE_LABEL:Record<string,string>={marketing:"Маркетинг",it:"Мэдээллийн технологи",finance:"Санхүү",people:"Хүний нөөц",operations:"Үйлдвэрлэл ба үйл ажиллагаа"};
 const ACTIVE_ASSESSMENT_STATUSES=["PROFILE_PENDING","IN_PROGRESS","PAUSED","READY_FOR_COMPLETION","PROCESSING"] as const;
 
 function hashToken(token:string){return createHash("sha256").update(token).digest("hex");}
@@ -106,7 +107,8 @@ export class BillingService {
     await this.retireStaleInvoices(companyId,domainCode,planCode,amountMnt);
     await this.assertPurchaseEligible(prisma,companyId,planCode,domainCode);
     const callbackToken=randomBytes(32).toString("base64url");
-    const senderInvoiceNo=`MMRI-${Date.now()}-${randomUUID().slice(0,8)}`;
+    // Letters and digits only: QPay refuses special characters here.
+    const senderInvoiceNo=`MMRI${Date.now()}${randomBytes(5).toString("hex").toUpperCase()}`;
     /* PAY-CONC-3: the "open invoice already exists?" check and the insert must be one atomic step, otherwise parallel requests all pass the check
        and each create an invoice. A transaction-scoped advisory lock keyed by company/domain/plan serialises them (no schema change, works across instances). */
     const claimed=await prisma.$transaction(async(tx:any)=>{
@@ -123,7 +125,7 @@ export class BillingService {
     const callbackUrl=`${this.config.billingCallbackBaseUrl}/api/v1/billing/qpay/callback/${encodeURIComponent(local.id)}?token=${encodeURIComponent(callbackToken)}`;
     let remote:Awaited<ReturnType<PaymentProviderAdapter["createInvoice"]>>;
     try{
-      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`BusinessMRI.mn · ${domainCode} · ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
+      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`BusinessMRI.mn ${DOMAIN_INVOICE_LABEL[domainCode]??domainCode} ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
     }catch(error:any){
       // Compare-and-set: only a still-CREATED row may become FAILED (a concurrent cancel/recovery decision is never overwritten).
       await prisma.billingInvoice.updateMany({where:{id:local.id,status:"CREATED"},data:{status:"FAILED",failureReason:String(error?.message??"Provider error").slice(0,500)}}).catch(()=>{});
@@ -277,6 +279,32 @@ export class BillingService {
     }
     await prisma.billingInvoice.update({where:{id:invoice.id},data:{lastVerifiedAt:new Date(),providerMetadata:safeProviderMetadata(verification.raw)}});
     return verification.paid?this.activatePaidInvoice(invoice.id,verification):this.getInvoice(invoice.id);
+  }
+
+  /** Lost-callback safety net. QPay asks merchants not to poll often, so each invoice is checked on a growing interval (2, 5, 15, 60 min by age, for 3 days) and a claim on `lastVerifiedAt`
+      keeps two instances from asking about the same invoice. Activation is the same idempotent path as the callback. */
+  async sweepPendingPayments(now=new Date(),limit=10):Promise<{checked:number;activated:number;failed:number}>{
+    const out={checked:0,activated:0,failed:0};
+    if(this.provider.name!=="QPAY"||this.config.billingProvider!=="qpay")return out;
+    const rows=await prisma.billingInvoice.findMany({
+      where:{provider:"QPAY",providerInvoiceId:{not:null},status:{in:["PENDING","CANCELLED","FAILED"]},createdAt:{gt:new Date(now.getTime()-3*86_400_000)}},
+      orderBy:{lastVerifiedAt:{sort:"asc",nulls:"first"}},take:200,select:{id:true,status:true,createdAt:true,lastVerifiedAt:true,callbackReceivedAt:true}
+    });
+    for(const row of rows){
+      if(out.checked>=limit)break;
+      const age=now.getTime()-row.createdAt.getTime();
+      const verified=row.lastVerifiedAt?.getTime()??row.createdAt.getTime();
+      // A callback whose verification failed is waiting for us: retry it soon.
+      const callbackOpen=!!row.callbackReceivedAt&&row.callbackReceivedAt.getTime()>=verified;
+      const every=(callbackOpen?1:row.status!=="PENDING"?60:age<15*60_000?2:age<60*60_000?5:age<6*3_600_000?15:60)*60_000;
+      if(now.getTime()-verified<every)continue;
+      const claim=await prisma.billingInvoice.updateMany({where:{id:row.id,status:row.status,lastVerifiedAt:row.lastVerifiedAt},data:{lastVerifiedAt:now}});
+      if(claim.count!==1)continue;
+      out.checked++;
+      try{const latest=await this.reconcileInvoice(row.id);if(latest.status==="PAID")out.activated++}
+      catch(error:any){out.failed++;console.log(JSON.stringify({ts:new Date().toISOString(),level:"warn",event:"payment_sweep_failed",invoiceId:row.id,code:String(error?.code??"ERROR").slice(0,60)}))}
+    }
+    return out;
   }
 
   async mockPay(invoiceId:string){

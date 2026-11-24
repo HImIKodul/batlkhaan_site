@@ -1,6 +1,7 @@
 /* Minimal Gmail API client (OAuth 2.0 refresh-token flow). No Google SDK: two fixed HTTPS hosts, bounded requests, no redirects.
    Scopes the owner grants once: gmail.readonly (read the support inbox) and gmail.send (send mail and replies). It never modifies, labels or deletes Gmail messages.
    Provider errors can echo addresses, bodies and tokens, so only fixed error codes and messages leave this module. Nothing here logs a credential. */
+import { randomBytes } from "node:crypto";
 export interface GmailCredentials { clientId: string; clientSecret: string; refreshToken: string; user: string; }
 export type GmailErrorCode = "AUTH" | "RATE_LIMIT" | "PROVIDER" | "NETWORK" | "BAD_INPUT";
 export class GmailError extends Error {
@@ -24,18 +25,22 @@ export function htmlToText(html: string): string {
 }
 const mimeWord = (s: string) => /^[\x20-\x7E]*$/.test(s) ? s : `=?UTF-8?B?${Buffer.from(s, "utf8").toString("base64")}?=`;
 /** RFC 5322 plain-text message. Every header value is validated against CR/LF (header injection) before use. */
-export function buildRawMessage(m: { from: string; fromName?: string; to: string; subject: string; text: string; inReplyTo?: string | null; references?: string | null }): string {
+export function buildRawMessage(m: { from: string; fromName?: string; to: string; subject: string; text: string; html?: string; inReplyTo?: string | null; references?: string | null }): string {
   const hv = (v: string, what: string) => { if (/[\r\n\u0000]/.test(v)) throw new GmailError("BAD_INPUT", `Invalid ${what}`); return v; };
   const addr = (v: string, what: string) => { if (!/^[^\s<>@,;"]+@[^\s<>@,;"]+\.[^\s<>@,;"]+$/.test(v)) throw new GmailError("BAD_INPUT", `Invalid ${what}`); return v; };
   const from = addr(m.from, "sender"), to = addr(m.to, "recipient");
   const headers = [
     `From: ${m.fromName ? `${mimeWord(hv(m.fromName.replace(/[<>"]/g, ""), "sender name"))} <${from}>` : from}`,
-    `To: ${to}`, `Subject: ${mimeWord(hv(m.subject, "subject"))}`, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64"
+    `To: ${to}`, `Subject: ${mimeWord(hv(m.subject, "subject"))}`, "MIME-Version: 1.0"
   ];
   if (m.inReplyTo) headers.push(`In-Reply-To: ${hv(m.inReplyTo, "reference")}`);
   if (m.references) headers.push(`References: ${hv(m.references, "reference")}`);
-  const body = Buffer.from(m.text.replace(/\r?\n/g, "\r\n"), "utf8").toString("base64").replace(/(.{76})/g, "$1\r\n");
-  return b64url(Buffer.from(headers.join("\r\n") + "\r\n\r\n" + body, "utf8"));
+  const part = (type: string, v: string) => `Content-Type: ${type}; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${Buffer.from(v.replace(/\r?\n/g, "\r\n"), "utf8").toString("base64").replace(/(.{76})/g, "$1\r\n")}`;
+  if (m.html === undefined) return b64url(Buffer.from(`${headers.join("\r\n")}\r\n${part("text/plain", m.text)}`, "utf8"));
+  // Automatic message: RFC 3834 marker, then multipart/alternative with the plain text first.
+  const boundary = `mmri-${randomBytes(12).toString("hex")}`;
+  headers.push("Auto-Submitted: auto-generated", `Content-Type: multipart/alternative; boundary="${boundary}"`);
+  return b64url(Buffer.from(`${headers.join("\r\n")}\r\n\r\n--${boundary}\r\n${part("text/plain", m.text)}\r\n--${boundary}\r\n${part("text/html", m.html)}\r\n--${boundary}--\r\n`, "utf8"));
 }
 function header(payload: any, name: string): string { const h = (payload?.headers ?? []).find((x: any) => String(x.name).toLowerCase() === name.toLowerCase()); return h ? String(h.value ?? "") : ""; }
 function collect(part: any, out: { plain: string[]; html: string[]; attachments: number }) {

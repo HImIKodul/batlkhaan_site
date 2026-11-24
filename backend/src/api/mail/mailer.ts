@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ApiConfig } from "../config.js";
+import { renderMailHtml } from "./mail-template.js";
 import { GmailApi, GmailError, buildRawMessage, type GmailCredentials } from "./gmail-client.js";
 
 export interface MailMessage { to: string; subject: string; text: string; kind: string; }
@@ -35,7 +36,7 @@ export class GmailMailer implements Mailer {
   readonly provider = "gmail" as const;
   constructor(private readonly api: GmailApi, private readonly fromName = "BusinessMRI") {}
   async send(message: MailMessage): Promise<MailResult> {
-    try { await this.api.send(buildRawMessage({ from: this.api.user, fromName: this.fromName, to: message.to, subject: message.subject, text: message.text })); return { delivered: true, provider: "gmail" }; }
+    try { await this.api.send(buildRawMessage({ from: this.api.user, fromName: this.fromName, to: message.to, subject: message.subject, text: message.text, html: renderMailHtml(message) })); return { delivered: true, provider: "gmail" }; }
     catch (e) { throw new Error(e instanceof GmailError ? `Mail provider request failed (${e.code})` : "Mail provider request failed"); }
   }
 }
@@ -50,7 +51,7 @@ export class ResendMailer implements Mailer {
       const response = await this.transport("https://api.resend.com/emails", {
         method: "POST", redirect: "error", signal: AbortSignal.timeout(this.timeoutMs),
         headers: { "authorization": `Bearer ${this.apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({ from: `BusinessMRI.mn <${this.from}>`, to: [message.to], subject: message.subject, text: message.text })
+        body: JSON.stringify({ from: `BusinessMRI.mn <${this.from}>`, to: [message.to], subject: message.subject, text: message.text, html: renderMailHtml(message), headers: { "Auto-Submitted": "auto-generated" } })
       });
       if (!response.ok) throw new Error("Mail provider rejected request");
       const body = await response.json() as { id?: unknown };

@@ -65,6 +65,8 @@ for(const mode of ['pages','empty-page','oversize-count','invalid-rows','repeate
  let pages=0;const signals=[];
  globalThis.fetch=async(url,options)=>{
   if(String(url).endsWith('/v2/auth/token'))return new Response(JSON.stringify({access_token:'synthetic-token',expires_in:3600}));
+  // the independent payment-detail lookup is not a page of payment/check
+  if(!String(url).endsWith('/v2/payment/check'))return new Response('{}',{status:404});
   pages++;signals.push(options.signal);const request=JSON.parse(options.body);
   check('pagination page numbers advance correctly',request.offset.page_number===pages);
   let body;

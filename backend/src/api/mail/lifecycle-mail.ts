@@ -14,9 +14,9 @@ import type { Mailer } from "./mailer.js";
  */
 export const MAX_ATTEMPTS = 5;
 const WINDOW_HOURS = 48, BATCH = 40;
-const CUSTOMER_MAIL_TYPES = ["ASSESSMENT_COMPLETED", "REPORT_UNDER_REVIEW", "REPORT_RELEASED"] as const;
+const CUSTOMER_MAIL_TYPES = ["ASSESSMENT_COMPLETED", "REPORT_UNDER_REVIEW", "REPORT_RELEASED", "PAYMENT_CONFIRMED"] as const;
 const ADMIN_MAIL_TYPES = ["NEW_ASSESSMENT", "REVIEW_OVERDUE"] as const;
-type MailKind = "ASSESSMENT_COMPLETED" | "REPORT_UNDER_REVIEW" | "REPORT_RELEASED" | "ADMIN_REVIEW_ALERT";
+type MailKind = "PAYMENT_CONFIRMED" | "ASSESSMENT_COMPLETED" | "REPORT_UNDER_REVIEW" | "REPORT_RELEASED" | "ADMIN_REVIEW_ALERT";
 
 export const customerEmailsEnabled = () => (process.env.MMRI_CUSTOMER_EMAILS ?? "off").trim().toLowerCase() === "on";
 export function adminAlertRecipients(): string[] {
@@ -31,6 +31,7 @@ export function buildCustomerMail(type: string, ctx: { company: string; domainLa
   if (type === "ASSESSMENT_COMPLETED") return { kind: "ASSESSMENT_COMPLETED", subject: "BusinessMRI.mn: оношилгоо дууслаа", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн оношилгоо амжилттай дууслаа. Хариулт бүрэн хадгалагдсан.\n\nҮр дүнг эндээс харна уу: ${base}/#/results${sign}` };
   if (type === "REPORT_UNDER_REVIEW") return { kind: "REPORT_UNDER_REVIEW", subject: "BusinessMRI.mn: тайлан хянагдаж байна", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн тайлан шинжээчийн хяналтад орлоо. Баталгаажсан тайлан бэлэн болмогц танд дахин мэдэгдэнэ. Хяналтын явцад тайланд нэвтрэх боломжгүй.${sign}` };
   if (type === "REPORT_RELEASED") return { kind: "REPORT_RELEASED", subject: "BusinessMRI.mn: тайлан бэлэн боллоо", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн тайлан бэлэн боллоо. Тайланг үзэх, PDF хэлбэрээр татах боломжтой (нэвтэрсний дараа нээгдэнэ):\n\n${base}/#/report${ctx.contact && /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(ctx.contact) ? `\n\nАсуулт байвал ${ctx.contact} хаягаар бидэнтэй холбогдоно уу.` : ""}${sign}` };
+  if (type === "PAYMENT_CONFIRMED") return { kind: "PAYMENT_CONFIRMED", subject: "BusinessMRI.mn: төлбөр баталгаажлаа", text: `Сайн байна уу.\n\n«${c}» байгууллагын ${d} чиглэлийн оношилгооны төлбөр баталгаажиж, эрх нээгдлээ.\n\nОношилгоог эндээс эхлүүлнэ үү: ${base}/#/analysis\n\nТөлбөрийн түүх таны бүртгэлийн «Тохиргоо» хэсэгт хадгалагдсан.${sign}` };
   return null;
 }
 export function buildAdminMail(type: string, title: string, body: string, appUrl: string): { subject: string; text: string; kind: MailKind } {

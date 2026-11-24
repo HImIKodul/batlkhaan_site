@@ -8,7 +8,10 @@ const transport: typeof fetch = async (url, options) => {
   assert.equal(options?.redirect,'error');
   assert.ok(options?.signal instanceof AbortSignal);
   assert.equal(new Headers(options?.headers).get('authorization'),'Bearer contract-test-key');
-  assert.deepEqual(JSON.parse(String(options?.body)),{from:'BusinessMRI.mn <noreply@example.invalid>',to:[message.to],subject:message.subject,text:message.text});
+  const {html,headers,...sent}=JSON.parse(String(options?.body));
+  assert.deepEqual(sent,{from:'BusinessMRI.mn <noreply@example.invalid>',to:[message.to],subject:message.subject,text:message.text});
+  assert.ok(html.includes('MRI')&&html.includes(message.text)&&!/<script|<img|javascript:/i.test(html));
+  assert.deepEqual(headers,{'Auto-Submitted':'auto-generated'});
   return new Response(JSON.stringify({id:'synthetic-mail-id'}),{status:200});
 };
 assert.deepEqual(await new ResendMailer('contract-test-key','noreply@example.invalid',1000,transport).send(message),{delivered:true,provider:'resend'});

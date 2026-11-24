@@ -13,7 +13,7 @@ import { scanReport } from "./review-scan.js";
 import type { SupportMailService } from "../mail/support-mail-service.js";
 
 export interface AdminDeps {
-  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; billing: { confirmManualPayment(id: string, reference: unknown, amount: unknown): Promise<any>; recordConfirmedRefund(id: string, reference: unknown, reason: unknown): Promise<any> }; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
+  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; billing: { reconcileInvoice(id: string): Promise<any>; confirmManualPayment(id: string, reference: unknown, amount: unknown): Promise<any>; recordConfirmedRefund(id: string, reference: unknown, reason: unknown): Promise<any> }; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
   readJson: (req: IncomingMessage, limit: number) => Promise<any>; clientIp: (req: IncomingMessage) => string; fingerprint: (req: IncomingMessage) => { ip?: string; userAgent?: string };
 }
 const A = "/api/v1/admin";
@@ -168,7 +168,7 @@ export function registerAdminRoutes(d: AdminDeps) {
   // ----- payments and disputes (admins can never mark an invoice paid or execute a refund) -----
   route("GET", "/payments", "payments.read", async (c) => {
     const { page, pageSize, skip } = pageOf(c.query); const where: any = {}; if (c.query.get("status")) where.status = c.query.get("status"); if (c.query.get("domain")) where.domainCode = c.query.get("domain");
-    const [total, rows] = await Promise.all([prisma.billingInvoice.count({ where }), prisma.billingInvoice.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize, select: { id: true, companyId: true, domainCode: true, planCode: true, amountMnt: true, currency: true, provider: true, status: true, paidAt: true, createdAt: true, providerPaymentId: true, refundedAt: true } })]);
+    const [total, rows] = await Promise.all([prisma.billingInvoice.count({ where }), prisma.billingInvoice.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize, select: { id: true, companyId: true, domainCode: true, planCode: true, amountMnt: true, currency: true, provider: true, status: true, paidAt: true, createdAt: true, providerPaymentId: true, refundedAt: true, lastVerifiedAt: true, callbackReceivedAt: true, failureReason: true } })]);
     const cos = await prisma.company.findMany({ where: { id: { in: rows.map(r => r.companyId) } }, select: { id: true, name: true } }); const cm = new Map(cos.map(x => [x.id, x.name]));
     const disputes = await prisma.paymentDispute.findMany({ where: { invoiceId: { in: rows.map(r => r.id) } }, select: { invoiceId: true, id: true, status: true } }); const dm = new Map(disputes.map(x => [x.invoiceId, x]));
     const dup: any[] = await prisma.$queryRaw`select "companyId","domainCode","planCode",count(*)::int n from billing_invoices where status='PAID' group by 1,2,3 having count(*)>1`;
@@ -199,6 +199,13 @@ export function registerAdminRoutes(d: AdminDeps) {
     await aud(p, fp, "ADMIN_MANUAL_PAYMENT_CONFIRMED", "INVOICE", c.params.id, { reason, paymentReference: clean(b.paymentReference, 200), amountMnt: Number(b.amountMnt ?? 0) });
     ok(c.res, inv);
   }, { sensitive: true });
+  /* Asks QPay again about one invoice. It cannot mark anything paid by itself: the invoice and entitlement change only when QPay confirms the exact payment (same path as the callback). */
+  route("POST", "/billing/invoices/:id/reconcile", "payments.decide", async (c, p, fp) => {
+    const before = await prisma.billingInvoice.findUnique({ where: { id: c.params.id }, select: { status: true } }); if (!before) throw notFound("Нэхэмжлэх олдсонгүй.");
+    const inv = await d.billing.reconcileInvoice(c.params.id);
+    await aud(p, fp, "ADMIN_PAYMENT_RECONCILED", "INVOICE", c.params.id, { before: before.status, after: inv.status });
+    ok(c.res, { status: inv.status, changed: inv.status !== before.status, lastVerifiedAt: inv.lastVerifiedAt });
+  });
   route("POST", "/billing/invoices/:id/refund-confirm", "payments.decide", async (c, p, fp, b) => {
     const reason = clean(b.reason, 500); if (reason.length < 5) throw badRequest("Буцаалтын шалтгаан шаардлагатай.");
     const inv = await d.billing.recordConfirmedRefund(c.params.id, b.refundReference, reason);

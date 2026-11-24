@@ -817,7 +817,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
       json(res,e.status,{error:{code:e.code,message:e.message,details:e.details,requestId}});
     }
   });
-  return {server,router,config,reviews,lifecycleMail,beginDrain:()=>{acceptingTraffic=false;},operationalSnapshot:()=>operationalMetrics.snapshot()};
+  return {server,router,config,reviews,lifecycleMail,billing,beginDrain:()=>{acceptingTraffic=false;},operationalSnapshot:()=>operationalMetrics.snapshot()};
 }
 
 function normalizeError(error:any,environment="development",context?:{requestId:string;path:string;releaseSha:string;instanceId:string}):ApiError {
