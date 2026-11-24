@@ -19,7 +19,7 @@ export function LegalDocument({doc,route}:{doc:LegalDoc;route:'privacy'|'terms'}
     <h2>{b.title}</h2>
     {b.paragraphs?.map((p,i)=><p key={i}>{p}</p>)}
     {b.items&&<ul>{b.items.map((x,i)=><li key={i}>{x}</li>)}</ul>}
-    {b.pending&&<p className="legal-doc__pending"><b>Тодруулж буй:</b> {b.pending.join('; ')}.</p>}
+    {b.pending&&<p className="legal-doc__pending"><b>Тодруулж буй:</b> {b.pending.join(' · ')}.</p>}
    </article>)}
   </section>
   <nav className="legal-doc__links" aria-label="Холбоотой баримт">

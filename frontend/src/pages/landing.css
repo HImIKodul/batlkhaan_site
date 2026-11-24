@@ -516,6 +516,9 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 .hx3__name{position:relative;z-index:2;font-size:round(max(11px,var(--fs)),.5px);max-width:100%;line-height:1.22;overflow-wrap:normal;word-break:keep-all;text-wrap:balance;text-shadow:0 1px 2px rgba(0,8,40,.9),0 0 .7em rgba(0,8,40,.55),0 0 1em color-mix(in srgb,var(--c) 55%,transparent)}
 @media (max-width:1000px){.hx{width:min(100%,580px);margin-inline:auto}}
 @media (min-width:561px) and (max-width:1000px){.mmri-shell:has(.mmri-home2) .mmri-legal-footer{padding-bottom:40px}html:root body.mmri-prism-page .mmri-home2__stage{gap:36px}.hx{margin-block:34px 0}}
+/* Desktop: the free height is shared equally above the hero, between hero and guides, and below the guides. Tablet and phone: one equal gap between the three guides. */
+@media (min-width:1001px){html:root body.mmri-prism-page .mmri-home2__stage{justify-content:space-evenly;gap:0}}
+@media (max-width:900px){html:root body.mmri-prism-page .mmri-home2__guides{gap:12px}}
 .mmri-home2__copy{grid-template-columns:minmax(0,1fr)}.mmri-home2__copy h1{justify-self:center}
 /* Phones: the same five equal cards as an overlapping column, each a small step to the right. */
 @media (max-width:560px){.hx{--w:88;--h:19.5;--o:3.5;--s:16;--r:4.2cqw;--fs:3.6cqw;width:100%;max-width:400px;margin:20px auto 0;aspect-ratio:100/83.5}.hx3,.hx3:nth-child(even){left:calc(var(--i) * 3cqw);top:calc(var(--i) * var(--s) * 1cqw)}.hx3 .hx3__top,.hx3:nth-child(n+2) .hx3__top{padding:0 2cqw 2.2cqw;border-width:1px}.hx3__name{font-size:clamp(12px,var(--fs),13.5px);line-height:1.14;letter-spacing:-.01em;hyphens:none}}
@@ -524,14 +527,13 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 @media (max-width:360px){body.mmri-prism-page .mmri-home2__guide{height:auto;min-height:50px;padding-block:6px}.mmri-home2__start{max-width:100%;box-sizing:border-box;gap:6px;padding-inline:14px 6px}.mmri-home2__start>span:not(.mmri-shell-glint){min-width:0;font-size:11.5px;letter-spacing:.01em}}
 
 /* Guide 3, step 5: the "wait up to 24 hours" notice (same glass family as the real notification panel) */
-.mmri-guide2__deliver{display:grid;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(140,190,255,.55);background:linear-gradient(165deg,rgba(40,100,230,.34),rgba(6,22,70,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 26px -14px rgba(0,0,0,.6);color:#fff}
-.mmri-guide2__deliver-item{display:flex;gap:12px;align-items:flex-start}
-.mmri-guide2__deliver-bell{flex:none;width:12px;height:12px;margin-top:6px;border-radius:50%;background:#ff4f7a;box-shadow:0 0 12px #ff4f7a;font-size:0}
-.mmri-guide2__deliver strong{display:block;font-size:16px;font-weight:800}
-.mmri-guide2__deliver p{margin:4px 0 0;font-size:15px;line-height:1.45;color:#e8f1ff}
-.mmri-guide2__deliver-flow{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none;counter-reset:d}
-.mmri-guide2__deliver-flow li{counter-increment:d;display:grid;gap:2px;padding:8px 12px;border-radius:12px;border:1px solid rgba(140,190,255,.45);background:rgba(4,16,56,.7);font-size:14px;font-weight:700;color:#fff}
-.mmri-guide2__deliver-flow li::before{content:counter(d);display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#2f7bff;font-size:12px;margin-bottom:2px}
-.mmri-guide2__deliver-flow small{font-size:12.5px;font-weight:700;color:#ffd98a}
-.mmri-guide2__deliver>small{font-size:12.5px;color:#cfe0ff}
-@media (max-width:640px){.mmri-guide2__deliver-flow{display:grid;grid-template-columns:1fr 1fr}}
+.mmri-guide2__deliver{container-type:inline-size;padding:14px 16px;border-radius:18px;border:1px solid rgba(140,190,255,.55);background:linear-gradient(165deg,rgba(40,100,230,.34),rgba(6,22,70,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 26px -14px rgba(0,0,0,.6);color:#fff}
+/* Four ordered actions: numbered circles joined by one line; a row with arrows when wide, a vertical timeline when narrow. */
+.mmri-guide2__deliver-flow{display:grid;margin:0;padding:0;list-style:none;counter-reset:d}
+.mmri-guide2__deliver-flow li{counter-increment:d;position:relative;display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:14px;min-height:50px;font-size:15px;line-height:1.3;font-weight:700;color:#fff}
+.mmri-guide2__deliver-flow li::before{content:counter(d);position:relative;z-index:1;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:2px solid rgba(190,220,255,.9);background:#1559e6;font-size:16px;font-weight:800;box-shadow:0 0 14px rgba(70,140,255,.6)}
+.mmri-guide2__deliver-flow li:not(:last-child)::after{content:"";position:absolute;left:16px;top:calc(50% + 17px);height:calc(100% - 34px);width:3px;background:#6fb0ff}
+@container (min-width:520px){.mmri-guide2__deliver-flow{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .mmri-guide2__deliver-flow li{grid-template-columns:minmax(0,1fr);justify-items:center;align-items:start;align-content:start;gap:8px;min-height:0;padding:0 8px;text-align:center;text-wrap:balance}
+ .mmri-guide2__deliver-flow li:not(:last-child)::after{left:calc(50% + 21px);top:11px;width:calc(100% - 42px);height:12px;background:#6fb0ff;clip-path:polygon(0 38%,calc(100% - 10px) 38%,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,calc(100% - 10px) 62%,0 62%)}
+}
