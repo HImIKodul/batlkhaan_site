@@ -1,4 +1,4 @@
-/* REAL e-mail test, only after the owner named the inboxes. Sends four clearly marked samples of the production templates to each inbox (at most two) through the configured Gmail account.
+/* REAL e-mail test, only after the owner named the inboxes. Sends five clearly marked samples of the production templates to each inbox (at most two) through the configured Gmail account.
    usage: set -a; . ~/mmri-secrets/gmail-support.env; set +a; MMRI_LIVE_MAIL_APPROVED=YES MMRI_LIVE_MAIL_TO="a@gmail.com,b@example.com" npx tsx scripts/live-mail-check.mts
    No database, no customer data, no valid code or link. Registration, expiry and replay are then checked by hand on the preview (see ROLLOUT.md). */
 import { createMailer } from "../src/api/mail/mailer.js"; import { buildCustomerMail } from "../src/api/mail/lifecycle-mail.js";
@@ -10,7 +10,7 @@ const ctx = { company: "Жишээ ХХК", domainLabel: "Санхүү", appUrl:
 const mails = [
   { kind: "EMAIL_VERIFICATION", subject: "ТУРШИЛТ: BusinessMRI.mn бүртгэлийн код", text: "Сайн байна уу.\n\nЭнэ бол имэйл хүргэлтийн туршилт. Доорх код ажиллахгүй.\n\n000000\n\nКодыг хэнд ч дамжуулж болохгүй." },
   { kind: "PASSWORD_RESET", subject: "ТУРШИЛТ: BusinessMRI.mn нууц үг сэргээх", text: "Сайн байна уу.\n\nЭнэ бол имэйл хүргэлтийн туршилт. Доорх холбоос хүчингүй гэсэн хариу өгөх ёстой:\n\nhttps://businessmri.mn/#/reset-password?token=TEST-ONLY" },
-  ...["PAYMENT_CONFIRMED", "REPORT_RELEASED"].map(t => { const m = buildCustomerMail(t, ctx)!; return { ...m, subject: `ТУРШИЛТ: ${m.subject}` }; })
+  ...["PAYMENT_CONFIRMED", "REPORT_UNDER_REVIEW", "REPORT_RELEASED"].map(t => { const m = buildCustomerMail(t, ctx)!; return { ...m, subject: `ТУРШИЛТ: ${m.subject}` }; })
 ];
 let bad = 0; for (const a of to) for (const m of mails) { try { const r = await mailer.send({ ...m, to: a }); console.log(`${m.kind} -> ${a.replace(/^(.).*@/, "$1***@")}: accepted=${r.delivered}`); } catch (x: any) { bad++; console.log(`${m.kind} -> ${a.replace(/^(.).*@/, "$1***@")}: ERROR ${x.message}`); } }
 console.log("Accepted by Gmail is not proof of arrival: check inbox/spam and 'Show original' for SPF, DKIM and DMARC = PASS."); process.exit(bad ? 1 : 0);

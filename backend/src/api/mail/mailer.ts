@@ -34,7 +34,7 @@ class DisabledMailer implements Mailer {
 /** Sends through the owner's existing Gmail mailbox (Gmail API, OAuth 2.0). Accepted by Gmail = delivered=true (never confirmed arrival). */
 export class GmailMailer implements Mailer {
   readonly provider = "gmail" as const;
-  constructor(private readonly api: GmailApi, private readonly fromName = "BusinessMRI") {}
+  constructor(private readonly api: GmailApi, private readonly fromName = "BusinessMRI.mn") {}
   async send(message: MailMessage): Promise<MailResult> {
     try { await this.api.send(buildRawMessage({ from: this.api.user, fromName: this.fromName, to: message.to, subject: message.subject, text: message.text, html: renderMailHtml(message) })); return { delivered: true, provider: "gmail" }; }
     catch (e) { throw new Error(e instanceof GmailError ? `Mail provider request failed (${e.code})` : "Mail provider request failed"); }

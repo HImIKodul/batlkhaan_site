@@ -28,7 +28,7 @@ class GmailSource implements SupportSource {
     return out;
   }
   async send(m: { to: string; subject: string; text: string; inReplyTo: string | null; references: string | null; threadId: string }) {
-    return this.api.send(buildRawMessage({ from: this.api.user, fromName: "BusinessMRI", to: m.to, subject: m.subject, text: m.text, inReplyTo: m.inReplyTo, references: m.references }), m.threadId);
+    return this.api.send(buildRawMessage({ from: this.api.user, fromName: "BusinessMRI.mn", to: m.to, subject: m.subject, text: m.text, inReplyTo: m.inReplyTo, references: m.references }), m.threadId);
   }
 }
 /** QA source: `support-inbox.jsonl` in the mock mailbox directory is the "inbox"; replies are appended to `outbox.jsonl` (kind SUPPORT_REPLY). Never leaves the machine. */
