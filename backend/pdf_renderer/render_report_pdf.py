@@ -61,11 +61,11 @@ ACCENT_DARK = colors.HexColor("#14523B")
 ACCENT_LIGHT = colors.HexColor("#E8F4EE")
 # Domain colour (fills/strokes/eyebrows). Strength/risk tones stay green/red so domain colour never reads as status.
 DOMAIN_COLORS = {
-    "marketing": ("#1FB5A0", "#0B6B5E", "#E2F6F2"),
+    "marketing": ("#FF3D8D", "#D81B70", "#FFE9F2"),
     "it": ("#00A6FF", "#007AC0", "#E0F4FF"),
     "finance": ("#FFD000", "#8F6B00", "#FFF6CC"),
     "people": ("#7C4DFF", "#5A31D6", "#EFE9FF"),
-    "operations": ("#E63F9A", "#A8246F", "#FDE7F3"),
+    "operations": ("#FF6A00", "#C24E00", "#FFEBDC"),
 }
 DOMAIN = ACCENT
 DOMAIN_INK = ACCENT
