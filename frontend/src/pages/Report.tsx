@@ -33,6 +33,8 @@ function fullDateLabel(value?:string|null){const d=value?new Date(value):new Dat
 function clamp(n:number){return Math.max(0,Math.min(100,Math.round(n)))}
 function mnCustomerText(value:string){let s=String(value||'');const replacements:Array<[RegExp,string]>=[[/\bKPI\b/gi,'гүйцэтгэлийн гол үзүүлэлт'],[/\bdashboard\b/gi,'хяналтын самбар'],[/\breview\b/gi,'хяналт'],[/\bworkflow\b/gi,'ажлын урсгал'],[/\bperformance\b/gi,'гүйцэтгэл'],[/\bonboarding\b/gi,'ажилд дасан зохицуулах үйл явц'],[/\bgovernance\b/gi,'удирдлага'],[/\banalytics?\b/gi,'шинжилгээ'],[/\blifecycle\b/gi,'амьдралын мөчлөг'],[/\bbenchmark\b/gi,'жишиг үзүүлэлт'],[/\bROI\b/gi,'хөрөнгө оруулалтын өгөөж'],[/\bSLA\b/gi,'үйлчилгээний түвшний шаардлага'],[/\bCRM\b/gi,'харилцагчийн мэдээллийн тогтолцоо'],[/\bERP\b/gi,'нөөцийн нэгдсэн удирдлагын тогтолцоо'],[/\bOKR\b/gi,'зорилго ба гол үр дүн'],[/\bAI\b/gi,'хиймэл оюун'],[/\bAPI\b/gi,'систем хоорондын холболт']];for(const [re,to] of replacements)s=s.replace(re,to);return plainMn(s).replace(/\s{2,}/g,' ').trim()}
 function purposeWhy(name:string,score:number){if(score<40)return `${name} нь эхэлж сайжруулах шаардлагатай чадавх байна.`;if(score<55)return `${name} нь тухайн зорилгын бусад чадавхаас сул түвшинд байна.`;return `${name} нь дараагийн ахиц гаргахын тулд эхэлж бэхжүүлэх чадавх байна.`}
+/** Display only: a sentence starts with a capital letter (catalogue fragments are joined in lower case). */
+const sentenceCase=(t:string)=>t.replace(/(^|[^.]{4}[.!?]\s+)(\p{Ll})/gu,(_,a,b)=>a+b.toLocaleUpperCase('mn'));
 function actionDetail(action:string,weakest:string,result:string,measure:string){return `“${weakest}” чадавхыг эхэлж бэхжүүлэхийн тулд ${lowerFirst(action)}. Ажил дуусахад ${lowerFirst(result)} бүрдсэн байна. Ахицыг дараах хэмжүүрээр харна: ${lowerFirst(measure)}.`}
 function projected(weak:number){return clamp(weak+Math.max(8,Math.round((100-weak)*.22)))}
 function capabilityMeaningOnly(name:string,definition:string){let text=mnCustomerText(definition).trim();text=text.replace(/^“[^”]+”\s*гэдэг нь\s*/u,'').replace(/^"[^"]+"\s*гэдэг нь\s*/u,'');const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');text=text.replace(new RegExp(`^${escaped}\\s*(?:гэдэг нь|нь)\\s*`,'u'),'');if(!text)return 'Тухайн чадавх байгууллагын өдөр тутмын удирдлага, хэрэгжилтийн тогтвортой байдлыг илэрхийлнэ.';return text.charAt(0).toLocaleUpperCase('mn-MN')+text.slice(1)}
@@ -122,7 +124,7 @@ function realModel(area:BusinessArea,company:string,assessment:AssessmentSummary
   const outcome=mnCustomerText(rec.deliverableMn);
   const measure=mnCustomerText(rec.kpiMn);
   const affectedPurposes=outcomes.filter(o=>(o.topCategories||[]).some(c=>c.categoryId===rec.categoryId)).map(o=>mnCustomerText(o.nameMn));
-  return {purpose:mnCustomerText(rec.objectiveMn||`Тэргүүлэх арга хэмжээ ${i+1}`),purposeScore:weakScore,weakest,weakScore,why:purposeWhy(weakest,weakScore),action,detail:approvedActionText(report,rec.id)||actionDetail(action,weakest,outcome,measure),outcome,measure,projectedScore,affectedPurposes};
+  return {purpose:mnCustomerText(rec.objectiveMn||`Тэргүүлэх арга хэмжээ ${i+1}`),purposeScore:weakScore,weakest,weakScore,why:purposeWhy(weakest,weakScore),action,detail:sentenceCase(approvedActionText(report,rec.id)||actionDetail(action,weakest,outcome,measure)),outcome,measure,projectedScore,affectedPurposes};
  });
  const rawDate=assessment?.completedAt||assessment?.updatedAt||payload?.generatedAt||new Date().toISOString();
  const generatedAt=payload?.generatedAt||rawDate;

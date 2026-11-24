@@ -72,6 +72,12 @@ DOMAIN_INK = ACCENT
 DOMAIN_LIGHT = ACCENT_LIGHT
 
 
+def sentence_case(value):
+    """Catalogue fragments start in lower case; shown as a sentence (first letter only, nothing else changes)."""
+    v = str(value)
+    return v[:1].upper() + v[1:]
+
+
 # Layout tier: 0 is the accepted design. Higher tiers shrink only the optional approved explanations and the milestone table
 # (never drop a milestone or an approved sentence) when a plan or reviewer edit would otherwise push the report past exactly 3 pages.
 TIER_E = 0  # explanation tier (pages 1-2): 0-3 print every approved word, 4 shortens (never in --strict), 5 omits explanations (never in --strict)
@@ -605,9 +611,9 @@ def action_card(action, index, st, content_width):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     facts = Table([
-        [p("Хийх ажил", st["small_bold"]), p(action.get("actionMn") or action.get("narrativeMn") or "-", st["body_compact"])],
-        [p("Гарц", st["small_bold"]), p(action.get("deliverableMn") or "-", st["body_compact"])],
-        [p("Хэмжүүр", st["small_bold"]), p(action.get("kpiMn") or "-", st["body_compact"])],
+        [p("Хийх ажил", st["small_bold"]), p(sentence_case(action.get("actionMn") or action.get("narrativeMn") or "-"), st["body_compact"])],
+        [p("Гарц", st["small_bold"]), p(sentence_case(action.get("deliverableMn") or "-"), st["body_compact"])],
+        [p("Хэмжүүр", st["small_bold"]), p(sentence_case(action.get("kpiMn") or "-"), st["body_compact"])],
     ] + ([[p("Тайлбар", st["small_bold"]), p(explanation_text(action.get("explanationMn"), 300), st["explain"])]] if explanation_text(action.get("explanationMn"), 300) else []), colWidths=[24 * mm, 144 * mm])
     facts.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
