@@ -502,16 +502,15 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 .hx__scene::before{content:"";position:absolute;inset:8% 10%;pointer-events:none;background:radial-gradient(closest-side,rgba(70,150,255,.3),rgba(120,90,255,.12) 55%,transparent)}
 .hx3{left:calc((4 - var(--i)) * var(--dx) * 1cqw);top:calc(var(--i) * var(--dy) * 1cqw - 3cqw);width:calc(var(--w) * 1cqw);height:calc(var(--h) * 1cqw);z-index:calc(5 - var(--i));transform-style:flat;transform:none;filter:none}
 .hx3__face,.hx3__shadow{display:none}
-.hx3__top{transform:none;align-items:flex-end;justify-content:center;text-align:center;padding:0 2cqw 1.7cqw;border-radius:var(--r);border:.3cqw solid rgba(255,255,255,.85);-webkit-backdrop-filter:blur(.9cqw) saturate(1.5);backdrop-filter:blur(.9cqw) saturate(1.5);transition:border-color .28s ease,filter .28s ease;
- background:linear-gradient(118deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 26%,rgba(255,255,255,0) 46%),linear-gradient(168deg,color-mix(in srgb,var(--c) 84%,rgba(255,255,255,.7)) 0,color-mix(in srgb,var(--c) 78%,rgba(20,40,130,.6)) 62%,color-mix(in srgb,var(--c) 56%,rgba(6,16,80,.86)) 100%);
- box-shadow:inset 0 0 0 .2cqw rgba(255,255,255,.35),inset 0 .6cqw .9cqw rgba(255,255,255,.7),inset 0 -.8cqw 1.4cqw color-mix(in srgb,var(--c) 60%,rgba(0,10,60,.4)),0 .8cqw 0 -.2cqw color-mix(in srgb,var(--c) 70%,#fff),0 0 2.6cqw color-mix(in srgb,var(--c) 50%,transparent),0 1.4cqw 2.4cqw rgba(0,8,40,.45)}
-/* Extra glow layer: opacity only, so hover is a smooth intensification and nothing moves. */
-.hx3__top::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .28s ease;box-shadow:0 0 5cqw .6cqw color-mix(in srgb,var(--c) 85%,transparent),inset 0 0 3cqw color-mix(in srgb,var(--c) 55%,transparent)}
-.hx3__top:is(:hover,:focus-visible){border-color:#fff;filter:brightness(1.1) saturate(1.12)}
-.hx3__top:is(:hover,:focus-visible)::before{opacity:1}
+/* Material, border, glow and hover of the cards are the diagnosis cards' own rule (midnight.css "category light"), so the five colours cannot drift apart. Only geometry and white light are set here. */
+.hx3__top{transform:none;align-items:flex-end;justify-content:center;text-align:center;padding:0 2cqw 1.7cqw;border-radius:var(--r)}
+.hx3__top::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .hx3__top:focus-visible{outline:3px solid #fff;outline-offset:3px}
-/* One quiet diagonal sheen across the upper part of each card. */
-.hx3__top::after{content:"";position:absolute;left:0;right:0;top:0;height:60%;border-radius:var(--r) var(--r) 0 0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.06) 55%,rgba(255,255,255,0) 100%)}
+/* The shared glow without its dark drop shadow (it would dim the label of the card underneath). Hover intensifies light only. */
+html:root body.mmri-prism-page:not(.mmri-admin) .hx .hx3 button.hx3__top{box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent),0 0 20px color-mix(in srgb,var(--c) 62%,transparent),0 0 64px -8px color-mix(in srgb,var(--c) 70%,transparent),inset 0 0 28px color-mix(in srgb,var(--c) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.72)}
+html:root body.mmri-prism-page:not(.mmri-admin) .hx .hx3 button.hx3__top:is(:hover,:focus-visible){box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 70%,transparent),0 0 32px color-mix(in srgb,var(--c) 85%,transparent),0 0 90px -6px color-mix(in srgb,var(--c) 75%,transparent),inset 0 0 40px color-mix(in srgb,var(--c) 75%,transparent),inset 0 1px 0 rgba(255,255,255,.85)}
+/* Refraction: a curved reflection over the upper half, a soft light band, and a bright inner rim (white light only, never a second hue). */
+.hx3__top::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 70% at 12% -12%,rgba(255,255,255,.42) 0,rgba(255,255,255,.1) 48%,transparent 49%),linear-gradient(112deg,transparent 58%,rgba(255,255,255,.12) 64%,rgba(255,255,255,.02) 74%,transparent 75%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 .5cqw .9cqw rgba(255,255,255,.32),inset .4cqw 0 .8cqw rgba(255,255,255,.16)}
 .hx3__name{position:relative;z-index:2;font-size:round(max(11px,var(--fs)),.5px);max-width:100%;line-height:1.22;overflow-wrap:normal;word-break:keep-all;text-wrap:balance;text-shadow:0 1px 2px rgba(0,8,40,.9),0 0 .7em rgba(0,8,40,.55),0 0 1em color-mix(in srgb,var(--c) 55%,transparent)}
 @media (max-width:1000px){.hx{width:min(100%,520px);margin-inline:auto}}
 /* Desktop: the figure uses the free height around its row, so it never moves the guides. */
@@ -523,6 +522,8 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 .mmri-home2__copy{grid-template-columns:minmax(0,1fr)}.mmri-home2__copy h1{justify-self:center}
 /* Phones: the same diagonal stack with wider cards and taller label strips. */
 @media (max-width:560px){.hx{--w:74;--h:31;--dx:6.5;--dy:14.2;--tilt:3deg;--r:4.4cqw;--fs:3.7cqw;width:100%;max-width:400px;margin:20px auto 0;aspect-ratio:100/89}.hx3__top{padding:0 2cqw 2.4cqw;border-width:1px}.hx3__name{font-size:clamp(12px,var(--fs),14px);line-height:1.14;letter-spacing:-.01em;hyphens:none}}
+/* Phones: one ambient glow layer instead of three. */
+@media (max-width:560px){html:root body.mmri-prism-page:not(.mmri-admin) .hx .hx3 button.hx3__top{box-shadow:0 0 18px color-mix(in srgb,var(--c) 62%,transparent),inset 0 0 16px color-mix(in srgb,var(--c) 42%,transparent),inset 0 1px 0 rgba(255,255,255,.72)}}
 @media (max-width:370px){.hx{--dy:16.4;aspect-ratio:100/98}.hx3__top{padding-bottom:1.6cqw}}
 /* Chrome counts the projected (perspective) box of a 3D stack as scrollable overflow even when every plate is inside the viewport. Guard at the viewport edge only (the shell is as wide as the viewport), so nothing visible can be cut mid-page; plate positions are verified separately. */
 .mmri-shell:has(.mmri-home2){overflow-x:clip}
