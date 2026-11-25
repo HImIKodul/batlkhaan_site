@@ -47,8 +47,7 @@ export function validateNarrativeDraft(payload: FrozenReportPayload, draft: Narr
     const traces=new Set(c.sourceTraceIds);
     const bound=(own:string[],extra?:string)=>own.some(t=>traces.has(t))||(extra!==undefined&&traces.has(extra));
     const add=(v:unknown)=>{ for(const n of collectTrustedNumericTokens(v)) scope.add(n); };
-    for(const x of payload.strengths) if(bound(x.sourceTraceIds)) add(x);
-    for(const x of payload.weaknesses) if(bound(x.sourceTraceIds)) add(x);
+    for(const x of [...payload.strengths,...payload.weaknesses]) if(bound(x.sourceTraceIds)) add([x,payload.guidance?.findings[x.id]??""]); // the frozen note of the same finding (answer wording such as "70-89%")
     payload.purposes.forEach((x,i)=>{ if(traces.has(`purpose:${x.id}`)) add([x,x.id,i+1]); });
     for(const x of payload.rootFindings) if(c.rootFindingId===x.id||bound(x.sourceTraceIds)) add(x);
     for(const x of [...payload.priorityActions,...payload.evidenceActions]) if(c.recommendationId===x.id||traces.has(`recommendation:${x.id}`)) add(x);

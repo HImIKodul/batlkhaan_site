@@ -1,3 +1,4 @@
+import { deterministicAnnualPlan } from "../report/guidance/year-plan.js";
 import { ApiError } from "../api/errors.js";
 import { planForPayload, planAnswersOverview } from "../report/annual-plan.js";
 import { readAiProfileConsent } from "../company/ai-profile-consent.js";
@@ -533,6 +534,8 @@ export class PrismaStrategyReportService {
         if(plan.state==="READY"){result={...result,narrative:{...narrativeBase,annualPlan:plan}};planOutcome="READY";}else planOutcome=`UNAVAILABLE: ${plan.reason}`;
         mark("annual_plan");
       }
+      /* A draft started by hand without AI gets the dated plan built from the same frozen diagnosis; a person edits and approves it before anything is published. */
+      if(withoutAi&&this.annualPlanProvider){const plan=deterministicAnnualPlan(payload);if(plan){result={...result,narrative:{...result.narrative,annualPlan:plan}};planOutcome="READY"}}
       /* Company logo snapshot (immutable asset id + hash). Reports issued later keep this logo even if the company replaces or removes it. */
       {
         const owner=await prisma.assessment.findUnique({where:{id:assessmentId},select:{companyId:true}});

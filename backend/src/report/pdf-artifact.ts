@@ -1,3 +1,4 @@
+import { plainRole } from "./guidance/index.js";
 import { planForPayload } from "./annual-plan.js";
 import { createHash } from "node:crypto";
 import type { FrozenReportPayload, NarrativeDraft, NarrativeClaim } from "./types.js";
@@ -29,6 +30,8 @@ export interface ReportPdfAction {
   kpiMn:string;
   /** Present only for a reported absence (newer reports), so earlier sources and their hashes are unchanged. */
   statedMn?:string;
+  /** Newer reports: capability-specific wording and the plan stages that carry the work. */
+  guide?:{headingMn:string;whyMn:string;goalMn:string;doMn:string;deliverableMn:string;checkMn:string;planMn:string};
   ownerRoleLabelMn:string;
   narrativeMn:string;
   /** Approved S06 explanation (reviewer or AI wording) when it differs from the deterministic default. MMRI-13. */
@@ -67,6 +70,7 @@ export interface ReportPdfSource {
   overallBand:string|null;
   overallConfidence:number|null;
   overallCoverage:number|null;
+  targetNoteMn?:string;
   conclusionMn:string;
   strengths:ReportPdfFinding[];
   weaknesses:ReportPdfFinding[];
@@ -154,32 +158,37 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
   const narrativeHash=sha256Json(narrative);
   const plan=planForPayload(narrative.annualPlan,payload.payloadHash);
   const baseline=deterministicFallbackNarrative(payload);
+  const guidance=payload.guidance;
+  const stagesOf=(i:number)=>plan?plan.stages.filter(st=>st.actions.some(x=>x.recommendationIds.includes(`F${i+1}`)&&x.recommendationIds.length<payload.priorityActions.length)).sort((a,b)=>a.startDay-b.startDay).reduce((t,st,k,all)=>k?t:`${st.startDate.replaceAll("-",".")} - ${all.reduce((m,x)=>x.endDate>m?x.endDate:m,st.endDate).replaceAll("-",".")}`,""):"";
+  /* The approved S06 wording (reviewer or model) is the action text; its default is the frozen guidance. The catalogue title in front of it is not repeated. */
+  const approvedDo=(id:string)=>{const t=claimTextByRef(narrative,"S06","recommendationId",id),title=payload.priorityActions.find(a=>a.id===id)?.titleMn??"";return t.startsWith(title)?t.slice(title.length).replace(/^[\s.:]+/,""):t;};
+  const guideOf=(id:string,i:number)=>{const g=guidance?.priorities.find(x=>x.recommendationId===id);return g?{guide:{headingMn:g.dimensionMn&&g.dimensionMn!=="Бодит хэрэгжилт"?`${g.capabilityMn}: ${g.dimensionMn.charAt(0).toLocaleLowerCase("mn-MN")+g.dimensionMn.slice(1)}`:g.capabilityMn,whyMn:g.whyMn,goalMn:`${g.goalMn}.`,doMn:approvedDo(id)||g.doMn,deliverableMn:g.deliverableMn,checkMn:g.checkMn,planMn:stagesOf(i)}}:{}};
   const strengths=payload.strengths.slice(0,5).map(s=>({
     id:s.id,nameMn:s.nameMn,score:s.score,...(s.basis?{basis:s.basis}:{}),
     narrativeMn:claimTextByTrace(narrative,"S04",`strength:${s.id}`)||claimTextByTrace(narrative,"S04",`category:${s.categoryId}`)||`${s.nameMn} нь харьцангуй тогтвортой чадавх байна.`,
     explanationMn:editedExplanation(
       claimTextByTrace(narrative,"S04",`strength:${s.id}`)||claimTextByTrace(narrative,"S04",`category:${s.categoryId}`),
-      claimTextByTrace(baseline,"S04",`strength:${s.id}`)||claimTextByTrace(baseline,"S04",`category:${s.categoryId}`))
+      claimTextByTrace(baseline,"S04",`strength:${s.id}`)||claimTextByTrace(baseline,"S04",`category:${s.categoryId}`))||guidance?.findings[s.id]||""
   }));
   const weaknesses=payload.weaknesses.slice(0,5).map(w=>({
     id:w.id,nameMn:w.nameMn,score:w.score,...(w.basis?{basis:w.basis}:{}),
     narrativeMn:claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`)||`${w.nameMn} нь эхэлж бэхжүүлэх шаардлагатай чадавх байна.`,
     explanationMn:editedExplanation(
       claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`),
-      claimTextByTrace(baseline,"S05",`weakness:${w.id}`)||claimTextByTrace(baseline,"S05",`category:${w.categoryId}`))
+      claimTextByTrace(baseline,"S05",`weakness:${w.id}`)||claimTextByTrace(baseline,"S05",`category:${w.categoryId}`))||guidance?.findings[w.id]||""
   }));
-  const criticalActions=payload.priorityActions.slice(0,5).map(a=>({
-    id:a.id,titleMn:a.titleMn,actionMn:a.actionMn,...(a.statedMn?{statedMn:a.statedMn}:{}),deliverableMn:a.deliverableMn,kpiMn:a.kpiMn,
-    ownerRoleLabelMn:payload.displayDictionary[a.ownerRoleId]||a.ownerRoleId,currentScore:a.currentCellScore,targetScore:a.targetCellScore,
+  const criticalActions=payload.priorityActions.slice(0,5).map((a,i)=>({
+    id:a.id,...guideOf(a.id,i),titleMn:a.titleMn,actionMn:a.actionMn,...(a.statedMn?{statedMn:a.statedMn}:{}),deliverableMn:a.deliverableMn,kpiMn:a.kpiMn,
+    ownerRoleLabelMn:guidance?plainRole(payload.displayDictionary[a.ownerRoleId]||a.ownerRoleId):payload.displayDictionary[a.ownerRoleId]||a.ownerRoleId,currentScore:a.currentCellScore,targetScore:a.targetCellScore,
     narrativeMn:claimTextByRef(narrative,"S06","recommendationId",a.id)||`${a.titleMn}. ${a.actionMn}`,
-    explanationMn:editedExplanation(claimTextByRef(narrative,"S06","recommendationId",a.id),claimTextByRef(baseline,"S06","recommendationId",a.id))
+    explanationMn:guidance?.priorities.some(x=>x.recommendationId===a.id)?"":editedExplanation(claimTextByRef(narrative,"S06","recommendationId",a.id),claimTextByRef(baseline,"S06","recommendationId",a.id))
   }));
   return {
     sourceVersion:MMRI_PDF_SOURCE_VERSION,
     reportId:payload.reportId,assessmentId:payload.assessmentId,payloadHash:payload.payloadHash,narrativeHash,bindingHash:payload.bindingHash,
     generatedAt:payload.generatedAt,companyName:payload.companyName,methodologyVersion:payload.methodologyVersion,metricType:payload.metricType,
     overallScore:payload.overall.score,overallBand:payload.overall.band,overallConfidence:payload.overall.confidence,overallCoverage:payload.overall.coverage,
-    conclusionMn:conclusionText(narrative),strengths:b4Active?withPlaceholders(strengths,payload.strengths.slice(0,5),B4_PLACEHOLDER_TEXT.strength,"strength",b4Rule):strengths,weaknesses:b4Active?withPlaceholders(weaknesses,payload.weaknesses.slice(0,5),B4_PLACEHOLDER_TEXT.weakness,"weakness",b4Rule):weaknesses,criticalActions,
+    ...(guidance?.targetNoteMn?{targetNoteMn:guidance.targetNoteMn}:{}),conclusionMn:conclusionText(narrative),strengths:b4Active?withPlaceholders(strengths,payload.strengths.slice(0,5),B4_PLACEHOLDER_TEXT.strength,"strength",b4Rule):strengths,weaknesses:b4Active?withPlaceholders(weaknesses,payload.weaknesses.slice(0,5),B4_PLACEHOLDER_TEXT.weakness,"weakness",b4Rule):weaknesses,criticalActions,
     roadmap:payload.roadmap.map(r=>({horizon:r.horizon,nameMn:r.nameMn,dayStart:r.dayStart,dayEnd:r.dayEnd,milestones:r.milestones.map(m=>({milestoneId:m.milestoneId,recommendationId:m.recommendationId,titleMn:m.titleMn,milestoneMn:m.milestoneMn,deliverableMn:m.deliverableMn,ownerRoleLabelMn:m.ownerRoleLabelMn,kpiMn:m.kpiMn}))})),
     warnings:[...payload.requiredWarnings,...(flags.b3&&payload.evidenceDisclosure?payload.evidenceDisclosure.warningsMn:[])],risks:payload.risks.map(r=>r.messageMn),
     ...(narrative.visualAnnotations?.items?.length?{annotations:narrative.visualAnnotations}:{}),

@@ -125,6 +125,9 @@ function realModel(area:BusinessArea,company:string,assessment:AssessmentSummary
   const outcome=mnCustomerText(rec.deliverableMn);
   const measure=mnCustomerText(rec.kpiMn);
   const affectedPurposes=outcomes.filter(o=>(o.topCategories||[]).some(c=>c.categoryId===rec.categoryId)).map(o=>mnCustomerText(o.nameMn));
+  const g=payload?.guidance?.priorities.find(x=>x.recommendationId===rec.id);
+  const approved=approvedActionText(report,rec.id),title=mnCustomerText(rec.titleMn),doText=(approved.startsWith(title)?approved.slice(title.length).replace(/^[\s.:]+/,''):approved)||g?.doMn||'';
+  if(g)return {purpose:`${g.goalMn}.`,purposeScore:weakScore,weakest:g.dimensionMn&&g.dimensionMn!=='Бодит хэрэгжилт'?`${g.capabilityMn}: ${lowerFirst(g.dimensionMn)}`:g.capabilityMn,weakScore,why:g.whyMn,action:doText,detail:`${g.whyMn} ${doText}`,outcome:g.deliverableMn,measure:g.checkMn,projectedScore,affectedPurposes};
   return {purpose:mnCustomerText(rec.objectiveMn||`Тэргүүлэх арга хэмжээ ${i+1}`),purposeScore:weakScore,weakest,weakScore,why:purposeWhy(weakest,weakScore),action,detail:(rec.statedMn?`${rec.statedMn} `:'')+sentenceCase(approvedActionText(report,rec.id)||actionDetail(action,weakest,outcome,measure)),outcome,measure,projectedScore,affectedPurposes};
  });
  const rawDate=assessment?.completedAt||assessment?.updatedAt||payload?.generatedAt||new Date().toISOString();

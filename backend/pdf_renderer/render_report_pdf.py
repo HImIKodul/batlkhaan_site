@@ -82,8 +82,10 @@ def sentence_case(value):
 # (never drop a milestone or an approved sentence) when a plan or reviewer edit would otherwise push the report past exactly 3 pages.
 TIER_E = 0  # explanation tier (pages 1-2): 0-3 print every approved word, 4 shortens (never in --strict), 5 omits explanations (never in --strict)
 STRICT = False
+GUIDED = False  # newer reports with capability-specific wording
 TIER_R = 0  # roadmap tier (page 3)
 TIER_ROADMAP = {0: (7.5, 10.6, 3.5), 1: (6.9, 8.9, 2.4), 2: (6.3, 8.0, 1.7), 3: (5.8, 7.3, 1.2), 4: (5.8, 7.3, 1.0)}
+TIER_GUIDE = {0: (7.5, 10.4), 1: (7.2, 9.6), 2: (6.9, 8.9), 3: (6.6, 8.3), 4: (6.6, 8.3), 5: (6.6, 8.3)}  # page 2 of newer reports
 TIER_EXPLAIN = {0: (6.9, 9.2), 1: (6.3, 8.2), 2: (5.9, 7.4), 3: (5.6, 7.0), 4: (5.6, 7.0), 5: (5.6, 7.0)}
 
 
@@ -174,6 +176,9 @@ def styles():
         "body": ParagraphStyle(
             "body", parent=base["BodyText"], fontName="MMRINoto",
             fontSize=8.2, leading=12.2, textColor=INK_2, spaceAfter=1.5 * mm,
+        ),
+        "guide": ParagraphStyle(
+            "guide", parent=base["BodyText"], fontName="MMRINoto", fontSize=TIER_GUIDE[TIER_E][0], leading=TIER_GUIDE[TIER_E][1], textColor=INK_2,
         ),
         "body_compact": ParagraphStyle(
             "body_compact", parent=base["BodyText"], fontName="MMRINoto",
@@ -432,10 +437,12 @@ def compact_finding_list(items, st, positive=True):
     rows = []
     spans = []
     expl_rows = []
+    # Newer reports: when every finding is preliminary the note under the lists says so once, and the lists use the full column.
+    mark = not (GUIDED and all(x.get("basis") == "RELATIVE_RANK" for x in items[:5]))
     for i, item in enumerate(items[:5], 1):
         rows.append([
             p(str(i), st["small_bold"]),
-            p((item.get("nameMn") or "-") + (" · урьдчилсан" if item.get("basis") == "RELATIVE_RANK" else ""), st["h3"]),
+            p((item.get("nameMn") or "-") + (" · урьдчилсан" if mark and item.get("basis") == "RELATIVE_RANK" else ""), st["h3"]),
             p(score(item.get("score")), st["h3"]),
         ])
         # Approved narrative wording (reviewer or AI) that differs from the default is part of the customer report (MMRI-13).
@@ -446,7 +453,7 @@ def compact_finding_list(items, st, positive=True):
             expl_rows.append(len(rows) - 1)
     if not rows:
         rows = [[p("-", st["small"]), p("Мэдээлэл алга", st["small"]), p("-", st["small"])]]
-    t = Table(rows, colWidths=[7 * mm, 55 * mm, 12 * mm])
+    t = Table(rows, colWidths=[7 * mm, 66 * mm, 12 * mm] if GUIDED else [7 * mm, 55 * mm, 12 * mm])
     commands = [
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("BOX", (0, 0), (-1, -1), 0.45, LINE),
@@ -489,7 +496,7 @@ def company_logo_flowable(source):
 
 
 def summary_page(source, st, content_width):
-    SF = 1.0 if TIER_E < 2 else 0.5  # compact vertical gaps only when approved explanations need the room
+    SF = (0.35 if GUIDED else 1.0) if TIER_E < 2 else (0.2 if GUIDED else 0.5)  # compact vertical gaps only when approved explanations need the room
     left = Table(
         [[ScoreBadge(source.get("overallScore"))]],
         colWidths=[39 * mm],
@@ -528,7 +535,7 @@ def summary_page(source, st, content_width):
     snapshot = Table([
         [p("Давуу талын товч зураг", st["h2"]), p("Сул талын товч зураг", st["h2"])],
         [strong, weak],
-    ], colWidths=[85 * mm, 85 * mm], hAlign="LEFT")
+    ], colWidths=[88.5 * mm, 88.5 * mm] if GUIDED else [85 * mm, 85 * mm], hAlign="LEFT")
     snapshot.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0),
@@ -563,7 +570,7 @@ def summary_page(source, st, content_width):
     ]
     prelim = any(x.get("basis") == "RELATIVE_RANK" for x in (source.get("strengths") or []) + (source.get("weaknesses") or []))
     if prelim:
-        story += [Spacer(1, 1.5 * mm * SF), p(PRELIM_NOTE, st["small"])]
+        story += [Spacer(1, 1.5 * mm * SF), p("Энэ хуудсын урьдчилсан дүнг одоогийн хариултаар эрэмбэлсэн бөгөөд нэмэлт хариултаар баталгаажна." if GUIDED else PRELIM_NOTE, st["small"])]
     notes = list(source.get("warnings") or []) + list(source.get("risks") or [])
     if notes:
         box = Table([[[p(note, st["warning"]) for note in notes[:3]]]], colWidths=[content_width], style=TableStyle([
@@ -584,6 +591,9 @@ def action_card(action, index, st, content_width):
         [p("Одоо", st["small_bold"]), p(score(action.get("currentScore")), st["h3"])],
         [p("Зорилт", st["small_bold"]), p(score(action.get("targetScore")), st["h3"])],
     ], colWidths=[15 * mm, 13 * mm])
+    compact = bool(action.get("guide"))
+    if compact:  # one line, so six rows per priority still fit one page
+        score_box = Table([[p(("Одоо " + score(action.get("currentScore")) + " · Зорилт " + score(action.get("targetScore"))) if action.get("targetScore") is not None else "Эхлээд тодруулна", st["small_bold"])]], colWidths=[30 * mm])
     score_box.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), DOMAIN_LIGHT),
         ("BOX", (0, 0), (-1, -1), 0.4, DOMAIN),
@@ -594,34 +604,38 @@ def action_card(action, index, st, content_width):
         ("TOPPADDING", (0, 0), (-1, -1), 2.5),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
     ]))
+    gp = (action.get("guide") or {}).get("planMn")
     title = Table([
         [
             p(str(index), st["h3"]),
-            p(action.get("titleMn") or "-", st["h3"]),
-            p(action.get("ownerRoleLabelMn") or "-", st["small_bold"]),
+            p((action.get("guide") or {}).get("headingMn") or action.get("titleMn") or "-", st["h3"]),
+            [p(action.get("ownerRoleLabelMn") or "-", st["small_bold"])] + ([p(gp, st["small"])] if gp else []),
             score_box,
         ],
-    ], colWidths=[9 * mm, 91 * mm, 38 * mm, 30 * mm])
+    ], colWidths=[9 * mm, 80 * mm, 51 * mm, 34 * mm] if gp else [9 * mm, 91 * mm, 38 * mm, 30 * mm])
     title.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (0, 0), DOMAIN_LIGHT),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("LEFTPADDING", (0, 0), (-1, -1), 4),
         ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 2 if compact else 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 2 if compact else 4),
     ]))
-    facts = Table([
+    g = action.get("guide") or {}
+    guide_rows = [[p(k, st["small_bold"]), p(v, st["guide"])] for k, v in (("Яагаад", g.get("whyMn")), ("Зорилго", sentence_case(g.get("goalMn") or "")), ("Хийх ажил", g.get("doMn")), ("Гарц", g.get("deliverableMn")), ("Шалгах", g.get("checkMn"))) if v]
+    facts = Table((guide_rows if guide_rows else [
         [p("Хийх ажил", st["small_bold"]), p(((action.get("statedMn") + " ") if action.get("statedMn") else "") + sentence_case(action.get("actionMn") or action.get("narrativeMn") or "-"), st["body_compact"])],
         [p("Гарц", st["small_bold"]), p(sentence_case(action.get("deliverableMn") or "-"), st["body_compact"])],
         [p("Хэмжүүр", st["small_bold"]), p(sentence_case(action.get("kpiMn") or "-"), st["body_compact"])],
-    ] + ([[p("Тайлбар", st["small_bold"]), p(explanation_text(action.get("explanationMn"), 300), st["explain"])]] if explanation_text(action.get("explanationMn"), 300) else []), colWidths=[24 * mm, 144 * mm])
+    ]) + ([[p("Тайлбар", st["small_bold"]), p(explanation_text(action.get("explanationMn"), 300), st["explain"])]] if explanation_text(action.get("explanationMn"), 300) else []), colWidths=[18 * mm, 156 * mm] if guide_rows else [24 * mm, 144 * mm])
+    pad = 1.3 if guide_rows else 3  # six short rows per priority instead of three
     facts.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LINEABOVE", (0, 1), (-1, -1), 0.25, LINE),
         ("LEFTPADDING", (0, 0), (-1, -1), 4),
         ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-        ("TOPPADDING", (0, 0), (-1, -1), 3),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("TOPPADDING", (0, 0), (-1, -1), pad),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), pad),
     ]))
     card = Table([[title], [facts]], colWidths=[content_width])
     card.setStyle(TableStyle([
@@ -639,7 +653,7 @@ def actions_page(source, st, content_width):
     story = [
         p("02 · ТЭРГҮҮЛЭХ 5 АЖИЛ", st["eyebrow"]),
         p("Эхэлж хэрэгжүүлэх 5 ажил", st["page_title"]),
-        p("Сул чадавхыг бодит ахиц болгохын тулд хариуцагч, гарах үр дүн, хэмжүүрийг хамтад нь тодорхойлов.", st["body"]),
+        p(source["targetNoteMn"], st["small"]) if source.get("targetNoteMn") else p("Сул чадавхыг бодит ахиц болгохын тулд хариуцагч, гарах үр дүн, хэмжүүрийг хамтад нь тодорхойлов.", st["body"]),
         Spacer(1, 2 * mm),
     ]
     for i, action in enumerate((source.get("criticalActions") or [])[:5], 1):
@@ -956,7 +970,8 @@ def main():
     top = 18 * mm
     bottom = 15 * mm
     content_width = A4[0] - left - right
-    global TIER_E, TIER_R, STRICT
+    global TIER_E, TIER_R, STRICT, GUIDED
+    GUIDED = any(a.get("guide") for a in source.get("criticalActions") or [])
     STRICT = args.strict
     # Tier 0/0 is the accepted design. The explanation tier (pages 1-2) and the roadmap tier (page 3) grow independently, smallest total first.
     for te, tr in sorted(((a, b) for a in TIER_EXPLAIN for b in TIER_ROADMAP), key=lambda x: (x[0] >= 4, x[0] + x[1], x[1])):

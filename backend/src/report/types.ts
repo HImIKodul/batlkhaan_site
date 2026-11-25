@@ -98,6 +98,8 @@ export interface FrozenReportPayload {
   requiredWarnings: string[];
   /** Phase 2.7 proposal (B3); only present when the B3 flag was ON when the payload was frozen. */
   evidenceDisclosure?: import("../diagnosis/evidence-disclosure.js").EvidenceDisclosure;
+  /** Customer wording for findings and priorities (newer reports only); absent in every earlier payload. */
+  guidance?: import("./guidance/index.js").ReportGuidance;
   displayDictionary: Record<string,string>;
   traceIndex: Record<string,{kind:string; ref:string}>;
   versions: {

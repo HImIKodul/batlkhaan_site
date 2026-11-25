@@ -3,6 +3,7 @@ import type { StrategyResult } from "../strategy/types.js";
 import { readPolicyFlags } from "../engine/policy-flags.js";
 import { buildEvidenceDisclosure } from "../diagnosis/evidence-disclosure.js";
 import { selectRecommendationActions } from "../strategy/recommendations.js";
+import { buildReportGuidance } from "./guidance/index.js";
 import type { FrozenReportPayload, MetricType, ReportRisk, RoadmapRow, StrengthFinding, WeaknessFinding } from "./types.js";
 
 export const MMRI_REPORT_FINDINGS_POLICY_VERSION="MMRI-REPORT-FINDINGS-1.0-FIVE-CATEGORY" as const;
@@ -159,7 +160,7 @@ export function buildFrozenReportPayload(input: BuildReportPayloadInput): Frozen
   if (reviewCount) risks.push({id:"RISK-REVIEW",type:"REVIEW_REQUIRED",messageMn:`${reviewCount} нүд нягтлах шаардлагатай төлөвтэй байна.`,sourceTraceIds:reviewCells.slice(0,4).map(([key])=>`cell:${key}`)});
   const gapFindings = strategy.rootCause.findings.filter(f=>f.classification==="EVIDENCE_GAP");
   const gapCount = gapFindings.length;
-  if (gapCount) risks.push({id:"RISK-EVIDENCE",type:"EVIDENCE_GAP",messageMn:`${gapCount} сул/тодорхойгүй хэсэгт нотолгоо хангалтгүй байна.`,sourceTraceIds:[...new Set(gapFindings.slice(0,4).flatMap(f=>f.sourceTraceIds))]});
+  if (gapCount) risks.push({id:"RISK-EVIDENCE",type:"EVIDENCE_GAP",messageMn:"Зарим нарийвчилсан асуултыг энэ удаа асуугаагүй тул холбогдох дүнг урьдчилсан гэж үзнэ.",sourceTraceIds:[...new Set(gapFindings.slice(0,4).flatMap(f=>f.sourceTraceIds))]});
   if (input.routingState === "QUICK_LIMIT_REACHED") risks.push({id:"RISK-QUICK-LIMIT",type:"QUICK_LIMIT",messageMn:"Түргэвчилсэн үнэлгээ тухайн үнэлгээний асуултын хязгаарт хүрсэн.",sourceTraceIds:[`assessment:${input.assessmentId}`]});
   if (input.assessmentStatus === "EXHAUSTED" && snapshot.overall.officialScore === null) risks.push({id:"RISK-INCOMPLETE",type:"INCOMPLETE_SCOPE",messageMn:"Хамаарах хэсгүүдийн зарим нь албан ёсны үнэлгээнд хүрээгүй.",sourceTraceIds:[`assessment:${input.assessmentId}`]});
   const selectedRisks = risks.slice(0, Number(reportContract.limits.risks ?? 4));
@@ -215,6 +216,7 @@ export function buildFrozenReportPayload(input: BuildReportPayloadInput): Frozen
     requiredWarnings:warningSet(input.assessmentMode,input.assessmentStatus,input.routingState,snapshot),
     // B3 (flag ON only): key absent when OFF => frozen payload JSON/hash identical to before.
     ...((input.policyFlags ?? readPolicyFlags()).b3 && methodology.engineKind === "BUSINESSMRI_V2" ? { evidenceDisclosure: buildEvidenceDisclosure(methodology, snapshot) } : {}),
+    guidance:buildReportGuidance(methodology,snapshot,strategy,{strengths,weaknesses,priorityActions}),
     displayDictionary:{
       QUICK_ESTIMATE:"Түргэвчилсэн үнэлгээний тооцоолол",
       OFFICIAL_OVERALL_SCORE:"Албан ёсны нийт оноо",

@@ -1,6 +1,6 @@
 import type { FrozenReportPayload, NarrativeValidationResult } from "./types.js";
 
-export const MMRI_AI_REPORT_PROMPT_VERSION="MMRI-AI-REPORT-PROMPT-1.8-CONCISE-EXECUTIVE" as const;
+export const MMRI_AI_REPORT_PROMPT_VERSION="MMRI-AI-REPORT-PROMPT-1.9-GROUNDED-FINDINGS" as const;
 
 export function narrativeJsonSchema(){
   const claim={
@@ -47,6 +47,7 @@ export function aiSystemInstructions():string{
     "When a technical label has a simpler Mongolian alternative, explain the practical meaning instead of repeating the technical label. Avoid vague phrases such as 'түвшин сайжруулах'; state the observable issue or action.",
     "For S03 use every supplied purpose in its authoritative order and preserve the exact supplied purpose name and purpose trace. Do not merge, omit, or reorder purposes.",
     "For S04 use only the supplied strengths, in their authoritative order. For S05 use only the supplied weaknesses, in their authoritative order. Use the exact supplied canonical capability name. Do not invent, merge, or paraphrase capability labels. Do not substitute cell-level root-cause findings for the five category-level weaknesses. Explanatory text should define the capability in one simple professional Mongolian sentence; do not repeat the score, recommendation, or self-evident status in that definition.",
+    "When findingNotes is supplied, it holds for each strength/weakness id what the capability is for and what the company itself answered. Build the S04/S05 explanation from that note: different for every finding, at most about 25 words, saying what the answer means for the business. A RELATIVE_RANK strength is a comparatively good answer, not a proven strength. Never reuse one sentence pattern for several findings.",
     "For S06, each priority action must read like practical management guidance: state the supplied action naturally, describe the supplied finished-state/deliverable in plain Mongolian, and state how the supplied measurement will verify progress. Do not expose owner-role IDs, internal codes, English labels, or database-field style wording.",
     "For S09 use only the supplied risks in their authoritative order. Preserve each supplied risk statement and its trace lineage; do not invent or upgrade risks.",
     "For S10, return exactly ONE claim under the title 'Ерөнхий дүгнэлт'. Write an assessment-specific executive conclusion in professional, natural and understandable Mongolian, about 90–150 Mongolian words. It must synthesize rather than list, and should fit comfortably in one report-page summary block. Cover: (a) the overall management state, (b) what the strongest supplied capabilities contribute, (c) the weakest supplied pattern and which management area needs attention without claiming unsupported causality, (d) the interaction between strengths and weaknesses, (e) the first supplied priority action, and (f) how progress should be verified at remeasurement. Use supplied canonical capability names exactly. Do not repeat section headings, enumerate every score, use generic filler, inflated consulting language, or a reusable template-like ending. A repeat assessment with different evidence must produce a materially different conclusion.",
@@ -92,9 +93,9 @@ function modelSafePayload(payload:FrozenReportPayload){
     assessmentId:payload.assessmentId,assessmentMode:payload.assessmentMode,assessmentStatus:payload.assessmentStatus,routingState:payload.routingState,
     generatedAt:payload.generatedAt,companyName:safeNarrativeCompanyName(payload.companyName),methodologyVersion:payload.methodologyVersion,
     metricType:payload.metricType,overall:payload.overall,purposes:payload.purposes,
-    strengths:payload.strengths,weaknesses:payload.weaknesses,
+    strengths:payload.strengths,weaknesses:payload.weaknesses,...(payload.guidance?{findingNotes:payload.guidance.findings}:{}),
     rootFindings:payload.rootFindings.map(x=>({id:x.id,categoryId:x.categoryId,cellId:x.cellId,classification:x.classification,role:x.role,sourceTraceIds:x.sourceTraceIds})),
-    priorityActions:payload.priorityActions.map(x=>({id:x.id,findingId:x.findingId,type:x.type,categoryId:x.categoryId,cellId:x.cellId,titleMn:x.titleMn,objectiveMn:x.objectiveMn,actionMn:x.actionMn,deliverableMn:x.deliverableMn,kpiMn:x.kpiMn,ownerRoleId:x.ownerRoleId,sponsorRoleId:x.sponsorRoleId,sourceTraceIds:x.sourceTraceIds})),
+    priorityActions:payload.priorityActions.map(raw=>{const g=payload.guidance?.priorities.find(p=>p.recommendationId===raw.id);return g?{...raw,actionMn:g.doMn,deliverableMn:g.deliverableMn,kpiMn:g.checkMn,objectiveMn:g.goalMn}:raw}).map(x=>({id:x.id,findingId:x.findingId,type:x.type,categoryId:x.categoryId,cellId:x.cellId,titleMn:x.titleMn,objectiveMn:x.objectiveMn,actionMn:x.actionMn,deliverableMn:x.deliverableMn,kpiMn:x.kpiMn,ownerRoleId:x.ownerRoleId,sponsorRoleId:x.sponsorRoleId,sourceTraceIds:x.sourceTraceIds})),
     evidenceActions:payload.evidenceActions.map(x=>({id:x.id,findingId:x.findingId,type:x.type,categoryId:x.categoryId,cellId:x.cellId,titleMn:x.titleMn,objectiveMn:x.objectiveMn,actionMn:x.actionMn,deliverableMn:x.deliverableMn,kpiMn:x.kpiMn,ownerRoleId:x.ownerRoleId,sponsorRoleId:x.sponsorRoleId,sourceTraceIds:x.sourceTraceIds})),
     roadmap:payload.roadmap,risks:payload.risks,remeasurement:payload.remeasurement,requiredWarnings:payload.requiredWarnings,
     displayDictionary,allowedTraceIds:Object.keys(payload.traceIndex),versions:payload.versions
