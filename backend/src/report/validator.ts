@@ -1,3 +1,4 @@
+import { glossaryIssues } from "./guidance/language.js";
 import type { FrozenReportPayload, NarrativeClaim, NarrativeDraft, NarrativeValidationIssue, NarrativeValidationResult } from "./types.js";
 
 export const MMRI_NARRATIVE_VALIDATOR_VERSION="MMRI-NARRATIVE-VALIDATOR-1.7-COMPLETE-ROADMAP" as const;
@@ -93,6 +94,8 @@ export function validateNarrativeDraft(payload: FrozenReportPayload, draft: Narr
   if (/\b\d+(?:\.\d+)?\s*%?\s*(өснө|буурна|нэмэгдэнэ|ашиг|орлого)/i.test(allText)) push(issues,"V10","BLOCK","Quantified future business forecast detected without forecast object.");
 
   if (/(https?:\/\/|www\.|судалгаагаар|гадаад эх сурвалжийн мэдээллээр)/i.test(allText)) push(issues,"V11","BLOCK","External fact/source wording detected in closed-book narrative.");
+  /* New reports: known literal-translation wording is sent back for one repair (never blocks). Canonical names, titles and required warnings are excluded. */
+  if (payload.guidance?.names) { const fixed=[...payload.strengths,...payload.weaknesses].map(x=>x.nameMn).concat(Object.keys(payload.guidance.names),payload.priorityActions.map(a=>a.titleMn),payload.evidenceActions.flatMap(a=>[a.titleMn,a.actionMn]),payload.requiredWarnings,payload.risks.map(r=>r.messageMn)); const seen=new Set(draft.sections.filter(s=>["S04","S05","S06","S10"].includes(s.id)).flatMap(s=>s.claims).flatMap(c=>glossaryIssues(c.textMn,fixed))); for(const t of seen) push(issues,"V40","REPAIR",`Wording that does not read as natural Mongolian: ${t}`); }
   if (payload.metricType === "QUICK_ESTIMATE" && !/түргэвчилсэн үнэлгээ/i.test(allText)) push(issues,"V15","REPAIR","Түргэвчилсэн үнэлгээний тайлбар дутуу байна.");
   if (payload.metricType === "REVIEW_REQUIRED_SCORE" && !/нягтлах шаардлагатай/i.test(allText)) push(issues,"V23","REPAIR","Нягтлах шаардлагатай төлөвийн тайлбар дутуу байна.");
 

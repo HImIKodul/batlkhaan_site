@@ -1,6 +1,7 @@
 import type { FrozenReportPayload, NarrativeValidationResult } from "./types.js";
+import { glossaryInstruction } from "./guidance/language.js";
 
-export const MMRI_AI_REPORT_PROMPT_VERSION="MMRI-AI-REPORT-PROMPT-1.9-GROUNDED-FINDINGS" as const;
+export const MMRI_AI_REPORT_PROMPT_VERSION="MMRI-AI-REPORT-PROMPT-2.0-PLAIN-LANGUAGE" as const;
 
 export function narrativeJsonSchema(){
   const claim={
@@ -60,6 +61,7 @@ export function aiSystemInstructions():string{
     "S10 binding: when priorityActions is not empty, the single S10 claim must have claimType RECOMMENDATION, recommendationId equal to the FIRST supplied priority action id, and sourceTraceIds containing the assessment trace and that action's recommendation trace (only traces of that action plus the assessment trace). When priorityActions is empty use claimType CONFIDENCE_STATEMENT and the assessment trace.",
     "Coverage and confidence: overall.coverage is the share of all criteria this diagnosis could judge and overall.confidence applies ONLY to the answered part. With low coverage never call the result reliable, complete or certain because confidence is high; unanswered criteria are not weaknesses. A weakness with needsEvidence true is NOT weak: in S05 say that its answered part is good and what should be clarified, and never name it as a weakness in S10. When every weakness has needsEvidence true, S10 must say that no weakness was shown by the answers. Write 'Энэ хуудасны', never 'Энэ хуудсын'.",
     "Numerals: write only numbers that appear verbatim in the supplied payload values. Never restate or reformat the report generation date, never convert an ISO date into words, and never add counts, percentages or day numbers of your own; if a date is needed use the supplied text exactly.",
+    glossaryInstruction()+" Supplied canonical capability names and required warnings are the only exception: copy them exactly where another rule requires it; the system shows their plain form.",
     "Output formatting: return the JSON as compact minified text on a single line. Use no tabs, no indentation, no line breaks and no padding whitespace; only single spaces inside Mongolian sentences.",
     "The authoritative binding is diagnosisResultHash + strategyHash + planHash. Never propose changes to any of those frozen objects."
   ].join("\n");

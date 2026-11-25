@@ -1,6 +1,7 @@
 import type { FrozenReportPayload } from "./types.js";
 import { checkPlanLanguage, planStems, COMMON_STEMS } from "./annual-plan-language.js";
 import { plainMn } from "./plain-terms.js";
+import { glossaryInstruction, glossaryIssues, withPlainNames } from "./guidance/language.js";
 
 /* ANNUAL (12-MONTH) IMPLEMENTATION PLAN: page 3 of the three-page report.
    Boundary: the frozen diagnosis (scores, findings, recommendations) is INPUT ONLY. The model proposes ONE coordinated plan (stages, ordering, actions, decisions,
@@ -9,7 +10,7 @@ import { plainMn } from "./plain-terms.js";
    before this feature, and their PDFs, are byte-for-byte unaffected. If no reliable plan can be produced the state is UNAVAILABLE and the report keeps its
    existing page 3; a generic fallback is never presented as personalised AI planning. */
 export const MMRI_ANNUAL_PLAN_VERSION = "MMRI-ANNUAL-PLAN-1.0" as const;
-export const MMRI_ANNUAL_PLAN_PROMPT_VERSION = "MMRI-ANNUAL-PLAN-PROMPT-2.4" as const;
+export const MMRI_ANNUAL_PLAN_PROMPT_VERSION = "MMRI-ANNUAL-PLAN-PROMPT-2.5" as const;
 /** DATE POLICY (documented, tested): the plan covers twelve CALENDAR months. Day 0 is the report date as a calendar date in Ulaanbaatar (planStartDate); the window ends on the day before the same calendar date twelve months later
  *  (2026-11-20 -> 2027-11-19; a window spanning 29 February has 366 days). A start of 29 February ends on 28 February of the next year after the leap day rule (anniversary clamped to the month end).
  *  Stage dates are inclusive: endDay = startDay + durationDays - 1. The system, never the model, performs every date calculation. */
@@ -31,10 +32,13 @@ const CHARS_PER_LINE = 86;
 
 export const PLAN_DOMAIN_NAME_MN: Record<string, string> = { marketing: "Маркетинг", finance: "Санхүү", people: "Хүний нөөц", it: "Мэдээллийн технологи", operations: "Үйлдвэрлэл ба үйл ажиллагаа" };
 export interface PlanActionDraft { textMn: string; recommendationIds: string[] }
-export interface PlanStageDraft { id: string; headingMn: string; startDay: number; durationDays: number; dependsOnStageIds: string[]; dependencyNoteMn: string | null; actions: PlanActionDraft[] }
+/** What a stage is for, what exists when it is finished, how that is verified and who leads it (new reports). */
+export interface PlanStageGuide { goalMn: string; resultMn: string; doneMn: string; ownerMn: string }
+const GUIDE_KEYS = ["goalMn", "resultMn", "doneMn", "ownerMn"] as const, GUIDE_MAX = 260;
+export interface PlanStageDraft { guide?: PlanStageGuide; id: string; headingMn: string; startDay: number; durationDays: number; dependsOnStageIds: string[]; dependencyNoteMn: string | null; actions: PlanActionDraft[] }
 export interface AnnualPlanDraft { schemaVersion: "MMRI-ANNUAL-PLAN-DRAFT-1.0"; stages: PlanStageDraft[] }
 
-export interface PlanStage { id: string; headingMn: string; startDay: number; endDay: number; startDate: string; endDate: string; dateLabel: string; dependsOnStageIds: string[]; dependencyNoteMn: string | null; actions: PlanActionDraft[] }
+export interface PlanStage { guide?: PlanStageGuide; id: string; headingMn: string; startDay: number; endDay: number; startDate: string; endDate: string; dateLabel: string; dependsOnStageIds: string[]; dependencyNoteMn: string | null; actions: PlanActionDraft[] }
 export interface AnnualPlanReady {
   schemaVersion: typeof MMRI_ANNUAL_PLAN_VERSION; state: "READY"; sourcePayloadHash: string; startDate: string; endDate: string; periodLabel: string;
   provider: { kind: "OPENAI_RESPONSES" | "TEST_DOUBLE" | "REVIEWER" | "DETERMINISTIC"; model: string }; promptVersion: string; stages: PlanStage[]; lineEstimate: number;
@@ -113,13 +117,15 @@ export interface PlanInput {
   /** Present for real diagnoses; absent only when the answers could not be read. */
   answersOverview?: PlanAnswersOverview;
   risksMn: string[]; warningsMn: string[];
+  /** New reports: every stage carries its goal, result, completion condition and responsible role, and the terminology rules apply. */
+  stageGuideRequired?: true;
 }
 export function buildPlanInput(payload: FrozenReportPayload, domainNameMn: string, extras?: { evidenceFromAnswers?: PlanEvidenceLine[]; companyCharacteristics?: string[]; answersOverview?: PlanAnswersOverview; catalog?: PlanCatalog; rootFindings?: PlanRootFinding[] }): { input: PlanInput; refToRecommendationId: Record<string, string> } {
   const refToRecommendationId: Record<string, string> = {};
   const owner = (id: string) => payload.displayDictionary[id] || "Хариуцсан ахлах албан тушаалтан";
   const nameByCategory: Record<string, string> = { ...(extras?.catalog?.categories ?? {}) };
   for (const w of [...payload.weaknesses, ...payload.strengths]) if (w.categoryId && w.nameMn && !nameByCategory[w.categoryId]) nameByCategory[w.categoryId] = w.nameMn;
-  const capOf = (categoryId: string) => nameByCategory[categoryId] ?? "";
+  const capOf = (categoryId: string) => withPlainNames(nameByCategory[categoryId] ?? "", payload.guidance?.names);
   const cellOf = (cellId: string) => extras?.catalog?.cells?.[cellId];
   /* The frozen payload lists only the three strongest root findings, which are often not the findings behind the five priorities; the full graph of the same frozen diagnosis is passed in when available. */
   const roots: PlanRootFinding[] = extras?.rootFindings?.length ? extras.rootFindings : payload.rootFindings;
@@ -144,11 +150,11 @@ export function buildPlanInput(payload: FrozenReportPayload, domainNameMn: strin
   const input: PlanInput = {
     domainNameMn, reportDate: iso(planStartDate(payload.generatedAt)), windowDays: planWindowDays(planStartDate(payload.generatedAt)),
     overall: { score: payload.overall.score ?? null, band: (payload.overall as any).band ?? null, confidence: (payload.overall as any).confidence ?? null, coverage: (payload.overall as any).coverage ?? null },
-    strengths: payload.strengths.slice(0, 5).map(s => ({ nameMn: s.nameMn, score: s.score ?? null })),
-    weaknesses: payload.weaknesses.filter(w => !w.needsEvidence).slice(0, 5).map(w => ({ nameMn: w.nameMn, score: w.score ?? null })),
+    strengths: payload.strengths.slice(0, 5).map(s => ({ nameMn: withPlainNames(s.nameMn, payload.guidance?.names), score: s.score ?? null })),
+    weaknesses: payload.weaknesses.filter(w => !w.needsEvidence).slice(0, 5).map(w => ({ nameMn: withPlainNames(w.nameMn, payload.guidance?.names), score: w.score ?? null })),
     findings, sharedInterventions, evidenceChecks, dependencyHints,
     evidenceFromAnswers: extras?.evidenceFromAnswers ?? [], companyCharacteristics: extras?.companyCharacteristics ?? [], ...(extras?.answersOverview ? { answersOverview: extras.answersOverview } : {}),
-    risksMn: payload.risks.map(r => r.messageMn).slice(0, 6), warningsMn: payload.requiredWarnings.slice(0, 4)
+    risksMn: payload.risks.map(r => r.messageMn).slice(0, 6), warningsMn: payload.requiredWarnings.slice(0, 4), ...(payload.guidance ? { stageGuideRequired: true as const } : {})
   };
   return { input, refToRecommendationId };
 }
@@ -171,6 +177,8 @@ export function planSystemInstructions(): string {
     "NUMBERS AND DATES: never write calendar dates, month names, durations in digits, scores, amounts, percentages or staff counts, neither in digits nor in words. Do not say 'эхний сард' in a later stage or 'жилийн эцэст' in an early one. The system computes the dates from startDay and durationDays.",
     "VERB FORM: describe what the company does, in the form 'тогтооно', 'харьцуулна', 'шийднэ'. Never use bare commands ('тогтоо', 'харьцуул', 'шийд') and never mix the two. Address the reader's organisation as 'компани' or with an implied subject, never 'эзэн'.",
     "STYLE: do not close every action with the same formula ('Ингэснээр ... болно') and do not reuse one sentence pattern with a different capability name; if two actions would read the same, merge them. Prefer ordinary words to compliance words (нотолгоо, баримт бүрдүүлэх, хүчинтэй). Vary sentence openings; no labels such as 'Хариуцагч:', 'Гарах үр дүн:', 'Шалгах нөхцөл:'; no unexplained abbreviations; Stage headings are short natural Mongolian phrases that state the purpose of the stage (not 'Үе шат 1', not codes, not the hint titles). Write only Mongolian Cyrillic; the only Latin text allowed is BusinessMRI.mn. F1, V2 and similar are internal references: put them ONLY in recommendationIds, never in text.",
+    "STAGE GUIDE: every stage has a guide object: goalMn (one sentence: what the stage achieves for this company), resultMn (the document, change or decision that exists when the stage is finished; build it from practiceMn.deliverable of its findings), doneMn (how the company checks that it is finished; build it from practiceMn.check, ending in 'эсэхийг шалгана' or similar) and ownerMn (the role from ownerMn of its findings; write 'Хариуцах хүнийг томилно' when none is given). Each under 25 words, no numbers, no invented roles. Do not repeat the actions in the guide.",
+    glossaryInstruction(),
     "dependsOnStageIds may list only EARLIER stage ids; when a stage depends on earlier results say so naturally in dependencyNoteMn (one short sentence), otherwise null. Return only the JSON object required by the schema."
   ].join("\n");
 }
@@ -180,7 +188,8 @@ export function planRepairInput(input: PlanInput, previous: unknown, issues: Pla
 }
 export function planJsonSchema() {
   const action = { type: "object", additionalProperties: false, required: ["textMn", "recommendationIds"], properties: { textMn: { type: "string", minLength: 20, maxLength: 480 }, recommendationIds: { type: "array", minItems: 1, maxItems: 6, items: { type: "string" } } } };
-  const stage = { type: "object", additionalProperties: false, required: ["id", "headingMn", "startDay", "durationDays", "dependsOnStageIds", "dependencyNoteMn", "actions"], properties: {
+  const stage = { type: "object", additionalProperties: false, required: ["id", "headingMn", "startDay", "durationDays", "dependsOnStageIds", "dependencyNoteMn", "guide", "actions"], properties: {
+    guide: { type: "object", additionalProperties: false, required: [...GUIDE_KEYS], properties: Object.fromEntries(GUIDE_KEYS.map(k => [k, { type: "string", minLength: 6, maxLength: GUIDE_MAX }])) },
     id: { type: "string", pattern: "^E[0-9]{1,2}$" }, headingMn: { type: "string", minLength: 6, maxLength: 90 }, startDay: { type: "integer", minimum: 0, maximum: 365 }, durationDays: { type: "integer", minimum: 7, maximum: 365 },
     dependsOnStageIds: { type: "array", maxItems: 4, items: { type: "string" } }, dependencyNoteMn: { type: ["string", "null"], maxLength: 200 }, actions: { type: "array", minItems: 1, maxItems: MAX_ACTIONS_PER_STAGE, items: action } } };
   return { type: "object", additionalProperties: false, required: ["schemaVersion", "stages"], properties: { schemaVersion: { type: "string", enum: ["MMRI-ANNUAL-PLAN-DRAFT-1.0"] }, stages: { type: "array", minItems: MIN_STAGES, maxItems: MAX_STAGES, items: stage } } };
@@ -190,10 +199,11 @@ export function planJsonSchema() {
 const BANNED_PHRASES = [/Дутуу баримтыг бүрдүүлэх/i, /нотолгооны багц бүрдсэн/i, /Бүрдсэн хүчинтэй шууд нотолгооны замын тоо/i, /Гарах үр дүн/i, /Шалгах нөхцөл/i, /Үе шат\s*\d/i, /\bROI\b/i, /төсөв\s*\d/i, /Хяналтын давтамжийг тохируулах/i, /Суурь түвшин тогтоох/i, /Үйл явцыг стандартчилах/i, /Хүчин чадлыг бодит ачаалалтай тэнцвэржүүлэх/i, /Зах зээл, хэрэглэгчийн нотолгоог шийдвэрт оруулах/i, /Шаардлагатай нотолгоог бүрдүүлэх/i, /Нотолгооны багц/i, /Баримт бичиг бүрдүүлэх/i];
 const strip = (t: string) => t.replace(/BusinessMRI\.mn/g, "");
 export function numbersIn(value: unknown): Set<string> { return new Set((JSON.stringify(value).match(/\d+(?:[.,]\d+)?/g) ?? [])); }
-export function estimatePlanLines(stages: Array<{ headingMn: string; dependencyNoteMn: string | null; actions: Array<{ textMn: string }> }>): number {
+export function estimatePlanLines(stages: Array<{ guide?: PlanStageGuide; headingMn: string; dependencyNoteMn: string | null; actions: Array<{ textMn: string }> }>): number {
   let lines = 0;
   for (const s of stages) {
     let l = Math.max(2, Math.ceil(s.headingMn.length / 70)) + (s.dependencyNoteMn ? Math.ceil(s.dependencyNoteMn.length / CHARS_PER_LINE) : 0);
+    if (s.guide) l += (s.guide.goalMn === s.headingMn ? 0 : Math.ceil((s.guide.goalMn.length + 9) / CHARS_PER_LINE)) + Math.ceil((s.guide.ownerMn.length + s.guide.resultMn.length + s.guide.doneMn.length + 44) / (CHARS_PER_LINE + 8)) * 0.9;
     for (const a of s.actions) l += Math.ceil(a.textMn.length / CHARS_PER_LINE);
     lines += l + 1.4;
   }
@@ -204,7 +214,8 @@ export function validateAnnualPlanDraft(draft: any, input: PlanInput, refToRecom
   if (!draft || draft.schemaVersion !== "MMRI-ANNUAL-PLAN-DRAFT-1.0" || !Array.isArray(draft.stages)) return { issues: [{ checkId: "SCHEMA", message: "Not a plan draft" }], stages: [] };
   /* Customer text never contains dashes used as punctuation (project rule); echoed finding titles do, so normalise instead of rejecting. */
   const clean = (v: any) => typeof v === "string" ? v.replace(/\s*[\u2014\u2015\u2013]\s*/g, " - ").replace(/\s+/g, " ").trim() : v;
-  const stages: PlanStageDraft[] = draft.stages.map((s: any) => ({ ...s, headingMn: clean(s?.headingMn), dependencyNoteMn: clean(s?.dependencyNoteMn) ?? null, actions: Array.isArray(s?.actions) ? s.actions.map((x: any) => ({ ...x, textMn: clean(x?.textMn) })) : s?.actions }));
+  const guideOf = (g: any): PlanStageGuide | undefined => g && GUIDE_KEYS.every(k => typeof g[k] === "string" && g[k].trim()) ? Object.fromEntries(GUIDE_KEYS.map(k => [k, clean(g[k])])) as unknown as PlanStageGuide : undefined;
+  const stages: PlanStageDraft[] = draft.stages.map(({ guide: rawGuide, ...s }: any) => ({ ...s, ...(guideOf(rawGuide) ? { guide: guideOf(rawGuide) } : {}), headingMn: clean(s?.headingMn), dependencyNoteMn: clean(s?.dependencyNoteMn) ?? null, actions: Array.isArray(s?.actions) ? s.actions.map((x: any) => ({ ...x, textMn: clean(x?.textMn) })) : s?.actions }));
   if (stages.length < MIN_STAGES || stages.length > MAX_STAGES) bad("STAGE_COUNT", `Between ${MIN_STAGES} and ${MAX_STAGES} stages are required`);
   /* Only numbers that belong to a capability name may appear: scores, the report date and the window length are data for the model, and "25 хувь" must not pass because some score is 25. */
   const allowed = numbersIn(input.findings.map(f => [f.capabilityMn, f.dimensionMn]).concat(input.evidenceChecks.map(v => [v.capabilityMn, v.dimensionMn]))); const ids = new Set<string>(); const seenHeadings = new Set<string>(); const prefixes = new Map<string, number>();
@@ -216,7 +227,11 @@ export function validateAnnualPlanDraft(draft: any, input: PlanInput, refToRecom
     const h = String(s.headingMn ?? "").trim(); if (h.length < 6 || h.length > 90) bad("HEADING_LENGTH", `Heading of ${s.id} must be 6-90 characters`);
     if (seenHeadings.has(h.toLowerCase())) bad("HEADING_DUPLICATE", `Duplicate heading ${s.id}`); seenHeadings.add(h.toLowerCase());
     if (!Array.isArray(s.actions) || s.actions.length < 1 || s.actions.length > MAX_ACTIONS_PER_STAGE) bad("ACTION_COUNT", `Stage ${s.id} needs 1-${MAX_ACTIONS_PER_STAGE} actions`);
-    const texts = [h, s.dependencyNoteMn ?? "", ...(s.actions ?? []).map(a => a?.textMn ?? "")];
+    const texts = [h, s.dependencyNoteMn ?? "", ...(s.guide ? GUIDE_KEYS.map(k => s.guide![k]) : []), ...(s.actions ?? []).map(a => a?.textMn ?? "")];
+    if (input.stageGuideRequired) {
+      if (!s.guide) bad("STAGE_GUIDE", `Stage ${s.id} needs goalMn, resultMn, doneMn and ownerMn`); else if (GUIDE_KEYS.some(k => s.guide![k].length < 6 || s.guide![k].length > GUIDE_MAX)) bad("STAGE_GUIDE", `A guide field of ${s.id} is too short or too long`);
+      const names = [...input.findings.map(f => f.capabilityMn), ...input.evidenceChecks.map(v => v.capabilityMn)]; for (const t of texts) for (const g of glossaryIssues(String(t), names)) bad("TERMINOLOGY", `${s.id} uses wording that does not read as natural Mongolian: ${g}`);
+    }
     for (const t of texts) {
       const plain = strip(String(t));
       if (/[A-Za-z]/.test(plain)) bad("LANGUAGE", `Latin characters or codes in ${s.id}: customer text must be Mongolian`);
@@ -316,7 +331,7 @@ export function materializeAnnualPlan(stages: PlanStageDraft[], payload: FrozenR
   const scheduled = normaliseStageSchedule(stages, windowDays);
   const out: PlanStage[] = scheduled.map(s => {
     const a = addDays(start, s.startDay), b = addDays(start, stageEndDay(s));
-    return { id: s.id, headingMn: plainMn(tidyPlanText(s.headingMn)), startDay: s.startDay, endDay: stageEndDay(s), startDate: iso(a), endDate: iso(b), dateLabel: planPeriodLabelMn(a, b),
+    return { ...(s.guide ? { guide: Object.fromEntries(GUIDE_KEYS.map(k => [k, plainMn(tidyPlanText(s.guide![k]))])) as unknown as PlanStageGuide } : {}), id: s.id, headingMn: plainMn(tidyPlanText(s.headingMn)), startDay: s.startDay, endDay: stageEndDay(s), startDate: iso(a), endDate: iso(b), dateLabel: planPeriodLabelMn(a, b),
       dependsOnStageIds: s.dependsOnStageIds ?? [], dependencyNoteMn: s.dependencyNoteMn ? plainMn(tidyPlanText(s.dependencyNoteMn)) : null, actions: s.actions.map(x => ({ textMn: plainMn(tidyPlanText(x.textMn)), recommendationIds: x.recommendationIds })) };
   });
   const end = addDays(start, Math.max(...out.map(s => s.endDay)));
@@ -328,7 +343,7 @@ export function materializeAnnualPlan(stages: PlanStageDraft[], payload: FrozenR
 export function reviewerAnnualPlan(raw: any, payload: FrozenReportPayload): { plan: AnnualPlanReady | null; issues: PlanIssue[] } {
   const issues: PlanIssue[] = []; /* stored plans refer to the diagnosis actions by the short references of buildPlanInput */ const known = new Set([...payload.priorityActions.map((_, i) => `F${i + 1}`), ...payload.evidenceActions.map((_, i) => `V${i + 1}`)]); const windowDays = planWindowDays(planStartDate(payload.generatedAt));
   const text = (v: unknown, max: number) => String(v ?? "").replace(/\s*[\u2014\u2015\u2013]\s*/g, " - ").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
-  const stages: PlanStageDraft[] = (Array.isArray(raw?.stages) ? raw.stages.slice(0, MAX_STAGES + 1) : []).map((s: any, i: number) => ({ id: `E${i + 1}`, headingMn: text(s?.headingMn, 120), startDay: Math.trunc(Number(s?.startDay)), durationDays: Math.trunc(Number(s?.durationDays)), dependsOnStageIds: [], dependencyNoteMn: text(s?.dependencyNoteMn, 200) || null,
+  const stages: PlanStageDraft[] = (Array.isArray(raw?.stages) ? raw.stages.slice(0, MAX_STAGES + 1) : []).map((s: any, i: number) => ({ ...(s?.guide && GUIDE_KEYS.every(k => text(s.guide[k], GUIDE_MAX)) ? { guide: Object.fromEntries(GUIDE_KEYS.map(k => [k, text(s.guide[k], GUIDE_MAX)])) as unknown as PlanStageGuide } : {}), id: `E${i + 1}`, headingMn: text(s?.headingMn, 120), startDay: Math.trunc(Number(s?.startDay)), durationDays: Math.trunc(Number(s?.durationDays)), dependsOnStageIds: [], dependencyNoteMn: text(s?.dependencyNoteMn, 200) || null,
     actions: (Array.isArray(s?.actions) ? s.actions.slice(0, MAX_ACTIONS_PER_STAGE + 1) : []).map((a: any) => ({ textMn: text(a?.textMn, 600), recommendationIds: [...new Set((Array.isArray(a?.recommendationIds) ? a.recommendationIds : []).map(String))] as string[] })) }));
   if (stages.length < MIN_STAGES || stages.length > MAX_STAGES) issues.push({ checkId: "STAGE_COUNT", message: `Төлөвлөгөө ${MIN_STAGES}-${MAX_STAGES} үе шаттай байна.` });
   stages.forEach((s, i) => {

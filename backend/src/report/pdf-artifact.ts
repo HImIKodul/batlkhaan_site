@@ -1,4 +1,5 @@
 import { coverageText, plainRole } from "./guidance/index.js";
+import { withPlainNames } from "./guidance/language.js";
 import { planForPayload } from "./annual-plan.js";
 import { createHash } from "node:crypto";
 import type { FrozenReportPayload, NarrativeDraft, NarrativeClaim } from "./types.js";
@@ -167,7 +168,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
   const stagesOf=(i:number)=>plan?plan.stages.filter(st=>st.actions.some(x=>x.recommendationIds.includes(`F${i+1}`)&&x.recommendationIds.length<payload.priorityActions.length)).sort((a,b)=>a.startDay-b.startDay).reduce((t,st,k,all)=>k?t:`${st.startDate.replaceAll("-",".")} - ${all.reduce((m,x)=>x.endDate>m?x.endDate:m,st.endDate).replaceAll("-",".")}`,""):"";
   /* The approved S06 wording (reviewer or model) is the action text; its default is the frozen guidance. The catalogue title in front of it is not repeated. */
   const approvedDo=(id:string)=>{const t=claimTextByRef(narrative,"S06","recommendationId",id),title=payload.priorityActions.find(a=>a.id===id)?.titleMn??"";return t.startsWith(title)?t.slice(title.length).replace(/^[\s.:]+/,""):t;};
-  const guideOf=(id:string,i:number)=>{const g=guidance?.priorities.find(x=>x.recommendationId===id);return g?{guide:{headingMn:g.dimensionMn&&g.dimensionMn!=="Бодит хэрэгжилт"?`${g.capabilityMn}: ${g.dimensionMn.charAt(0).toLocaleLowerCase("mn-MN")+g.dimensionMn.slice(1)}`:g.capabilityMn,whyMn:g.whyMn,goalMn:`${g.goalMn}.`,doMn:approvedDo(id)||g.doMn,deliverableMn:g.deliverableMn,checkMn:g.checkMn,planMn:stagesOf(i)}}:{}};
+  const guideOf=(id:string,i:number)=>{const g=guidance?.priorities.find(x=>x.recommendationId===id);return g?{guide:{headingMn:g.labelMn!==undefined?(g.labelMn?`${g.capabilityMn}: ${g.labelMn}`:g.capabilityMn):g.dimensionMn&&g.dimensionMn!=="Бодит хэрэгжилт"?`${g.capabilityMn}: ${g.dimensionMn.charAt(0).toLocaleLowerCase("mn-MN")+g.dimensionMn.slice(1)}`:g.capabilityMn,whyMn:g.whyMn,goalMn:`${g.goalMn}.`,doMn:approvedDo(id)||g.doMn,deliverableMn:g.deliverableMn,checkMn:g.checkMn,planMn:stagesOf(i)}}:{}};
   const strengths=payload.strengths.slice(0,5).map(s=>({
     id:s.id,nameMn:s.nameMn,score:s.score,...(s.basis?{basis:s.basis}:{}),
     narrativeMn:claimTextByTrace(narrative,"S04",`strength:${s.id}`)||claimTextByTrace(narrative,"S04",`category:${s.categoryId}`)||`${s.nameMn} нь харьцангуй тогтвортой чадавх байна.`,
@@ -188,7 +189,9 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
     narrativeMn:claimTextByRef(narrative,"S06","recommendationId",a.id)||`${a.titleMn}. ${a.actionMn}`,
     explanationMn:guidance?.priorities.some(x=>x.recommendationId===a.id)?"":editedExplanation(claimTextByRef(narrative,"S06","recommendationId",a.id),claimTextByRef(baseline,"S06","recommendationId",a.id))
   }));
-  return {
+  /* New reports show plain capability names everywhere; canonical names stay in the payload and the stored narrative. */
+  const plainAll=<T,>(v:T):T=>guidance?.names?(typeof v==="string"?withPlainNames(v,guidance.names) as any:Array.isArray(v)?v.map(plainAll) as any:v&&typeof v==="object"?Object.fromEntries(Object.entries(v as any).map(([k,x])=>[k,plainAll(x)])) as any:v):v;
+  const out={
     sourceVersion:MMRI_PDF_SOURCE_VERSION,
     reportId:payload.reportId,assessmentId:payload.assessmentId,payloadHash:payload.payloadHash,narrativeHash,bindingHash:payload.bindingHash,
     generatedAt:payload.generatedAt,companyName:payload.companyName,methodologyVersion:payload.methodologyVersion,metricType:payload.metricType,
@@ -200,8 +203,10 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
     /* Identity of the frozen logo snapshot only (bytes are attached outside the hashed source at render time and verified against this hash). Absent without a snapshot, so existing sources and PDFs are unchanged. */
     ...(narrative.companyLogo?{companyLogo:{sha256:narrative.companyLogo.sha256}}:{}),
     /* Customer-safe projection of the validated 12-month plan: titles, calendar labels and Mongolian text only (no stage ids, finding references or provider details). Absent for reports without a READY plan, which keep the existing page 3. */
-    ...(plan?{annualPlan:{periodLabel:plan.periodLabel,stages:plan.stages.map(st=>({headingMn:st.headingMn,dateLabel:st.dateLabel,dependencyNoteMn:st.dependencyNoteMn,actions:st.actions.map(x=>({textMn:x.textMn}))}))}}:{})
+    ...(plan?{annualPlan:{periodLabel:plan.periodLabel,stages:plan.stages.map(st=>({headingMn:st.headingMn,dateLabel:st.dateLabel,dependencyNoteMn:st.dependencyNoteMn,...(st.guide?{guide:st.guide}:{}),actions:st.actions.map(x=>({textMn:x.textMn}))}))}}:{}),
+    ...(guidance?.version==="MMRI-REPORT-GUIDANCE-1.1"?{textRules:2 as const}:{})
   };
+  return guidance?.names?{...out,conclusionMn:plainAll(out.conclusionMn),strengths:plainAll(out.strengths),weaknesses:plainAll(out.weaknesses),criticalActions:plainAll(out.criticalActions),roadmap:plainAll(out.roadmap),warnings:plainAll(out.warnings),risks:plainAll(out.risks),...(out.annualPlan?{annualPlan:plainAll(out.annualPlan)}:{}),...(out.selectionNoteMn?{selectionNoteMn:plainAll(out.selectionNoteMn)}:{})}:out;
 }
 
 export function reportPdfSourceHash(source:ReportPdfSource):string{return sha256Json(source);}

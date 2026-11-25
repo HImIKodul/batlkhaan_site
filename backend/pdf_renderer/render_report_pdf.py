@@ -84,6 +84,7 @@ TIER_E = 0  # explanation tier (pages 1-2): 0-3 print every approved word, 4 sho
 STRICT = False
 # Category heading of newer reports (customer label; internal domain ids are unchanged).
 DOMAIN_LABELS = {"marketing": "МАРКЕТИНГ (MMRI)", "it": "МЭДЭЭЛЛИЙН ТЕХНОЛОГИ (ITMRI)", "finance": "САНХҮҮ (FINMRI)", "people": "ХҮНИЙ НӨӨЦ (HRMRI)", "operations": "ҮЙЛДВЭРЛЭЛ БА ҮЙЛ АЖИЛЛАГАА (OPMRI)"}
+RULES2 = False  # newest reports: plain labels, goal/result/check rows per stage
 GUIDED = False  # newer reports with capability-specific wording
 TIER_R = 0  # roadmap tier (page 3)
 TIER_ROADMAP = {0: (7.5, 10.6, 3.5), 1: (6.9, 8.9, 2.4), 2: (6.3, 8.0, 1.7), 3: (5.8, 7.3, 1.2), 4: (5.8, 7.3, 1.0)}
@@ -556,9 +557,9 @@ def summary_page(source, st, content_width):
     strong = compact_finding_list(source.get("strengths") or [], st, True)
     weak = compact_finding_list(source.get("weaknesses") or [], st, False)
     flags = [bool(x.get("needsEvidence")) for x in (source.get("weaknesses") or [])[:5]]
-    weak_title = "Сул талын товч зураг" if not any(flags) else "Нэмж тодруулах чиглэл" if all(flags) else "Сул ба тодруулах чиглэл"
+    weak_title = ("Сул талууд" if RULES2 else "Сул талын товч зураг") if not any(flags) else "Нэмж тодруулах чиглэл" if all(flags) else "Сул ба тодруулах чиглэл"
     snapshot = Table([
-        [p("Давуу талын товч зураг", st["h2"]), p(weak_title, st["h2"])],
+        [p("Давуу талууд" if RULES2 else "Давуу талын товч зураг", st["h2"]), p(weak_title, st["h2"])],
         [strong, weak],
     ], colWidths=[88.5 * mm, 88.5 * mm] if GUIDED else [85 * mm, 85 * mm], hAlign="LEFT")
     snapshot.setStyle(TableStyle([
@@ -639,10 +640,10 @@ def action_card(action, index, st, content_width):
         [
             p(str(index), st["h3"]),
             p((action.get("guide") or {}).get("headingMn") or action.get("titleMn") or "-", st["h3"]),
-            [p(action.get("ownerRoleLabelMn") or "-", st["glabel"] if compact else st["small_bold"])] + ([p(gp, st["gsmall"])] if gp else []),
+            [p(("Хариуцах: " + (action.get("ownerRoleLabelMn") or "хүнийг томилно")) if RULES2 else (action.get("ownerRoleLabelMn") or "-"), st["glabel"] if compact else st["small_bold"])] + ([p(gp, st["gsmall"])] if gp else []),
             score_box,
         ],
-    ], colWidths=[9 * mm, 83 * mm, 50 * mm, 38 * mm] if gp else [9 * mm, 91 * mm, 38 * mm, 30 * mm])
+    ], colWidths=([9 * mm, 72 * mm, 63 * mm, 36 * mm] if RULES2 else [9 * mm, 83 * mm, 50 * mm, 38 * mm]) if gp else [9 * mm, 91 * mm, 38 * mm, 30 * mm])
     title.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (0, 0), DOMAIN_LIGHT),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -654,14 +655,14 @@ def action_card(action, index, st, content_width):
     g = action.get("guide") or {}
     guide_rows = [[p(k, st["glabel"]), p(v, st["guide"])] for k, v in (("Яагаад", g.get("whyMn")), ("Хийх ажил", g.get("doMn"))) if v]
     if guide_rows and (g.get("deliverableMn") or g.get("checkMn")):  # the proof and the question that verifies it, side by side
-        pair = Table([[p(g.get("deliverableMn") or "-", st["guide"]), p("Шалгах", st["glabel"]), p(g.get("checkMn") or "-", st["guide"])]], colWidths=[76 * mm, 15 * mm, 67 * mm], style=TableStyle([
+        pair = Table([[p(g.get("deliverableMn") or "-", st["guide"]), p("Шалгах нь" if RULES2 else "Шалгах", st["glabel"]), p(g.get("checkMn") or "-", st["guide"])]], colWidths=[70 * mm, 19 * mm, 66 * mm] if RULES2 else [76 * mm, 15 * mm, 67 * mm], style=TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 4), ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
-        guide_rows.append([p("Гарц", st["glabel"]), pair])
+        guide_rows.append([p("Гарах үр дүн" if RULES2 else "Гарц", st["glabel"]), pair])
     facts = Table((guide_rows if guide_rows else [
         [p("Хийх ажил", st["small_bold"]), p(((action.get("statedMn") + " ") if action.get("statedMn") else "") + sentence_case(action.get("actionMn") or action.get("narrativeMn") or "-"), st["body_compact"])],
         [p("Гарц", st["small_bold"]), p(sentence_case(action.get("deliverableMn") or "-"), st["body_compact"])],
         [p("Хэмжүүр", st["small_bold"]), p(sentence_case(action.get("kpiMn") or "-"), st["body_compact"])],
-    ]) + ([[p("Тайлбар", st["small_bold"]), p(explanation_text(action.get("explanationMn"), 300), st["explain"])]] if explanation_text(action.get("explanationMn"), 300) else []), colWidths=[20 * mm, 160 * mm] if guide_rows else [24 * mm, 144 * mm])
+    ]) + ([[p("Тайлбар", st["small_bold"]), p(explanation_text(action.get("explanationMn"), 300), st["explain"])]] if explanation_text(action.get("explanationMn"), 300) else []), colWidths=([23 * mm, 157 * mm] if RULES2 else [20 * mm, 160 * mm]) if guide_rows else [24 * mm, 144 * mm])
     pad = (1.2 if TIER_E < 2 else 0.5) if guide_rows else 3  # six short rows per priority instead of three
     facts.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -885,21 +886,29 @@ class PlanStage(Flowable):
         self.head_style = ParagraphStyle("pl_head", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=hs, leading=hs + 2.6, textColor=PLAN_BLUE_DARK)
         self.note_style = ParagraphStyle("pl_note", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs - 0.6, leading=lead - 0.8, textColor=PLAN_BLUE)
         self.body_style = ParagraphStyle("pl_body", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs, leading=lead, textColor=INK_2)
-        self.gap_after = 4.2 * mm
+        self.row_gap = (0.35 if stage.get("guide") else 1.2) * mm
+        self.gap_after = (1.8 if stage.get("guide") else 4.2) * mm
 
     def wrap(self, availWidth, availHeight):
         self.text_w = availWidth - PLAN_GUTTER
-        self.parts = [Paragraph(text(self.stage.get("dateLabel")), self.date_style), Paragraph(text(self.stage.get("headingMn")), self.head_style)]
+        same = (self.stage.get("guide") or {}).get("goalMn") == self.stage.get("headingMn")  # the heading is the goal itself: said once
+        self.parts = [Paragraph(text(self.stage.get("dateLabel")), self.date_style), Paragraph(("Зорилго: " if same else "") + text(self.stage.get("headingMn")), self.head_style)]
         if self.stage.get("dependencyNoteMn"):
             self.parts.append(Paragraph(text(self.stage["dependencyNoteMn"]), self.note_style))
+        guide = self.stage.get("guide") or {}
+        if guide.get("goalMn") and not same:
+            self.parts.append(Paragraph("<font name='MMRINotoBold'>Зорилго:</font> " + text(guide["goalMn"]).rstrip(".") + ".", self.body_style))
         for a in self.stage.get("actions") or []:
             self.parts.append(Paragraph("&#8226;&nbsp;" + text(a.get("textMn")), self.body_style))
+        tail = " ".join("<font name='MMRINotoBold'>" + label + ":</font> " + text(guide[key]).rstrip(".") + "." for key, label in (("ownerMn", "Хариуцах"), ("resultMn", "Гарах үр дүн"), ("doneMn", "Дууссаныг шалгах")) if guide.get(key))
+        if tail:
+            self.parts.append(Paragraph(tail, self.note_style))
         h = 0
         self.heights = []
         for i, pp in enumerate(self.parts):
             _, ph = pp.wrap(self.text_w, 10000)
             self.heights.append(ph)
-            h += ph + (0.6 * mm if i == 0 else 1.2 * mm)
+            h += ph + (0.6 * mm if i == 0 else self.row_gap)
         self.height = h + 0.6 * mm
         self.width = availWidth
         return self.width, self.height
@@ -923,7 +932,7 @@ class PlanStage(Flowable):
         for i, (pp, ph) in enumerate(zip(self.parts, self.heights)):
             y -= ph
             pp.drawOn(c, PLAN_GUTTER, y)
-            y -= 0.6 * mm if i == 0 else 1.2 * mm
+            y -= 0.6 * mm if i == 0 else self.row_gap
 
 
 def annual_plan_pages(source, st, content_width):
@@ -932,8 +941,8 @@ def annual_plan_pages(source, st, content_width):
     head = [
         p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
         p("12 сарын хэрэгжилтийн төлөвлөгөө", st["page_title"]),
-        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна" + (". Зарим" if GUIDED else "; зарим") + " ажил зэрэгцэн явагдана.", st["body"]),
-        Spacer(1, 3 * mm),
+        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Санал болгосон албан тушаал танайд байхгүй бол хариуцах хүнээ томилно.", st["body"]) if RULES2 else p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна" + (". Зарим" if GUIDED else "; зарим") + " ажил зэрэгцэн явагдана.", st["body"]),
+        Spacer(1, (2 if RULES2 else 3) * mm),
     ]
     # The platypus frame keeps 6 pt of padding on every side: measure with the width and height the frame really gives, otherwise text wraps into more
     # lines than estimated and a plan that fits at a smaller size is rejected.
@@ -949,6 +958,8 @@ def annual_plan_pages(source, st, content_width):
         for fl in flows:
             _, h = fl.wrap(inner_w, avail)
             total += h + fl.gap_after
+        if RULES2 and flows:
+            total -= flows[-1].gap_after  # nothing follows the last stage
         if used + total <= avail:
             body = []
             for i, fl in enumerate(flows):
@@ -1004,8 +1015,9 @@ def main():
     top = 18 * mm
     bottom = 15 * mm
     content_width = A4[0] - left - right
-    global TIER_E, TIER_R, STRICT, GUIDED
+    global TIER_E, TIER_R, STRICT, GUIDED, RULES2
     GUIDED = any(a.get("guide") for a in source.get("criticalActions") or [])
+    RULES2 = source.get("textRules") == 2
     STRICT = args.strict
     # Tier 0/0 is the accepted design. The explanation tier (pages 1-2) and the roadmap tier (page 3) grow independently, smallest total first.
     for te, tr in sorted(((a, b) for a in TIER_EXPLAIN for b in TIER_ROADMAP), key=lambda x: (x[0] >= 4, x[0] + x[1], x[1])):
