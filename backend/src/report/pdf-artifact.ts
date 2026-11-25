@@ -1,4 +1,4 @@
-import { plainRole } from "./guidance/index.js";
+import { coverageText, plainRole } from "./guidance/index.js";
 import { planForPayload } from "./annual-plan.js";
 import { createHash } from "node:crypto";
 import type { FrozenReportPayload, NarrativeDraft, NarrativeClaim } from "./types.js";
@@ -21,6 +21,8 @@ export interface ReportPdfFinding {
   /** Approved narrative text shown on the PDF; empty when it equals the deterministic default (which the name and score already express). MMRI-13. */
   explanationMn?:string;
   basis?:"VALIDATED"|"RELATIVE_RANK";
+  /** Newer reports: an area to clarify, never shown as a weakness. */
+  needsEvidence?:true;
 }
 export interface ReportPdfAction {
   id:string;
@@ -71,6 +73,9 @@ export interface ReportPdfSource {
   overallConfidence:number|null;
   overallCoverage:number|null;
   targetNoteMn?:string;
+  selectionNoteMn?:string;
+  coverageNoteMn?:string;
+  coverageShare?:string;
   conclusionMn:string;
   strengths:ReportPdfFinding[];
   weaknesses:ReportPdfFinding[];
@@ -171,7 +176,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
       claimTextByTrace(baseline,"S04",`strength:${s.id}`)||claimTextByTrace(baseline,"S04",`category:${s.categoryId}`))||guidance?.findings[s.id]||""
   }));
   const weaknesses=payload.weaknesses.slice(0,5).map(w=>({
-    id:w.id,nameMn:w.nameMn,score:w.score,...(w.basis?{basis:w.basis}:{}),
+    id:w.id,nameMn:w.nameMn,score:w.score,...(w.needsEvidence?{needsEvidence:true as const}:{}),...(w.basis?{basis:w.basis}:{}),
     narrativeMn:claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`)||`${w.nameMn} нь эхэлж бэхжүүлэх шаардлагатай чадавх байна.`,
     explanationMn:editedExplanation(
       claimTextByTrace(narrative,"S05",`weakness:${w.id}`)||claimTextByTrace(narrative,"S05",`category:${w.categoryId}`),
@@ -188,7 +193,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
     reportId:payload.reportId,assessmentId:payload.assessmentId,payloadHash:payload.payloadHash,narrativeHash,bindingHash:payload.bindingHash,
     generatedAt:payload.generatedAt,companyName:payload.companyName,methodologyVersion:payload.methodologyVersion,metricType:payload.metricType,
     overallScore:payload.overall.score,overallBand:payload.overall.band,overallConfidence:payload.overall.confidence,overallCoverage:payload.overall.coverage,
-    ...(guidance?.targetNoteMn?{targetNoteMn:guidance.targetNoteMn}:{}),conclusionMn:conclusionText(narrative),strengths:b4Active?withPlaceholders(strengths,payload.strengths.slice(0,5),B4_PLACEHOLDER_TEXT.strength,"strength",b4Rule):strengths,weaknesses:b4Active?withPlaceholders(weaknesses,payload.weaknesses.slice(0,5),B4_PLACEHOLDER_TEXT.weakness,"weakness",b4Rule):weaknesses,criticalActions,
+    ...(guidance?.targetNoteMn?{targetNoteMn:guidance.targetNoteMn}:{}),...(guidance?.selectionNoteMn?{selectionNoteMn:guidance.selectionNoteMn}:{}),...(guidance?.coverageNoteMn?{coverageNoteMn:guidance.coverageNoteMn,coverageShare:`${coverageText(payload.overall.coverage)}%`}:{}),conclusionMn:conclusionText(narrative),strengths:b4Active?withPlaceholders(strengths,payload.strengths.slice(0,5),B4_PLACEHOLDER_TEXT.strength,"strength",b4Rule):strengths,weaknesses:b4Active?withPlaceholders(weaknesses,payload.weaknesses.slice(0,5),B4_PLACEHOLDER_TEXT.weakness,"weakness",b4Rule):weaknesses,criticalActions,
     roadmap:payload.roadmap.map(r=>({horizon:r.horizon,nameMn:r.nameMn,dayStart:r.dayStart,dayEnd:r.dayEnd,milestones:r.milestones.map(m=>({milestoneId:m.milestoneId,recommendationId:m.recommendationId,titleMn:m.titleMn,milestoneMn:m.milestoneMn,deliverableMn:m.deliverableMn,ownerRoleLabelMn:m.ownerRoleLabelMn,kpiMn:m.kpiMn}))})),
     warnings:[...payload.requiredWarnings,...(flags.b3&&payload.evidenceDisclosure?payload.evidenceDisclosure.warningsMn:[])],risks:payload.risks.map(r=>r.messageMn),
     ...(narrative.visualAnnotations?.items?.length?{annotations:narrative.visualAnnotations}:{}),

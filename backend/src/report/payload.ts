@@ -31,6 +31,9 @@ function warningSet(mode: "QUICK"|"FULL", status: string, routingState: string |
   return warnings;
 }
 
+/** What rule H01 found, in words: answers to the same topic that differ by at least half the scale. */
+export function contradictionMessage(names:string[]):string{return `${names.length} сэдвийн хариултууд хоорондоо эрс зөрсөн (${names.slice(0,3).map(n=>`«${n}»`).join(", ")}${names.length>3?" болон бусад":""}). Эдгээрийн дүнг дахин шалгаж баталгаажуулна.`;}
+
 export interface BuildReportPayloadInput {
   reportId: string;
   payloadHash: string;
@@ -111,6 +114,8 @@ export function buildFrozenReportPayload(input: BuildReportPayloadInput): Frozen
   const weakIds = new Set(weaknesses.map(x => x.categoryId));
   scoredCats.filter(x => !weakIds.has(x.c.id) && !strengthIds.has(x.c.id)).sort((a,b) => a.score-b.score || (b.r?.confidence??0)-(a.r?.confidence??0) || a.c.id.localeCompare(b.c.id)).slice(0, Math.max(0, REPORT_CATEGORY_FINDING_LIMIT-weaknesses.length)).forEach(x => { weaknesses.push({ id:`WEAK-${x.c.id}`,categoryId:x.c.id,nameMn:x.c.nameMn,score:x.score,confidence:x.r?.confidence??0,coverage:x.r?.coverage??0,severity:Math.max(0,(weaknessThreshold-x.score)/Math.max(1,weaknessThreshold)),sourceTraceIds:[`category:${x.c.id}`,`weakness:WEAK-${x.c.id}`],basis:"RELATIVE_RANK" }); });
 
+  /* The five positions are kept, but a capability at or above the threshold is an area to clarify, not a weakness. */
+  for (const w of weaknesses) if (w.score >= weaknessThreshold) w.needsEvidence = true;
   const selectedRoots = strategy.rootCause.selectedFindings
     .filter(f => ["PRIMARY_ROOT_CAUSE","CONTRIBUTING_CAUSE","POSSIBLE_CAUSE","EVIDENCE_GAP","ISOLATED_WEAKNESS"].includes(f.classification))
     .slice(0, Number(reportContract.limits.rootFindings ?? 3));
@@ -154,10 +159,10 @@ export function buildFrozenReportPayload(input: BuildReportPayloadInput): Frozen
 
   const risks: ReportRisk[] = [];
   const hard = snapshot.contradictions.filter(c => c.type === "HARD");
-  if (hard.length) risks.push({ id:"RISK-CONTRADICTION",type:"CONTRADICTION",messageMn:`${hard.length} ноцтой зөрчил илэрсэн буюу шийдвэрлэх шаардлагатай.`,sourceTraceIds:[...new Set(hard.slice(0,4).flatMap(c=>c.affectedCellIds.map(cellId=>`cell:${c.categoryId}:${cellId}`)))] });
+  if (hard.length) risks.push({ id:"RISK-CONTRADICTION",type:"CONTRADICTION",messageMn:contradictionMessage([...new Set(hard.map(c=>c.categoryId))].map(id=>methodology.categories.find(c=>c.id===id)?.nameMn??id)),sourceTraceIds:[...new Set(hard.slice(0,4).flatMap(c=>c.affectedCellIds.map(cellId=>`cell:${c.categoryId}:${cellId}`)))] });
   const reviewCells = [...snapshot.cells.entries()].filter(([,c]) => c.status === "REVIEW_REQUIRED");
   const reviewCount = reviewCells.length;
-  if (reviewCount) risks.push({id:"RISK-REVIEW",type:"REVIEW_REQUIRED",messageMn:`${reviewCount} нүд нягтлах шаардлагатай төлөвтэй байна.`,sourceTraceIds:reviewCells.slice(0,4).map(([key])=>`cell:${key}`)});
+  if (reviewCount) risks.push({id:"RISK-REVIEW",type:"REVIEW_REQUIRED",messageMn:`${reviewCount} асуулгын хэсгийг нягтлах шаардлагатай.`,sourceTraceIds:reviewCells.slice(0,4).map(([key])=>`cell:${key}`)});
   const gapFindings = strategy.rootCause.findings.filter(f=>f.classification==="EVIDENCE_GAP");
   const gapCount = gapFindings.length;
   if (gapCount) risks.push({id:"RISK-EVIDENCE",type:"EVIDENCE_GAP",messageMn:"Зарим нарийвчилсан асуултыг энэ удаа асуугаагүй тул холбогдох дүнг урьдчилсан гэж үзнэ.",sourceTraceIds:[...new Set(gapFindings.slice(0,4).flatMap(f=>f.sourceTraceIds))]});

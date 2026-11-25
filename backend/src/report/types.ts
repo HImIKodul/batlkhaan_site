@@ -34,6 +34,8 @@ export interface WeaknessFinding {
   coverage: number;
   severity: number;
   sourceTraceIds: string[];
+  /** Newer reports: the score is not below the weakness threshold, so this fills the list as an area to clarify and is never called weak. */
+  needsEvidence?: true;
   basis?: "VALIDATED" | "RELATIVE_RANK";
 }
 

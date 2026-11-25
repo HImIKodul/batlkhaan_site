@@ -10,6 +10,9 @@ export function guidanceIssues(payload: FrozenReportPayload, plan: AnnualPlanRea
   pairs(payload.strengths.map(s => g.findings[s.id] ?? ""), "REPEATED_STRENGTH", 0.85); pairs(payload.weaknesses.map(s => g.findings[s.id] ?? ""), "REPEATED_WEAKNESS", 0.85);
   pairs(g.priorities.map(p => p.doMn), "REPEATED_ACTION", 0.55); pairs(g.priorities.map(p => p.deliverableMn), "REPEATED_DELIVERABLE", 0.9); pairs(g.priorities.map(p => p.checkMn), "REPEATED_CHECK", 0.9);
   for (const [i, p] of g.priorities.entries()) { for (const k of ["whyMn", "doMn", "deliverableMn", "checkMn"] as const) if (!p[k]?.trim()) out.push(`MISSING_${k}:${i + 1}`); if (FIGURE.test([p.doMn, p.deliverableMn, p.checkMn].join(" "))) out.push(`FIGURE:${i + 1}`); if (/\{c\}|undefined|  /.test(JSON.stringify(p))) out.push(`TEMPLATE:${i + 1}`); }
+  for (const w of payload.weaknesses) if (w.score >= 60 && !w.needsEvidence) out.push(`INVENTED_WEAKNESS:${w.id}`);
+  if (/хуудсын/u.test(JSON.stringify(g))) out.push("LANGUAGE:хуудсын"); if (/ноцтой зөрчил/u.test(payload.risks.map(r => r.messageMn).join(" "))) out.push("UNQUALIFIED_WARNING");
+  if (g.priorities.length && g.selectionNoteMn === null && payload.weaknesses.some(w => !w.needsEvidence && !payload.priorityActions.some(a => a.categoryId === w.categoryId))) out.push("SELECTION_UNEXPLAINED");
   if (payload.priorityActions.some(a => typeof a.targetCellScore === "number") && !g.targetNoteMn) out.push("TARGET_UNEXPLAINED");
   if (plan) {
     const acts = plan.stages.flatMap(s => s.actions.map(a => ({ s, a })));

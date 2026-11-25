@@ -1,5 +1,6 @@
 import type { FrozenReportPayload, NarrativeClaim, NarrativeDraft, NarrativeSection } from "./types.js";
 import { safeNarrativeCompanyName } from "./ai-prompt.js";
+import { coverageText } from "./guidance/index.js";
 
 const pct = (v:number|null):string => v===null ? "тодорхойгүй" : `${(v*100).toFixed(0)}%`;
 const score = (v:number|null):string => v===null ? "оноо гараагүй" : `${v.toFixed(1)}`;
@@ -57,14 +58,17 @@ function conclusionText(payload:FrozenReportPayload):{text:string;sources:string
   if(action){const a=`Эхний удирдлагын алхам нь “${action.titleMn}”. ${sentenceCap(action.actionMn)} Ахиц нь “${String(action.kpiMn||"холбогдох хэмжүүр").replace(/[.!?…]+$/,'')}” хэмжүүрийн өөрчлөлтөөр баталгаажна.`;parts.push({full:a,short:`Эхний удирдлагын алхам нь “${action.titleMn}”. ${sentenceCap(action.actionMn)}`})}
   parts.push({full:`${payload.remeasurement.labelMn} хийхдээ нийт онооноос гадна дээрх сул чадавхууд тогтвортой сайжирсан эсэх, төлөвлөсөн гарц бодитоор бүрдсэн эсэхийг өмнөх тайлантай харьцуулна.`,short:`${payload.remeasurement.labelMn} хийхдээ өмнөх тайлантай харьцуулна.`});
   if(payload.guidance?.priorities.length){
-    const [g1,g2,g3]=payload.guidance.priorities;const quote=(x:string)=>`«${x}»`;
-    const validated=strengths.length>0&&strengths.every((x:any)=>x.basis!=="RELATIVE_RANK");
+    const [g1,g2,g3]=payload.guidance.priorities;const quote=(x:string)=>`«${x}»`,low=(x:string)=>x?x[0].toLocaleLowerCase("mn-MN")+x.slice(1):x;
+    const validated=strengths.length>0&&strengths.every((x:any)=>x.basis!=="RELATIVE_RANK"),weak=payload.weaknesses.filter(x=>!x.needsEvidence).slice(0,3).map(x=>quote(x.nameMn)),share=coverageText(payload.overall.coverage);
+    const said=`${safeNarrativeCompanyName(payload.companyName)} энэ удаагийн оношилгоогоор ${payload.overall.score===null?"нийт оноо тогтоогдоогүй":`${score(payload.overall.score)} оноо авлаа`}.`;
+    const first=g1.steps.startMn.split(" Үүнд:")[0];
     parts.splice(0,parts.length,
-      {full:`${safeNarrativeCompanyName(payload.companyName)} энэ удаагийн оношилгоогоор ${payload.overall.score===null?"нийт оноо тогтоогдоогүй":`${score(payload.overall.score)} оноо авлаа`}.`,short:`${safeNarrativeCompanyName(payload.companyName)} энэ удаагийн оношилгоогоор ${payload.overall.score===null?"нийт оноо тогтоогдоогүй":`${score(payload.overall.score)} оноо авлаа`}.`},
-      ...(strengthNames.length?[{full:`Харьцангуй сайн хариулттай чиглэл нь ${joinMn(strengthNames.map(quote))} байна. ${validated?"Эдгээр нь баталгаажсан давуу тал тул сул чиглэлийг сайжруулахад түшиглэнэ.":"Энэ нь цөөн хариултад тулгуурласан урьдчилсан дүн тул нэмэлт хариултаар баталгаажтал бүрэн давуу тал гэж үзэхгүй."}`,short:`Харьцангуй сайн хариулттай чиглэл нь ${joinMn(strengthNames.map(quote))} байна.${validated?"":" Энэ нь урьдчилсан дүн юм."}`}]:[]),
-      ...(weaknessNames.length?[{full:`Хамгийн сул нь ${joinMn(weaknessNames.map(quote))} бөгөөд эдгээрийг хуудас хоёрт дурдсан ажлуудтай хамт авч үзнэ.`,short:`Хамгийн сул нь ${joinMn(weaknessNames.map(quote))}.`}]:[]),
-      {full:`Удирдлага эхлээд ${quote(g1.capabilityMn)} ажлыг эхлүүлэхийг зөвлөж байна: ${g1.steps.startMn[0].toLocaleLowerCase("mn-MN")}${g1.steps.startMn.slice(1)}${g2?` Дараа нь ${joinMn([g2,g3].filter(Boolean).map(x=>quote(x.capabilityMn)))} ажлыг төлөвлөгөөний дарааллаар эхлүүлнэ.`:""}`,short:`Удирдлага эхлээд ${quote(g1.capabilityMn)} ажлыг эхлүүлэхийг зөвлөж байна: ${g1.steps.startMn[0].toLocaleLowerCase("mn-MN")}${g1.steps.startMn.slice(1)}`},
-      {full:`Ахицыг шалгах гол асуулт: ${g1.checkMn[0].toLocaleLowerCase("mn-MN")}${g1.checkMn.slice(1)}. Жилийн эцэст дахин оношилгоо хийж, сул чиглэлүүдийн өөрчлөлтийг энэ тайлантай харьцуулснаар хийсэн ажил бодит үр дүн өгсөн эсэхийг дүгнэнэ.`,short:"Ахицыг дахин оношилгоогоор энэ тайлантай харьцуулж шалгана."});
+      {full:`${said}${share?` Энэ нь бүх шалгуурын ${share} хувийг үнэлсэн урьдчилсан дүн.`:""}`,short:`${said}${share?` Энэ нь бүх шалгуурын ${share} хувийг үнэлсэн урьдчилсан дүн.`:""}`},
+      ...(strengthNames.length?[{full:`Сайн хариулттай чиглэл нь ${joinMn(strengthNames.map(quote))}. ${validated?"Эдгээр нь баталгаажсан давуу тал тул бусад ажилд түшиглэнэ.":"Нэмэлт хариултаар баталгаажтал эдгээрийг бүрэн давуу тал гэж үзэхгүй."}`,short:`Сайн хариулттай чиглэл нь ${joinMn(strengthNames.map(quote))}.`}]:[]),
+      weak.length?{full:`Сул үнэлэгдсэн чиглэл нь ${joinMn(weak)}.`,short:`Сул үнэлэгдсэн чиглэл нь ${joinMn(weak)}.`}
+        :{full:`Өгсөн хариултаар сул тал илрээгүй. Хариулаагүй хэсэг олон тул ${joinMn(payload.weaknesses.slice(0,2).map(x=>quote(x.nameMn)))} зэрэг чиглэлийг нэмж тодруулсны дараа дүгнэнэ.`,short:"Өгсөн хариултаар сул тал илрээгүй; хариулаагүй хэсгийг нэмж тодруулна."},
+      {full:`Эхний ажил нь ${quote(g1.capabilityMn)}: ${low(first)}${g2?` Дараагийн ажлууд нь ${joinMn([...new Set([g2,g3].filter(Boolean).map(x=>x.capabilityMn))].map(quote))}.`:""}`,short:`Эхний ажил нь ${quote(g1.capabilityMn)}: ${low(first)}`},
+      {full:`Ахицыг шалгах асуулт: ${low(g1.checkMn)}. Жилийн эцэст дахин оношилгоо хийж, өөрчлөлтийг энэ тайлантай харьцуулж дүгнэнэ. Хариулаагүй шалгуурыг сул гэж тооцоогүй тул дараагийн оношилгоонд тэдгээрийг нэмж үнэлэх нь дүнг илүү бодитой болгоно.`,short:"Жилийн эцэст дахин оношилгоо хийж, өөрчлөлтийг энэ тайлантай харьцуулна."});
   }
   const useShort=new Set<number>();const order=[2,1,parts.length-1,parts.length-2];
   const compose=()=>parts.map((x,i)=>useShort.has(i)?x.short:x.full).join(" ");
@@ -91,7 +95,7 @@ export function deterministicFallbackNarrative(payload: FrozenReportPayload): Na
   sections.push({id:"S01",titleMn:"Үнэлгээний мэдээлэл",claims:[claim("DESCRIPTIVE_SCORE",`${safeNarrativeCompanyName(payload.companyName)}: ${payload.assessmentMode} үнэлгээ; төлөв: ${payload.assessmentStatus}; аргачлал: ${payload.methodologyVersion}.`,[`assessment:${payload.assessmentId}`]) ]});
 
   const metricLabel = payload.metricType === "QUICK_ESTIMATE" ? "Түргэвчилсэн үнэлгээний тооцоолол" : payload.metricType === "OFFICIAL_OVERALL_SCORE" ? "Албан ёсны нийт оноо" : payload.metricType === "REVIEW_REQUIRED_SCORE" ? "Нягтлах шаардлагатай урьдчилсан оноо" : "Нийт оноо";
-  const execText = `${metricLabel}: ${score(payload.overall.score)}${payload.overall.band?` (${payload.overall.band})`:""}. Итгэлцэл ${pct(payload.overall.confidence)}, хамрах хүрээ ${pct(payload.overall.coverage)}.`;
+  const execText = `${metricLabel}: ${score(payload.overall.score)}${payload.overall.band?` (${payload.overall.band})`:""}. ${payload.guidance?`Хариулсан хэсгийн итгэлцэл ${pct(payload.overall.confidence)}; бүх шалгуурын ${pct(payload.overall.coverage)} үнэлэгдсэн.`:`Итгэлцэл ${pct(payload.overall.confidence)}, хамрах хүрээ ${pct(payload.overall.coverage)}.`}`;
   const execClaims=[claim("DESCRIPTIVE_SCORE",execText,[`assessment:${payload.assessmentId}`]),...payload.requiredWarnings.map(w=>claim("RISK",w,[`assessment:${payload.assessmentId}`]))];
   sections.push({id:"S02",titleMn:"Ерөнхий онош",claims:execClaims});
 

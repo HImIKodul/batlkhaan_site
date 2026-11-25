@@ -1,14 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { GuidePicker, named, plainRole, practiceKind } from "../src/report/guidance/index.js";
+import { GuidePicker, buildReportGuidance, coverageText, named, plainRole, practiceKind } from "../src/report/guidance/index.js";
 import { MARKETING_GUIDE } from "../src/report/guidance/marketing.js";
 import { DIMENSION_GUIDE } from "../src/report/guidance/dimensions.js";
 import { PRACTICE_KINDS, PRACTICE_MAP } from "../src/report/guidance/practices.js";
+import { CAPABILITY_CONTENT } from "../src/report/guidance/capabilities.js";
+import { contradictionMessage } from "../src/report/payload.js";
 import { guidanceIssues } from "../src/report/guidance/check.js";
 import { deterministicAnnualPlan } from "../src/report/guidance/year-plan.js";
 
 const rows = (t: string) => t.trim().split("\n").filter(l => l.includes("|")).map(l => l.split("|"));
 const priority = (i: number, over: any = {}) => ({ recommendationId: `R${i}`, evidence: false, capabilityMn: `Чадавх ${"абвгд"[i]}`, dimensionMn: "Бодит хэрэгжилт", whyMn: "Шалтгаан", goalMn: "Зорилго", ...(() => { const p = new GuidePicker().pick(["MS09", "MS13", "MS31", "MS40", "MS43"][i], "C02"); return { doMn: `${p.start}.`, deliverableMn: p.deliverable, checkMn: p.check, steps: { startMn: `${p.start}.`, runMn: `${p.run}.`, embedMn: `${p.embed}.` } }; })(), ...over });
-const payload = (over: any = {}): any => ({ payloadHash: "h", generatedAt: "2026-11-25T00:00:00.000Z", strengths: [], weaknesses: [], displayDictionary: { R02: "Менежер" }, priorityActions: [0, 1, 2, 3, 4].map(i => ({ id: `R${i}`, ownerRoleId: "R02", titleMn: "t", targetCellScore: 60 })), guidance: { version: "x", findings: {}, affects: [], targetNoteMn: "тайлбар", priorities: [0, 1, 2, 3, 4].map(i => priority(i)) }, ...over });
+const payload = (over: any = {}): any => ({ payloadHash: "h", generatedAt: "2026-11-25T00:00:00.000Z", strengths: [], weaknesses: [], risks: [], displayDictionary: { R02: "Менежер" }, priorityActions: [0, 1, 2, 3, 4].map(i => ({ id: `R${i}`, ownerRoleId: "R02", titleMn: "t", targetCellScore: 60 })), guidance: { version: "x", findings: {}, affects: [], targetNoteMn: "тайлбар", selectionNoteMn: "тайлбар", coverageNoteMn: "тайлбар", priorities: [0, 1, 2, 3, 4].map(i => priority(i)) }, ...over });
 
 describe("guidance tables", () => {
   it("cover all 64 marketing capabilities, all 46 scored dimensions besides C02 and all 64 capabilities of the other four domains", () => {
@@ -39,4 +41,18 @@ describe("content checks find the reported defects", () => {
     const p = payload(); p.guidance.priorities[1].doMn = p.guidance.priorities[0].doMn; expect(guidanceIssues(p, null).join()).toContain("REPEATED_ACTION");
     const q = payload(); q.guidance.priorities[2].deliverableMn = ""; q.guidance.priorities[3].doMn += " Борлуулалтыг 20 хувиар өсгөнө."; q.guidance.targetNoteMn = null; const s = guidanceIssues(q, null).join(); expect(s).toContain("MISSING_deliverableMn:3"); expect(s).toContain("FIGURE:4"); expect(s).toContain("TARGET_UNEXPLAINED");
   });
+});
+
+describe("independent review 2026-11-25", () => {
+  const ids = ["FINMRI-C17", "HRMRI-C17", "ISMRI-C17", "OPMRI-C17"];
+  const m = (o: any = {}): any => ({ categories: ids.map(id => ({ id, nameMn: `Нэр ${id.slice(0, 2) === "FI" ? "санхүү" : id.slice(0, 2) === "HR" ? "сургалт" : id.slice(0, 2) === "IS" ? "систем" : "хүчин чадал"}` })), cells: [{ id: "C09", nameMn: "Шийдвэр гаргах эрх тодорхой эсэх" }], questions: [], contracts: { recommendation: { composition: { categoryObjectives: [] } } }, ...o });
+  const snap = (o: any = {}): any => ({ cells: new Map(), contradictions: [], overall: { coverage: 0.027, confidence: 1 }, ...o });
+  const action = (id: string): any => ({ id: `R-${id}`, findingId: "f", categoryId: id, cellId: "C09", type: "LOCAL_IMPROVEMENT", titleMn: "t", objectiveMn: "o", targetCellScore: 60, components: { severity: 0.9, purposeEmphasis: 0.8, feasibility: 0.2 } });
+  const build = (parts: any, strategy: any = { rootCause: { findings: [] }, recommendations: { candidates: [] } }, s = snap()) => buildReportGuidance(m(), s, strategy, { strengths: [], weaknesses: [], priorityActions: [], ...parts });
+  it("has its own scope, step and evidence for all 256 non-marketing capabilities, none shared", () => { expect(CAPABILITY_CONTENT.size).toBe(256); expect(new Set([...CAPABILITY_CONTENT.values()].map(c => c.step)).size).toBe(256); expect(new Set([...CAPABILITY_CONTENT.values()].map(c => c.evidence)).size).toBe(256); for (const c of CAPABILITY_CONTENT.values()) { expect(c.step).toMatch(/(?:на|нэ|но|нө)$/); expect(c.covers + c.step + c.evidence).not.toMatch(/[A-Za-z0-9%]/); } });
+  it("the same weak dimension gives different work for an operating margin, a training design, a BI platform and capacity use", () => { const all = ids.map(id => build({ priorityActions: [action(id)] }).priorities[0]); expect(new Set(all.map(x => x.doMn)).size).toBe(4); expect(new Set(all.map(x => x.deliverableMn)).size).toBe(4); expect(new Set(all.map(x => x.steps.runMn)).size).toBe(4); expect(all[2].doMn).toMatch(/агуулах/); expect(all[0].doMn).toMatch(/Тогтмол зардал/i); });
+  it("never calls a good or merely unasked capability weak", () => { const g = build({ weaknesses: [{ id: "W", categoryId: ids[3], nameMn: "Х", score: 100, needsEvidence: true }] }); expect(g.findings.W).toContain("Сул гэж тогтоогоогүй"); const p = payload(); p.weaknesses = [{ id: "W", score: 100, categoryId: "x" }]; expect(guidanceIssues(p, null).join()).toContain("INVENTED_WEAKNESS"); });
+  it("explains why a low score is not among the five, and by which parts of the accepted ranking a priority was chosen", () => { const g = build({ priorityActions: [action(ids[0])], weaknesses: [{ id: "A", categoryId: ids[1], nameMn: "Эхний", score: 0 }, { id: "B", categoryId: ids[2], nameMn: "Хоёр дахь", score: 0 }] }, { rootCause: { findings: [] }, recommendations: { candidates: [{ categoryId: ids[1], type: "LOCAL_IMPROVEMENT" }, { categoryId: ids[2], type: "COLLECT_EVIDENCE" }] } }); expect(g.selectionNoteMn).toContain("«Эхний» бага оноотой ч"); expect(g.selectionNoteMn).toContain("«Хоёр дахь» чиглэлд ажил санал болгохын өмнө"); expect(g.priorities[0].whyMn).toContain("дутагдал их"); });
+  it("says what coverage and confidence mean", () => { expect(coverageText(0.027)).toBe("2.7"); expect(coverageText(0.406)).toBe("41"); expect(coverageText(null)).toBeNull(); expect(build({ priorityActions: [action(ids[0])] }).coverageNoteMn).toMatch(/2\.7%.*сул гэж үзээгүй.*хариулсан хэсэгт/); });
+  it("flags a finding whose answers contradict and words the warning by topic", () => { const g = build({ strengths: [{ id: "S", categoryId: ids[0] }] }, undefined, snap({ contradictions: [{ type: "HARD", categoryId: ids[0], affectedCellIds: ["C02"] }] })); expect(g.findings.S).toContain("зөрсөн"); expect(contradictionMessage(["А", "Б", "В", "Г"])).toBe("4 сэдвийн хариултууд хоорондоо эрс зөрсөн («А», «Б», «В» болон бусад). Эдгээрийн дүнг дахин шалгаж баталгаажуулна."); });
 });

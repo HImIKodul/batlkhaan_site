@@ -112,7 +112,7 @@ function realModel(area:BusinessArea,company:string,assessment:AssessmentSummary
   return {id:canonical?.id||c.id,name:canonical?.name||canonicalCapabilityName(area.id,c.id,c.nameMn),score:clamp(rawScore),weightPct:Number(c.weightPct||0),evidenceCount:Number(c.finalizedCellCount||0),purposeMass,confidence:Number(c.confidence||0),coverage:Number(c.coverage||0),canonicalIndex:canonicalIndex>=0?canonicalIndex:catalog.length+sourceIndex};
  }).filter((x):x is RankedCapability=>x!==null);
  const claimText=(section:string,trace:string)=>mnCustomerText(report?.narrative?.sections?.find(x=>x.id===section)?.claims.find(c=>c.sourceTraceIds?.includes(trace))?.textMn||'');
- const fromPayload=(rows:ReportStrength[]|undefined,section:string,prefix:string):Finding[]=>(rows||[]).slice(0,5).map(r=>({name:r.nameMn,score:clamp(r.score),meaning:claimText(section,`${prefix}:${r.id}`),prelim:r.basis==='RELATIVE_RANK'}));
+ const fromPayload=(rows:ReportStrength[]|undefined,section:string,prefix:string):Finding[]=>(rows||[]).slice(0,5).map(r=>({name:(r as {needsEvidence?:boolean}).needsEvidence?`${r.nameMn} (тодруулах)`:r.nameMn,score:clamp(r.score),meaning:claimText(section,`${prefix}:${r.id}`),prelim:r.basis==='RELATIVE_RANK'}));
  const positives=fromPayload(payload?.strengths,'S04','strength');const flaws=fromPayload(payload?.weaknesses,'S05','weakness');
  const categoryByRuntimeId=new Map<string,RankedCapability>();
  for(const row of candidates){categoryByRuntimeId.set(row.id,row);const canonical=catalog.find(c=>c.id===row.id||c.name===row.name);for(const id of canonical?.runtimeIds||[])categoryByRuntimeId.set(id,row)}

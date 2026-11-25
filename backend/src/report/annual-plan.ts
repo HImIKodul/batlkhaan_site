@@ -145,7 +145,7 @@ export function buildPlanInput(payload: FrozenReportPayload, domainNameMn: strin
     domainNameMn, reportDate: iso(planStartDate(payload.generatedAt)), windowDays: planWindowDays(planStartDate(payload.generatedAt)),
     overall: { score: payload.overall.score ?? null, band: (payload.overall as any).band ?? null, confidence: (payload.overall as any).confidence ?? null, coverage: (payload.overall as any).coverage ?? null },
     strengths: payload.strengths.slice(0, 5).map(s => ({ nameMn: s.nameMn, score: s.score ?? null })),
-    weaknesses: payload.weaknesses.slice(0, 5).map(w => ({ nameMn: w.nameMn, score: w.score ?? null })),
+    weaknesses: payload.weaknesses.filter(w => !w.needsEvidence).slice(0, 5).map(w => ({ nameMn: w.nameMn, score: w.score ?? null })),
     findings, sharedInterventions, evidenceChecks, dependencyHints,
     evidenceFromAnswers: extras?.evidenceFromAnswers ?? [], companyCharacteristics: extras?.companyCharacteristics ?? [], ...(extras?.answersOverview ? { answersOverview: extras.answersOverview } : {}),
     risksMn: payload.risks.map(r => r.messageMn).slice(0, 6), warningsMn: payload.requiredWarnings.slice(0, 4)
