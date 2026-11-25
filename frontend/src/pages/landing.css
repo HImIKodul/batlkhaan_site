@@ -493,19 +493,18 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 /* Phones: a deliberate arrangement, not a shrunken desktop: wider plates, a small diagonal step, a steeper elevated view, label type 11-14px. */
 @media (max-width:560px){.hx{--pw:72;--ph:19;--t:4.2;--x0:15;--y0:3;--pitch:23.6;--fan:3.2;--orb:9.5cqw;--fs:3.9cqw;width:min(100%,400px);margin:10px auto 12px;aspect-ratio:1.14;top:0}
  .hx__scene{perspective:1000cqw;perspective-origin:50% 0%}.hx__stack{transform:rotateX(50deg) rotateZ(0deg)}.hx3{--r:4cqw}.hx3__left,.hx3__right{display:none}.hx3__top{padding:0 calc(var(--orb) * 1.5);border-radius:4cqw}.hx3__name{font-size:clamp(11px,var(--fs),14px);white-space:normal;text-wrap:balance}}
-/* HERO: five identical liquid-glass cards in one overlapping row (the diagnosis cards' order and colours), alternately set a little higher and lower; none is emphasised. Every card lies over the left edge of the next one
-   and --o is that overlap, so the labels, at the bottom of each card and inset by the overlap, are never covered. --w/--h card size, --s vertical step (all in cqw). Hover never changes geometry. */
-.hx{--w:21.76;--h:46;--o:2.2;--s:4;--r:3cqw;--fs:2.05cqw;top:0;width:min(100%,clamp(340px,calc((100dvh - 345px)*1.9),640px));margin-inline:auto 0;aspect-ratio:2}
+/* HERO: five identical glossy glass cards in one overlapping diagonal (approved reference): the front card at the upper right, each next one a step down and to the left, behind it. The whole bottom edge of every card stays
+   free, so each label, at the bottom of its card, is never covered. --w/--h card size, --dx/--dy step, --tilt slant (sizes in cqw). Colours are the diagnosis-card tokens (--mmri-domain-*). Hover never changes geometry. */
+.hx{--w:54;--h:35;--dx:11.5;--dy:11.6;--tilt:5deg;--r:3.4cqw;--fs:2.75cqw;top:0;width:min(100%,clamp(380px,calc((100dvh - 440px)*1.15),600px));margin-inline:auto 2%;aspect-ratio:100/83}
 .hx__scene{perspective:none}
-.hx__stack{transform:none;height:100%;top:0;transform-style:flat}
+.hx__stack{transform:skewY(var(--tilt));transform-origin:0 0;height:100%;top:0;transform-style:flat}
 .hx3__orb{display:none}
 .hx__scene::before{content:"";position:absolute;inset:8% 10%;pointer-events:none;background:radial-gradient(closest-side,rgba(70,150,255,.3),rgba(120,90,255,.12) 55%,transparent)}
-.hx3{--y:0;left:calc(var(--i) * (var(--w) - var(--o)) * 1cqw);top:calc(var(--y) * var(--s) * 1cqw);width:calc(var(--w) * 1cqw);height:calc(var(--h) * 1cqw);z-index:calc(5 - var(--i));transform-style:flat;transform:none;filter:none}
-.hx3:nth-child(even){--y:1}.hx3:nth-child(n+2) .hx3__top{padding-left:calc(var(--o) * 1cqw + .9cqw)}
+.hx3{left:calc((4 - var(--i)) * var(--dx) * 1cqw);top:calc(var(--i) * var(--dy) * 1cqw - 3cqw);width:calc(var(--w) * 1cqw);height:calc(var(--h) * 1cqw);z-index:calc(5 - var(--i));transform-style:flat;transform:none;filter:none}
 .hx3__face,.hx3__shadow{display:none}
-.hx3__top{transform:none;align-items:flex-end;justify-content:center;text-align:center;padding:0 .8cqw 2.8cqw;border-radius:var(--r);border:.3cqw solid rgba(255,255,255,.78);-webkit-backdrop-filter:blur(.7cqw) saturate(1.6);backdrop-filter:blur(.7cqw) saturate(1.6);transition:border-color .28s ease,filter .28s ease;
- background:radial-gradient(90% 60% at 78% 24%,rgba(255,255,255,.2),transparent 62%),linear-gradient(125deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.18) 24%,rgba(255,255,255,0) 44%),linear-gradient(165deg,color-mix(in srgb,var(--c) 66%,rgba(255,255,255,.34)) 0,color-mix(in srgb,var(--c) 38%,rgba(10,24,96,.4)) 100%);
- box-shadow:inset 0 0 0 .2cqw rgba(255,255,255,.38),inset 0 .7cqw .9cqw rgba(255,255,255,.65),inset 0 -1.4cqw 2.2cqw color-mix(in srgb,var(--c) 55%,rgba(0,10,60,.5)),0 .9cqw 0 -.2cqw color-mix(in srgb,var(--c) 70%,#fff),0 0 3.4cqw .2cqw color-mix(in srgb,var(--c) 60%,transparent),0 0 7cqw color-mix(in srgb,var(--c) 30%,transparent),0 1.6cqw 2.6cqw rgba(0,8,40,.4)}
+.hx3__top{transform:none;align-items:flex-end;justify-content:center;text-align:center;padding:0 2cqw 1.7cqw;border-radius:var(--r);border:.3cqw solid rgba(255,255,255,.85);-webkit-backdrop-filter:blur(.9cqw) saturate(1.5);backdrop-filter:blur(.9cqw) saturate(1.5);transition:border-color .28s ease,filter .28s ease;
+ background:linear-gradient(118deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 26%,rgba(255,255,255,0) 46%),linear-gradient(168deg,color-mix(in srgb,var(--c) 84%,rgba(255,255,255,.7)) 0,color-mix(in srgb,var(--c) 78%,rgba(20,40,130,.6)) 62%,color-mix(in srgb,var(--c) 56%,rgba(6,16,80,.86)) 100%);
+ box-shadow:inset 0 0 0 .2cqw rgba(255,255,255,.35),inset 0 .6cqw .9cqw rgba(255,255,255,.7),inset 0 -.8cqw 1.4cqw color-mix(in srgb,var(--c) 60%,rgba(0,10,60,.4)),0 .8cqw 0 -.2cqw color-mix(in srgb,var(--c) 70%,#fff),0 0 2.6cqw color-mix(in srgb,var(--c) 50%,transparent),0 1.4cqw 2.4cqw rgba(0,8,40,.45)}
 /* Extra glow layer: opacity only, so hover is a smooth intensification and nothing moves. */
 .hx3__top::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .28s ease;box-shadow:0 0 5cqw .6cqw color-mix(in srgb,var(--c) 85%,transparent),inset 0 0 3cqw color-mix(in srgb,var(--c) 55%,transparent)}
 .hx3__top:is(:hover,:focus-visible){border-color:#fff;filter:brightness(1.1) saturate(1.12)}
@@ -514,14 +513,17 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 /* One quiet diagonal sheen across the upper part of each card. */
 .hx3__top::after{content:"";position:absolute;left:0;right:0;top:0;height:60%;border-radius:var(--r) var(--r) 0 0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.06) 55%,rgba(255,255,255,0) 100%)}
 .hx3__name{position:relative;z-index:2;font-size:round(max(11px,var(--fs)),.5px);max-width:100%;line-height:1.22;overflow-wrap:normal;word-break:keep-all;text-wrap:balance;text-shadow:0 1px 2px rgba(0,8,40,.9),0 0 .7em rgba(0,8,40,.55),0 0 1em color-mix(in srgb,var(--c) 55%,transparent)}
-@media (max-width:1000px){.hx{width:min(100%,580px);margin-inline:auto}}
+@media (max-width:1000px){.hx{width:min(100%,520px);margin-inline:auto}}
+/* Desktop: the figure uses the free height around its row, so it never moves the guides. */
+@media (min-width:1001px){.mmri-home2__art{height:clamp(170px,calc((100dvh - 345px)*.95),320px);grid-template-rows:100%}}
 @media (min-width:561px) and (max-width:1000px){.mmri-shell:has(.mmri-home2) .mmri-legal-footer{padding-bottom:40px}html:root body.mmri-prism-page .mmri-home2__stage{gap:36px}.hx{margin-block:34px 0}}
 /* Desktop: the free height is shared equally above the hero, between hero and guides, and below the guides. Tablet and phone: one equal gap between the three guides. */
 @media (min-width:1001px){html:root body.mmri-prism-page .mmri-home2__stage{justify-content:space-evenly;gap:0}}
 @media (max-width:900px){html:root body.mmri-prism-page .mmri-home2__guides{gap:12px}}
 .mmri-home2__copy{grid-template-columns:minmax(0,1fr)}.mmri-home2__copy h1{justify-self:center}
-/* Phones: the same five equal cards as an overlapping column, each a small step to the right. */
-@media (max-width:560px){.hx{--w:88;--h:19.5;--o:3.5;--s:16;--r:4.2cqw;--fs:3.6cqw;width:100%;max-width:400px;margin:20px auto 0;aspect-ratio:100/83.5}.hx3,.hx3:nth-child(even){left:calc(var(--i) * 3cqw);top:calc(var(--i) * var(--s) * 1cqw)}.hx3 .hx3__top,.hx3:nth-child(n+2) .hx3__top{padding:0 2cqw 2.2cqw;border-width:1px}.hx3__name{font-size:clamp(12px,var(--fs),13.5px);line-height:1.14;letter-spacing:-.01em;hyphens:none}}
+/* Phones: the same diagonal stack with wider cards and taller label strips. */
+@media (max-width:560px){.hx{--w:74;--h:31;--dx:6.5;--dy:14.2;--tilt:3deg;--r:4.4cqw;--fs:3.7cqw;width:100%;max-width:400px;margin:20px auto 0;aspect-ratio:100/89}.hx3__top{padding:0 2cqw 2.4cqw;border-width:1px}.hx3__name{font-size:clamp(12px,var(--fs),14px);line-height:1.14;letter-spacing:-.01em;hyphens:none}}
+@media (max-width:370px){.hx{--dy:16.4;aspect-ratio:100/98}.hx3__top{padding-bottom:1.6cqw}}
 /* Chrome counts the projected (perspective) box of a 3D stack as scrollable overflow even when every plate is inside the viewport. Guard at the viewport edge only (the shell is as wide as the viewport), so nothing visible can be cut mid-page; plate positions are verified separately. */
 .mmri-shell:has(.mmri-home2){overflow-x:clip}
 @media (max-width:360px){body.mmri-prism-page .mmri-home2__guide{height:auto;min-height:50px;padding-block:6px}.mmri-home2__start{max-width:100%;box-sizing:border-box;gap:6px;padding-inline:14px 6px}.mmri-home2__start>span:not(.mmri-shell-glint){min-width:0;font-size:11.5px;letter-spacing:.01em}}
