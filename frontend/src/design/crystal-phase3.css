@@ -247,7 +247,7 @@ html:root body.mmri-prism-page .account-payment-history>section>article{border-b
 html:root body.mmri-prism-page .account-payment-history>section>article:hover{background:rgba(255,255,255,.22)}
 html:root body.mmri-prism-page .account-payment-history>section>article:last-child{border-bottom:0}
 html:root body.mmri-prism-page .profile-question-card,html:root body.mmri-prism-page .company-detail-editor__grid,html:root body.mmri-prism-page .technical-settings__group{border-bottom:1px solid rgba(6,25,74,.14);padding-bottom:14px}
-html:root body.mmri-prism-page :is(.company-detail-editor__grid,.company-detail-editor__name,.profile-onboarding) label{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding-inline:0}
+html:root body.mmri-prism-page :is(.company-detail-editor__grid,.company-detail-editor__name,.profile-onboarding) label:not(.mmri-radio-card){background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding-inline:0}
 /* fields: one consistent control look */
 html:root body.mmri-prism-page .mmri-shell-main :is(input:not([type=checkbox]):not([type=radio]),select,textarea,.mmri-choice-select__trigger){background:rgba(5,18,56,.72);color:#fff;border:1px solid rgba(122,178,255,.45);border-radius:12px;box-shadow:inset 0 2px 6px rgba(0,6,24,.5);-webkit-backdrop-filter:none;backdrop-filter:none}
 html:root body.mmri-prism-page .mmri-shell-main :is(input,select,textarea):focus-visible{outline:3px solid var(--gm-royal);outline-offset:1px}

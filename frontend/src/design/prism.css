@@ -143,10 +143,10 @@ body.mmri-prism-page :is(.profile-onboarding>header>span,.company-detail-editor>
 body.mmri-prism-page :is(.profile-onboarding>header p,.company-detail-editor>header p){color:var(--wp-ink2)}
 body.mmri-prism-page .profile-question-card h2,body.mmri-prism-page :is(.profile-login-required h1){color:var(--wp-ink)}
 body.mmri-prism-page :is(.profile-question-progress,.profile-question-later,.company-detail-editor__name small){color:var(--wp-ink3)}
-body.mmri-prism-page .profile-question-jump button{color:var(--wp-ink2);border:1px solid var(--wp-silver);background:#fff;transition:border-color var(--wp-dur) ease,background-color var(--wp-dur) ease}
-body.mmri-prism-page .profile-question-jump button:hover{border-color:var(--wp-silver2);background:var(--wp-mist)}
-body.mmri-prism-page .profile-question-jump button.is-done{background:#E9F6EF;border-color:#BFE3CF;color:#1F6B49}
-body.mmri-prism-page .profile-question-jump button.is-current{border-color:var(--wp-ink);box-shadow:0 0 0 1px var(--wp-ink);color:var(--wp-ink)}
+body.mmri-prism-page .profile-question-jump button{color:#fff;border:1px solid rgba(150,195,255,.5);background:rgba(30,78,180,.45);transition:border-color var(--wp-dur) ease,background-color var(--wp-dur) ease}
+body.mmri-prism-page .profile-question-jump button:hover{border-color:#fff;background:rgba(50,110,230,.6)}
+body.mmri-prism-page .profile-question-jump button.is-done{background:#146b4a;border-color:#58d8a0;color:#fff}
+body.mmri-prism-page .profile-question-jump button.is-current{border-color:#fff;box-shadow:0 0 0 1px #fff;background:#1559e6;color:#fff}
 body.mmri-prism-page .company-detail-editor__grid label>span,body.mmri-prism-page .company-detail-editor__number{color:var(--wp-ink2)}
 body.mmri-prism-page .company-detail-editor__bar>span{color:#1F6B49}
 body.mmri-prism-page .profile-avatar{color:#fff;background:linear-gradient(180deg,#2B3545,#0B0F14)}
