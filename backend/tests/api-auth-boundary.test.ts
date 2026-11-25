@@ -43,3 +43,14 @@ it('a wrong verification code takes at least the fixed minimum time (no timing o
 it('registration requests a code from the verification service, not the password-reset service',async()=>{
  const {pending,res}=await invoke('/api/v1/auth/register',{email:'new@example.invalid',password:'SyntheticPassword123!'});await vi.advanceTimersByTimeAsync(1400);await pending;expect(res.status).toBe(202);expect(mocks.code).toHaveBeenCalled();expect(mocks.request).not.toHaveBeenCalled();expect(res.body.data.message).toMatch(/6 оронтой/);
 });
+
+it('invitation-only registration refuses an uninvited address before any account or mail is created',async()=>{
+ vi.stubEnv('MMRI_REGISTRATION_ALLOWLIST','guest@example.invalid, @pilot.invalid');
+ try{
+  for(const email of ['stranger@example.invalid','guest@example.invalid.evil.invalid','x@sub.pilot.invalid.evil']){
+   const {pending}=await invoke('/api/v1/auth/register',{email,password:'SyntheticPassword123!'});const out=expect(pending).rejects.toMatchObject({status:403,code:'REGISTRATION_BY_INVITATION'});
+   await vi.advanceTimersByTimeAsync(1350);await out}
+  expect(mocks.register).not.toHaveBeenCalled();expect(mocks.code).not.toHaveBeenCalled();
+  for(const email of ['Guest@Example.invalid','a@pilot.invalid']){const {pending,res}=await invoke('/api/v1/auth/register',{email,password:'SyntheticPassword123!'});await vi.advanceTimersByTimeAsync(1350);await pending;expect(res.status).toBe(202)}
+ }finally{vi.unstubAllEnvs()}
+});

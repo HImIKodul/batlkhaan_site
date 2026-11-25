@@ -72,6 +72,8 @@ export function recipientAllowed(to: string, list = recipientAllowlist()): boole
   const addr = to.trim().toLowerCase();
   return list.some(rule => rule.startsWith("@") ? addr.endsWith(rule) : addr === rule);
 }
+/** Invitation-only pilot: MMRI_REGISTRATION_ALLOWLIST (comma list of full addresses or @domains) limits who can REGISTER. Unset = open registration. */
+export function registrationAllowed(email: string): boolean { return recipientAllowed(email, (process.env.MMRI_REGISTRATION_ALLOWLIST ?? "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean)); }
 class AllowlistMailer implements Mailer {
   constructor(private readonly inner: Mailer, private readonly list: string[]) {}
   get provider() { return this.inner.provider; }

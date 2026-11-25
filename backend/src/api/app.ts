@@ -11,7 +11,7 @@ import { ConcurrencyGate } from "./concurrency-gate.js";
 import { AuthService } from "./auth/auth-service.js";
 import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
 import { EmailVerificationService } from "./auth/email-verification-service.js";
-import { createMailer } from "./mail/mailer.js";
+import { registrationAllowed, createMailer } from "./mail/mailer.js";
 import { LifecycleMailService } from "./mail/lifecycle-mail.js";
 import { DataLifecycleService } from "./account/data-lifecycle-service.js";
 import { AdminService } from "./admin/admin-service.js";
@@ -132,6 +132,8 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const ip=clientIp(req,config); authIpLimiter.check(`register:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
     const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
     authAccountLimiter.check(`register:acct:${emailKey}`);
+    // Invitation-only pilot: with the list set, only these addresses can open an account (existing accounts, sign-in and recovery are untouched). Unset = open registration.
+    if(!registrationAllowed(String(body.email??""))){await finishMailRequest(started);throw new ApiError(403,"REGISTRATION_BY_INVITATION","Туршилтын хугацаанд зөвхөн урилгатай имэйлээр бүртгүүлэх боломжтой.")}
     await auth.register({email:body.email,password:body.password,displayName:body.displayName},fingerprint(req,config));
     try{await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
     await finishMailRequest(started);

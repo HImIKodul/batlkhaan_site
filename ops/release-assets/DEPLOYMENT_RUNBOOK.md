@@ -97,6 +97,10 @@ It imports Marketing 3.0.3 and the four domain bundles shipped in `backend\metho
 3. Health: `curl http://127.0.0.1:4000/live` → live; `/ready` → ready with `database: ok`; `/health`; `/metrics` needs `METRICS_TOKEN`. `MMRI_BASE_URL=http://127.0.0.1:4000 node ops\smoke-test.mjs` **[VERIFIED]**. `/live`, `/health`, `/ready`, `/metrics` must NOT be reachable through the public site (the IIS rule returns 404) **[VERIFIED with the staging proxy]**.
 4. Smoke through the site (authorised account only; do not create real customer data): `GET /` serves the new asset hash; `GET /api/v1/auth/me` → 401; `PUT /api/v1/companies/x/profile-answers` unauthenticated → **401, not 405** (WebDAV removed); administrator MFA login; open the report queue.
 
+## 7b. Invitation-only pilot (before opening registration)
+`MMRI_BILLING_PROVIDER=grant` (see PILOT_GRANT_MODE.md) and `MMRI_REGISTRATION_ALLOWLIST=<approved addresses>` in the service `.env`, then restart the service. Uninvited addresses get 403 at registration; sign-in, verification codes, reset links and the QPay callback are not affected. Copy `deploy/assets/iis/web.config` into `frontend\dist` only if IIS itself serves the files; it keeps the CSP, the HTTPS redirect and the other security headers of the live site. Compare with the existing `web.config` first: the live site answered with an nginx-style ETag on 2026-11-25, so a second proxy may exist (then `TRUST_PROXY_HOPS=2` and that proxy's body limit must be at least 3 MB).
+Management ports: run `Get-NetFirewallRule` for 3389 and 5985 and limit `RemoteAddress` to the administrator's own address BEFORE removing the open rule, keeping a console session open.
+
 ## 8. Switch traffic and monitor  [OWNER executes; not done in this session]
 Point the IIS site physical path at `<release>\frontend\dist` (atomic switch; keep the old path as rollback). Watch for 24 h: `/ready`, API error rate, report queue age (24 h target), failed mail marks, disk and memory (initial API RSS ≈ 2.3 GB, see the final report), backup success, certificate expiry (Let's Encrypt via win-acme; alert 14 days before).
 
