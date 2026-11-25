@@ -101,7 +101,7 @@ export function buildReportGuidance(m: MethodologyDefinition, snapshot: RuntimeS
     const about = covers ? ` Үүнд: ${covers}.` : "", join = (...t: string[]) => t.filter(Boolean).map(x => `${upperFirst(trimEnd(x))}.`).join(" ");
     return { recommendationId: a.id, evidence, capabilityMn, dimensionMn, whyMn: why,
       doMn: evidence ? `${review}.${about} Дутуу нь батлагдвал: ${lowerFirst(trimEnd(step || full(raw.start)))}.` : `${full(raw.start)}.${about}${step ? ` ${upperFirst(trimEnd(step))}.` : ""}`,
-      deliverableMn: proof ? (evidence ? `Одоогийн байдлын дүгнэлт; дараа нь ${lowerFirst(proof)}` : `${proof}; ${lowerFirst(raw.deliverable)}`) : raw.deliverable, checkMn: raw.check,
+      deliverableMn: proof ? (evidence ? `Одоогийн байдлын дүгнэлт, дараа нь ${lowerFirst(proof)}` : `${proof} болон ${lowerFirst(raw.deliverable)}`) : raw.deliverable, checkMn: raw.check,
       goalMn: upperFirst(trimEnd(objectives.get(a.categoryId) || a.objectiveMn)),
       steps: { startMn: evidence ? `${review}.` : `${brief(raw.start)}.${about}`,
         runMn: evidence ? `Дутуу нь батлагдвал ${lowerFirst(trimEnd(step || named(raw.start, null)))}.` : join(step, brief(raw.run)),

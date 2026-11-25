@@ -932,7 +932,7 @@ def annual_plan_pages(source, st, content_width):
     head = [
         p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
         p("12 сарын хэрэгжилтийн төлөвлөгөө", st["page_title"]),
-        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна; зарим ажил зэрэгцэн явагдана.", st["body"]),
+        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна" + (". Зарим" if GUIDED else "; зарим") + " ажил зэрэгцэн явагдана.", st["body"]),
         Spacer(1, 3 * mm),
     ]
     # The platypus frame keeps 6 pt of padding on every side: measure with the width and height the frame really gives, otherwise text wraps into more

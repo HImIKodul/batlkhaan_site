@@ -945,3 +945,6 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 - Two stale static expectations updated (locked-payment label is sentence case; check button has a variant attribute).
 - Hero replaced (owner 2026-11-24, later brief): five equal overlapping cards in one row, column on phones, labels at the bottom; no emphasised centre.
 - Production env template: MMRI_AI_ANNUAL_PLAN=on is now explicit (was only a comment). Real-model case: ~/mmri-live-ai-case-marketing-v2; `live-plan-one.mts narrative` is a second capped request; Gmail token is revoked until the owner signs in again.
+
+## 2026-11-25: final polish
+Hero material follows the approved reference (bright liquid glass, shared category tokens), Guide 3 step 5 as connected tiles, plan wording without semicolons or repeated checkpoints (newer reports only, 12/12 historical PDFs identical), live AI test cap 0.15 USD.
