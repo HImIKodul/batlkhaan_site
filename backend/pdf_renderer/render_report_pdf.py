@@ -82,6 +82,8 @@ def sentence_case(value):
 # (never drop a milestone or an approved sentence) when a plan or reviewer edit would otherwise push the report past exactly 3 pages.
 TIER_E = 0  # explanation tier (pages 1-2): 0-3 print every approved word, 4 shortens (never in --strict), 5 omits explanations (never in --strict)
 STRICT = False
+# Category heading of newer reports (customer label; internal domain ids are unchanged).
+DOMAIN_LABELS = {"marketing": "МАРКЕТИНГ (MMRI)", "it": "МЭДЭЭЛЛИЙН ТЕХНОЛОГИ (ITMRI)", "finance": "САНХҮҮ (FINMRI)", "people": "ХҮНИЙ НӨӨЦ (HRMRI)", "operations": "ҮЙЛДВЭРЛЭЛ БА ҮЙЛ АЖИЛЛАГАА (OPMRI)"}
 GUIDED = False  # newer reports with capability-specific wording
 TIER_R = 0  # roadmap tier (page 3)
 TIER_ROADMAP = {0: (7.5, 10.6, 3.5), 1: (6.9, 8.9, 2.4), 2: (6.3, 8.0, 1.7), 3: (5.8, 7.3, 1.2), 4: (5.8, 7.3, 1.0)}
@@ -296,7 +298,7 @@ def page_header_footer(canvas, doc, source, st):
     canvas.drawString(14 * mm, height - 10.5 * mm, "BusinessMRI.mn")
     canvas.setFillColor(MUTED)
     canvas.setFont("MMRINoto", 6.3)
-    canvas.drawRightString(width - 14 * mm, height - 10.5 * mm, "Бизнесийн оношилгооны тайлан")
+    canvas.drawRightString(width - 14 * mm, height - 10.5 * mm, ("Бизнесийн оношилгооны тайлан · " + DOMAIN_LABELS[(source.get("render") or {}).get("domainCode")]) if GUIDED and (source.get("render") or {}).get("domainCode") in DOMAIN_LABELS else "Бизнесийн оношилгооны тайлан")
     canvas.setStrokeColor(LINE)
     canvas.setLineWidth(0.6)
     canvas.line(14 * mm, height - 13.3 * mm, width - 14 * mm, height - 13.3 * mm)
@@ -568,7 +570,7 @@ def summary_page(source, st, content_width):
     ]))
 
     title_block = [
-        p("УДИРДЛАГЫН ТАЙЛАН", st["eyebrow"]),
+        p("УДИРДЛАГЫН ТАЙЛАН" + (" · " + DOMAIN_LABELS[(source.get("render") or {}).get("domainCode")] if GUIDED and (source.get("render") or {}).get("domainCode") in DOMAIN_LABELS else ""), st["eyebrow"]),
         p(source.get("companyName"), st["title"]),
         p("Бизнесийн оношилгооны үр дүн, тэргүүлэх 5 ажил, 12 сарын төлөвлөгөө", st["body"]),
     ]

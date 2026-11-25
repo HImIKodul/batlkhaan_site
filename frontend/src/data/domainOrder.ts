@@ -5,7 +5,7 @@ export type DomainCode=typeof DOMAIN_ORDER[number];
 export const DOMAIN_NAME_MN:Record<DomainCode,string>={marketing:'Маркетинг',finance:'Санхүү',people:'Хүний нөөц',it:'Мэдээллийн технологи',operations:'Үйлдвэрлэл ба үйл ажиллагаа'};
 /* Homepage hero labels only (the platform brand stays BusinessMRI.mn). */
 /* Approved convention: UPPERCASE Mongolian name followed by the English abbreviation in parentheses, identical in every customer-facing label. */
-export const DOMAIN_HERO_LABEL:Record<DomainCode,string>={marketing:'МАРКЕТИНГ (MMRI)',it:'МЭДЭЭЛЛИЙН ТЕХНОЛОГИ (ITMRI)',finance:'САНХҮҮ (FINMRI)',people:'ХҮНИЙ НӨӨЦ (HRMRI)',operations:'ҮЙЛДВЭРЛЭЛ БА ҮЙЛ АЖИЛЛАГАА (POMMRI)'};
+export const DOMAIN_HERO_LABEL:Record<DomainCode,string>={marketing:'МАРКЕТИНГ (MMRI)',it:'МЭДЭЭЛЛИЙН ТЕХНОЛОГИ (ITMRI)',finance:'САНХҮҮ (FINMRI)',people:'ХҮНИЙ НӨӨЦ (HRMRI)',operations:'ҮЙЛДВЭРЛЭЛ БА ҮЙЛ АЖИЛЛАГАА (OPMRI)'};
 /** Diagnosis selection cards: the same global format as everywhere ("МАРКЕТИНГ (MMRI)"). */
 export const DOMAIN_DIAGNOSIS_LABEL:Record<DomainCode,string>=DOMAIN_HERO_LABEL;
 const rank=(id:string)=>{const i=(DOMAIN_ORDER as readonly string[]).indexOf(id);return i<0?DOMAIN_ORDER.length:i};
@@ -13,12 +13,12 @@ const rank=(id:string)=>{const i=(DOMAIN_ORDER as readonly string[]).indexOf(id)
 export function sortByDomain<T>(rows:readonly T[],id:(row:T)=>string):T[]{return rows.map((r,i)=>[r,i] as const).sort((a,b)=>rank(id(a[0]))-rank(id(b[0]))||a[1]-b[1]).map(x=>x[0])}
 export const domainNameMn=(id:string)=>(DOMAIN_NAME_MN as Record<string,string>)[id]??id;
 /** Short code shown next to each domain (display only). */
-export const DOMAIN_ABBR:Record<DomainCode,string>={marketing:'MMRI',it:'ITMRI',finance:'FINMRI',people:'HRMRI',operations:'POMMRI'};
-/** Initials shown inside the category-coloured boxes (owner 2026-11-24). The diagnosis names keep their own abbreviation. */
-export const DOMAIN_CODE:Record<DomainCode,string>={marketing:'MKT',it:'IT',finance:'FIN',people:'HR',operations:'OPS'};
+export const DOMAIN_ABBR:Record<DomainCode,string>={marketing:'MMRI',it:'ITMRI',finance:'FINMRI',people:'HRMRI',operations:'OPMRI'};
+/** Code inside the category-coloured boxes: the same abbreviation as everywhere (owner 2026-11-25). */
+export const DOMAIN_CODE:Record<DomainCode,string>=DOMAIN_ABBR;
 export const domainCode=(id:string)=>(DOMAIN_CODE as Record<string,string>)[id]??'';
 /** Full customer-facing diagnosis names with the code, used in diagnosis and report sections. */
-export const DOMAIN_FULL_NAME:Record<DomainCode,string>={marketing:'Маркетингийн оношилгоо (MMRI)',it:'Мэдээллийн технологийн оношилгоо (ITMRI)',finance:'Санхүүгийн оношилгоо (FINMRI)',people:'Хүний нөөцийн оношилгоо (HRMRI)',operations:'Үйлдвэрлэл ба үйл ажиллагааны оношилгоо (POMMRI)'};
+export const DOMAIN_FULL_NAME:Record<DomainCode,string>={marketing:'Маркетингийн оношилгоо (MMRI)',it:'Мэдээллийн технологийн оношилгоо (ITMRI)',finance:'Санхүүгийн оношилгоо (FINMRI)',people:'Хүний нөөцийн оношилгоо (HRMRI)',operations:'Үйлдвэрлэл ба үйл ажиллагааны оношилгоо (OPMRI)'};
 export const domainAbbr=(id:string)=>(DOMAIN_ABBR as Record<string,string>)[id]??'';
 export const domainFullName=(id:string)=>(DOMAIN_FULL_NAME as Record<string,string>)[id]??id;
 /** "САНХҮҮ (FINMRI)" style label for compact places such as receipts. */
