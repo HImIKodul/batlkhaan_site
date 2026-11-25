@@ -493,14 +493,14 @@ html:root body.mmri-prism-page .mmri-home2__guide.is-about,html:root body.mmri-p
 /* Phones: a deliberate arrangement, not a shrunken desktop: wider plates, a small diagonal step, a steeper elevated view, label type 11-14px. */
 @media (max-width:560px){.hx{--pw:72;--ph:19;--t:4.2;--x0:15;--y0:3;--pitch:23.6;--fan:3.2;--orb:9.5cqw;--fs:3.9cqw;width:min(100%,400px);margin:10px auto 12px;aspect-ratio:1.14;top:0}
  .hx__scene{perspective:1000cqw;perspective-origin:50% 0%}.hx__stack{transform:rotateX(50deg) rotateZ(0deg)}.hx3{--r:4cqw}.hx3__left,.hx3__right{display:none}.hx3__top{padding:0 calc(var(--orb) * 1.5);border-radius:4cqw}.hx3__name{font-size:clamp(11px,var(--fs),14px);white-space:normal;text-wrap:balance}}
-/* HERO: five identical glossy glass cards in one overlapping diagonal (approved reference): the front card at the upper right, each next one a step down and to the left, behind it. The whole bottom edge of every card stays
+/* HERO: five identical glossy glass cards in one overlapping diagonal (approved reference): the front card at the upper left, each next one a step down and to the right, behind it. The whole bottom edge of every card stays
    free, so each label, at the bottom of its card, is never covered. --w/--h card size, --dx/--dy step, --tilt slant (sizes in cqw). Colours are the diagnosis-card tokens (--mmri-domain-*). Hover never changes geometry. */
 .hx{--w:54;--h:35;--dx:11.5;--dy:11.6;--tilt:5deg;--r:3.4cqw;--fs:2.75cqw;top:0;width:min(100%,clamp(380px,calc((100dvh - 440px)*1.15),600px));margin-inline:auto 2%;aspect-ratio:100/83}
 .hx__scene{perspective:none}
-.hx__stack{transform:skewY(var(--tilt));transform-origin:0 0;height:100%;top:0;transform-style:flat}
+.hx__stack{transform:skewY(calc(var(--tilt) * -1));transform-origin:100% 0;height:100%;top:0;transform-style:flat}
 .hx3__orb{display:none}
 .hx__scene::before{content:"";position:absolute;inset:8% 10%;pointer-events:none;background:radial-gradient(closest-side,rgba(70,150,255,.3),rgba(120,90,255,.12) 55%,transparent)}
-.hx3{left:calc((4 - var(--i)) * var(--dx) * 1cqw);top:calc(var(--i) * var(--dy) * 1cqw - 3cqw);width:calc(var(--w) * 1cqw);height:calc(var(--h) * 1cqw);z-index:calc(5 - var(--i));transform-style:flat;transform:none;filter:none}
+.hx3{left:calc(var(--i) * var(--dx) * 1cqw);top:calc(var(--i) * var(--dy) * 1cqw - 3cqw);width:calc(var(--w) * 1cqw);height:calc(var(--h) * 1cqw);z-index:calc(5 - var(--i));transform-style:flat;transform:none;filter:none}
 .hx3__face,.hx3__shadow{display:none}
 /* Material, border, glow and hover of the cards are the diagnosis cards' own rule (midnight.css "category light"), so the five colours cannot drift apart. Only geometry and white light are set here. */
 .hx3__top{transform:none;align-items:flex-end;justify-content:center;text-align:center;padding:0 2cqw 1.7cqw;border-radius:var(--r)}
