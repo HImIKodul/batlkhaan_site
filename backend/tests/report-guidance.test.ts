@@ -6,7 +6,9 @@ import { PRACTICE_KINDS, PRACTICE_MAP } from "../src/report/guidance/practices.j
 import { CAPABILITY_CONTENT } from "../src/report/guidance/capabilities.js";
 import { contradictionMessage } from "../src/report/payload.js";
 import { guidanceIssues } from "../src/report/guidance/check.js";
-import { DIMENSION_LANGUAGE, PLAIN_NAMES, dimensionSays, glossaryIssues, withPlainNames } from "../src/report/guidance/language.js";
+import { deterministicFallbackNarrative } from "../src/report/fallback-renderer.js";
+import { validateNarrativeDraft } from "../src/report/validator.js";
+import { DIMENSION_CHECK, DIMENSION_LANGUAGE, PLAIN_NAMES, dimensionSays, glossaryIssues, withPlainNames } from "../src/report/guidance/language.js";
 import { MARKETING_COVERS } from "../src/report/guidance/marketing-covers.js";
 import { validateAnnualPlanDraft } from "../src/report/annual-plan.js";
 import { deterministicAnnualPlan } from "../src/report/guidance/year-plan.js";
@@ -73,5 +75,28 @@ describe("language of new reports", () => {
     const ok = { guide: { goalMn: "Шийдвэрээ гаргах", resultMn: "Бичсэн шийдвэр", doneMn: "Шийдвэр гарсан эсэх", ownerMn: "Маркетингийн захирал" } };
     expect(validateAnnualPlanDraft(draft(ok), base, { F1: "R" }).issues.map(i => i.checkId)).not.toContain("STAGE_GUIDE");
     expect(validateAnnualPlanDraft(draft({ guide: { ...ok.guide, resultMn: "Кампанит ажлын тайлан" } }), base, { F1: "R" }).issues.map(i => i.checkId)).toContain("TERMINOLOGY");
+  });
+});
+
+describe("editorial review 2026-11-26: phrases and meaning", () => {
+  const MAL = /»\s+талаар|сааттаг|саатдаг тохиролц|сонгосон шалгуурын хүснэгт/iu;
+  const cats = ["ISMRI-C22", "ISMRI-C20", "FINMRI-C20", "HRMRI-C13", "OPMRI-C02", "OPMRI-C03"];
+  const meth: any = { categories: cats.map(id => ({ id, nameMn: `Нэр ${id}` })), cells: [{ id: "C02", nameMn: "Бодит хэрэгжилт" }, { id: "C07", nameMn: "Эцсийн хариуцагч тодорхой эсэх" }, { id: "C16", nameMn: "Тогтвортой байдал" }], questions: [], contracts: {} };
+  const act = (id: string, cellId: string, type = "COLLECT_EVIDENCE"): any => ({ id: `R-${id}-${cellId}`, findingId: "f", categoryId: id, cellId, type, titleMn: "t", objectiveMn: "o", components: {} });
+  const make = (priorityActions: any[], coverage = 0.5) => buildReportGuidance(meth, { cells: new Map(), contradictions: [], overall: { coverage, confidence: 1 } } as any, { rootCause: { findings: [] }, recommendations: { candidates: [] } } as any, { strengths: [], weaknesses: [], priorityActions });
+  it("no malformed phrase in any table or generated text", () => {
+    for (const x of [MARKETING_GUIDE, DIMENSION_GUIDE, PRACTICE_KINDS, ...[...CAPABILITY_CONTENT.values()].flatMap(c => Object.values(c) as string[])]) expect(x).not.toMatch(MAL);
+    for (const cell of DIMENSION_CHECK.keys()) { const g = make(cats.slice(0, 5).map(c => act(c, cell))); expect(JSON.stringify(g.priorities)).not.toMatch(MAL); }
+  });
+  it("cause analysis is about causes, not about sorting reports", () => { const p = make([act("ISMRI-C22", "C02", "EXECUTION")]).priorities[0]; for (const s of [p.doMn, p.steps.runMn]) { expect(s).toMatch(/шалтгаан/u); expect(s).not.toMatch(/хэрэглэгддэггүй тайлан/u); } expect(p.steps.startMn).toMatch(/шалтгаан/u); expect(p.deliverableMn).toMatch(/Шалтгааны шинжилгээ/u); expect(p.checkMn).toMatch(/Шалтгааны шинжилгээ/u); });
+  it("every capability that is not done is answered with its own work, step and document", () => { for (const [id, c] of CAPABILITY_CONTENT) { const m2 = { ...meth, categories: [{ id, nameMn: "Нэр" }] }, p = buildReportGuidance(m2, { cells: new Map(), contradictions: [], overall: { coverage: 0.5 } } as any, { rootCause: { findings: [] }, recommendations: {} } as any, { strengths: [], weaknesses: [], priorityActions: [act(id, "C02", "EXECUTION")] }).priorities[0]; const has = (t: string, w: string) => t.toLocaleLowerCase("mn-MN").includes(w.toLocaleLowerCase("mn-MN")); expect(has(p.doMn, c.step), id).toBe(true); expect(has(p.doMn, c.covers.split(", ")[0]), id).toBe(true); expect(has(p.deliverableMn, c.evidence), id).toBe(true); expect(has(p.checkMn, c.evidence), id).toBe(true); } });
+  it("the same unjudged side keeps the uncertainty and says what to check for each capability", () => { const g = make(cats.slice(0, 5).map(c => act(c, "C07"))).priorities; for (const [i, p] of g.entries()) { const c = CAPABILITY_CONTENT.get(cats[i])!; expect(p.whyMn).not.toMatch(/сул байна/u); expect(p.doMn).toContain("хэн хариуцаж байгааг"); expect(p.doMn).toContain("Хэрэв дутуу нь тогтоогдвол"); expect(p.doMn).toContain(c.covers); expect(p.checkMn.toLocaleLowerCase("mn-MN")).toContain(c.covers.toLocaleLowerCase("mn-MN")); expect(p.checkMn).toContain("хариуцах хүн тодорхой"); } for (const k of ["doMn", "whyMn", "checkMn"] as const) expect(new Set(g.map(p => p[k])).size).toBe(5); });
+  it("a check verifies the side that was found weak, with the document of the work", () => { const p = make([act("FINMRI-C20", "C16", "EXECUTION")]).priorities[0]; expect(p.checkMn).toContain(CAPABILITY_CONTENT.get("FINMRI-C20")!.evidence); expect(p.checkMn).toContain(DIMENSION_CHECK.get("C16")!.done); });
+  it("has a question, a decision and a check for every dimension, as complete clauses", () => { expect(DIMENSION_CHECK.size).toBe(47); for (const [id, d] of DIMENSION_CHECK) { expect(DIMENSION_LANGUAGE.has(id)).toBe(true); expect(d.ask, d.ask).toMatch(/(?:г|йг|ийг|ыг)$/u); expect(d.decide, d.decide).toMatch(/,$/u); expect(d.done, d.done).toMatch(/эсэх$/u); } });
+  it("a result from a small part of the criteria is marked partial and the plan checks are never empty", () => { expect(make([act("OPMRI-C02", "C07")], 0.08).partial).toBe(true); expect(make([act("OPMRI-C02", "C07")], 0.41).partial).toBeUndefined(); });
+  it("the conclusion of such a result cannot read as a rating of the business, and a model text without that sentence is sent back", () => {
+    const g = make(cats.slice(0, 3).map(c => act(c, "C07")), 0.08); const p: any = { ...payload(), assessmentId: "a", companyName: "Тест ХХК", overall: { score: 100, coverage: 0.08, confidence: 1, band: "Тэргүүлэгч" }, purposes: [], evidenceActions: [], rootFindings: [], roadmap: [], requiredWarnings: [], traceIndex: {}, remeasurement: { labelMn: "Дахин" }, guidance: g, priorityActions: cats.slice(0, 3).map(c => ({ ...act(c, "C07"), sourceTraceIds: [] })) };
+    const text = deterministicFallbackNarrative(p).sections.find(s => s.id === "S10")!.claims[0].textMn; expect(text).toContain("бүрэн үнэлгээ биш"); expect(text.indexOf("бүрэн үнэлгээ биш")).toBeLessThan(220); expect(text).not.toMatch(/оноо авлаа|давуу талдаа/u);
+    const bad: any = { schemaVersion: "MMRI-NARRATIVE-DRAFT-1.0", payloadHash: p.payloadHash, sections: [{ id: "S10", titleMn: "х", claims: [{ claimType: "CONFIDENCE_STATEMENT", textMn: "Компани тэргүүлж байна.", sourceTraceIds: [] }] }] }; expect(validateNarrativeDraft(p, bad).issues.map(i => i.checkId)).toContain("V41");
   });
 });

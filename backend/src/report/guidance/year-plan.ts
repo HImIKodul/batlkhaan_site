@@ -33,28 +33,28 @@ function buildPlan(payload: FrozenReportPayload, detail: number): AnnualPlanRead
   /* An action is introduced by the plain name of its work (the same name as on page 2), never by a number; a capability that has two priorities also names its side. */
   const twice = (i: number) => p.some((y, j) => j !== i && y.g.capabilityMn === p[i].g.capabilityMn);
   const name = (i: number) => `${withPlainNames(p[i].g.capabilityMn, named)}${twice(i) && p[i].g.labelMn ? ` (${p[i].g.labelMn})` : ""}`;
-  const act = (i: number, k: "startMn" | "runMn" | "embedMn") => p[i] ? [{ textMn: `${name(i)}: ${trim(p[i].g.steps[k], i)}`, recommendationIds: [`F${p[i].n}`] }] : [];
+  const act = (i: number, k: "startMn" | "runMn" | "embedMn") => p[i] ? [{ textMn: `${name(i)}: ${trim(k === "startMn" && detail < 2 ? p[i].g.steps.briefMn ?? p[i].g.steps.startMn : p[i].g.steps[k], i)}`, recommendationIds: [`F${p[i].n}`] }] : [];
   const short = (t: string) => t.split(/;|, дараа нь /u)[0];
   /* Documents named once, in the stage whose work creates them. */
   const told = new Set<string>();
-  const results = (...want: Array<[number, "startMn" | "runMn"]>) => { const rows = want.filter(([i]) => p[i]).map(([i, k]) => { const o = p[i].g.outputs?.[k] ?? short(p[i].g.deliverableMn); return o === "Одоогийн байдлын дүгнэлт" ? `одоогийн байдлын дүгнэлт («${withPlainNames(p[i].g.capabilityMn, named)}»)` : o; }).filter(o => !told.has(o) && told.add(o)); return rows.map((o, k) => (k ? o[0].toLocaleLowerCase("mn-MN") : o[0].toLocaleUpperCase("mn-MN")) + o.slice(1)).join(", ") || "Туршилтын дүн, дараагийн шийдвэр"; };
-  const check = (...idx: number[]) => [...new Set(idx.filter(i => p[i]).map(i => p[i].g.checkMn.replace(/[.\s]+$/u, "")))].map((c, k) => k ? c[0].toLocaleLowerCase("mn-MN") + c.slice(1) : c).join(", ");
+  const results = (...want: Array<[number, "startMn" | "runMn"]>) => { const state = want.filter(([i, k]) => p[i]?.g.outputs?.[k] === "Одоогийн байдлын дүгнэлт").map(([i]) => `«${withPlainNames(p[i].g.capabilityMn, named)}»`); const rows = [...want.filter(([i, k]) => p[i] && p[i].g.outputs?.[k] !== "Одоогийн байдлын дүгнэлт").map(([i, k]) => p[i].g.outputs?.[k] ?? short(p[i].g.deliverableMn)), ...(state.length ? [`одоогийн байдлын дүгнэлт (${[...new Set(state)].join(", ")})`] : [])].filter(o => !told.has(o) && told.add(o)); return rows.map((o, k) => (k ? o[0].toLocaleLowerCase("mn-MN") : o[0].toLocaleUpperCase("mn-MN")) + o.slice(1)).join(", ") || "Туршилтын дүн, дараагийн шийдвэр"; };
+  const check = (...idx: number[]) => [...new Set(idx.filter(i => p[i]).map(i => withPlainNames(p[i].g.doneMn ?? p[i].g.checkMn, named).replace(/[.\s]+$/u, "")))].map((c, k) => k ? c[0].toLocaleLowerCase("mn-MN") + c.slice(1) : c).join(", ");
   const owners = (...idx: number[]) => [...new Set(idx.filter(i => p[i]).map(i => p[i].owner).filter(Boolean))].map((r, k) => k ? r[0].toLocaleLowerCase("mn-MN") + r.slice(1) : r).join(" болон ") || "Хариуцах хүнийг томилно";
   const goals = goalsFor(payload.priorityActions[0]?.categoryId), H = goals;
   /* Findings that must be clarified first are clarified together early in the year, so their work can follow on the result. */
   const clarify = p.map((x, i) => ({ x, i })).filter(y => y.x.g.evidence && y.i >= 2);
-  const clarifying = clarify.length ? [{ textMn: `${clarify.map(y => `«${name(y.i)}»`).join(", ")}: хариуцсан хүмүүс одоогийн байдлыг хамт нягталж, дутуу эсэхийг дүгнэнэ.`, recommendationIds: clarify.map(y => `F${y.x.n}`) }] : [];
+  const clarifying = clarify.length ? [{ textMn: `${clarify.map(y => `«${name(y.i)}»`).join(", ")} ажил бүрд хариуцсан хүмүүс ${new Set(clarify.map(y => y.x.g.askMn)).size === 1 && clarify[0].x.g.askMn ? clarify[0].x.g.askMn : "хоёрдугаар хуудсанд заасан зүйлийг"} шалгаж, дүгнэлтээ бичнэ.`, recommendationIds: clarify.map(y => `F${y.x.n}`) }] : [];
   const begin = (i: number) => p[i]?.g.evidence && i >= 2 ? act(i, "runMn") : act(i, "startMn"), next = (i: number) => p[i]?.g.evidence && i >= 2 ? act(i, "embedMn") : act(i, "runMn");
   const all = p.map(x => `F${x.n}`);
   const stage = (id: string, headingMn: string, startDay: number, durationDays: number, dependsOnStageIds: string[], guide: PlanStageGuide, actions: PlanStageDraft["actions"]): PlanStageDraft => ({ id, headingMn, startDay, durationDays, dependsOnStageIds, dependencyNoteMn: null, guide, actions });
   const g = (k: number, resultMn: string, doneMn: string, ownerMn: string): PlanStageGuide => ({ goalMn: goals[k], resultMn, doneMn, ownerMn });
   const stages = [
-    stage("E1", H[0], 0, 45, [], g(0, results([0, "startMn"], [1, "startMn"]), "Баримтуудыг бичгээр гаргаж, удирдлага дараагийн алхмыг зөвшөөрсөн эсэх", owners(0, 1)), [...act(0, "startMn"), ...act(1, "startMn")]),
+    stage("E1", H[0], 0, 45, [], g(0, results([0, "startMn"], [1, "startMn"]), `Эдгээр ажлын эхний дүгнэлтийг удирдлага хэлэлцэж, дараагийн алхмыг шийдсэн эсэх`, owners(0, 1)), [...act(0, "startMn"), ...act(1, "startMn")]),
     stage("E2", H[1], 45, 60, ["E1"], g(1, results([0, "runMn"], ...(p[2] ? [[2, "startMn"] as [number, "startMn"]] : []), ...clarify.filter(y => y.i > 2).slice(0, 1).map(y => [y.i, "startMn"] as [number, "startMn"])), check(0), owners(0, 2)), [...act(0, "runMn"), ...(p[2]?.g.evidence ? [] : act(2, "startMn")), ...clarifying]),
     stage("E3", H[2], 105, 75, ["E2"], g(2, results([1, "runMn"], [2, "runMn"], [3, p[3]?.g.evidence ? "runMn" : "startMn"]), check(1), owners(1, 3)), [...act(1, "runMn"), ...act(2, "runMn"), ...begin(3)]),
     stage("E4", H[3], 180, 90, ["E3"], g(3, results([3, "runMn"], [4, p[4]?.g.evidence ? "runMn" : "startMn"]), p[2] ? check(2, 3) : check(0), owners(3, 4)), [...act(0, "embedMn"), ...next(3), ...begin(4)]),
-    stage("E5", H[4], 270, W - 270, ["E4"], g(4, "Жилийн үр дүнгийн дүгнэлт, дараагийн жилийн ажлын жагсаалт", `${p[4] ? `${check(4)}, ` : ""}дахин оношилгооны дүн өмнөхөөс сайжирсан эсэх`, "Дээрх ажлуудыг хариуцсан хүмүүс"), [...act(1, "embedMn"), ...act(2, "embedMn"), ...(p[3]?.g.evidence ? [] : act(3, "embedMn")), ...next(4),
-      { textMn: `Жилийн дүгнэлт: ажил бүрийн үр дүнг хоёрдугаар хуудсанд заасан шалгах аргаар үнэлж, дахин оношилгоо хийнэ.${p[4] && !p[4].g.evidence ? ` «${name(4)}» ажлыг дараагийн жил үргэлжлүүлэх эсэхийг шийднэ.` : ""}`, recommendationIds: all }])
+    stage("E5", H[4], 270, W - 270, ["E4"], g(4, "Жилийн үр дүнгийн дүгнэлт, дараагийн жилийн ажлын жагсаалт", detail < 1 && p[4] ? check(4) : `${p[4] ? `${check(4)}, ` : ""}дахин оношилгооны дүнг энэ тайлантай харьцуулсан эсэх`, "Дээрх ажлуудыг хариуцсан хүмүүс"), [...act(1, "embedMn"), ...act(2, "embedMn"), ...(p[3]?.g.evidence ? [] : act(3, "embedMn")), ...next(4),
+      { textMn: `Жилийн дүгнэлт: ажил бүрийн үр дүнг хоёрдугаар хуудсанд заасан шалгах аргаар үнэлж, дахин оношилгоо хийнэ.${detail > 0 && p[4] && !p[4].g.evidence ? ` «${name(4)}» ажлыг дараагийн жил үргэлжлүүлэх эсэхийг шийднэ.` : ""}`, recommendationIds: all }])
   ].filter(s => s.actions.length);
   return materializeAnnualPlan(stages, payload, { kind: "DETERMINISTIC", model: "guidance" });
 }

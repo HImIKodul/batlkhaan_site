@@ -1,4 +1,4 @@
-import { coverageText, plainRole } from "./guidance/index.js";
+import { coverageText, plainRole, PLAIN_LANGUAGE_VERSIONS } from "./guidance/index.js";
 import { withPlainNames } from "./guidance/language.js";
 import { planForPayload } from "./annual-plan.js";
 import { createHash } from "node:crypto";
@@ -204,7 +204,7 @@ export function buildReportPdfSource(payload:FrozenReportPayload,narrative:Narra
     ...(narrative.companyLogo?{companyLogo:{sha256:narrative.companyLogo.sha256}}:{}),
     /* Customer-safe projection of the validated 12-month plan: titles, calendar labels and Mongolian text only (no stage ids, finding references or provider details). Absent for reports without a READY plan, which keep the existing page 3. */
     ...(plan?{annualPlan:{periodLabel:plan.periodLabel,stages:plan.stages.map(st=>({headingMn:st.headingMn,dateLabel:st.dateLabel,dependencyNoteMn:st.dependencyNoteMn,...(st.guide?{guide:st.guide}:{}),actions:st.actions.map(x=>({textMn:x.textMn}))}))}}:{}),
-    ...(guidance?.version==="MMRI-REPORT-GUIDANCE-1.1"?{textRules:2 as const}:{})
+    ...(guidance&&PLAIN_LANGUAGE_VERSIONS.includes(guidance.version)?{textRules:2 as const}:{}),...(guidance?.partial?{partial:true as const}:{})
   };
   return guidance?.names?{...out,conclusionMn:plainAll(out.conclusionMn),strengths:plainAll(out.strengths),weaknesses:plainAll(out.weaknesses),criticalActions:plainAll(out.criticalActions),roadmap:plainAll(out.roadmap),warnings:plainAll(out.warnings),risks:plainAll(out.risks),...(out.annualPlan?{annualPlan:plainAll(out.annualPlan)}:{}),...(out.selectionNoteMn?{selectionNoteMn:plainAll(out.selectionNoteMn)}:{})}:out;
 }

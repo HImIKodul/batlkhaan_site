@@ -60,14 +60,15 @@ function conclusionText(payload:FrozenReportPayload):{text:string;sources:string
   if(payload.guidance?.priorities.length){
     const [g1,g2,g3]=payload.guidance.priorities;const quote=(x:string)=>`«${x}»`,low=(x:string)=>x?x[0].toLocaleLowerCase("mn-MN")+x.slice(1):x;
     const validated=strengths.length>0&&strengths.every((x:any)=>x.basis!=="RELATIVE_RANK"),weak=payload.weaknesses.filter(x=>!x.needsEvidence).slice(0,3).map(x=>quote(x.nameMn)),share=coverageText(payload.overall.coverage);
-    const said=`${safeNarrativeCompanyName(payload.companyName)} энэ удаагийн оношилгоогоор ${payload.overall.score===null?"нийт оноо тогтоогдоогүй":`${score(payload.overall.score)} оноо авлаа`}.`;
+    const partial=payload.guidance.partial&&share&&payload.overall.score!==null;
+    const said=partial?`${safeNarrativeCompanyName(payload.companyName)} энэ удаа бүх шалгуурын зөвхөн ${share} хувийг үнэлүүлсэн. Хариулсан хэсгийн дүн ${score(payload.overall.score)} оноо боловч энэ нь бизнесийн бүрэн үнэлгээ биш.`:`${safeNarrativeCompanyName(payload.companyName)} энэ удаагийн оношилгоогоор ${payload.overall.score===null?"нийт оноо тогтоогдоогүй":`${score(payload.overall.score)} оноо авлаа`}.`;
     const first=g1.steps.startMn.split(" Ингэхдээ ")[0];
     parts.splice(0,parts.length,
-      {full:`${said}${share?` Энэ нь бүх шалгуурын ${share} хувийг үнэлсэн урьдчилсан дүн юм.`:""}`,short:`${said}${share?` Энэ нь бүх шалгуурын ${share} хувийг үнэлсэн урьдчилсан дүн.`:""}`},
+      {full:`${said}${!partial&&share?` Энэ нь бүх шалгуурын ${share} хувийг үнэлсэн урьдчилсан дүн юм.`:""}`,short:`${said}${!partial&&share?` Энэ нь бүх шалгуурын ${share} хувийг үнэлсэн урьдчилсан дүн.`:""}`},
       ...(strengthNames.length?[{full:`Харьцангуй сайн үнэлэгдсэн ажил нь ${joinMn(strengthNames.map(quote))}. ${validated?"Эдгээр давуу талдаа бусад ажлаа хийхдээ түшиглэнэ.":"Эдгээрийг бүрэн давуу тал гэж дүгнэхийн тулд нэмэлт хариулт шаардлагатай."}`,short:`Харьцангуй сайн үнэлэгдсэн ажил нь ${joinMn(strengthNames.map(quote))}.`}]:[]),
       weak.length?{full:`Харин хамгийн сул үнэлэгдсэн ажил нь ${joinMn(weak)}.`,short:`Харин хамгийн сул үнэлэгдсэн ажил нь ${joinMn(weak)}.`}
         :{full:`Өгсөн хариултаар сул тал илрээгүй. Хариулаагүй хэсэг олон тул ${joinMn(payload.weaknesses.slice(0,2).map(x=>quote(x.nameMn)))} зэрэг ажлыг нэмж тодруулсны дараа дүгнэнэ.`,short:"Өгсөн хариултаар сул тал илрээгүй. Хариулаагүй хэсгийг нэмж тодруулна."},
-      {full:`Хамгийн түрүүнд ${quote(g1.capabilityMn)} ажлыг эхлүүлнэ. ${first}${g2?` Дараа нь ${joinMn([...new Set([g2,g3].filter(Boolean).map(x=>x.capabilityMn))].filter(n=>n!==g1.capabilityMn).map(quote))} ажлыг эхлүүлнэ.`:""}`,short:`Хамгийн түрүүнд ${quote(g1.capabilityMn)} ажлыг эхлүүлнэ. ${first}`},
+      {full:`Хамгийн түрүүнд ${quote(g1.capabilityMn)} ажлыг ${g1.evidence?"тодруулна":"эхлүүлнэ"}. ${first}${g2?` Дараа нь ${joinMn([...new Set([g2,g3].filter(Boolean).map(x=>x.capabilityMn))].filter(n=>n!==g1.capabilityMn).map(quote))} ажлыг ${[g2,g3].filter(Boolean).every(x=>x.evidence)?"тодруулна":"эхлүүлнэ"}.`:""}`,short:`Хамгийн түрүүнд ${quote(g1.capabilityMn)} ажлыг ${g1.evidence?"тодруулна":"эхлүүлнэ"}. ${first}`},
       {full:`Ахицыг дүгнэхдээ ${low(g1.checkMn)}ийг шалгана. Жилийн эцэст дахин оношилгоо хийж, өөрчлөлтийг энэ тайлантай харьцуулна. Хариулаагүй шалгуурыг сул гэж тооцоогүй. Дараагийн оношилгоонд тэдгээрийг үнэлбэл дүн илүү бодитой болно.`,short:"Жилийн эцэст дахин оношилгоо хийж, өөрчлөлтийг энэ тайлантай харьцуулна."});
   }
   const useShort=new Set<number>();const order=[2,1,parts.length-1,parts.length-2];

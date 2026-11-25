@@ -8,11 +8,15 @@ import { DIMENSION_GUIDE } from "./dimensions.js";
 import { PRACTICE_KINDS, PRACTICE_MAP } from "./practices.js";
 import { CAPABILITY_CONTENT } from "./capabilities.js";
 import { MARKETING_COVERS } from "./marketing-covers.js";
-import { DIMENSION_LANGUAGE, dimensionSays, displayNames } from "./language.js";
+import { DIMENSION_CHECK, DIMENSION_LANGUAGE, dimensionSays, displayNames } from "./language.js";
 
-export const REPORT_GUIDANCE_VERSION = "MMRI-REPORT-GUIDANCE-1.1" as const;
-export interface PriorityGuidance { recommendationId: string; /** the diagnosis could not judge it: clarify first */ evidence: boolean; capabilityMn: string; dimensionMn: string; /** short plain label of the dimension; empty for "is it done at all" */ labelMn?: string; whyMn: string; doMn: string; deliverableMn: string; checkMn: string; goalMn: string; steps: { startMn: string; runMn: string; embedMn: string }; /** what exists after the first step and after the work is put into use */ outputs?: { startMn: string; runMn: string } }
-export interface ReportGuidance { version: typeof REPORT_GUIDANCE_VERSION; findings: Record<string, string>; priorities: PriorityGuidance[]; affects: Array<{ first: string; then: string }>; targetNoteMn: string | null;
+/** Below this share of all criteria the score describes only the answered part and is never shown as the rating of the whole business. */
+export const PARTIAL_COVERAGE = 0.25;
+/** Guidance versions written in the plain-language rules (PDF labels, checks). */
+export const PLAIN_LANGUAGE_VERSIONS = ["MMRI-REPORT-GUIDANCE-1.1", "MMRI-REPORT-GUIDANCE-1.2"];
+export const REPORT_GUIDANCE_VERSION = "MMRI-REPORT-GUIDANCE-1.2" as const;
+export interface PriorityGuidance { recommendationId: string; /** the diagnosis could not judge it: clarify first */ evidence: boolean; capabilityMn: string; dimensionMn: string; /** short plain label of the dimension; empty for "is it done at all" */ labelMn?: string; whyMn: string; doMn: string; deliverableMn: string; checkMn: string; /** the check in one short line for the plan page */ doneMn?: string; /** what has to be found out first */ askMn?: string; goalMn: string; steps: { /** the first step without the list that page 2 already gives */ briefMn?: string; startMn: string; runMn: string; embedMn: string }; /** what exists after the first step and after the work is put into use */ outputs?: { startMn: string; runMn: string } }
+export interface ReportGuidance { version: typeof REPORT_GUIDANCE_VERSION; /** only a small part of the criteria could be judged */ partial?: true; findings: Record<string, string>; priorities: PriorityGuidance[]; affects: Array<{ first: string; then: string }>; targetNoteMn: string | null;
   /** Why these five and not simply the five lowest scores. */ selectionNoteMn: string | null;
   /** Share of all criteria that this diagnosis could judge, and what the confidence figure means. */ coverageNoteMn: string | null;
   /** canonical capability name -> plain name shown to the customer (new reports only) */ names?: Record<string, string> }
@@ -44,15 +48,16 @@ export class GuidePicker {
     return this.own(categoryId);
   }
 }
-/* How a finding that could not be judged is clarified; a different way each time, so two of them do not read the same. */
-const REVIEWS: Array<(d: string) => string> = [
-  d => `Хариуцсан хүмүүс «${d}» талаар хамт ярилцаж, дутуу зүйлээ нэг хуудсанд бичнэ`,
-  d => `Ажил гүйцэтгэдэг хүмүүсээс «${d}» талаар тус тусад нь асууж, хариултуудыг нь харьцуулна`,
-  d => `Сүүлд хийсэн нэг ажлыг эхнээс нь дуустал нягталж, «${d}» талаар ямар асуудал гарсныг тэмдэглэнэ`,
-  d => `Бичгээр тогтоосон журам, өдөр тутмын ажлыг харьцуулж, «${d}» талаарх зөрүүг тэмдэглэнэ`,
-  d => `Тайлан, бүртгэлээс цөөн жишээ авч, «${d}» талаар хангалттай эсэхийг дүгнэнэ`
+/* How a finding that could not be judged is clarified: for the things THIS capability consists of, what exactly has to be found out about THIS dimension. A different way each time. */
+const REVIEWS: Array<(each: string, ask: string) => string> = [
+  (e, q) => `Хариуцсан хүмүүс хамт ярилцаж, ${e}${q} тодруулна`,
+  (e, q) => `Ажил гүйцэтгэдэг хүмүүсээс ${e}${q} тус тусад нь асууж, хариултыг нь харьцуулна`,
+  (e, q) => `Сүүлд хийсэн нэг ажлыг эхнээс нь дуустал нягталж, ${e}${q} тэмдэглэнэ`,
+  (e, q) => `Бичгээр тогтоосон журмыг өдөр тутмын ажилтай харьцуулж, ${e}${q} шалгана`,
+  (e, q) => `Тайлан, бүртгэлээс цөөн жишээ авч, ${e}${q} баталгаажуулна`
 ];
-const unsure: Array<(d: string) => string> = [d => `Хариулт хангалтгүй тул «${d}» талаар одоогоор дүгнэх боломжгүй. Эхлээд бодит байдлыг тодруулна.`, d => `«${upperFirst(d)}» талаарх хариулт дутуу байна. Зөвлөмж гаргахын өмнө үүнийг тодруулна.`, d => `Одоогийн хариултаар «${d}» ямар түвшинд байгааг тогтоох боломжгүй тул эхлээд шалгана.`, d => `«${upperFirst(d)}» талаар хангалттай хариулт аваагүй. Сул эсэхийг шалгасны дараа арга хэмжээгээ сонгоно.`, d => `«${upperFirst(d)}» талаар дүгнэлт хийхэд мэдээлэл дутуу тул эхний алхам нь тодруулга байна.`];
+const unsure: Array<(q: string) => string> = [q => `Одоогийн хариултаар ${q} тогтоох боломжгүй. Сул гэж дүгнээгүй, эхлээд шалгана.`, q => `${upperFirst(q)} харуулсан хариулт дутуу байна. Зөвлөмж гаргахын өмнө үүнийг тодруулна.`, q => `Хариулт хангалтгүй тул ${q} хараахан мэдэх боломжгүй. Бодит байдлыг шалгасны дараа шийднэ.`, q => `Асуулгаар ${q} бүрэн тодруулж чадаагүй. Сул эсэхийг шалгасны дараа арга хэмжээгээ сонгоно.`, q => `${upperFirst(q)} дүгнэхэд мэдээлэл дутуу тул эхний алхам нь тодруулга байна.`];
+const NOT_DONE: Array<(c: string) => string> = [c => `Одоо ${c} тус бүр ямар байгааг бичиж, дутуу хэсгийг тодруулна`, c => `${upperFirst(c)} тус бүрээр сүүлийн бодит жишээг авч, юу хийгдээгүйг тогтооно`, c => `Гүйцэтгэдэг хүмүүстэй ${c} тус бүрийн талаар ярилцаж, эхлэх хэсгээ сонгоно`];
 const trimEnd = (t: string) => String(t ?? "").trim().replace(/[.?!…]+$/, "");
 /** Role labels of the methodology carry a few English words; the customer reads Mongolian. */
 export const plainRole = (t: string) => t.replace(/CRM\s*\/\s*/g, "").replace(/retention/gi, "хэрэглэгч хадгалалт").replace(/капиталын/g, "хөрөнгийн").replace(/процессын/g, "үйл явцын").replace(/аналитик/g, "шинжилгээ").replace(/\bAI\b/g, "хиймэл оюун").replace(/\bIT\b/g, "мэдээллийн технологийн").replace(/\s*\/\s*(?=менежер|ахлах|захирал|мэдээллийн технологийн менежер)/gu, " эсвэл ").replace(/\s*\/\s*/g, ", ").replace(/^./u, c => c.toLocaleUpperCase("mn-MN"));
@@ -90,32 +95,36 @@ export function buildReportGuidance(m: MethodologyDefinition, snapshot: RuntimeS
   };
   for (const x of parts.strengths) findings[x.id] = note(x.categoryId, "good");
   for (const x of parts.weaknesses) findings[x.id] = note(x.categoryId, x.needsEvidence ? "unproven" : "weak");
-  const picker = new GuidePicker(), roots = new Map(strategy.rootCause.findings.map(f => [f.id, f] as const)), affects: ReportGuidance["affects"] = [], used = new Set<string>(), spent = new Map<string, number>(); const sides = new Map<string, string>(); let unsureAt = -1; let reviews = -1; const top = parts.priorityActions.slice(0, 5);
+  const picker = new GuidePicker(), roots = new Map(strategy.rootCause.findings.map(f => [f.id, f] as const)), affects: ReportGuidance["affects"] = [], used = new Set<string>(), spent = new Map<string, number>(); const sides = new Set<string>(); let notDone = 0; let unsureAt = -1; let reviews = -1; const top = parts.priorityActions.slice(0, 5);
   const priorities = top.map(a => {
     const capabilityMn = cat.get(a.categoryId) ?? a.titleMn, dimensionMn = cell.get(a.cellId) ?? "", evidence = a.type !== "EXECUTION" && a.type !== "LOCAL_IMPROVEMENT";
-    const earlier = evidence && a.cellId !== "C02" ? sides.get(a.cellId) : undefined, dim = DIMENSIONS.get(a.cellId); if (!sides.has(a.cellId)) sides.set(a.cellId, capabilityMn);
+    const earlier = evidence && a.cellId !== "C02" && sides.has(a.cellId), dim = DIMENSIONS.get(a.cellId), side = DIMENSION_CHECK.get(a.cellId); sides.add(a.cellId);
     const first = !used.has(a.categoryId); used.add(a.categoryId);
     const content = first ? CAPABILITY_CONTENT.get(a.categoryId) : undefined, marketing = MARKETING.get(a.categoryId), own = marketing && first && a.cellId !== "C02" ? marketing : undefined;
-    const label = DIMENSION_LANGUAGE.get(a.cellId)?.label ?? lowerFirst(dimensionMn), ownStep = content?.step ?? own?.start ?? "";
-    /* Several works whose same side must be clarified: after the first, each one decides that side and goes on with its own concrete step, so the advice neither repeats nor speaks about something else. */
-    const raw = earlier && dim ? (ownStep ? { ...picker.own(a.categoryId), start: `«${label}» талаар шийдвэрээ гаргаад, ${lowerFirst(trimEnd(ownStep))}` } : { start: `«${earlier}» ажилд авсан арга хэмжээг энд мөн хэрэгжүүлнэ`, run: dim.embed, embed: dim.embed, deliverable: dim.deliverable, check: dim.check }) : picker.pick(a.categoryId, a.cellId), full = (t: string) => upperFirst(trimEnd(named(t, null))), brief = (t: string) => upperFirst(trimEnd(named(t, null)));
+    const label = DIMENSION_LANGUAGE.get(a.cellId)?.label ?? lowerFirst(dimensionMn), covers = coversOf(a.categoryId), each = covers ? `${covers} тус бүрээр ` : "";
+    const picked = evidence && dim ? (earlier ? { ...dim, run: covers ? `Гарсан баримтыг сар бүр шинэчилж, ${covers} тус бүрийн өөрчлөлтийг тэмдэглэнэ` : dim.embed } : dim) : picker.pick(a.categoryId, a.cellId);
+    /* Not done at all (C02): the capability's own work comes first, never a general exercise of its kind. */
+    const raw = !evidence && a.cellId === "C02" && content ? { ...picked, start: NOT_DONE[notDone++ % NOT_DONE.length](covers), deliverable: content.evidence } : picked, full = (t: string) => upperFirst(trimEnd(named(t, null))), brief = (t: string) => upperFirst(trimEnd(named(t, null)));
     /* The second priority of one capability (another dimension of it) must not repeat the capability's own step. */
-    const step = content?.step ?? own?.start ?? "", covers = first ? coversOf(a.categoryId) : "", proof = content?.evidence ?? own?.deliverable ?? "";
+    const step = content?.step ?? own?.start ?? "", proof = content?.evidence ?? own?.deliverable ?? "";
     const down = ((roots.get(a.findingId) as any)?.downstreamCategoryIds ?? []) as string[];
     const helps = top.filter(b => b.id !== a.id && b.categoryId !== a.categoryId && down.includes(b.categoryId));
     for (const b of helps) if (!affects.some(x => x.first === b.id && x.then === a.id)) affects.push({ first: a.id, then: b.id });
     /* Only an answer about THIS dimension may be quoted as the reason. */
     const said = clearestAnswers(m, snapshot, a.categoryId, false, 1, a.cellId)[0], reasons = evidence ? "" : reasonsOf(a.components, spent);
-    const why = [evidence ? unsure[++unsureAt % unsure.length](label) : said && dimensionSays(a.cellId, said.score) ? `Оношилгооны хариултаас харахад ${lowerFirst(dimensionSays(a.cellId, said.score))}` : a.statedMn ? `Оношилгооны хариултаас харахад ${lowerFirst(dimensionSays(a.cellId, 0) || "энэ ажил хэрэгждэггүй.")}` : `Холбогдох хариултуудаас харахад «${label}» бусад хэсгээс сул байна.`,
+    const why = [evidence ? unsure[++unsureAt % unsure.length](side?.ask ?? `«${label}» ямар түвшинд байгааг`) : said && dimensionSays(a.cellId, said.score) ? `Оношилгооны хариултаас харахад ${lowerFirst(dimensionSays(a.cellId, said.score))}` : a.statedMn ? `Оношилгооны хариултаас харахад ${lowerFirst(dimensionSays(a.cellId, 0) || "энэ ажил хэрэгждэггүй.")}` : `Холбогдох хариултуудаас харахад «${label}» бусад хэсгээс сул байна.`,
       reasons, helps.length ? `Мөн «${cat.get(helps[0].categoryId)}» ажилд тус болно.` : ""].filter(Boolean).join(" ");
-    const review = evidence ? REVIEWS[++reviews % REVIEWS.length](label) : "";
-    const about = covers ? ` Ингэхдээ ${covers} зэргийг хамруулна.` : "", join = (...t: string[]) => t.filter(Boolean).map(x => `${upperFirst(trimEnd(x))}.`).join(" ");
+    const review = evidence ? REVIEWS[++reviews % REVIEWS.length](each, side?.ask ?? `«${label}» ямар түвшинд байгааг`) : "", briefReview = evidence ? REVIEWS[reviews % REVIEWS.length]("", side?.ask ?? `«${label}» ямар түвшинд байгааг`) : "";
+    /* If it turns out to be missing: decide that side and go on with the concrete step of this capability. */
+    const then = side && step ? `${side.decide} ${lowerFirst(trimEnd(step))}` : side && earlier && covers ? `${side.decide} ${covers} тус бүрийн ажлын хуваарьт бичнэ` : lowerFirst(trimEnd(named(dim?.start ?? raw.start, null)));
+    const check = side && (evidence || a.cellId !== "C02") ? (evidence || !proof ? `${upperFirst(each)}${each ? side.done : upperFirst(side.done)}` : `${upperFirst(proof)} бэлэн болж, ${side.done}`) : content ? `${upperFirst(content.evidence)} бэлэн болж, ажилд хэрэглэгдэж байгаа эсэх` : raw.check;
+    const about = covers && (evidence ? false : !(a.cellId === "C02" && content)) ? (first ? ` Ингэхдээ ${covers} зэргийг хамруулна.` : ` Эхлээд «${covers.split(", ")[0]}» хэсгээс эхэлнэ.`) : "", join = (...t: string[]) => t.filter(Boolean).map(x => `${upperFirst(trimEnd(x))}.`).join(" ");
     return { recommendationId: a.id, evidence, capabilityMn, dimensionMn, labelMn: a.cellId === "C02" ? "" : label, whyMn: why,
-      doMn: evidence ? `${review}.${about} Хэрэв дутуу нь тогтоогдвол ${lowerFirst(trimEnd(a.cellId === "C02" && step ? step : named(raw.start, null)))}.` : `${full(raw.start)}.${about}${step ? ` ${upperFirst(trimEnd(step))}.` : ""}`,
-      deliverableMn: evidence ? `Одоогийн байдлын дүгнэлт, дараа нь ${lowerFirst(raw.deliverable)}` : proof && proof !== raw.deliverable ? `${raw.deliverable} болон ${lowerFirst(proof)}` : raw.deliverable, outputs: evidence ? { startMn: "Одоогийн байдлын дүгнэлт", runMn: raw.deliverable } : { startMn: raw.deliverable, runMn: proof || raw.deliverable }, checkMn: raw.check,
+      doMn: evidence ? `${review}.${about} Хэрэв дутуу нь тогтоогдвол ${then}.` : `${full(raw.start)}.${about}${step ? ` ${upperFirst(trimEnd(step))}.` : ""}`,
+      deliverableMn: evidence ? `Одоогийн байдлын дүгнэлт, дараа нь ${lowerFirst(proof || dim?.deliverable || raw.deliverable)}` : proof && proof !== raw.deliverable ? `${raw.deliverable} болон ${lowerFirst(proof)}` : raw.deliverable, outputs: evidence ? { startMn: "Одоогийн байдлын дүгнэлт", runMn: proof || dim?.deliverable || raw.deliverable } : { startMn: a.cellId === "C02" && content ? "Одоогийн байдлын дүгнэлт" : raw.deliverable, runMn: proof || raw.deliverable }, checkMn: check, ...(side && (evidence || (a.cellId !== "C02" && !proof)) ? { doneMn: `«${capabilityMn}» ажлын хувьд ${side.done}` } : {}), ...(evidence && side ? { askMn: side.ask } : {}),
       goalMn: upperFirst(trimEnd(objectives.get(a.categoryId) || a.objectiveMn)),
-      steps: { startMn: evidence ? `${review}.` : `${brief(raw.start)}.${about}`,
-        runMn: evidence ? `Хэрэв дутуу нь тогтоогдвол ${lowerFirst(trimEnd(a.cellId === "C02" && step ? step : named(raw.start, null)))}.` : join(step, brief(raw.run)),
+      steps: { ...(evidence ? { briefMn: `${briefReview}.` } : {}), startMn: evidence ? `${review}.` : `${brief(raw.start)}.${about}`,
+        runMn: evidence ? `Хэрэв дутуу нь тогтоогдвол ${then}.` : join(step, brief(raw.run)),
         embedMn: evidence ? join(brief(raw.run)) : `${brief(raw.embed)}.` } };
   });
   /* Low scores that did not become one of the five priorities, and why, from the accepted ranking itself. */
@@ -129,7 +138,7 @@ export function buildReportGuidance(m: MethodologyDefinition, snapshot: RuntimeS
   const share = coverageText(snapshot.overall.coverage);
   const shown = new Set([...parts.strengths, ...parts.weaknesses, ...parts.priorityActions].map(x => x.categoryId).concat(priorities.length ? top.flatMap(a => ((roots.get(a.findingId) as any)?.downstreamCategoryIds ?? []) as string[]) : []));
   const plain = displayNames(m.categories.map(c => ({ id: c.id, nameMn: c.nameMn })), shown);
-  return { version: REPORT_GUIDANCE_VERSION, ...(Object.keys(plain).length ? { names: plain } : {}), findings, priorities, affects, selectionNoteMn,
+  return { version: REPORT_GUIDANCE_VERSION, ...(typeof snapshot.overall.coverage === "number" && snapshot.overall.coverage < PARTIAL_COVERAGE ? { partial: true as const } : {}), ...(Object.keys(plain).length ? { names: plain } : {}), findings, priorities, affects, selectionNoteMn,
     coverageNoteMn: share ? `Үнэлсэн хэсэг гэдэг нь нийт шалгуураас таны хариултаар үнэлж чадсан хувь (${share}%). Үлдсэн шалгуурыг сул гэж үзээгүй. Итгэлцлийн тоо зөвхөн хариулсан хэсэгт хамаарна.` : null,
     targetNoteMn: top.some(a => typeof a.targetCellScore === "number") ? "Одоо ба зорилт нь оношилгооны оноо. Зорилтыг одоогийн оноонд 25-ыг нэмж, 60-аас багагүй, 75-аас ихгүй байхаар тогтоосон. Энэ нь дараагийн оношилгоонд хүрэх түвшин бөгөөд орлого, борлуулалт өснө гэсэн амлалт биш." : null };
 }

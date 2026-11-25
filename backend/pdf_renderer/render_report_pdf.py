@@ -84,6 +84,7 @@ TIER_E = 0  # explanation tier (pages 1-2): 0-3 print every approved word, 4 sho
 STRICT = False
 # Category heading of newer reports (customer label; internal domain ids are unchanged).
 DOMAIN_LABELS = {"marketing": "МАРКЕТИНГ (MMRI)", "it": "МЭДЭЭЛЛИЙН ТЕХНОЛОГИ (ITMRI)", "finance": "САНХҮҮ (FINMRI)", "people": "ХҮНИЙ НӨӨЦ (HRMRI)", "operations": "ҮЙЛДВЭРЛЭЛ БА ҮЙЛ АЖИЛЛАГАА (OPMRI)"}
+PARTIAL = False  # newest reports: only a small part of the criteria was judged, so the score is never shown as the rating of the whole business
 RULES2 = False  # newest reports: plain labels, goal/result/check rows per stage
 GUIDED = False  # newer reports with capability-specific wording
 TIER_R = 0  # roadmap tier (page 3)
@@ -283,7 +284,11 @@ class ScoreBadge(Flowable):
         c.drawCentredString(d / 2, d / 2 + 1.7 * mm, self.value)
         c.setFillColor(MUTED)
         c.setFont("MMRINotoBold", 5.8)
-        c.drawCentredString(d / 2, d / 2 - 7.0 * mm, "НИЙТ ҮНЭЛГЭЭ")
+        if PARTIAL:  # two short lines, so the label stays inside the ring
+            c.drawCentredString(d / 2, d / 2 - 5.6 * mm, "ХАРИУЛСАН")
+            c.drawCentredString(d / 2, d / 2 - 8.0 * mm, "ХЭСЭГ")
+        else:
+            c.drawCentredString(d / 2, d / 2 - 7.0 * mm, "НИЙТ ҮНЭЛГЭЭ")
 
 
 def page_header_footer(canvas, doc, source, st):
@@ -416,7 +421,7 @@ PRELIM_NOTE = "Урьдчилсан гэж тэмдэглэсэн чадавхы
 def metric_strip(source, st):
     official = source.get("metricType") == "OFFICIAL_OVERALL_SCORE"
     cells = [
-        ("Үнэлгээний түвшин", source.get("overallBand") or "-"),
+        ("Бизнесийн бүрэн үнэлгээ", "Хийгдээгүй") if PARTIAL else ("Үнэлгээний түвшин", source.get("overallBand") or "-"),
         ("Үнэлгээний төрөл", "Албан ёсны" if official else "Урьдчилсан"),
     ]
     if source.get("coverageShare"):
@@ -559,7 +564,7 @@ def summary_page(source, st, content_width):
     flags = [bool(x.get("needsEvidence")) for x in (source.get("weaknesses") or [])[:5]]
     weak_title = ("Сул талууд" if RULES2 else "Сул талын товч зураг") if not any(flags) else "Нэмж тодруулах чиглэл" if all(flags) else "Сул ба тодруулах чиглэл"
     snapshot = Table([
-        [p("Давуу талууд" if RULES2 else "Давуу талын товч зураг", st["h2"]), p(weak_title, st["h2"])],
+        [p("Сайн хариулттай ажлууд" if PARTIAL else "Давуу талууд" if RULES2 else "Давуу талын товч зураг", st["h2"]), p(weak_title, st["h2"])],
         [strong, weak],
     ], colWidths=[88.5 * mm, 88.5 * mm] if GUIDED else [85 * mm, 85 * mm], hAlign="LEFT")
     snapshot.setStyle(TableStyle([
@@ -886,8 +891,8 @@ class PlanStage(Flowable):
         self.head_style = ParagraphStyle("pl_head", parent=base["BodyText"], fontName="MMRINotoBold", fontSize=hs, leading=hs + 2.6, textColor=PLAN_BLUE_DARK)
         self.note_style = ParagraphStyle("pl_note", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs - 0.6, leading=lead - 0.8, textColor=PLAN_BLUE)
         self.body_style = ParagraphStyle("pl_body", parent=base["BodyText"], fontName="MMRINoto", fontSize=fs, leading=lead, textColor=INK_2)
-        self.row_gap = (0.35 if stage.get("guide") else 1.2) * mm
-        self.gap_after = (1.8 if stage.get("guide") else 4.2) * mm
+        self.row_gap = (0.25 if stage.get("guide") else 1.2) * mm
+        self.gap_after = (1.6 if stage.get("guide") else 4.2) * mm
 
     def wrap(self, availWidth, availHeight):
         self.text_w = availWidth - PLAN_GUTTER
@@ -1015,9 +1020,10 @@ def main():
     top = 18 * mm
     bottom = 15 * mm
     content_width = A4[0] - left - right
-    global TIER_E, TIER_R, STRICT, GUIDED, RULES2
+    global TIER_E, TIER_R, STRICT, GUIDED, RULES2, PARTIAL
     GUIDED = any(a.get("guide") for a in source.get("criticalActions") or [])
     RULES2 = source.get("textRules") == 2
+    PARTIAL = bool(source.get("partial"))
     STRICT = args.strict
     # Tier 0/0 is the accepted design. The explanation tier (pages 1-2) and the roadmap tier (page 3) grow independently, smallest total first.
     for te, tr in sorted(((a, b) for a in TIER_EXPLAIN for b in TIER_ROADMAP), key=lambda x: (x[0] >= 4, x[0] + x[1], x[1])):
