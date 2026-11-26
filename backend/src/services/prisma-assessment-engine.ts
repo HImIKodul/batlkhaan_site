@@ -18,6 +18,17 @@ import { customerNotifications } from "../api/notifications/notification-service
 import { ACTIVE_ASSESSMENT_STATUSES, RESULT_TERMINAL_ASSESSMENT_STATUSES, canMutateRespondents, isResultTerminalAssessmentStatus } from "./assessment-lifecycle.js";
 import { LONG_TX } from "../lib/tx-options.js";
 
+const DRAFT_SEQ_KEY = "__clientSeq";
+function draftClientSequence(draft: unknown): number | null {
+  const v = draft && typeof draft === "object" ? (draft as Record<string, unknown>)[DRAFT_SEQ_KEY] : null;
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+export function publicDraftValue(draft: unknown): unknown {
+  if (!draft || typeof draft !== "object" || Array.isArray(draft)) return draft;
+  const { [DRAFT_SEQ_KEY]: _omit, ...rest } = draft as Record<string, unknown>;
+  return rest;
+}
+
 export class PrismaAssessmentEngine {
   private readonly cache = new MethodologyDefinitionCache(prisma);
 
@@ -538,7 +549,7 @@ export class PrismaAssessmentEngine {
     });
   }
 
-  async saveDraft(assessmentId: string, input: { questionIssueId: string; questionId: string; draft: unknown; expectedAssessmentRevision: number; writerLeaseId: string }) {
+  async saveDraft(assessmentId: string, input: { questionIssueId: string; questionId: string; draft: unknown; expectedAssessmentRevision: number; writerLeaseId: string; clientSequence?: number | null }) {
     const writerLeaseId = requireWriterId(input.writerLeaseId);
     return prisma.$transaction(async (tx: any) => {
       const a = await tx.assessment.findUnique({ where: { id: assessmentId } });
@@ -550,10 +561,18 @@ export class PrismaAssessmentEngine {
       if (!issue || issue.assessmentId !== assessmentId || issue.status !== "ISSUED" || a.currentQuestionIssueId !== issue.id) throw conflict("Draft does not match current issued question");
       const definition = await this.cache.get(a.methodologyVersionId);
       if (issue.questionId !== questionId(definition.version, input.questionId)) throw conflict("Draft question id does not match issue");
+      // Serialize concurrent writers on the assessment row, then order by the client's monotonic sequence so a delayed older request can never replace a newer stored selection.
+      if (typeof tx.$queryRaw === "function") await tx.$queryRaw`SELECT id FROM assessments WHERE id = ${assessmentId} FOR UPDATE`;
+      const seq = Number.isFinite(input.clientSequence) ? Number(input.clientSequence) : null;
       const existing = await tx.responseDraft.findUnique({ where: { assessmentId } });
+      const storedSeq = existing && existing.questionIssueId === issue.id ? draftClientSequence(existing.draft) : null;
+      if (existing && seq !== null && storedSeq !== null && seq <= storedSeq) {
+        return { saved: false, stale: true, draftRevision: existing.draftRevision, serverAckAt: existing.serverAckAt, assessmentRevision: a.assessmentRevision };
+      }
+      const stored = seq === null ? jsonSafe(input.draft) : { ...(jsonSafe(input.draft) as Record<string, unknown>), [DRAFT_SEQ_KEY]: seq };
       const row = existing
-        ? await tx.responseDraft.update({ where: { assessmentId }, data: { questionIssueId: issue.id, questionId: issue.questionId, draft: jsonSafe(input.draft), draftRevision: { increment: 1 }, serverAckAt: new Date() } })
-        : await tx.responseDraft.create({ data: { assessmentId, questionIssueId: issue.id, questionId: issue.questionId, draft: jsonSafe(input.draft), draftRevision: 1 } });
+        ? await tx.responseDraft.update({ where: { assessmentId }, data: { questionIssueId: issue.id, questionId: issue.questionId, draft: stored, draftRevision: { increment: 1 }, serverAckAt: new Date() } })
+        : await tx.responseDraft.create({ data: { assessmentId, questionIssueId: issue.id, questionId: issue.questionId, draft: stored, draftRevision: 1 } });
       await tx.assessment.update({ where: { id: assessmentId }, data: { writerLeaseExpiresAt: leaseExpiry() } });
       await tx.auditEvent.create({ data: { assessmentId, eventType: "DRAFT_SAVED", entityType: "ResponseDraft", entityId: row.id, payload: { questionIssueId: issue.id, draftRevision: row.draftRevision } } });
       return { saved: true, draftRevision: row.draftRevision, serverAckAt: row.serverAckAt, assessmentRevision: a.assessmentRevision };

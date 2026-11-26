@@ -595,7 +595,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   router.add("PUT","/api/v1/assessments/:assessmentId/draft",async({req,res,principal,params})=>{
     await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
     if(!b.questionIssueId||!b.questionId||!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("questionIssueId, questionId and expectedAssessmentRevision are required");
-    ok(res,await engine.saveDraft(params.assessmentId,{questionIssueId:String(b.questionIssueId),questionId:String(b.questionId),draft:b.draft??{},expectedAssessmentRevision:Number(b.expectedAssessmentRevision),writerLeaseId:writerId(req)}));
+    ok(res,await engine.saveDraft(params.assessmentId,{questionIssueId:String(b.questionIssueId),questionId:String(b.questionId),draft:b.draft??{},expectedAssessmentRevision:Number(b.expectedAssessmentRevision),writerLeaseId:writerId(req),clientSequence:b.clientSequence==null?null:Number(b.clientSequence)}));
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/writer-lease/heartbeat",async({req,res,principal,params})=>{
