@@ -968,3 +968,10 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 ## 2026-11-26 (3) QPay activation Step 1 (no server access)
 - This computer has no route to the server. From outside: IIS/ARR, live frontend = d449445 file names, backend has routes up to 4df4d6d or later; ports 21, 80, 443, 3389, 5985 accept connections from this network (5432, 4000, 22, 5986 did not). Nothing changed.
 - New `ops/windows/Step1-InspectBackupRestore.ps1` (never run in PowerShell; its SQL/dump/restore steps passed on a temporary Postgres: 87/87 tables). Fixed: `H` function shadowed by the Get-History alias (also in Diagnose-Production.ps1), qpay-smoke refusing every file on Windows. Backup-Postgres.ps1 deletes old dumps: not for pre-change backups.
+
+## 2026-11-26 — Account 2: legacy MANUAL invoices under QPay, admin e-mail code
+- Live `GET /api/v1/billing/plans` reported QPAY at 09:21 UTC (read-only check). Live backend version/migrations/invoices NOT verified (no server access).
+- `96319b2`/`d756b01`: createInvoice refuses (409 OTHER_PROVIDER_INVOICE_OPEN) instead of re-presenting/duplicating an open invoice of another provider; confirmManualPayment no longer requires MANUAL mode. qa-gate-qpay-e2e 43/43 on clone mmri_qa_acc2_legacy (11 LEG checks).
+- `d6e43de`: admin e-mail code (flag MMRI_ADMIN_EMAIL_OTP + MMRI_ADMIN_EMAIL_OTP_ACCOUNTS, off by default; TOTP untouched), additive migration 20261126120000_admin_email_challenges, scripts/gmail-check.mjs, deploy/ADMIN_EMAIL_CODE.md. qa-gate-admin-email-code 21/21 (mock mailbox only), qa-admin-regression 30/30 flag off. No real mail delivered; Gmail invalid_grant not reproducible locally.
+- Not run: real QPay payment, real e-mail, colored-QR bank scans, Windows deploy, backup/restore on production.
+- QA Postgres container mmri-v3-local-postgres-1 was started for these runs (clone DB mmri_qa_acc2_legacy is disposable).
