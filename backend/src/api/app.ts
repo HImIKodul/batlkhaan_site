@@ -403,7 +403,8 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
   router.add("PUT","/api/v1/companies/:companyId/logo",async({req,res,principal,params})=>{
     await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN); logoLimiter.check(`logo:${principal!.userId}`);
-    const body=await readJson(req,LOGO_REQUEST_LIMIT_BYTES);
+    /* A body above the limit gets the same customer message as a too-large file (the connection is closed by the body reader; the browser form already refuses such files before uploading). */
+    const body=await readJson(req,LOGO_REQUEST_LIMIT_BYTES).catch((e:any)=>{if(e instanceof ApiError&&/too large/i.test(e.message)){throw new ApiError(413,"LOGO_TOO_LARGE","Зургийн хэмжээ 5 МБ-аас хэтэрсэн байна. Жижиг файл сонгоно уу.")}throw e});
     ok(res,{logo:await companyLogos.set(params.companyId,principal!.userId,{dataBase64:body?.dataBase64})});
   });
   router.add("DELETE","/api/v1/companies/:companyId/logo",async({res,principal,params})=>{

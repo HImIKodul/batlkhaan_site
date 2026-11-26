@@ -75,7 +75,7 @@ export default function Billing(){
  const requestedArea=((sessionStorage.getItem('business:billingArea')||'marketing') as BusinessAreaId);const area=businessAreaById(requestedArea);const areaId=area.id;useAmbientEnvironment(areaId);const mode=sessionStorage.getItem('business:billingMode')==='retake'?'retake':'first';const code:BillingPlanCode=mode==='retake'?'RETAKE':'DIAGNOSTIC';const palette=areaReportPalette[area.id];
  const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
  const [plainQr,setPlainQr]=useState(false);const [coloredQr,setColoredQr]=useState(false);
- const autoCreateRef=useRef('');const timeLeft=useSecondsLeft(invoice);
+ const autoCreateRef=useRef('');const [confirmCancel,setConfirmCancel]=useState(false);const [cancelled,setCancelled]=useState(false);const cancelBtnRef=useRef<HTMLButtonElement|null>(null);const timeLeft=useSecondsLeft(invoice);
  const plan=useMemo(()=>plans.find(p=>p.code===code)??null,[plans,code]);const amount=plan?.amountMnt??300000;
  /* Manual payment has no automatic lifetime: no countdown and no expired state, whatever an older invoice row carries. */
  const manual=!!plan?.manualMode||invoice?.provider==='MANUAL';const left=manual?null:timeLeft;const expired=left===0;
@@ -93,6 +93,16 @@ export default function Billing(){
   await refresh()}catch(e:any){if(!alreadyOwned(e))setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
  /* RELOAD / expired code: the server verifies the old invoice with the provider, cancels it there and issues a genuinely NEW invoice and QR with a fresh lifetime. Paid invoices come back as PAID. */
  const regenerate=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{const i=await api.regenerateBillingInvoice(invoice.id);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);if(i.status==='PAID'){sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}await refresh()}catch(e:any){if(!alreadyOwned(e))setError(e instanceof ApiError&&e.status===429?'QR код хэт олон удаа шинэчлэгдлээ. Хэсэг хүлээгээд дахин оролдоно уу.':(e?.message||'QR кодыг шинэчилж чадсангүй. Төлбөр хийсэн бол «Төлбөр шалгах» дарна уу.'))}finally{setBusy(false)}};
+ /* CANCEL (customer, QPay only): the server asks the provider for the payment state first and never cancels a paid invoice; if the provider cannot confirm the cancellation the invoice stays open and reconcilable, and this page says so instead of claiming it is cancelled. */
+ const cancelInvoice=async()=>{if(!invoice||busy)return;const current=invoice;setBusy(true);setError('');try{
+  const i=await api.cancelBillingInvoice(current.id);setConfirmCancel(false);
+  if(i.status==='PAID'){setInvoice(i);sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess();await refresh()}
+  else if(i.status==='CANCELLED'){setInvoice(null);setCancelled(true);await refresh()}
+  else setError('Нэхэмжлэл цуцлагдсан эсэхийг баталгаажуулж чадсангүй. Төлбөр хийгдсэн бол автоматаар бүртгэгдэнэ. Дахин оролдоно уу.');
+ }catch(e:any){setConfirmCancel(false);const c=String(e?.code??'');
+  if(c==='PAID_INVOICE_CANNOT_BE_CANCELLED'){try{await readInvoice(current)}catch{/* the status check below keeps the page consistent */}setError('Төлбөр хийгдсэн тул нэхэмжлэлийг цуцлах боломжгүй.')}
+  else if(e instanceof ApiError&&e.status===502)setError('Нэхэмжлэлийг QPay дээр цуцалж баталгаажуулж чадсангүй. QR код хүчинтэй хэвээр байж магадгүй тул төлөхгүй бол хэсэг хүлээгээд дахин оролдоно уу. Төлбөр хийгдвэл автоматаар бүртгэгдэнэ.');
+  else setError(e?.message||'Нэхэмжлэлийг цуцалж чадсангүй.')}finally{setBusy(false)}};
  const check=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{
   // Ask the server to verify with the payment provider; the cached status alone could lag behind a real payment. Invoices the provider cannot check (mock/manual) fall back to a plain status read.
   let latest:BillingInvoice;
@@ -157,7 +167,7 @@ export default function Billing(){
    <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title"><DomainBadge id={area.id}/> <span>{domainNameMn(area.id)}</span></h1><strong className="billing-qr__price">{money(amount)}</strong></header>
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
    {noCode?<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>:<div className="billing-qr__box">
-    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><small>Энэ кодоор бүү төл. Шинэ код авна уу.</small><Button loading={busy} onClick={()=>void (invoice&&invoice.provider==='QPAY'?regenerate():create())}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
+    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><small>Энэ кодоор бүү төл. Шинэ код авна уу.</small><Button loading={busy} onClick={()=>void (invoice&&invoice.provider==='QPAY'?regenerate():create())}>Шинэ QR авах</Button></div>:cancelled&&!invoice?<div className="billing-qr__wait is-expired" role="status"><span>Нэхэмжлэл цуцлагдлаа</span><small>Энэ QR кодоор төлбөр хийхгүй. Шаардлагатай бол шинэ QR аваарай.</small><Button loading={busy} onClick={()=>{setCancelled(false);void create()}}>Шинэ QR авах</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
      :demo?<div className="billing-qr__demo-box"><QrCode area={areaId} text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
      :codeText?<QrCode area={areaId} text={codeText} plain={plainQr} onColor={setColoredQr} label={`${area.name} оношилгооны төлбөрийн QR`}/>
      :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
@@ -174,7 +184,13 @@ export default function Billing(){
    {invoice&&!expired&&!demo&&<p className="billing-qr__how">{manual?'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөрийг ажилтан шалгаж баталгаажуулсны дараа оношилгоо нээгдэнэ.':'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөр баталгаажмагц оношилгоо нээгдэнэ.'}</p>}
    <p className={`billing-qr__status${invoice&&!expired?' is-waiting':''}`} role="status" aria-live="polite">{invoice&&!expired?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөр хүлээж байна…'):''}</p>
    {invoice&&!demo&&!expired&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}
-   {invoice&&!demo&&!expired&&!manual&&invoice.provider==='QPAY'&&<Button variant="secondary" loading={busy} onClick={()=>void regenerate()}>Шинэчлэх</Button>}
+   {invoice&&!demo&&!expired&&!manual&&invoice.provider==='QPAY'&&<Button variant="secondary" loading={busy} onClick={()=>void regenerate()}>Шинэ QR авах</Button>}
+   {invoice&&!demo&&!expired&&!manual&&invoice.provider==='QPAY'&&<><Button ref={cancelBtnRef} variant="secondary" disabled={busy} onClick={()=>setConfirmCancel(true)}>Нэхэмжлэл цуцлах</Button><p className="billing-qr__cancel-note">Зөвхөн төлөгдөөгүй энэ QR нэхэмжлэлийг цуцална. Өмнөх төлбөр, бүртгэлд нөлөөлөхгүй.</p></>}
   </section>
+ {confirmCancel&&<div className="billing-success-modal billing-cancel-modal" role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" aria-describedby="cancel-text" onKeyDown={e=>{if(e.key==='Escape'&&!busy){setConfirmCancel(false);cancelBtnRef.current?.focus()}}}><div>
+  <h2 id="cancel-title">Нэхэмжлэл цуцлах уу?</h2>
+  <p id="cancel-text">Одоогийн төлөгдөөгүй QR нэхэмжлэл цуцлагдаж, энэ QR кодоор төлбөр хийх боломжгүй болно. Төлбөр аль хэдийн хийгдсэн бол цуцлахгүй. Шаардлагатай үед шинэ QR авч болно.</p>
+  <div className="billing-cancel-actions"><Button variant="secondary" disabled={busy} autoFocus onClick={()=>{setConfirmCancel(false);cancelBtnRef.current?.focus()}}>Буцах</Button><Button variant="danger" loading={busy} onClick={()=>void cancelInvoice()}>Нэхэмжлэл цуцлах</Button></div>
+ </div></div>}
  </PageContainer></AppShell>;
 }

@@ -7,15 +7,15 @@ import { ApiError, badRequest, notFound } from "../api/errors.js";
 
 /* COMPANY LOGO. Optional, one current logo per company.
    Intake is validated and re-encoded on the SERVER by pdf_renderer/process_logo.py (Pillow): the real format is decided by decoding, not by file name or the client's content type;
-   only PNG/JPEG/WebP, size and pixel limits, no animation; the stored bytes are a fresh PNG (<= 512 px) with every metadata block dropped.
+   only PNG/JPEG/WebP/GIF (a GIF must be a single static frame), size and pixel limits, no animation; the stored bytes are a fresh PNG (<= 512 px) with every metadata block dropped.
    Rows are immutable assets keyed by (companyId, sha256). Replacing or removing the logo moves/clears Company.logoAssetId only, so reports that snapshotted an asset keep it.
    Nothing here accepts a URL or file path from the client. */
-export const MAX_LOGO_BYTES = 1_500_000;
-export const LOGO_REQUEST_LIMIT_BYTES = 2_300_000; // base64 of MAX_LOGO_BYTES plus JSON framing
+export const MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5 МБ, the same number in the browser (CompanyLogoEditor) and in pdf_renderer/process_logo.py
+export const LOGO_REQUEST_LIMIT_BYTES = 7_200_000; // base64 of MAX_LOGO_BYTES (6.99 MB) plus JSON framing
 const REJECT_MESSAGES: Record<string, string> = {
   EMPTY: "Зураг хоосон байна.",
-  TOO_LARGE: "Зургийн хэмжээ 1.5 МБ-аас хэтэрсэн байна.",
-  UNSUPPORTED_FORMAT: "Зөвхөн PNG, JPEG эсвэл WebP зураг оруулна уу.",
+  TOO_LARGE: "Зургийн хэмжээ 5 МБ-аас хэтэрсэн байна. Жижиг файл сонгоно уу.",
+  UNSUPPORTED_FORMAT: "Зөвхөн PNG, JPG, JPEG, WebP эсвэл GIF зураг оруулна уу.",
   TOO_MANY_PIXELS: "Зургийн нягтрал хэт өндөр байна.",
   TOO_SMALL: "Зураг хэт жижиг байна (хамгийн багадаа 32×32 пиксел).",
   DIMENSIONS_TOO_LARGE: "Зураг хэт том байна (нэг тал нь 4096 пикселээс хэтрэхгүй).",

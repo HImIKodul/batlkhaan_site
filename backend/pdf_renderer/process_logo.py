@@ -3,7 +3,7 @@
 or writes a normalised PNG to --output and a JSON description to stdout.
 
 Policy (all enforced here, never trusted from the client):
-  * the real format is decided by decoding with Pillow, not by file name or declared content type; only PNG, JPEG and WebP are accepted
+  * the real format is decided by decoding with Pillow, not by file name or declared content type; only PNG, JPEG, WebP and a single-frame GIF are accepted
   * size limits: input <= MAX_BYTES, decoded pixels <= MAX_PIXELS (decompression-bomb guard), each side between MIN_SIDE and MAX_SIDE
   * animated images (more than one frame) are rejected
   * the image is fully decoded (Image.load) and then RE-ENCODED from raw pixels as a new PNG: every metadata block (EXIF, XMP, ICC, text chunks,
@@ -17,12 +17,12 @@ from io import BytesIO
 
 from PIL import Image, ImageOps
 
-MAX_BYTES = 1_500_000
+MAX_BYTES = 5 * 1024 * 1024
 MAX_PIXELS = 16_000_000
 MIN_SIDE = 32
 MAX_SIDE = 4096
 OUT_BOX = 512
-ALLOWED = {"PNG", "JPEG", "WEBP"}
+ALLOWED = {"PNG", "JPEG", "WEBP", "GIF"}
 
 
 def reject(reason):

@@ -125,3 +125,10 @@ html:root body.mmri-prism-page:not(.mmri-admin) .billing-qr .mmri-button--second
 .billing-payee__copy:focus-visible{outline:3px solid currentColor;outline-offset:2px}
 .billing-payee__warn{margin:10px 0 0;padding:10px 12px;border:1px solid rgba(255,196,87,.55);border-left-width:4px;border-radius:12px;background:rgba(255,196,87,.10);font-size:13.5px;line-height:1.5}
 .billing-payee__warn b{display:block;margin-bottom:2px}.billing-payee__warn a{color:inherit;text-decoration:underline;overflow-wrap:anywhere}
+
+/* Cancel an unpaid QPay invoice: short note under the button and the confirmation dialog buttons. */
+.billing-qr__cancel-note{margin:0;max-width:40ch;font-size:12.5px;line-height:1.5;opacity:.85;text-align:center}
+.billing-cancel-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px}
+.billing-cancel-modal{background:rgba(3,10,30,.78)}
+.billing-cancel-modal>div{background:#0c1d4a;border-color:rgba(160,190,255,.45);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.billing-cancel-modal h2{color:#fff}.billing-cancel-modal p{color:#e4ecff;line-height:1.55}

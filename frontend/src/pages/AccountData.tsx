@@ -22,7 +22,7 @@ export default function AccountData(){
   <section className="account-data__card account-data__danger lg lg--soft" aria-labelledby="del-data"><h2 id="del-data">Өгөгдөл устгах</h2>
    {companyErased?<p><a href="#/profile">Шинэ байгууллагын мэдээлэл оруулах</a></p>:companyId?<>
    <p>Бүх оношилгоо, тайлан эргэн сэргэхгүйгээр устна. Төлбөрийн болон аюулгүй байдлын бүртгэл хуулийн дагуу хадгалагдана. Зөвхөн эзэмшигч устгана.</p>
-   <p><button type="button" className="account-manage__export" disabled={!!busy} onClick={()=>void exportCompany()}>Устгахын өмнө мэдээллээ татах</button></p>
+   <p><Button type="button" variant="secondary" className="account-manage__export" disabled={!!busy} onClick={()=>void exportCompany()}>Устгахын өмнө мэдээллээ татах</Button></p>
    <form onSubmit={e=>{e.preventDefault();void eraseCompany()}} autoComplete="off">
     <Field label={`Байгууллагын нэрийг яг бичнэ үү ${companyName}`}><Input value={coName} onChange={e=>setCoName(e.target.value)} autoComplete="off"/></Field>
     <Field label="Нууц үг"><PasswordInput className="mmri-input" value={coPw} onChange={e=>setCoPw(e.target.value)} autoComplete="current-password"/></Field>

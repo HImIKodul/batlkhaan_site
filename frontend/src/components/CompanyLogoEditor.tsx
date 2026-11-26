@@ -3,8 +3,9 @@ import { Button } from './UI';
 import { api } from '../api/client';
 import { CompanyLogoMark,notifyCompanyLogoChanged,useCompanyLogo } from './CompanyLogo';
 
-const TYPES=['image/png','image/jpeg','image/webp'];
-const MAX_BYTES=1_500_000;
+const TYPES=['image/png','image/jpeg','image/webp','image/gif'];
+const EXT=/\.(png|jpe?g|webp|gif)$/i;
+const MAX_BYTES=5*1024*1024;
 const toBase64=(file:File)=>new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=()=>reject(new Error('read'));r.readAsDataURL(file)});
 
 /** Optional company logo: preview, replace, remove, save. The browser only does a convenience pre-check; the server validates and re-encodes the image and enforces the OWNER/ADMIN role. */
@@ -16,8 +17,8 @@ export default function CompanyLogoEditor({companyId,canEdit,initials}:{companyI
  useEffect(()=>()=>{if(pending)URL.revokeObjectURL(pending.preview)},[pending]);
  const choose=async(e:React.ChangeEvent<HTMLInputElement>)=>{
   const file=e.target.files?.[0];e.target.value='';setError('');setNote('');setConfirmRemove(false);if(!file)return;
-  if(!TYPES.includes(file.type)){setError('Зөвхөн PNG, JPEG эсвэл WebP зураг оруулна уу.');return}
-  if(file.size>MAX_BYTES){setError('Зургийн хэмжээ 1.5 МБ-аас хэтэрсэн байна.');return}
+  if(!(TYPES.includes(file.type)||(!file.type&&EXT.test(file.name)))){setError('Зөвхөн PNG, JPG, JPEG, WebP эсвэл GIF зураг оруулна уу.');return}
+  if(file.size>MAX_BYTES){setError('Зургийн хэмжээ 5 МБ-аас хэтэрсэн байна. Жижиг файл сонгоно уу.');return}
   try{const b64=await toBase64(file);setPending({b64,preview:URL.createObjectURL(file),name:file.name})}catch{setError('Файлыг уншиж чадсангүй.')}
  };
  const save=async()=>{if(!pending||busy)return;setBusy('save');setError('');setNote('');try{await api.setCompanyLogo(companyId,pending.b64);notifyCompanyLogoChanged(companyId);setPending(null);setNote('Лого хадгалагдлаа. Шинээр гарах тайлан болон PDF-д харагдана; өмнө гарсан тайлан өөрчлөгдөхгүй.')}catch(e:any){setError(e?.message||'Логог хадгалж чадсангүй.')}finally{setBusy('')}};
@@ -30,9 +31,9 @@ export default function CompanyLogoEditor({companyId,canEdit,initials}:{companyI
   </div>
   <div className="company-logo-editor__body">
    <h2 id="company-logo-title">Байгууллагын лого</h2>
-   <p>Заавал шаардлагагүй. PNG, JPEG эсвэл WebP, 1.5 МБ хүртэл. Лого таны компанийн мэдээлэл, цэс болон шинээр гарах тайлан, PDF-ийн толгойд харагдана.</p>
+   <p>Лого оруулах нь заавал шаардлагагүй. PNG, JPG, JPEG, WebP эсвэл GIF зураг сонгоно уу. Файлын хэмжээ 5 МБ-аас ихгүй байна.</p>
    {canEdit?<div className="company-logo-editor__actions">
-    <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" className="mmri-visually-hidden" id="company-logo-file" onChange={choose} aria-label="Логоны файл сонгох"/>
+    <input ref={input} type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" className="mmri-visually-hidden" id="company-logo-file" onChange={choose} aria-label="Логоны файл сонгох"/>
     <Button type="button" variant="secondary" onClick={()=>input.current?.click()} disabled={!!busy}>{current||pending?'Лого солих':'Лого сонгох'}</Button>
     {pending&&<><Button type="button" loading={busy==='save'} disabled={!!busy} onClick={()=>void save()}>Хадгалах</Button><Button type="button" variant="secondary" disabled={!!busy} onClick={()=>{setPending(null);setError('')}}>Болих</Button></>}
     {current&&!pending&&(confirmRemove

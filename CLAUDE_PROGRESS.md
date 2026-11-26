@@ -987,3 +987,10 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Show/hide password: one shared `components/PasswordInput.tsx` (eye/eye-off, aria-pressed, keyboard, 40px touch) used by login/registration, password reset (both fields), account deletion forms and the administrator login and re-authentication. No control existed before. No auth/validation/backend change. Browser check 1440 and 390 PASS.
 - annual-plan-cases.mts 15/15 failed because of an obsolete fixture (placeholder fix types INT-n, so the stand-in model wrote one sentence per finding and the validator rightly flagged SAME_ADVICE). Fixture now uses real fix types: 15/15 READY, 3 pages. Planner and validator unchanged.
 - Browser smoke (disposable stack: fake QPay, mock mail, clone mmri_qa_acc2_smoke, scratchpad scripts) at 1440 and 390: login, five categories, QR, ten minute timer, expiry + Reload (one new invoice), account page with two sections, Guide example web/PDF pages and demo PDF: all PASS, no overflow.
+
+## 2026-11-26 (7) Final targeted fixes
+- AI profile consent card removed from the company page UI (component file kept, unused). Backend untouched: consent stays default NOT given, so no profile answers go to OpenAI until the owner decides on a disclosed legal basis; reports/plans still generate without them.
+- Logo: limit 5 МБ (frontend, backend, pdf_renderer/process_logo.py), static GIF accepted (animated rejected), PNG/JPG/JPEG/WebP/GIF, exact customer text; SVG not supported. Stored in company_logo_assets (database), company isolation verified.
+- Deletion page: export button was an unstyled native button, now the secondary Button; disabled buttons readable.
+- QPay: customer button "Нэхэмжлэл цуцлах" with confirmation dialog (uses the existing DELETE /billing/invoices/:id: provider payment check first, never cancels PAID, provider failure keeps the invoice open); labels Төлбөр шалгах / Шинэ QR авах.
+- Gate backend/scripts/qa-gate-cancel-logo.mts 34/34 (fake provider, disposable clone); browser checks 1440/390 PASS.
