@@ -975,3 +975,10 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - `d6e43de`: admin e-mail code (flag MMRI_ADMIN_EMAIL_OTP + MMRI_ADMIN_EMAIL_OTP_ACCOUNTS, off by default; TOTP untouched), additive migration 20261126120000_admin_email_challenges, scripts/gmail-check.mjs, deploy/ADMIN_EMAIL_CODE.md. qa-gate-admin-email-code 21/21 (mock mailbox only), qa-admin-regression 30/30 flag off. No real mail delivered; Gmail invalid_grant not reproducible locally.
 - Not run: real QPay payment, real e-mail, colored-QR bank scans, Windows deploy, backup/restore on production.
 - QA Postgres container mmri-v3-local-postgres-1 was started for these runs (clone DB mmri_qa_acc2_legacy is disposable).
+
+## 2026-11-26 (5) Resume after laptop shutdown (rc/account2-final)
+- ca3edbe found complete: 10 minute invoice lifetime, POST /billing/invoices/:id/regenerate (new invoice, QR, reference; old one cancelled at the provider; paid never cancelled), unique reference in provider description, customers cannot cancel MANUAL invoices, member routes 404, Settings data/account deletion only.
+- qa-gate-qpay-e2e.mts (the unfinished script) was complete; needs MMRI_BILLING_ENFORCEMENT=true, MMRI_CUSTOMER_NOTIFICATIONS=on, MMRI_MAIL_PROVIDER=mock, MMRI_MOCK_MAIL_DIR and a fresh clone of a mmri_qa_acc2_* DB. Result 70/70 (clone mmri_qa_acc2_qpayfinal). Bank reference is now unique per run.
+- 12-month plan: colons removed from plan text (`«Name» ажилд ...`), checker rule COLON, plan page labels in web and PDF without colons (page 1 and 2 card labels untouched), PAGE_HEIGHT stays 680. Five domains through report-guidance-preview.mts: 3 pages, strict fit OK, no colon on page 3. Guide example (sampleReport.json, sample-report-1..3.jpg, demo PDF) regenerated from a synthetic Marketing report dated 2026.11.26.
+- scripts/annual-plan-cases.mts (simulated model) fails all 15 cases (DUPLICATE_ACTION, REPEATED_SENTENCE, SAME_ADVICE) also at HEAD: the stand-in model is stale, not touched.
+- Editorial score 95/100 NOT measured: no native reader and no real model run. Live QPay, bank-app scan, real mail, real AI unverified.
