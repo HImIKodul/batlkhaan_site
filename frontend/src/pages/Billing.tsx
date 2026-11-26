@@ -44,18 +44,23 @@ function BankLinks({invoice}:{invoice:BillingInvoice}){
  if(!links.length&&!short)return null;
  return <div className="billing-qr__banks">{links.length>0&&<><h2>Банкны аппаар төлөх</h2><ul>{links.map((x,i)=><li key={`${x.link}-${i}`}><a href={x.link} rel="noopener noreferrer">{x.logo&&/^https:\/\//i.test(x.logo)&&<img src={x.logo} alt="" width={36} height={36} loading="lazy" referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display='none'}}/>}<span>{x.description||x.name||'Банкны апп'}</span></a></li>)}</ul></>}{short&&<a className="billing-qr__short" href={short} target="_blank" rel="noopener noreferrer">Төлбөрийн холбоос нээх</a>}</div>;
 }
-/** Remaining validity of a provider code (server time limit). */
-function useSecondsLeft(expiresAt?:string|null){
- const read=()=>expiresAt?Math.max(0,Math.floor((new Date(expiresAt).getTime()-Date.now())/1000)):null;const [left,setLeft]=useState<number|null>(read);
- useEffect(()=>{setLeft(read());if(!expiresAt)return;const t=window.setInterval(()=>setLeft(read()),1000);return()=>window.clearInterval(t)},[expiresAt]);
- return left;
+/** Remaining validity of an open invoice, measured on the server clock (a wrong device clock must neither expire a fresh code nor extend an old one).
+    Computed during render, so a replaced invoice never shows the previous one's remaining time. */
+function useSecondsLeft(invoice:BillingInvoice|null){
+ const expiresAt=invoice&&openStatuses.has(invoice.status)?invoice.expiresAt:null;
+ const offset=useMemo(()=>{const t=Date.parse(invoice?.serverTime??'');return Number.isNaN(t)?0:t-Date.now()},[invoice]);
+ const [,tick]=useState(0);
+ useEffect(()=>{if(!expiresAt)return;const t=window.setInterval(()=>tick(n=>n+1),1000);return()=>window.clearInterval(t)},[expiresAt]);
+ return expiresAt?Math.max(0,Math.floor((Date.parse(expiresAt)-(Date.now()+offset))/1000)):null;
 }
 
 export default function Billing(){
  const requestedArea=((sessionStorage.getItem('business:billingArea')||'marketing') as BusinessAreaId);const area=businessAreaById(requestedArea);const areaId=area.id;useAmbientEnvironment(areaId);const mode=sessionStorage.getItem('business:billingMode')==='retake'?'retake':'first';const code:BillingPlanCode=mode==='retake'?'RETAKE':'DIAGNOSTIC';const palette=areaReportPalette[area.id];
  const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
- const autoCreateRef=useRef('');const left=useSecondsLeft(invoice&&openStatuses.has(invoice.status)?invoice.expiresAt:null);const expired=left===0;
+ const autoCreateRef=useRef('');const timeLeft=useSecondsLeft(invoice);
  const plan=useMemo(()=>plans.find(p=>p.code===code)??null,[plans,code]);const amount=plan?.amountMnt??300000;
+ /* Manual payment has no automatic lifetime: no countdown and no expired state, whatever an older invoice row carries. */
+ const manual=!!plan?.manualMode||invoice?.provider==='MANUAL';const left=manual?null:timeLeft;const expired=left===0;
  const refresh=async()=>{if(!session.companyId)return null;const s=await api.getBillingStatus(session.companyId);setStatus(s);return s};
  const openSuccess=()=>{const active=document.activeElement;successRestoreRef.current=active instanceof HTMLElement?active:null;setShowSuccess(true)};
  /* MMRI-27: an open invoice can become FAILED/CANCELLED while this page is open (recovery, cancel in another tab). Drop the dead code so the existing "create code" start view returns. */
@@ -63,7 +68,7 @@ export default function Billing(){
  const readInvoice=async(current:BillingInvoice)=>{const latest=await api.getBillingInvoice(current.id);if(deadInvoice(latest)){await refresh();return latest}setInvoice(latest);if(latest.status==='PAID'){sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}await refresh();return latest};
  /* Already bought or finished: never ask for money again, open the right place instead. */
  const alreadyOwned=(e:any)=>{const c=String(e?.code??'');if(c==='ENTITLEMENT_ALREADY_ACTIVE'||c==='ASSESSMENT_ALREADY_ACTIVE'){heroIntent.area=areaId;heroIntent.at=Date.now();go('analysis');return true}if(c==='RETAKE_REQUIRED'){sessionStorage.setItem(REPORT_AREA_KEY,areaId);go('report');return true}return false};
- const load=async()=>{if(!session.accessToken){go('login');return}if(!session.companyId){go('profile');return}setLoading(true);setError('');try{const company=await api.getCompany(session.companyId);const done=new Set(((company.profile?.assessmentProfileAnswers??[]) as {questionId:string;optionIndexes?:number[]}[]).filter(x=>/^P(?:0[1-9]|1\d|20)$/.test(x.questionId)&&(x.optionIndexes?.length??0)>0).map(x=>x.questionId));if(done.size!==20&&!isTestBusiness(company.name)){go('profile');return}const [p,s]=await Promise.all([api.getBillingPlans(),api.getBillingStatus(session.companyId)]);setPlans(p);setStatus(s);const existing=s.invoices.find(x=>x.domainCode===areaId&&x.planCode===code&&openStatuses.has(x.status));if(existing){const full=await api.getBillingInvoice(existing.id);setInvoice(full);if(full.status==='PAID')openSuccess()}else{/* No extra step: the payment panel (QR or QA mock button) is shown immediately. One invoice per page visit even under StrictMode double effects. */const key=`${areaId}.${code}`;if(autoCreateRef.current!==key){autoCreateRef.current=key;const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
+ const load=async()=>{if(!session.accessToken){go('login');return}if(!session.companyId){go('profile');return}setLoading(true);setError('');try{const company=await api.getCompany(session.companyId);const done=new Set(((company.profile?.assessmentProfileAnswers??[]) as {questionId:string;optionIndexes?:number[]}[]).filter(x=>/^P(?:0[1-9]|1\d|20)$/.test(x.questionId)&&(x.optionIndexes?.length??0)>0).map(x=>x.questionId));if(done.size!==20&&!isTestBusiness(company.name)){go('profile');return}const [p,s]=await Promise.all([api.getBillingPlans(),api.getBillingStatus(session.companyId)]);setPlans(p);setStatus(s);const existing=s.invoices.find(x=>x.domainCode===areaId&&x.planCode===code&&openStatuses.has(x.status));if(existing){const full=await api.getBillingInvoice(existing.id);setInvoice(full);if(full.status==='PAID')openSuccess()}else{/* No extra step: the payment panel (QR or QA mock button) is shown immediately. One invoice per page visit even under StrictMode double effects. */const key=`${areaId}:${code}`;if(autoCreateRef.current!==key){autoCreateRef.current=key;const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
   await refresh()}}}catch(e:any){autoCreateRef.current='';if(!alreadyOwned(e))setError(e?.message||'Төлбөрийн мэдээллийг ачаалж чадсангүй.')}finally{setLoading(false)}};
  useEffect(()=>{void load()},[areaId,code]);
  const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
@@ -124,13 +129,15 @@ export default function Billing(){
  if(loading)return <AppShell route="billing"><PageContainer className="billing-domain-page mmri-skel"><SkeletonHost label="Төлбөрийг бэлтгэж байна…"><BillingSkeletonBody/></SkeletonHost></PageContainer></AppShell>;
  if(error&&!status)return <AppShell route="billing"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
  const noCode=!invoice&&!!error&&!busy;const demo=invoice?.provider==='MOCK';const codeImage=imageSource(invoice?.qrImage);const codeText=invoice?payableQrText(invoice):null;
+ /* The countdown belongs to something the customer can pay with: a confirmed (PENDING) invoice that carries a code or a payment link. */
+ const timed=!!invoice&&invoice.status==='PENDING'&&!!(demo||codeText||codeImage||invoice.shortUrl||invoice.deeplinks.length);
  return <AppShell route="billing"><PageContainer className="billing-domain-page billing-domain-page--qr">
   <button type="button" className="billing-domain-back" onClick={()=>{window.location.hash='#/analysis'}}><span className="billing-domain-back__icon"><Icon name="back" size={20}/></span><span>Оношилгоо руу буцах</span></button>
   <section className="billing-qr" data-area={areaId} style={{'--c':`var(--mmri-domain-${areaId})`} as React.CSSProperties} aria-labelledby="billing-qr-title">
    <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title"><DomainBadge id={area.id}/> <span>{domainNameMn(area.id)}</span></h1><strong className="billing-qr__price">{money(amount)}</strong></header>
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
    {noCode?<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>:<div className="billing-qr__box">
-    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><Button loading={busy} onClick={()=>void create()}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
+    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><small>Энэ кодоор бүү төл. Шинэ код авна уу.</small><Button loading={busy} onClick={()=>void create()}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
      :demo?<div className="billing-qr__demo-box"><QrCode text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
      :codeText?<QrCode text={codeText} label={`${area.name} оношилгооны төлбөрийн QR`}/>
      :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
@@ -140,9 +147,9 @@ export default function Billing(){
     <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||expired}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
    </div>}
    {demo&&<p className="billing-qr__demo-note" role="note">Туршилтын QR. Уншуулах шаардлагагүй. «Тест төлбөр хийх» товч дарахад оношилгоо нээгдэнэ.</p>}
-   {invoice&&left!==null&&!expired&&<p className="billing-qr__expiry">{<>QR код хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
+   {timed&&left!==null&&!expired&&<p className="billing-qr__expiry">{<>QR код хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
    {!demo&&invoice&&!expired&&<BankLinks invoice={invoice}/>}
-   {invoice&&!expired&&!demo&&<p className="billing-qr__how">Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөр баталгаажмагц оношилгоо нээгдэнэ.</p>}
+   {invoice&&!expired&&!demo&&<p className="billing-qr__how">{manual?'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөрийг ажилтан шалгаж баталгаажуулсны дараа оношилгоо нээгдэнэ.':'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөр баталгаажмагц оношилгоо нээгдэнэ.'}</p>}
    <p className={`billing-qr__status${invoice&&!expired?' is-waiting':''}`} role="status" aria-live="polite">{invoice&&!expired?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөр хүлээж байна…'):''}</p>
    {invoice&&!demo&&!expired&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}
   </section>

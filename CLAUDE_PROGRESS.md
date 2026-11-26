@@ -948,3 +948,8 @@ Verified results (logs in /home/kirby/mmri-qa-runtime/logs, full report FINAL_RE
 
 ## 2026-11-25: final polish
 Hero material follows the approved reference (bright liquid glass, shared category tokens), Guide 3 step 5 as connected tiles, plan wording without semicolons or repeated checkpoints (newer reports only, 12/12 historical PDFs identical), live AI test cap 0.15 USD.
+
+## 2026-11-26 payment page corrections (rc/account2-final)
+- Production (read-only GET /api/v1/billing/plans): provider MANUAL. The live frontend files were byte-identical to a build of d449445. Missing colours were not reproducible; accents in billing.css made stronger.
+- Countdown: server lifetime (createdAt + MMRI_INVOICE_TTL_MINUTES, default 30), enforced by cancel at QPay; no expiry field is sent to QPay. Fixed: device-clock dependence (new additive `serverTime` on invoices; needs the API redeployed too), timer without a payable code, timer in manual mode from an old QPay row, stale expired value after regeneration, two different auto-create keys.
+- Checks: offline mock browser suite 183/183 (5 areas x 1440/390, scratchpad only, no backend), tsc, build, UI polish, source release gate, step13 static + fake-provider regression, step11 billing static. No real invoice, payment, AI or mail. Not deployed.

@@ -484,7 +484,8 @@ export class BillingService {
   }
 
   presentInvoice(row:any){
-    return {expiresAt:row.createdAt instanceof Date?this.invoiceExpiresAt(row):null,id:row.id,companyId:row.companyId,domainCode:row.domainCode,planCode:row.planCode,amountMnt:row.amountMnt,currency:row.currency,provider:row.provider,status:row.status,senderInvoiceNo:row.senderInvoiceNo,qrText:row.qrText,qrImage:row.qrImage,shortUrl:row.shortUrl,deeplinks:Array.isArray(row.deeplinks)?row.deeplinks:[],paidAt:row.paidAt,refundedAt:row.refundedAt,refundReason:row.refundReason,lastVerifiedAt:row.lastVerifiedAt,callbackReceivedAt:row.callbackReceivedAt,createdAt:row.createdAt,updatedAt:row.updatedAt,testMode:row.provider==="MOCK",manualMode:row.provider==="MANUAL"};
+    /* serverTime lets the payment page count down on the server clock, whatever the device clock says. */
+    return {serverTime:new Date().toISOString(),expiresAt:row.createdAt instanceof Date?this.invoiceExpiresAt(row):null,id:row.id,companyId:row.companyId,domainCode:row.domainCode,planCode:row.planCode,amountMnt:row.amountMnt,currency:row.currency,provider:row.provider,status:row.status,senderInvoiceNo:row.senderInvoiceNo,qrText:row.qrText,qrImage:row.qrImage,shortUrl:row.shortUrl,deeplinks:Array.isArray(row.deeplinks)?row.deeplinks:[],paidAt:row.paidAt,refundedAt:row.refundedAt,refundReason:row.refundReason,lastVerifiedAt:row.lastVerifiedAt,callbackReceivedAt:row.callbackReceivedAt,createdAt:row.createdAt,updatedAt:row.updatedAt,testMode:row.provider==="MOCK",manualMode:row.provider==="MANUAL"};
   }
 
   presentInvoiceSummary(row:any){

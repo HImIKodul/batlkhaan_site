@@ -66,9 +66,11 @@
 
 /* QR payment view (opens immediately; category-lit dark glass) */
 .billing-domain-page--qr{display:grid;justify-items:center;gap:14px;padding-bottom:28px}
-.billing-qr{width:min(100%,520px);display:grid;justify-items:center;gap:14px;padding:clamp(18px,3vw,28px);border-radius:24px;text-align:center;background:linear-gradient(170deg,color-mix(in srgb,var(--c) 26%,#0a2878) 0%,rgba(4,14,52,.9) 60%);border:1.5px solid color-mix(in srgb,var(--c) 80%,#fff);box-shadow:0 0 30px color-mix(in srgb,var(--c) 58%,transparent),0 0 80px -12px color-mix(in srgb,var(--c) 50%,transparent),inset 0 0 26px color-mix(in srgb,var(--c) 24%,transparent),inset 0 1px 0 rgba(255,255,255,.5)}
+.billing-qr{position:relative;width:min(100%,520px);display:grid;justify-items:center;gap:14px;padding:clamp(18px,3vw,28px);border-radius:24px;text-align:center;background:linear-gradient(115deg,rgba(255,255,255,.12),rgba(255,255,255,0) 24%),radial-gradient(130% 62% at 50% 100%,color-mix(in srgb,var(--c) 24%,transparent),transparent 72%),linear-gradient(172deg,color-mix(in srgb,var(--c) 36%,#0a2060) 0%,rgba(4,14,52,.9) 56%,color-mix(in srgb,var(--c) 16%,rgba(4,14,52,.92)) 100%);border:2px solid color-mix(in srgb,var(--c) 88%,#fff);box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent),0 0 30px color-mix(in srgb,var(--c) 62%,transparent),0 0 80px -12px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 34px color-mix(in srgb,var(--c) 30%,transparent),inset 0 1px 0 rgba(255,255,255,.55)}
+/* lit top edge of the glass in the category colour */
+.billing-qr::before{content:"";position:absolute;top:-2px;left:14%;right:14%;height:4px;border-radius:999px;background:linear-gradient(90deg,transparent,var(--c) 18%,color-mix(in srgb,var(--c) 45%,#fff) 50%,var(--c) 82%,transparent);box-shadow:0 0 14px var(--c);pointer-events:none}
 .billing-qr__head{display:grid;gap:4px;justify-items:center}
-.billing-qr__head>span{font-size:12px;font-weight:800;letter-spacing:.14em;color:color-mix(in srgb,var(--c) 70%,#fff)}
+.billing-qr__head>span{font-size:12px;font-weight:800;letter-spacing:.14em;color:color-mix(in srgb,var(--c) 28%,#fff)}
 .billing-qr__head h1{margin:0;font-size:clamp(19px,3.2vw,26px);line-height:1.2;font-weight:900;text-shadow:0 0 14px var(--c),0 0 30px color-mix(in srgb,var(--c) 70%,transparent)}
 .billing-qr__price{font-size:clamp(24px,4vw,32px);font-weight:900;text-shadow:0 0 16px rgba(160,205,255,.8)}
 .billing-qr__box{width:min(78vw,280px);aspect-ratio:1;display:grid;place-items:center;border-radius:18px;background:#fff;padding:10px;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 70%,#fff),0 0 34px color-mix(in srgb,var(--c) 65%,transparent)}
@@ -84,7 +86,7 @@
 @media (prefers-reduced-motion:reduce){.billing-qr__wait i{animation:none}}
 
 .billing-qr__test{display:grid;gap:10px;justify-items:center}
-.billing-qr__expiry{margin:0;font-size:15px;color:#e8f1ff}.billing-qr__expiry b{font-size:20px;color:#fff;font-variant-numeric:tabular-nums}.billing-qr__expiry.is-expired b,.billing-qr__expiry.is-expired{color:#ffb4ae}
+.billing-qr__expiry{margin:0;padding:8px 18px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 75%,#fff);background:color-mix(in srgb,var(--c) 16%,rgba(4,14,52,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.28);font-size:15px;color:#fff}.billing-qr__expiry b{font-size:20px;color:#fff;font-variant-numeric:tabular-nums}
 .billing-qr__test-btn{min-height:50px;padding:0 24px;border-radius:16px;font:inherit;font-weight:800;font-size:16px;color:#fff;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 34%),linear-gradient(180deg,color-mix(in srgb,var(--c) 55%,#0a2a78),color-mix(in srgb,var(--c) 22%,#04123f));border:1.5px solid color-mix(in srgb,var(--c) 85%,#fff);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 0 #04123f,0 0 22px color-mix(in srgb,var(--c) 65%,transparent)}
 .billing-qr__test-btn:disabled{opacity:.5;cursor:not-allowed}
 .billing-qr__status.is-waiting{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;color:#fff}
@@ -96,7 +98,7 @@
 .billing-qr__banks{width:100%;display:grid;gap:10px}
 .billing-qr__banks h2{margin:0;font-size:16px;font-weight:800;color:#fff}
 .billing-qr__banks ul{display:none;margin:0;padding:0;list-style:none;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
-.billing-qr__banks a{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1px solid rgba(160,205,255,.5);border-radius:14px;background:rgba(8,30,92,.6);color:#fff;text-decoration:none;text-align:left;font-size:14px;font-weight:700;line-height:1.2}
+.billing-qr__banks a{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--c) 70%,#fff);border-radius:14px;background:color-mix(in srgb,var(--c) 14%,rgba(6,22,70,.82));box-shadow:inset 0 1px 0 rgba(255,255,255,.22);color:#fff;text-decoration:none;text-align:left;font-size:14px;font-weight:700;line-height:1.2}
 .billing-qr__banks a:hover{border-color:#fff}.billing-qr__banks a:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .billing-qr__banks img{flex:none;border-radius:9px;background:#fff}
 .billing-qr__short{justify-content:center}
@@ -109,5 +111,5 @@
 html:root body.mmri-prism-page:not(.mmri-admin) .billing-qr .mmri-button--primary{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));border-color:color-mix(in srgb,var(--c) 45%,#fff);box-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent);color:#04122e}
 html:root body.mmri-prism-page:not(.mmri-admin) .billing-qr .mmri-button--secondary{border-color:color-mix(in srgb,var(--c) 70%,#fff)}
 .billing-qr__status.is-waiting::before{border-top-color:var(--c)}
-.billing-qr__wait.is-expired{gap:14px;color:#06194a;text-align:center}
+.billing-qr__wait.is-expired{gap:12px;padding:6px;color:#06194a;text-align:center}.billing-qr__wait.is-expired span{font-size:17px;font-weight:800}.billing-qr__wait.is-expired small{max-width:24ch;font-size:13.5px;font-weight:600;line-height:1.4;color:#33415f}
 .billing-qr__box:has(.is-expired){aspect-ratio:auto;min-height:190px}
