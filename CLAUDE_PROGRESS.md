@@ -994,3 +994,11 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Deletion page: export button was an unstyled native button, now the secondary Button; disabled buttons readable.
 - QPay: customer button "Нэхэмжлэл цуцлах" with confirmation dialog (uses the existing DELETE /billing/invoices/:id: provider payment check first, never cancels PAID, provider failure keeps the invoice open); labels Төлбөр шалгах / Шинэ QR авах.
 - Gate backend/scripts/qa-gate-cancel-logo.mts 34/34 (fake provider, disposable clone); browser checks 1440/390 PASS.
+
+## 2026-11-26 (8) Admin access control, 24 h report notice (rc/account2-final)
+- Root causes of the admin grant/revoke failures: grant refused any open non-manual invoice (PAYMENT_IN_PROGRESS) and any started assessment; revoke accepted only unused ADMIN_GRANT rows (ENTITLEMENT_IN_USE after the first answer, PAID never); after a diagnosis starts the entitlement is CONSUMED and no answer route re-read it, so revocation could not be enforced; description was mandatory.
+- Fix: grant never blocked by invoices (waiting QPay code retired through the verified cancel flow after the decision, provider failure keeps it open and reconcilable); revoke works for ACTIVE or CONSUMED-with-running-diagnosis, paid or granted, access only (invoice/answers/reports untouched); re-grant re-activates the SAME entitlement (resume); `assessmentWriteAccess` refuses every write with 403 ACCESS_REVOKED; description optional (fixed internal default for the DB 8-char rule, note appended to the standard notification); notifications ACCESS_GRANTED/ACCESS_REVOKED (migration 20261126140000, chain digest updated, rollback.sql).
+- Customer: ReportWaiting shows the confirmation, the persisted submission time and 24 h deadline in Asia/Ulaanbaatar and a plain stage (review-status gained `stage`).
+- Existing review workflow (queue with deadline/overdue, editor, approve, publish, PDF) verified end to end, not rebuilt.
+- Gate backend/scripts/qa-gate-access-report.mts 60/60 on a disposable clone. Clone note: the legacy QA DB had admin_email_challenges created by hand, so `prisma migrate resolve --applied 20261126120000_admin_email_challenges` is needed on that clone only.
+- Not done yet: diagnosis question card styling (item 1), browser run of the journey UI.

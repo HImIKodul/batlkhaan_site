@@ -237,7 +237,7 @@ export default function Results(){
  if(testMode)return <TestQuestionnaire areaId={testArea}/>;
  if(!loggedIn)return <DemoResults/>;
  if(loading)return <AppShell route="results"><PageContainer><section className="mmri-questionnaire mmri-skel"><SkeletonHost label="Шинжилгээний орчныг бэлтгэж байна..."><QuestionnaireSkeletonBody/></SkeletonHost></section></PageContainer></AppShell>;
- if(pendingReview)return <AppShell route="results"><PageContainer><ReportWaiting areaId={assessment?.domainCode||undefined}/></PageContainer></AppShell>;
+ if(pendingReview)return <AppShell route="results"><PageContainer><ReportWaiting areaId={assessment?.domainCode||undefined} assessmentId={assessment?.id}/></PageContainer></AppShell>;
  if(error&&!assessment)return <AppShell route="results"><PageContainer><ErrorState message={error} onRetry={load}/></PageContainer></AppShell>;
  if(!assessment)return <AppShell route="results"><PageContainer><section className="mmri-questionnaire mmri-skel"><SkeletonHost label="Оношилгооны хэсэг рүү шилжүүлж байна..."><QuestionnaireSkeletonBody/></SkeletonHost></section></PageContainer></AppShell>;
 

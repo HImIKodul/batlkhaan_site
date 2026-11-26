@@ -19,7 +19,7 @@ import { ReviewService } from "./admin/review-service.js";
 import { registerAdminRoutes } from "./admin/admin-routes.js";
 import { SupportMailService } from "./mail/support-mail-service.js";
 import { registerNotificationRoutes } from "./notifications/notification-routes.js";
-import { authenticate, assessmentAccess, billingInvoiceAccess, pilotEnrollmentAccess, requireCompanyRole, requireOperator, type CompanyRole } from "./auth/access.js";
+import { authenticate, assessmentAccess, assessmentWriteAccess, billingInvoiceAccess, pilotEnrollmentAccess, requireCompanyRole, requireOperator, type CompanyRole } from "./auth/access.js";
 import { assertOwnerTransitionAllowed } from "./auth/role-policy.js";
 import { parseCookies, refreshCookie, clearRefreshCookie } from "./auth/cookies.js";
 import { hashAuditValue } from "./auth/crypto.js";
@@ -542,25 +542,25 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/respondents",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes); if(!b.roleExternalId)throw badRequest("roleExternalId is required");
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes); if(!b.roleExternalId)throw badRequest("roleExternalId is required");
     created(res,await engine.addRespondent(params.assessmentId,String(b.roleExternalId),text(b.displayName),b.authorityMetadata&&typeof b.authorityMetadata==="object"?b.authorityMetadata:undefined));
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/start",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
     const mode=String(b.mode??"QUICK") as AssessmentMode; if(!["QUICK","FULL"].includes(mode))throw badRequest("mode must be QUICK or FULL");
     const profileAnswers=validateProfileShape(b.profileAnswers); await engine.startAssessment(params.assessmentId,mode,profileAnswers,writerId(req)); const payload=await queries.resumePayload(params.assessmentId); ok(res,payload);
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/pause",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     const b=await readJson(req,config.requestBodyLimitBytes);
     if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
     ok(res,await engine.pauseAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)}));
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/resume",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     const b=await readJson(req,config.requestBodyLimitBytes);
     if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
     await engine.resumeAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
@@ -568,14 +568,14 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("GET","/api/v1/assessments/:assessmentId/next-question",async({req,res,principal,params})=>{
-    const access=await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
+    const access=await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     if(access.assessment.status!=="IN_PROGRESS")throw conflict(`Assessment is not accepting question requests: ${access.assessment.status}`);
     await engineGate.run(()=>engine.issueNextQuestion(params.assessmentId,writerId(req)));
     const payload=await queries.resumePayload(params.assessmentId); if(!payload)throw notFound("Assessment not found"); ok(res,payload);
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/answers",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
     if(!b.questionId||!Number.isInteger(b.optionIndex))throw badRequest("questionId and integer optionIndex are required");
     if(!b.clientRequestId||!b.questionIssueId||!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("clientRequestId, questionIssueId and expectedAssessmentRevision are required");
     const result=await engineGate.run(()=>engine.submitAnswer(params.assessmentId,String(b.questionId),Number(b.optionIndex),text(b.respondentId),{writerLeaseId:writerId(req),clientRequestId:String(b.clientRequestId),questionIssueId:String(b.questionIssueId),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)}));
@@ -586,7 +586,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/back",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     const b=await readJson(req,config.requestBodyLimitBytes);
     if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
     await engine.rewindPreviousAnswer(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)});
@@ -594,18 +594,18 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   });
 
   router.add("PUT","/api/v1/assessments/:assessmentId/draft",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT); const b=await readJson(req,config.requestBodyLimitBytes);
     if(!b.questionIssueId||!b.questionId||!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("questionIssueId, questionId and expectedAssessmentRevision are required");
     ok(res,await engine.saveDraft(params.assessmentId,{questionIssueId:String(b.questionIssueId),questionId:String(b.questionId),draft:b.draft??{},expectedAssessmentRevision:Number(b.expectedAssessmentRevision),writerLeaseId:writerId(req)}));
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/writer-lease/heartbeat",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     ok(res,await engine.heartbeatWriterLease(params.assessmentId,writerId(req)));
   });
 
   router.add("POST","/api/v1/assessments/:assessmentId/complete",async({req,res,principal,params})=>{
-    await assessmentAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
+    await assessmentWriteAccess(principal!.userId,params.assessmentId,ASSESSMENT_INPUT);
     const b=await readJson(req,config.requestBodyLimitBytes); if(!Number.isInteger(b.expectedAssessmentRevision))throw badRequest("expectedAssessmentRevision is required");
     const result=await engineGate.run(()=>engine.completeAssessment(params.assessmentId,{writerLeaseId:writerId(req),expectedAssessmentRevision:Number(b.expectedAssessmentRevision)}));
     const reviewTask:any=result.completed&&config.reportReviewRequired?await prisma.reportReview.findUnique({where:{assessmentId:params.assessmentId}}):null;

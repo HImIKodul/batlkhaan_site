@@ -7,7 +7,7 @@ export const SIGNIN_MN:Record<string,string>={LOGIN_SUCCESS:'Нэвтэрсэн'
 export const Badge=({tone,children}:{tone:'ok'|'bad'|'warn'|'mute';children:React.ReactNode})=><span className={`adm-badge adm-badge--${tone}`}>{children}</span>;
 
 /** Short confirmation: says what will happen, asks for a written reason (kept in the audit trail), and only then calls the server. */
-export function ConfirmDialog({title,children,confirmLabel,danger,extra,canSubmit=true,onConfirm,onCancel}:{title:string;children:React.ReactNode;confirmLabel:string;danger?:boolean;extra?:React.ReactNode;canSubmit?:boolean;onConfirm:(reason:string)=>Promise<void>;onCancel:()=>void}){
+export function ConfirmDialog({title,children,confirmLabel,danger,extra,canSubmit=true,reasonOptional=false,onConfirm,onCancel}:{reasonOptional?:boolean;title:string;children:React.ReactNode;confirmLabel:string;danger?:boolean;extra?:React.ReactNode;canSubmit?:boolean;onConfirm:(reason:string)=>Promise<void>;onCancel:()=>void}){
  const [reason,setReason]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);const box=useRef<HTMLFormElement>(null);const opener=useRef<HTMLElement|null>(null);
  /* Runs once per dialog: a parent re-render (new onCancel) must not move focus again. Keys belong to the topmost dialog only, so Escape in the
     re-authentication dialog never closes this one underneath, and a submitted request cannot be "cancelled" by Escape while it is still pending. */
@@ -20,8 +20,8 @@ export function ConfirmDialog({title,children,confirmLabel,danger,extra,canSubmi
  const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{await onConfirm(reason.trim())}catch(x){setErr((x as Error).message);setBusy(false)}};
  return <div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="cf-title"><form ref={box} className="adm-modal__box adm-confirm" onSubmit={submit}>
   <h2 id="cf-title">{title}</h2><div className="adm-confirm__what">{children}</div>{extra}
-  <label>Шалтгаан (хадгалагдана)<textarea rows={2} value={reason} onChange={e=>setReason(e.target.value)} minLength={8} maxLength={300} required placeholder="Яагаад хийж байгаагаа товч бичнэ үү"/></label>
+  {reasonOptional?<label>Нэмэлт тайлбар (заавал биш)<textarea rows={2} value={reason} onChange={e=>setReason(e.target.value)} maxLength={300} placeholder="Хоосон орхиж болно. Бичвэл харилцагчид стандарт мэдэгдлийн доор харагдана."/></label>:<label>Шалтгаан (хадгалагдана)<textarea rows={2} value={reason} onChange={e=>setReason(e.target.value)} minLength={8} maxLength={300} required placeholder="Яагаад хийж байгаагаа товч бичнэ үү"/></label>}
   {err&&<div className="adm-error" role="alert">{err}</div>}
-  <div className="adm-modal__row"><button type="button" className="adm-btn" onClick={onCancel} disabled={busy}>Болих</button><button type="submit" className={`adm-btn ${danger?'adm-btn--danger':'adm-btn--primary'}`} disabled={busy||!canSubmit||reason.trim().length<8}>{busy?'Түр хүлээнэ үү':confirmLabel}</button></div>
+  <div className="adm-modal__row"><button type="button" className="adm-btn" onClick={onCancel} disabled={busy}>Болих</button><button type="submit" className={`adm-btn ${danger?'adm-btn--danger':'adm-btn--primary'}`} disabled={busy||!canSubmit||(!reasonOptional&&reason.trim().length<8)}>{busy?'Түр хүлээнэ үү':confirmLabel}</button></div>
  </form></div>;
 }

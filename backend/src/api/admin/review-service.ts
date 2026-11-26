@@ -110,7 +110,9 @@ export class ReviewService {
       if (!r) return { reviewRequired: true, state: "PENDING_REVIEW", available: false, submittedAt: null, estimatedAvailableAt: null, publishedAt: null, message: CUSTOMER_PENDING_MESSAGE, note: "Тайлан баталгаажмагц танд мэдэгдэнэ." };
     }
     const published = r.status === "PUBLISHED";
-    return { reviewRequired: true, state: published ? "PUBLISHED" : "PENDING_REVIEW", available: published, submittedAt: r.submittedAt, estimatedAvailableAt: published ? null : r.deadlineAt, publishedAt: r.publishedAt,
+    /* stage: what the customer is told, never the internal workflow status. READY = published, PREPARING = the draft is not generated yet, IN_REVIEW = a draft exists and waits for / is in administrator review. deadlineAt is the persisted submission time + the review target. */
+    const stage = published ? "READY" : r.draftGeneratedAt ? "IN_REVIEW" : "PREPARING";
+    return { reviewRequired: true, stage, deadlineAt: r.deadlineAt, state: published ? "PUBLISHED" : "PENDING_REVIEW", available: published, submittedAt: r.submittedAt, estimatedAvailableAt: published ? null : r.deadlineAt, publishedAt: r.publishedAt,
       message: published ? "Тайлан бэлэн боллоо." : CUSTOMER_PENDING_MESSAGE, note: published ? null : "Тайлан баталгаажмагц танд мэдэгдэнэ." };
   }
   /** Server-side gate for every customer report/result endpoint. No review row means a legacy report that stays available. */

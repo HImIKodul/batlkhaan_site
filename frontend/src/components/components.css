@@ -166,3 +166,8 @@ html:root body.mmri-prism-page .mmri-button:is(.mmri-button--primary,.mmri-butto
 .report-waiting__mark{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.28);border-top-color:var(--c,#fff);animation:mmri-spin 1.6s linear infinite}
 @media (prefers-reduced-motion:reduce){.report-waiting__mark{animation:none}}
 @media (max-width:480px){html:root body.mmri-prism-page .mmri-button{white-space:normal;height:auto;min-height:44px;padding-block:8px}html:root body.mmri-prism-page .mmri-button .mmri-button__label{white-space:normal;text-wrap:balance}}
+
+.report-waiting__dates{display:grid;gap:8px;margin:0;width:100%;max-width:420px;text-align:left}
+.report-waiting__dates>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:10px 14px;border:1px solid rgba(160,190,255,.35);border-radius:14px;background:rgba(8,22,60,.55)}
+.report-waiting__dates dt{font-size:14px;opacity:.85}.report-waiting__dates dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.report-waiting__stage{font-size:16px}.report-waiting__stage b{margin-left:6px;padding:4px 12px;border-radius:999px;border:1px solid rgba(160,190,255,.5);background:rgba(8,22,60,.6)}

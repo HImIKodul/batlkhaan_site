@@ -13,7 +13,7 @@ import { ApiError, badRequest, notFound } from "../errors.js";
 
 export const NOTIFICATION_TYPES = [
   "PAYMENT_CONFIRMED", "ASSESSMENT_COMPLETED", "REPORT_UNDER_REVIEW", "REPORT_APPROVED", "REPORT_RELEASED",
-  "ACCOUNT_EMAIL_VERIFIED", "ACCOUNT_PASSWORD_CHANGED"
+  "ACCOUNT_EMAIL_VERIFIED", "ACCOUNT_PASSWORD_CHANGED", "ACCESS_GRANTED", "ACCESS_REVOKED"
 ] as const;
 export type NotificationType = typeof NOTIFICATION_TYPES[number];
 export const NOTIFICATION_DESTINATIONS = ["home", "analysis", "results", "report", "billing", "profile", "settings"] as const;
@@ -131,6 +131,19 @@ export class CustomerNotificationService {
       // Review workflow off: the report is available as soon as the assessment is complete.
       await this.reportReleased(a.companyId, assessmentId, a.domainCode, tx);
     }
+  }
+  /** Administrator access decisions. The standard sentence always comes first; the optional administrator note is added underneath it. The note is customer-facing text,
+      internal audit metadata (who, which admin, fingerprints) never goes into a notification. dedupeKey carries the entitlement and the decision time so a later decision is a new message. */
+  accessChanged(kind: "GRANTED" | "REVOKED", companyId: string, domainCode: string, entitlementId: string, note: string | null, at: Date) {
+    const d = domainLabel(domainCode);
+    const base = kind === "GRANTED"
+      ? `Танд ${d} оношилгоонд хандах эрх олгогдлоо. Та оношилгоогоо эхлүүлэх эсвэл үргэлжлүүлэх боломжтой.`
+      : `Таны ${d} оношилгоонд хандах эрх цуцлагдлаа. Өмнө хадгалсан хариултууд тань хэвээр үлдэнэ.`;
+    const extra = note && note.trim() ? `\n\nНэмэлт тайлбар: ${note.trim().slice(0, 300)}` : "";
+    return this.emitToCompany(companyId, ALL_MEMBER_ROLES, {
+      type: kind === "GRANTED" ? "ACCESS_GRANTED" : "ACCESS_REVOKED", title: kind === "GRANTED" ? "Оношилгоонд хандах эрх олгогдлоо" : "Оношилгоонд хандах эрх цуцлагдлаа",
+      message: base + extra, destination: "analysis", payload: { domainCode, entitlementId }, eventRef: `entitlement:${entitlementId}`, dedupeKey: `ACCESS_${kind}:${entitlementId}:${at.getTime()}`
+    });
   }
   reportApproved(companyId: string, assessmentId: string, domainCode: string, reviewId: string) {
     return this.emitToCompany(companyId, REPORT_READ_ROLES, { type: "REPORT_APPROVED", title: "Тайлан батлагдлаа", message: `${domainLabel(domainCode)} чиглэлийн тайлан батлагдлаа. Нээгдэх үед дахин мэдэгдэнэ.`, destination: "report", payload: { assessmentId, domainCode }, eventRef: `review:${reviewId}`, dedupeKey: `REPORT_APPROVED:${reviewId}` });

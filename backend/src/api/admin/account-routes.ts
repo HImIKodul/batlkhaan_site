@@ -3,6 +3,7 @@ import { ApiError, badRequest, notFound } from "../errors.js";
 import { ok } from "../http/respond.js";
 import type { RouteContext } from "../http/router.js";
 import type { AdminPrincipal, Permission } from "./admin-service.js";
+import { customerNotifications } from "../notifications/notification-service.js";
 
 /* SUPER_ADMIN account management: customer accounts, e-mail, activation, and read-only entitlement origin and history.
    Every route here needs the "accounts.manage" permission (SUPER_ADMIN only, decided on the server from the database role). Every change is a
@@ -25,9 +26,15 @@ export interface AccountRouteDeps {
   pageOf: (q: URLSearchParams) => { page: number; pageSize: number; skip: number };
   /** Controlled pilot (MMRI_BILLING_PROVIDER=grant): grants need a written authorisation reference and stop at the pilot expiry. */
   pilotGrant?: { authorizedBy: string; expiresAt: Date } | null;
+  /** Verified cancellation flow of the billing service (asks the provider about payment first, never cancels a paid invoice). Used after a grant to retire a waiting QPay code. */
+  cancelProviderInvoice?: (invoiceId: string) => Promise<unknown>;
 }
 
 const reasonOf = (v: unknown) => { const r = String(v ?? "").replace(/\s+/g, " ").trim(); if (r.length < 8) throw badRequest("Шалтгаанаа дор хаяж 8 тэмдэгтээр бичнэ үү."); return r.slice(0, 300); };
+/** The description of a grant/revoke is OPTIONAL. The database still requires a reason of 8+ characters for administrator decisions, so a blank description is stored as a fixed internal default; the customer only ever sees the standard message plus the administrator\'s own words, if any. */
+const noteOf = (v: unknown) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, 300);
+const DEFAULT_GRANT_REASON = "Администраторын шийдвэрээр эрх олгов";
+const DEFAULT_REVOKE_REASON = "Администраторын шийдвэрээр эрх цуцлав";
 const maskEmail = (e: string) => { const [l = "", d = ""] = e.split("@"); return `${l.slice(0, 1)}***@${d}`; };
 const safeUser = { id: true, email: true, displayName: true, status: true, lastLoginAt: true, erasedAt: true, createdAt: true, emailVerificationRequired: true, emailVerifiedAt: true } as const;
 
@@ -152,13 +159,13 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
     ok(c.res, { company: { id: co.id, name: co.erasedAt ? null : co.name, erased: !!co.erasedAt }, customers: (members as { role: string; user: { email: string } }[]).map(m => ({ email: m.user.email, role: m.role })), openInvoices, pilotAuthorizationRequired: !!d.pilotGrant, runningDomains: running.map(r => r.domainCode), entitlements: ents.map(e => ({ id: e.id, domainCode: e.domainCode, planCode: e.planCode, status: e.status, startsAt: e.startsAt, endsAt: e.endsAt, assessmentLimit: e.assessmentLimit, assessmentsUsed: e.assessmentsUsed, assessments: e._count.assessments, createdAt: e.createdAt,
       origin: originOf(e, e.sourceInvoice), grantReason: e.grantReason, grantedBy: e.grantedByAdmin?.user.email ?? null, revokedBy: e.revokedByAdmin?.user.email ?? null, revokeReason: e.revokeReason, revokedAt: e.revokedAt,
       invoice: e.sourceInvoice ? { id: e.sourceInvoice.id, provider: e.sourceInvoice.provider, status: e.sourceInvoice.status, amountMnt: e.sourceInvoice.amountMnt, paidAt: e.sourceInvoice.paidAt, refundedAt: e.sourceInvoice.refundedAt } : null,
-      revocable: e.origin === "ADMIN_GRANT" && e.status === "ACTIVE" && e.assessmentsUsed === 0 && e._count.assessments === 0 })), history });
+      revocable: e.status === "ACTIVE" || e.status === "CONSUMED" })), history });
   }, { sensitive: false });
 
   route("POST", "/companies/:id/entitlements/grant", "accounts.manage", async (c, p, fp, b) => {
     const id = c.params.id; let reason: string | undefined;
     try {
-      reason = reasonOf(b.reason);
+      const note = noteOf(b.reason ?? b.note); reason = note.length >= 8 ? note : DEFAULT_GRANT_REASON;
       let authorizationRef: string | undefined;
       if (d.pilotGrant) {
         if (Date.now() >= d.pilotGrant.expiresAt.getTime()) throw new ApiError(409, "PILOT_EXPIRED", "Пилотын хугацаа дууссан тул эрх олгохгүй.");
@@ -169,60 +176,79 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       const domain = String(b.domainCode ?? "");
       if (!(DOMAIN_CODES as readonly string[]).includes(domain)) throw badRequest("Оношилгооны чиглэл буруу байна.");
       const cancelInvoiceIds: string[] = Array.isArray(b.cancelInvoiceIds) ? b.cancelInvoiceIds.filter((x: unknown): x is string => typeof x === "string").slice(0, 20) : [];
+      const at = new Date();
       const out = await prisma.$transaction(async tx => {
         // same lock key as the customer purchase path (billing-service lockPurchase): a grant and a payment for one company+domain can never interleave
         await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`mmri-purchase:${id}:${domain}`}))`;
         const co = await tx.company.findUnique({ where: { id }, select: { id: true, erasedAt: true } });
         if (!co) throw notFound("Байгууллага олдсонгүй.");
         if (co.erasedAt) throw new ApiError(409, "COMPANY_ERASED", "Устгагдсан байгууллагад эрх олгохгүй.");
+        // A waiting invoice (QPay or manual) does NOT block an administrator decision: it stays untouched here and reconcilable (a payment that still arrives is recorded once by the normal path).
+        const running = await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ACTIVE_ASSESSMENT as any } }, orderBy: { createdAt: "desc" }, select: { id: true, entitlementId: true, entitlement: { select: { id: true, status: true, origin: true, assessmentLimit: true, planCode: true } } } });
+        if (running) {
+          // A diagnosis that was started and then revoked is RESUMED by re-activating its own entitlement: no second entitlement, no second assessment, saved answers stay.
+          if (running.entitlement?.status === "REVOKED") {
+            const r = await tx.companyEntitlement.updateMany({ where: { id: running.entitlement.id, status: "REVOKED" }, data: { status: "CONSUMED", endsAt: null, revokedAt: null, revokedByAdminId: null, revokeReason: null } });
+            if (r.count !== 1) throw new ApiError(409, "ENTITLEMENT_CHANGED", "Эрх өөрчлөгдсөн байна. Хуудсыг шинэчлээд дахин оролдоно уу.");
+            return { entitlementId: running.entitlement.id, plan: running.entitlement.planCode, reactivated: true, assessmentId: running.id, cancelledInvoiceIds: [] as string[] };
+          }
+          throw new ApiError(409, "ASSESSMENT_ALREADY_ACTIVE", "Энэ чиглэлийн оношилгоо эхэлсэн бөгөөд эрх нь идэвхтэй байна.");
+        }
         if (await tx.companyEntitlement.findFirst({ where: { companyId: id, domainCode: domain, status: "ACTIVE" }, select: { id: true } })) throw new ApiError(409, "ENTITLEMENT_EXISTS", "Энэ чиглэлд ашиглагдаагүй идэвхтэй эрх аль хэдийн байна.");
-        if (await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ACTIVE_ASSESSMENT as any } }, select: { id: true } })) throw new ApiError(409, "ASSESSMENT_ALREADY_ACTIVE", "Энэ чиглэлийн оношилгоо аль хэдийн эхэлсэн байна.");
-        /* An open invoice blocks a grant. A manual invoice never expires (the payment page creates one on opening), so the administrator may cancel it together with
-           the grant, but only by naming exactly the invoices they checked. Provider (QPay) invoices always block: only the provider can say whether they were paid.
-           A cancelled invoice that turns out to be paid can still be confirmed later (activatePaidInvoice accepts CANCELLED). */
-        const open = await tx.billingInvoice.findMany({ where: { companyId: id, domainCode: domain, status: { in: ["CREATED", "PENDING"] } }, select: { id: true, provider: true } });
-        if (open.some(i => i.provider !== "MANUAL")) throw new ApiError(409, "PAYMENT_IN_PROGRESS", "Хэрэглэгч энэ чиглэлд төлбөр хийж байна. Төлбөр дуустал хүлээнэ үү.");
-        if (open.some(i => !cancelInvoiceIds.includes(i.id))) throw new ApiError(409, "OPEN_MANUAL_INVOICE", "Энэ чиглэлд нээлттэй нэхэмжлэх байна. Төлбөр ороогүйг шалгаад цуцлахыг зөвшөөрнө үү.");
-        if (open.length) {
-          const r = await tx.billingInvoice.updateMany({ where: { id: { in: open.map(i => i.id) }, companyId: id, domainCode: domain, provider: "MANUAL", status: { in: ["CREATED", "PENDING"] } }, data: { status: "CANCELLED" } });
-          if (r.count !== open.length) throw new ApiError(409, "INVOICE_CHANGED", "Нэхэмжлэх өөрчлөгдсөн байна. Хуудсыг шинэчлээд дахин шалгана уу.");
+        let cancelled: string[] = [];
+        if (cancelInvoiceIds.length) {   // optional: the administrator names MANUAL invoices that they checked against the bank statement
+          const r = await tx.billingInvoice.updateMany({ where: { id: { in: cancelInvoiceIds }, companyId: id, domainCode: domain, provider: "MANUAL", status: { in: ["CREATED", "PENDING"] } }, data: { status: "CANCELLED" } });
+          cancelled = r.count ? cancelInvoiceIds : [];
         }
         const prior = await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ["COMPLETED", "COMPLETED_WITH_REVIEW", "EXHAUSTED"] as any } }, select: { id: true } });
         const plan = prior ? "RETAKE" : "DIAGNOSTIC";
         const ent = await tx.companyEntitlement.create({ data: { companyId: id, domainCode: domain, origin: "ADMIN_GRANT", planCode: plan, status: "ACTIVE", assessmentLimit: 1, assessmentsUsed: 0, grantedByAdminId: p.adminId, grantReason: reason } });
-        return { entitlementId: ent.id, plan, cancelledInvoiceIds: open.map(i => i.id) };
+        return { entitlementId: ent.id, plan, reactivated: false, assessmentId: null as string | null, cancelledInvoiceIds: cancelled };
       });
-      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", cancelledInvoiceIds: out.cancelledInvoiceIds, ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
+      // After the decision is saved: retire a waiting QPay code through the verified cancellation flow. If the provider says it was paid, the normal payment path records it once; if it cannot be cancelled it stays open and reconcilable.
+      const retired: string[] = [], kept: string[] = [];
+      if (d.cancelProviderInvoice) {
+        const waiting = await prisma.billingInvoice.findMany({ where: { companyId: id, domainCode: domain, provider: "QPAY", status: { in: ["CREATED", "PENDING"] } }, select: { id: true } });
+        for (const w of waiting) { try { await d.cancelProviderInvoice(w.id); retired.push(w.id); } catch { kept.push(w.id); } }
+      }
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, note: note || null, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", reactivated: out.reactivated, assessmentId: out.assessmentId, cancelledInvoiceIds: out.cancelledInvoiceIds, qpayInvoicesRetired: retired, qpayInvoicesStillOpen: kept, ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "COMPANY", id }, { entitlementId: out.entitlementId, domainCode: domain });
-      ok(c.res, { granted: true, ...out, domainCode: domain });
+      await customerNotifications.accessChanged("GRANTED", id, domain, out.entitlementId, note || null, at).catch(() => undefined);
+      ok(c.res, { granted: true, ...out, domainCode: domain, qpayInvoicesStillOpen: kept.length });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_GRANTED", "COMPANY", id, e, reason); }
   }, { sensitive: true });
 
+  /* REVOKE. Works for any administrator grant and for a purchased entitlement alike, while it is unused (ACTIVE) or while its diagnosis is still running (CONSUMED + unfinished assessment).
+     Only the ACCESS changes: the payment/invoice, the saved answers and any completed report are never touched, and a later QPay callback cannot re-activate a revoked entitlement
+     (activatePaidInvoice upserts by source invoice with an empty update). Re-granting re-activates the same entitlement and the customer resumes where they stopped. */
   route("POST", "/entitlements/:id/revoke", "accounts.manage", async (c, p, fp, b) => {
     const id = c.params.id; let reason: string | undefined;
     try {
-      reason = reasonOf(b.reason);
+      const note = noteOf(b.reason ?? b.note); reason = note.length >= 8 ? note : DEFAULT_REVOKE_REASON;
+      const at = new Date();
       const out = await prisma.$transaction(async tx => {
         const probe = await tx.companyEntitlement.findUnique({ where: { id }, select: { companyId: true, domainCode: true } });
         if (!probe) throw notFound("Эрх олдсонгүй.");
         await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`mmri-purchase:${probe.companyId}:${probe.domainCode}`}))`;
-        const e = await tx.companyEntitlement.findUnique({ where: { id }, select: { id: true, companyId: true, domainCode: true, status: true, origin: true, assessmentsUsed: true, _count: { select: { assessments: true } } } });
+        const e = await tx.companyEntitlement.findUnique({ where: { id }, select: { id: true, companyId: true, domainCode: true, status: true, origin: true, assessments: { select: { id: true, status: true } } } });
         if (!e) throw notFound("Эрх олдсонгүй.");
-        if (e.origin !== "ADMIN_GRANT") throw new ApiError(409, "PAID_ENTITLEMENT_PROTECTED", "Төлбөртэй эрхийг энд цуцлахгүй. Буцаалтыг «Төлбөрүүд» хэсгийн хүсэлтээр шийднэ.");
-        if (e.status !== "ACTIVE") throw new ApiError(409, "ENTITLEMENT_NOT_ACTIVE", "Зөвхөн идэвхтэй эрхийг цуцална.");
-        if (e.assessmentsUsed > 0 || e._count.assessments > 0) throw new ApiError(409, "ENTITLEMENT_IN_USE", "Оношилгоонд ашиглагдсан эрхийг цуцлахгүй.");
-        const now = new Date();
-        const r = await tx.companyEntitlement.updateMany({ where: { id, origin: "ADMIN_GRANT", status: "ACTIVE", assessmentsUsed: 0 }, data: { status: "REVOKED", endsAt: now, revokedAt: now, revokedByAdminId: p.adminId, revokeReason: reason } });
+        if (e.status === "REVOKED") throw new ApiError(409, "ENTITLEMENT_NOT_ACTIVE", "Энэ эрх аль хэдийн цуцлагдсан байна.");
+        const running = e.assessments.filter(a => ACTIVE_ASSESSMENT.includes(a.status as string));
+        const finished = e.assessments.filter(a => !ACTIVE_ASSESSMENT.includes(a.status as string));
+        if (e.status === "ACTIVE" || (e.status === "CONSUMED" && running.length)) { /* revocable */ }
+        else if (e.status === "CONSUMED" && finished.length) throw new ApiError(409, "DIAGNOSIS_FINISHED", "Оношилгоо дууссан тул эрхийг цуцлах шаардлагагүй. Дууссан тайлан хэвээр хадгалагдана.");
+        else throw new ApiError(409, "ENTITLEMENT_NOT_ACTIVE", "Зөвхөн идэвхтэй эрхийг цуцална.");
+        const r = await tx.companyEntitlement.updateMany({ where: { id, status: { in: ["ACTIVE", "CONSUMED"] } }, data: { status: "REVOKED", endsAt: at, revokedAt: at, revokedByAdminId: p.adminId, revokeReason: reason } });
         if (r.count !== 1) throw new ApiError(409, "ENTITLEMENT_NOT_ACTIVE", "Эрх өөрчлөгдсөн байна. Дахин шалгана уу.");
-        return { companyId: e.companyId, domainCode: e.domainCode };
+        return { companyId: e.companyId, domainCode: e.domainCode, origin: e.origin, runningAssessmentIds: running.map(a => a.id) };
       });
-      await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "ENTITLEMENT", id }, { reason, ...out });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "ENTITLEMENT", id }, { reason, note: note || null, ...out });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "COMPANY", id: out.companyId }, { entitlementId: id, domainCode: out.domainCode });
-      ok(c.res, { revoked: true });
+      await customerNotifications.accessChanged("REVOKED", out.companyId, out.domainCode, id, note || null, at).catch(() => undefined);
+      ok(c.res, { revoked: true, answersKept: true, runningAssessments: out.runningAssessmentIds.length });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_REVOKED", "ENTITLEMENT", id, e, reason); }
   }, { sensitive: true });
 
-  // ----- company details (name / industry correction) -----
   route("POST", "/companies/:id/details", "accounts.manage", async (c, p, fp, b) => {
     const id = c.params.id; let reason: string | undefined;
     try {

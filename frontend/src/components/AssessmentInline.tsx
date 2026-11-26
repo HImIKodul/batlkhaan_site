@@ -109,6 +109,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
    setDraftState('saved');
    return true;
   }catch(e:any){
+   if(e?.code==='ACCESS_REVOKED'){const m=e?.message||'Таны энэ чиглэлийн оношилгоонд хандах эрх цуцлагдсан байна. Өмнө хадгалсан хариултууд тань хэвээр үлдэнэ.';setDraftState('error');setDraftError(m);setActionError(m);return false}   // an administrator revoked access: no retries, say it clearly
    if(seq!==draftSeq.current||gen!==selectionGen.current)return false;
    if(attempt<2&&navigator.onLine!==false){          // safe automatic retry (the server draft endpoint is idempotent for the same value)
     await new Promise(r=>window.setTimeout(r,attempt===0?1000:3000));

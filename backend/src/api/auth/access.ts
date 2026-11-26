@@ -1,6 +1,6 @@
 import { prisma } from "../../db.js";
 import type { ApiConfig } from "../config.js";
-import { forbidden, notFound, unauthorized } from "../errors.js";
+import { ApiError, forbidden, notFound, unauthorized } from "../errors.js";
 import { verifyAccessToken } from "./crypto.js";
 
 export type CompanyRole = "OWNER" | "ADMIN" | "ASSESSOR" | "CONSULTANT" | "VIEWER";
@@ -66,4 +66,13 @@ export function requireOperator(principal:Principal,config:ApiConfig):void{
   const byId=config.operatorUserIds.has(principal.userId);
   const byEmail=config.environment!=="production"&&config.operatorEmails.has(principal.email.trim().toLowerCase());
   if(!byId&&!byEmail)throw notFound("Route not found");
+}
+
+/** Write access to an assessment: the normal company-role check PLUS the administrator's decision. An entitlement revoked by an administrator stops every write (start, resume, question, answer, back, draft, complete);
+    saved answers are never touched and reading stays possible. Enforced on the server on every request, so an open tab, an old session or a cached page cannot continue. */
+export async function assessmentWriteAccess(userId: string, assessmentId: string, allowed: readonly CompanyRole[]) {
+  const access = await assessmentAccess(userId, assessmentId, allowed);
+  const row = await prisma.assessment.findUnique({ where: { id: assessmentId }, select: { entitlement: { select: { status: true } } } });
+  if (row?.entitlement?.status === "REVOKED") throw new ApiError(403, "ACCESS_REVOKED", "Таны энэ чиглэлийн оношилгоонд хандах эрх цуцлагдсан байна. Өмнө хадгалсан хариултууд тань хэвээр үлдэнэ.");
+  return access;
 }

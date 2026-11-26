@@ -13,7 +13,7 @@ import { scanReport } from "./review-scan.js";
 import type { SupportMailService } from "../mail/support-mail-service.js";
 
 export interface AdminDeps {
-  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; billing: { reconcileInvoice(id: string): Promise<any>; confirmManualPayment(id: string, reference: unknown, amount: unknown): Promise<any>; recordConfirmedRefund(id: string, reference: unknown, reason: unknown): Promise<any> }; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
+  router: Router; config: ApiConfig; admin: AdminService; reviews: ReviewService; supportMail: SupportMailService; queriesResults: (assessmentId: string) => Promise<any>; billing: { reconcileInvoice(id: string): Promise<any>; cancelInvoice(id: string): Promise<any>; confirmManualPayment(id: string, reference: unknown, amount: unknown): Promise<any>; recordConfirmedRefund(id: string, reference: unknown, reason: unknown): Promise<any> }; ipLimiter: MemoryRateLimiter; loginLimiter: MemoryRateLimiter;
   readJson: (req: IncomingMessage, limit: number) => Promise<any>; clientIp: (req: IncomingMessage) => string; fingerprint: (req: IncomingMessage) => { ip?: string; userAgent?: string };
 }
 const A = "/api/v1/admin";
@@ -290,7 +290,7 @@ export function registerAdminRoutes(d: AdminDeps) {
     const a = await admin.changeRole(c.params.id, b.role, p.adminId, { enforceNotSelf: true });
     await aud(p, fp, "ADMIN_ROLE_CHANGED", "ADMIN", a.id, { to: b.role }); ok(c.res, { role: b.role });
   }, { sensitive: true });
-  registerAccountRoutes({ route, audit: (id, action, outcome, fp, target, meta) => admin.audit(id, action, outcome, fp as any, target, meta), pageOf, pilotGrant: config.pilotGrant });
+  registerAccountRoutes({ route, audit: (id, action, outcome, fp, target, meta) => admin.audit(id, action, outcome, fp as any, target, meta), pageOf, pilotGrant: config.pilotGrant, cancelProviderInvoice: (invoiceId: string) => d.billing.cancelInvoice(invoiceId) });
   route("POST", "/maintenance/run", "admins.manage", async (c, p, fp) => { const out = await reviews.maintenance(); await aud(p, fp, "MAINTENANCE_RUN", "SYSTEM", "reviews", out); ok(c.res, out); }, { sensitive: true, body: false });
 }
 void json;
