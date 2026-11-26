@@ -119,7 +119,7 @@ for (const [domain,file] of BUNDLES) {
   const target=methodologyTargetForDomain(domain);
   console.log('BANK',JSON.stringify({domain,version:a.def.version,hash:a.bundleSha,match:a.bundleSha===target.bundleSha256,total:a.def.questions.length,unique:new Set(a.def.questions.map(q=>q.id)).size,capabilities:a.def.categories.length}));
   if (process.env.AUDIT_PART !== 'report') {
-  const cases = process.env.AUDIT_PART === 'routing' ? [['QUICK',20,'low'],['QUICK',20,'high']] : [['QUICK',8,'low'],['QUICK',20,'low'],['QUICK',20,'high'],['QUICK',20,'unknown'],['FULL',8,'low']];
+  const cases = process.env.AUDIT_PART === 'routing' ? (process.env.COUNTS||'20').split(',').flatMap(c=>[['QUICK',Number(c),'low'],['QUICK',Number(c),'high']]) : [['QUICK',8,'low'],['QUICK',20,'low'],['QUICK',20,'high'],['QUICK',20,'unknown'],['FULL',8,'low']];
   for (const params of cases) {
     try { console.log('ROUTE',domain,JSON.stringify(route(a.def,...params))); }
     catch (error) { console.log('ROUTE ERROR',domain,params,String(error)); }

@@ -987,3 +987,9 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Show/hide password: one shared `components/PasswordInput.tsx` (eye/eye-off, aria-pressed, keyboard, 40px touch) used by login/registration, password reset (both fields), account deletion forms and the administrator login and re-authentication. No control existed before. No auth/validation/backend change. Browser check 1440 and 390 PASS.
 - annual-plan-cases.mts 15/15 failed because of an obsolete fixture (placeholder fix types INT-n, so the stand-in model wrote one sentence per finding and the validator rightly flagged SAME_ADVICE). Fixture now uses real fix types: 15/15 READY, 3 pages. Planner and validator unchanged.
 - Browser smoke (disposable stack: fake QPay, mock mail, clone mmri_qa_acc2_smoke, scratchpad scripts) at 1440 and 390: login, five categories, QR, ten minute timer, expiry + Reload (one new invoice), account page with two sections, Guide example web/PDF pages and demo PDF: all PASS, no overflow.
+
+## Codex-audit focused fixes (branch fix/codex-audit, disposable QA only)
+- Draft ordering: client sequence + row lock, stale/replayed draft writes ignored (tests/draft-ordering.test.ts).
+- Dated plan: extra compaction level (Marketing A now 3 pages, strict render passes, 10/10 probe reports), deterministic plan fallback at generation, approval and publication require a payload-bound plan (ANNUAL_PLAN_REQUIRED).
+- Metric wording: fallback conclusion says "албан ёсны дүн" for official scores; web report shows the partial label for QUICK_ESTIMATE.
+- Not changed (owner decision): QUICK 280 ceiling/coverage and one-capability priority slots are contract/policy bound; see report.
