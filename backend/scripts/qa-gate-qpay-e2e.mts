@@ -59,6 +59,16 @@ try {
   // expiry: an expired code is replaced by a new one
   const e = await mk("qe"), E1 = (await inv(e, "it")).d; sql(`update billing_invoices set "createdAt"=now()-interval '45 minutes' where id='${E1.id}'`); const E2 = (await inv(e, "it")).d; ok("expired code is cancelled and replaced", E2.id !== E1.id && st.cancelled.has(pidOf(E1.id)));
   ok("payment mail/notification queued for the confirmed payment", Number(sql(`select count(*) from customer_notifications where "companyId"='${a.co}' and type='PAYMENT_CONFIRMED'`)) >= 1);
+  // immediate access, to exactly the purchased diagnosis: no administrator step between the provider confirmation and the start
+  const f1 = await mk("qf"), F = (await inv(f1, "operations")).d;
+  const pq = (await call(B, "GET", "/methodology/current/profile-questions", { tok: f1.tok })).d;
+  await call(B, "PUT", `/companies/${f1.co}/profile-answers`, { tok: f1.tok, body: { profileAnswers: pq.map((q: any) => ({ questionId: q.id, optionIndexes: [Number(q.options[0].optionIndex)] })), basicInfoAnswers: Array.from({ length: 20 }, (_, i) => ({ questionId: `B${String(i + 1).padStart(2, "0")}`, optionIndexes: [1] })) } });
+  const start = (domainCode: string) => call(B, "POST", `/companies/${f1.co}/assessments`, { tok: f1.tok, body: { domainCode } });
+  const unpaid = await start("operations"); ok("before payment the diagnosis cannot start", unpaid.s === 402, unpaid);
+  pay(pidOf(F.id)); await cb(F.id);
+  for (const other of ["marketing", "it", "finance", "people"]) { const x = await start(other); ok(`payment for operations does not open ${other}`, x.s === 402, x); }
+  const opened = await start("operations"); ok("the purchased diagnosis starts immediately after the callback", opened.s === 201, opened);
+  ok("the right is used exactly once", Number(sql(`select count(*) from company_entitlements where "companyId"='${f1.co}' and "assessmentsUsed"=1 and "domainCode"='operations'`)) === 1 && Number(sql(`select count(*) from assessments where "companyId"='${f1.co}'`)) === 1);
   ok("no secret or token in the server log", !/qa-secret|Bearer t|Basic cWE/.test(log)); ok("few sign-ins for the whole run", st.tokens <= 12, st.tokens);
 } catch (x: any) { ok("no exception", false, String(x?.stack ?? x)); }
 console.log(fail ? `RESULT FAIL ${fail}` : "RESULT PASS"); api.kill("SIGKILL"); fake.close(); process.exit(fail ? 1 : 0);

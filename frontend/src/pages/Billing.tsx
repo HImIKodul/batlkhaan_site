@@ -2,6 +2,7 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import { domainNameMn } from '../data/domainOrder';
 import DomainBadge from '../components/DomainBadge';
 import qrcode from 'qrcode-generator';
+import { QR_BLACK,approvedQrAreas,qrInk } from '../billing/qrColor';
 import { AppShell,PageContainer,go } from '../components/AppShell';
 import { useAmbientEnvironment } from '../design/environment';
 import { Button,StatusBadge } from '../components/UI';
@@ -15,6 +16,10 @@ import { REPORT_AREA_KEY } from '../data/experience';
 import { areaReportPalette } from '../data/reportExperience';
 import { isTestBusiness } from '../data/experience';
 
+/* The library default keeps only the low byte of each character, which silently changes any non-ASCII payload. Payment payloads are encoded as UTF-8 (identical for ASCII). */
+qrcode.stringToBytes=(s:string)=>Array.from(new TextEncoder().encode(s));
+const colorQrAreas=approvedQrAreas(import.meta.env.VITE_MMRI_COLOR_QR_AREAS);
+const colorQrPreview=()=>{try{return localStorage.getItem('mmri.qrColorPreview')==='on'}catch{return false}};
 const money=(n:number)=>`${new Intl.NumberFormat('mn-MN').format(n)} ₮`;
 const imageSource=(value:string|null|undefined)=>!value?null:value.startsWith('data:')?value:`data:image/png;base64,${value}`;
 const openStatuses=new Set<BillingInvoiceStatus>(['CREATED','PENDING']);
@@ -25,11 +30,14 @@ export function payableQrText(invoice:Pick<BillingInvoice,'provider'|'qrText'>):
  const text=(invoice.qrText||'').trim();
  return invoice.provider==='MOCK'||!text||text.length>1500?null:text;
 }
-/** A real, standards-compliant QR code of `text` (error correction M, 4 module quiet zone, black on white for reliable scanning). */
-function QrCode({text,label}:{text:string;label:string}){
+/** A real, standards-compliant QR code of `text` (error correction M, 4 module quiet zone, solid white background). Modules are black unless the category colour is allowed (billing/qrColor.ts). */
+function QrCode({text,label,area,plain=false,onColor}:{text:string;label:string;area:string;plain?:boolean;onColor?:(colored:boolean)=>void}){
  let n=0,d='';
- try{const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();n=qr.getModuleCount();for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(qr.isDark(y,x))d+=`M${x+4} ${y+4}h1v1h-1z`}catch{return null}
- return <svg className="billing-domain-qr__placeholder" viewBox={`0 0 ${n+8} ${n+8}`} role="img" aria-label={label} shapeRendering="crispEdges"><rect width={n+8} height={n+8} fill="#fff"/><path d={d} fill="#000"/></svg>;
+ try{const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();n=qr.getModuleCount();for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(qr.isDark(y,x))d+=`M${x+4} ${y+4}h1v1h-1z`}catch{n=0}
+ const allowed=qrInk(area,n,colorQrAreas,colorQrPreview());const ink=plain?QR_BLACK:allowed;const colored=allowed!==QR_BLACK;
+ useEffect(()=>{onColor?.(colored)},[colored]);
+ if(!n)return null;
+ return <svg className="billing-domain-qr__placeholder" viewBox={`0 0 ${n+8} ${n+8}`} role="img" aria-label={label} shapeRendering="crispEdges"><rect width={n+8} height={n+8} fill="#fff"/><path d={d} fill={ink}/></svg>;
 }
 function NoPayableCode({invoice}:{invoice:BillingInvoice}){
  const links=[invoice.shortUrl,...invoice.deeplinks.map(x=>x.link)].filter((u):u is string=>!!u&&/^https:\/\//i.test(u)).slice(0,4);
@@ -57,6 +65,7 @@ function useSecondsLeft(invoice:BillingInvoice|null){
 export default function Billing(){
  const requestedArea=((sessionStorage.getItem('business:billingArea')||'marketing') as BusinessAreaId);const area=businessAreaById(requestedArea);const areaId=area.id;useAmbientEnvironment(areaId);const mode=sessionStorage.getItem('business:billingMode')==='retake'?'retake':'first';const code:BillingPlanCode=mode==='retake'?'RETAKE':'DIAGNOSTIC';const palette=areaReportPalette[area.id];
  const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
+ const [plainQr,setPlainQr]=useState(false);const [coloredQr,setColoredQr]=useState(false);
  const autoCreateRef=useRef('');const timeLeft=useSecondsLeft(invoice);
  const plan=useMemo(()=>plans.find(p=>p.code===code)??null,[plans,code]);const amount=plan?.amountMnt??300000;
  /* Manual payment has no automatic lifetime: no countdown and no expired state, whatever an older invoice row carries. */
@@ -138,11 +147,12 @@ export default function Billing(){
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
    {noCode?<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>:<div className="billing-qr__box">
     {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><small>Энэ кодоор бүү төл. Шинэ код авна уу.</small><Button loading={busy} onClick={()=>void create()}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
-     :demo?<div className="billing-qr__demo-box"><QrCode text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
-     :codeText?<QrCode text={codeText} label={`${area.name} оношилгооны төлбөрийн QR`}/>
+     :demo?<div className="billing-qr__demo-box"><QrCode area={areaId} text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
+     :codeText?<QrCode area={areaId} text={codeText} plain={plainQr} onColor={setColoredQr} label={`${area.name} оношилгооны төлбөрийн QR`}/>
      :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
      :<NoPayableCode invoice={invoice}/>}
    </div>}
+   {!demo&&invoice&&!expired&&codeText&&coloredQr&&<button type="button" className="billing-qr__plain" aria-pressed={plainQr} onClick={()=>setPlainQr(v=>!v)}>{plainQr?'Өнгөт QR харуулах':'Уншигдахгүй бол хар цагаан QR харуулах'}</button>}
    {demo&&<div className="billing-qr__test" role="group" aria-label="Тест төлбөрийн жишээ">
     <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||expired}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
    </div>}

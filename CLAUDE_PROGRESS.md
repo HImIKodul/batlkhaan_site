@@ -953,3 +953,8 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Production (read-only GET /api/v1/billing/plans): provider MANUAL. The live frontend files were byte-identical to a build of d449445. Missing colours were not reproducible; accents in billing.css made stronger.
 - Countdown: server lifetime (createdAt + MMRI_INVOICE_TTL_MINUTES, default 30), enforced by cancel at QPay; no expiry field is sent to QPay. Fixed: device-clock dependence (new additive `serverTime` on invoices; needs the API redeployed too), timer without a payable code, timer in manual mode from an old QPay row, stale expired value after regeneration, two different auto-create keys.
 - Checks: offline mock browser suite 183/183 (5 areas x 1440/390, scratchpad only, no backend), tsc, build, UI polish, source release gate, step13 static + fake-provider regression, step11 billing static. No real invoice, payment, AI or mail. Not deployed.
+
+## 2026-11-26 (2) QPay preparation (not deployed, billing unchanged)
+- Coloured QR: deep category shades (8:1) on white, OFF by default (`VITE_MMRI_COLOR_QR_AREAS`; per-device preview `mmri.qrColorPreview`), black above 77 modules, black/colour switch for customers (billing/qrColor.ts). QR bytes now UTF-8 (library default truncated non-ASCII). jsQR + ZXing exact-payload decode: 1000/1000 and 33/33 checks (synthetic payloads; no bank-app scan).
+- qpay-smoke on the local production credential file: sign-in, refresh, payment/check PASS; invoice code unverified. Fake-provider e2e 32/32 on a temporary Postgres (now also: paid domain starts at once, other four stay 402).
+- Cutover risk: open MANUAL invoices are reused in QPay mode. Procedure and owner approvals: deploy/QPAY_ACTIVATION.md.

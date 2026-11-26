@@ -113,3 +113,4 @@ html:root body.mmri-prism-page:not(.mmri-admin) .billing-qr .mmri-button--second
 .billing-qr__status.is-waiting::before{border-top-color:var(--c)}
 .billing-qr__wait.is-expired{gap:12px;padding:6px;color:#06194a;text-align:center}.billing-qr__wait.is-expired span{font-size:17px;font-weight:800}.billing-qr__wait.is-expired small{max-width:24ch;font-size:13.5px;font-weight:600;line-height:1.4;color:#33415f}
 .billing-qr__box:has(.is-expired){aspect-ratio:auto;min-height:190px}
+.billing-qr__plain{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 70%,#fff);background:rgba(4,14,52,.6);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer}.billing-qr__plain:focus-visible{outline:3px solid #fff;outline-offset:2px}
