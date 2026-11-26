@@ -61,8 +61,9 @@
 .adm-btn--primary{color:#fff;border-color:rgba(255,255,255,.55);background:linear-gradient(180deg,#2358D2,#1743BC 55%,#0A2B94);box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}.adm-btn--primary:hover:not(:disabled){background:linear-gradient(180deg,#2B66E6,#1B4FD2 55%,#0E34A8);border-color:#fff}.adm-btn--wide{width:100%}
 .adm-table{width:100%;border-collapse:separate;border-spacing:0;background:rgba(255,255,255,.86);border-radius:14px;overflow:hidden;border:1px solid rgba(40,80,170,.22)}
 .adm-table tbody tr:hover td{background:rgba(35,88,210,.05)}
-.adm-modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px;background:rgba(4,14,80,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.adm-modal__box{display:grid;gap:12px;width:min(420px,100%);padding:22px;border-radius:22px;border:1px solid #fff;background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(226,240,255,.95));box-shadow:inset 0 2px 0 #fff,1px 1px 0 #E3F4FF,2px 2px 0 #B7DDFB,3px 3px 0 #8CBDF0,0 30px 60px -20px rgba(2,10,90,.7)}
+/* The overlay scrolls: on a short screen (zoom, landscape phone, open keyboard) every part of a dialog stays reachable. margin:auto centres it when it fits. */
+.adm-modal{position:fixed;inset:0;z-index:200;display:flex;overflow-y:auto;overscroll-behavior:contain;padding:16px;background:rgba(4,14,80,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.adm-modal__box{margin:auto;display:grid;gap:12px;width:min(420px,100%);padding:22px;border-radius:22px;border:1px solid #fff;background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(226,240,255,.95));box-shadow:inset 0 2px 0 #fff,1px 1px 0 #E3F4FF,2px 2px 0 #B7DDFB,3px 3px 0 #8CBDF0,0 30px 60px -20px rgba(2,10,90,.7)}
 .adm-login{min-height:100dvh;display:grid;place-items:center;padding:18px}
 .adm-login__card{display:grid;gap:12px;width:min(420px,100%);padding:clamp(20px,4vw,32px);border-radius:26px;border:1px solid #fff;background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(224,239,255,.95));box-shadow:inset 0 2px 0 #fff,inset -2px 0 0 rgba(90,230,255,.5),inset 0 -3px 0 rgba(60,110,235,.45),1px 1px 0 #E3F4FF,2px 2px 0 #B7DDFB,3px 3px 0 #8CBDF0,0 2px 3px rgba(3,10,70,.4),0 30px 60px -20px rgba(2,10,90,.7)}
 .adm-page{gap:18px}.adm-page__head h1{font-weight:700;color:var(--a-ink)}
@@ -110,8 +111,10 @@
 .adm-more>summary::after{content:" ▾"}.adm-more[open]>summary::after{content:" ▴"}.adm-more>a{display:block}
 .adm-domains{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .adm-domain{display:grid;gap:8px;align-content:start;border-top:5px solid var(--acc,#6C8CF0)}.adm-domain h3{display:flex;align-items:center;gap:8px;margin:0;font-size:18px}
-.adm-domain .mmri-domain__mark{width:13px;height:13px;border-radius:3px;rotate:45deg;background:linear-gradient(135deg,var(--acc2,#BCD),var(--acc,#6C8CF0) 70%)}.adm-domain p{margin:0;font-size:14.5px;line-height:1.45}
-.adm-sub{display:block;font-size:13px;color:var(--a-ink2)}.adm-pick li{padding:6px 0}
+.adm-domain .mmri-domain__mark{width:13px;height:13px;border-radius:3px;rotate:45deg;background:linear-gradient(135deg,var(--acc2,#BCD),var(--acc,#6C8CF0) 70%)}.adm-domain p{margin:0;font-size:14.5px;line-height:1.45;overflow-wrap:anywhere}
+/* a long unbroken value (the granting administrator's e-mail) must wrap inside the card, never widen it past the screen */
+.adm-domain{grid-template-columns:minmax(0,1fr);min-width:0}.adm-pick{grid-template-columns:minmax(0,1fr)}.adm-pick li{overflow-wrap:anywhere;min-width:0}.adm-pick__access .adm-badge{white-space:normal;max-width:100%}
+.adm-sub{display:block;font-size:13px;color:var(--a-ink2)}.adm-pick li{padding:6px 0}.adm-pick__access{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .adm-confirm{width:min(520px,100%)}.adm-confirm__what ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:15px;line-height:1.45}.adm-confirm textarea{min-height:64px;padding:8px 12px;border-radius:12px;border:1px solid var(--a-line);font:inherit;resize:vertical}
 .adm-modal__row{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 

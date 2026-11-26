@@ -144,10 +144,12 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       grantedByAdmin: { select: { user: { select: { email: true } } } }, revokedByAdmin: { select: { user: { select: { email: true } } } },
       sourceInvoice: { select: { id: true, provider: true, status: true, amountMnt: true, paidAt: true, refundedAt: true } }, _count: { select: { assessments: true } } } });
     const ids = ents.map(e => e.id);
-    const [history, running] = await Promise.all([
+    const [history, running, openInvoices, members] = await Promise.all([
       prisma.adminAuditEvent.findMany({ where: { OR: [{ targetType: "ENTITLEMENT", targetId: { in: ids } }, { targetType: "COMPANY", targetId: co.id, action: { startsWith: "ADMIN_ENTITLEMENT" } }] }, orderBy: { createdAt: "desc" }, take: 30, select: { action: true, outcome: true, targetType: true, targetId: true, createdAt: true, metadata: true } }),
-      prisma.assessment.findMany({ where: { companyId: co.id, status: { in: ACTIVE_ASSESSMENT as any } }, select: { domainCode: true } })]);
-    ok(c.res, { company: { id: co.id, name: co.erasedAt ? null : co.name, erased: !!co.erasedAt }, runningDomains: running.map(r => r.domainCode), entitlements: ents.map(e => ({ id: e.id, domainCode: e.domainCode, planCode: e.planCode, status: e.status, startsAt: e.startsAt, endsAt: e.endsAt, assessmentLimit: e.assessmentLimit, assessmentsUsed: e.assessmentsUsed, assessments: e._count.assessments, createdAt: e.createdAt,
+      prisma.assessment.findMany({ where: { companyId: co.id, status: { in: ACTIVE_ASSESSMENT as any } }, select: { domainCode: true } }),
+      prisma.billingInvoice.findMany({ where: { companyId: co.id, status: { in: ["CREATED", "PENDING"] } }, orderBy: { createdAt: "asc" }, select: { id: true, domainCode: true, provider: true, status: true, amountMnt: true, createdAt: true } }),
+      co.erasedAt ? Promise.resolve([]) : prisma.companyMembership.findMany({ where: { companyId: co.id }, orderBy: { createdAt: "asc" }, select: { role: true, user: { select: { email: true } } } })]);
+    ok(c.res, { company: { id: co.id, name: co.erasedAt ? null : co.name, erased: !!co.erasedAt }, customers: (members as { role: string; user: { email: string } }[]).map(m => ({ email: m.user.email, role: m.role })), openInvoices, pilotAuthorizationRequired: !!d.pilotGrant, runningDomains: running.map(r => r.domainCode), entitlements: ents.map(e => ({ id: e.id, domainCode: e.domainCode, planCode: e.planCode, status: e.status, startsAt: e.startsAt, endsAt: e.endsAt, assessmentLimit: e.assessmentLimit, assessmentsUsed: e.assessmentsUsed, assessments: e._count.assessments, createdAt: e.createdAt,
       origin: originOf(e, e.sourceInvoice), grantReason: e.grantReason, grantedBy: e.grantedByAdmin?.user.email ?? null, revokedBy: e.revokedByAdmin?.user.email ?? null, revokeReason: e.revokeReason, revokedAt: e.revokedAt,
       invoice: e.sourceInvoice ? { id: e.sourceInvoice.id, provider: e.sourceInvoice.provider, status: e.sourceInvoice.status, amountMnt: e.sourceInvoice.amountMnt, paidAt: e.sourceInvoice.paidAt, refundedAt: e.sourceInvoice.refundedAt } : null,
       revocable: e.origin === "ADMIN_GRANT" && e.status === "ACTIVE" && e.assessmentsUsed === 0 && e._count.assessments === 0 })), history });
@@ -166,6 +168,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       }
       const domain = String(b.domainCode ?? "");
       if (!(DOMAIN_CODES as readonly string[]).includes(domain)) throw badRequest("Оношилгооны чиглэл буруу байна.");
+      const cancelInvoiceIds: string[] = Array.isArray(b.cancelInvoiceIds) ? b.cancelInvoiceIds.filter((x: unknown): x is string => typeof x === "string").slice(0, 20) : [];
       const out = await prisma.$transaction(async tx => {
         // same lock key as the customer purchase path (billing-service lockPurchase): a grant and a payment for one company+domain can never interleave
         await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`mmri-purchase:${id}:${domain}`}))`;
@@ -174,13 +177,22 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
         if (co.erasedAt) throw new ApiError(409, "COMPANY_ERASED", "Устгагдсан байгууллагад эрх олгохгүй.");
         if (await tx.companyEntitlement.findFirst({ where: { companyId: id, domainCode: domain, status: "ACTIVE" }, select: { id: true } })) throw new ApiError(409, "ENTITLEMENT_EXISTS", "Энэ чиглэлд ашиглагдаагүй идэвхтэй эрх аль хэдийн байна.");
         if (await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ACTIVE_ASSESSMENT as any } }, select: { id: true } })) throw new ApiError(409, "ASSESSMENT_ALREADY_ACTIVE", "Энэ чиглэлийн оношилгоо аль хэдийн эхэлсэн байна.");
-        if (await tx.billingInvoice.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ["CREATED", "PENDING"] } }, select: { id: true } })) throw new ApiError(409, "PAYMENT_IN_PROGRESS", "Хэрэглэгч энэ чиглэлд төлбөр хийж байна. Төлбөр дуустал хүлээнэ үү.");
+        /* An open invoice blocks a grant. A manual invoice never expires (the payment page creates one on opening), so the administrator may cancel it together with
+           the grant, but only by naming exactly the invoices they checked. Provider (QPay) invoices always block: only the provider can say whether they were paid.
+           A cancelled invoice that turns out to be paid can still be confirmed later (activatePaidInvoice accepts CANCELLED). */
+        const open = await tx.billingInvoice.findMany({ where: { companyId: id, domainCode: domain, status: { in: ["CREATED", "PENDING"] } }, select: { id: true, provider: true } });
+        if (open.some(i => i.provider !== "MANUAL")) throw new ApiError(409, "PAYMENT_IN_PROGRESS", "Хэрэглэгч энэ чиглэлд төлбөр хийж байна. Төлбөр дуустал хүлээнэ үү.");
+        if (open.some(i => !cancelInvoiceIds.includes(i.id))) throw new ApiError(409, "OPEN_MANUAL_INVOICE", "Энэ чиглэлд нээлттэй нэхэмжлэх байна. Төлбөр ороогүйг шалгаад цуцлахыг зөвшөөрнө үү.");
+        if (open.length) {
+          const r = await tx.billingInvoice.updateMany({ where: { id: { in: open.map(i => i.id) }, companyId: id, domainCode: domain, provider: "MANUAL", status: { in: ["CREATED", "PENDING"] } }, data: { status: "CANCELLED" } });
+          if (r.count !== open.length) throw new ApiError(409, "INVOICE_CHANGED", "Нэхэмжлэх өөрчлөгдсөн байна. Хуудсыг шинэчлээд дахин шалгана уу.");
+        }
         const prior = await tx.assessment.findFirst({ where: { companyId: id, domainCode: domain, status: { in: ["COMPLETED", "COMPLETED_WITH_REVIEW", "EXHAUSTED"] as any } }, select: { id: true } });
         const plan = prior ? "RETAKE" : "DIAGNOSTIC";
         const ent = await tx.companyEntitlement.create({ data: { companyId: id, domainCode: domain, origin: "ADMIN_GRANT", planCode: plan, status: "ACTIVE", assessmentLimit: 1, assessmentsUsed: 0, grantedByAdminId: p.adminId, grantReason: reason } });
-        return { entitlementId: ent.id, plan };
+        return { entitlementId: ent.id, plan, cancelledInvoiceIds: open.map(i => i.id) };
       });
-      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
+      await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", cancelledInvoiceIds: out.cancelledInvoiceIds, ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "COMPANY", id }, { entitlementId: out.entitlementId, domainCode: domain });
       ok(c.res, { granted: true, ...out, domainCode: domain });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_GRANTED", "COMPANY", id, e, reason); }

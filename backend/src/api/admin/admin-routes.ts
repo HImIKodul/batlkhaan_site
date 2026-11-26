@@ -163,9 +163,11 @@ export function registerAdminRoutes(d: AdminDeps) {
   // ----- companies -----
   route("GET", "/companies", "companies.read", async (c) => {
     const { page, pageSize, skip } = pageOf(c.query); const q = c.query.get("q");
-    const where: any = { erasedAt: null, ...(q ? { name: { contains: q, mode: "insensitive" } } : {}) };
-    const [total, rows] = await Promise.all([prisma.company.count({ where }), prisma.company.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize, select: { id: true, name: true, industry: true, createdAt: true, _count: { select: { assessments: true } } } })]);
-    ok(c.res, { page, pageSize, total, items: rows.map(r => ({ id: r.id, name: r.name, industry: r.industry, createdAt: r.createdAt, assessments: r._count.assessments })) });
+    // A customer is found by company name or by a member's e-mail.
+    const where: any = { erasedAt: null, ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { memberships: { some: { user: { email: { contains: q, mode: "insensitive" } } } } }] } : {}) };
+    const [total, rows] = await Promise.all([prisma.company.count({ where }), prisma.company.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize, select: { id: true, name: true, industry: true, createdAt: true, _count: { select: { assessments: true } },
+      memberships: { orderBy: { createdAt: "asc" }, take: 3, select: { user: { select: { email: true } } } }, entitlements: { where: { status: "ACTIVE" }, select: { domainCode: true, origin: true } } } })]);
+    ok(c.res, { page, pageSize, total, items: rows.map((r: any) => ({ id: r.id, name: r.name, industry: r.industry, createdAt: r.createdAt, assessments: r._count.assessments, customers: r.memberships.map((m: any) => m.user.email), access: r.entitlements.map((e: any) => ({ domain: e.domainCode, origin: e.origin })) })) });
   });
   route("GET", "/companies/:id", "companies.read", async (c, p, fp) => {
     const co = await prisma.company.findUnique({ where: { id: c.params.id }, select: { id: true, name: true, industry: true, businessModel: true, employeeCount: true, companyAgeYears: true, marketType: true, country: true, createdAt: true, erasedAt: true } }); if (!co) throw notFound("Байгууллага олдсонгүй.");

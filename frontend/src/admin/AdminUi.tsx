@@ -9,10 +9,14 @@ export const Badge=({tone,children}:{tone:'ok'|'bad'|'warn'|'mute';children:Reac
 /** Short confirmation: says what will happen, asks for a written reason (kept in the audit trail), and only then calls the server. */
 export function ConfirmDialog({title,children,confirmLabel,danger,extra,canSubmit=true,onConfirm,onCancel}:{title:string;children:React.ReactNode;confirmLabel:string;danger?:boolean;extra?:React.ReactNode;canSubmit?:boolean;onConfirm:(reason:string)=>Promise<void>;onCancel:()=>void}){
  const [reason,setReason]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);const box=useRef<HTMLFormElement>(null);const opener=useRef<HTMLElement|null>(null);
+ /* Runs once per dialog: a parent re-render (new onCancel) must not move focus again. Keys belong to the topmost dialog only, so Escape in the
+    re-authentication dialog never closes this one underneath, and a submitted request cannot be "cancelled" by Escape while it is still pending. */
+ const cancelRef=useRef(onCancel);cancelRef.current=onCancel;const busyRef=useRef(busy);busyRef.current=busy;
  useEffect(()=>{opener.current=document.activeElement as HTMLElement|null;(box.current?.querySelector('input,textarea') as HTMLElement|null)?.focus();
-  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onCancel()}
+  const key=(e:KeyboardEvent)=>{const all=document.querySelectorAll('.adm-modal');if(all[all.length-1]!==box.current?.parentElement)return;
+   if(e.key==='Escape'){e.preventDefault();if(!busyRef.current)cancelRef.current()}
    if(e.key==='Tab'&&box.current){const f=[...box.current.querySelectorAll<HTMLElement>('input,textarea,button:not(:disabled)')];if(!f.length)return;const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};
-  document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);opener.current?.focus?.()}},[onCancel]);
+  document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);opener.current?.focus?.()}},[]);
  const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{await onConfirm(reason.trim())}catch(x){setErr((x as Error).message);setBusy(false)}};
  return <div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="cf-title"><form ref={box} className="adm-modal__box adm-confirm" onSubmit={submit}>
   <h2 id="cf-title">{title}</h2><div className="adm-confirm__what">{children}</div>{extra}

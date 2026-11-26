@@ -959,6 +959,12 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - qpay-smoke on the local production credential file: sign-in, refresh, payment/check PASS; invoice code unverified. Fake-provider e2e 32/32 on a temporary Postgres (now also: paid domain starts at once, other four stay 402).
 - Cutover risk: open MANUAL invoices are reused in QPay mode. Procedure and owner approvals: deploy/QPAY_ACTIVATION.md.
 
+## 2026-11-26 (4) Customer grant/revoke fixes (admin «Оношилгооны эрх»)
+- Causes reproduced on a disposable stack: an open MANUAL invoice (never expires, created by opening the payment page) blocked grants for ever; dialogs did not scroll (buttons unreachable at 844x390 and with a phone keyboard); Escape on re-auth closed the grant dialog underneath; pilot mode required `authorizationRef` with no field; a granted card's long e-mail clipped the card.
+- Grant may cancel a MANUAL invoice only when the admin names exactly it (`cancelInvoiceIds`, checkbox), same locked transaction, audited; other providers still block (`PAYMENT_IN_PROGRESS`). List shows customer e-mail and access.
+- Checks: 44 + 5 browser/API checks (one earlier failure was test ordering: the customer browser had already started the granted diagnosis), 5/5 short screens, 13 layout checks, invoice binding 53/53, QR render+decode 40/40. No bank-app scan. Test scripts stay in the session scratchpad.
+- Live (public read, 2026-11-26 09:10Z): provider QPAY, frontend byte-identical to the 300d387 package, colour approvals empty. Deployed/switched outside these sessions.
+
 ## 2026-11-26 (3) QPay activation Step 1 (no server access)
 - This computer has no route to the server. From outside: IIS/ARR, live frontend = d449445 file names, backend has routes up to 4df4d6d or later; ports 21, 80, 443, 3389, 5985 accept connections from this network (5432, 4000, 22, 5986 did not). Nothing changed.
 - New `ops/windows/Step1-InspectBackupRestore.ps1` (never run in PowerShell; its SQL/dump/restore steps passed on a temporary Postgres: 87/87 tables). Fixed: `H` function shadowed by the Get-History alias (also in Diagnose-Production.ps1), qpay-smoke refusing every file on Windows. Backup-Postgres.ps1 deletes old dumps: not for pre-change backups.

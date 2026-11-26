@@ -26,6 +26,8 @@ export function useAsync<T>(fn:()=>Promise<T>,deps:unknown[]){const [state,set]=
 function ReauthModal({onDone,onCancel}:{onDone:(ok:boolean)=>void;onCancel:()=>void}){
  const [pw,setPw]=useState('');const [code,setCode]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);const first=useRef<HTMLInputElement>(null);
  useEffect(()=>{first.current?.focus()},[]);
+ const cancelRef=useRef(onCancel);cancelRef.current=onCancel;
+ useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();cancelRef.current()}};document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key)},[]);
  const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{await adminApi.reauth(pw,code.replace(/\s/g,''));onDone(true)}catch(x){setErr((x as Error).message)}finally{setBusy(false)}};
  return <div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="reauth-title"><form className="adm-modal__box" onSubmit={submit}><h2 id="reauth-title">Дахин баталгаажуулах</h2><p>Энэ үйлдэл нууц үг ба MFA кодоор дахин баталгаажуулахыг шаардана.</p>
   <label>Нууц үг<input ref={first} type="password" autoComplete="current-password" value={pw} onChange={e=>setPw(e.target.value)} required/></label>
