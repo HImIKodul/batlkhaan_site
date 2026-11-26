@@ -279,11 +279,15 @@ export function registerAdminRoutes(d: AdminDeps) {
   route("GET", "/audit", "audit.read", async (c) => { const { page, pageSize, skip } = pageOf(c.query); const where: any = c.query.get("action") ? { action: { contains: c.query.get("action") } } : {}; const [total, rows] = await Promise.all([prisma.adminAuditEvent.count({ where }), prisma.adminAuditEvent.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize })]); ok(c.res, { page, pageSize, total, items: rows }); });
   route("GET", "/settings", "admins.manage", async (c) => {
     const admins = await prisma.adminAccount.findMany({ orderBy: { createdAt: "asc" } }); const users = await prisma.user.findMany({ where: { id: { in: admins.map(a => a.userId) } }, select: { id: true, email: true } }); const um = new Map(users.map(u => [u.id, u.email]));
-    ok(c.res, { admins: admins.map(a => ({ id: a.id, email: um.get(a.userId), role: a.role, status: a.status, createdAt: a.createdAt })), reportReviewRequired: config.reportReviewRequired, reviewHours: REVIEW_HOURS, aiProvider: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase(), aiKeyConfigured: Boolean((process.env.OPENAI_API_KEY ?? "").trim()), emailDelivery: config.mailProvider==="resend"?"RESEND_CONFIGURED_NOT_VERIFIED":config.mailProvider==="mock"?"MOCK_LOCAL_ONLY":"DISABLED", adminProvisioning: "CLI only: npm run admin:bootstrap" });
+    ok(c.res, { admins: admins.map(a => ({ id: a.id, email: um.get(a.userId), role: a.role, status: a.status, createdAt: a.createdAt, lockedUntil: a.lockedUntil && a.lockedUntil > new Date() ? a.lockedUntil : null })), reportReviewRequired: config.reportReviewRequired, reviewHours: REVIEW_HOURS, aiProvider: (process.env.MMRI_AI_REPORT_PROVIDER ?? "disabled").toLowerCase(), aiKeyConfigured: Boolean((process.env.OPENAI_API_KEY ?? "").trim()), emailDelivery: config.mailProvider==="resend"?"RESEND_CONFIGURED_NOT_VERIFIED":config.mailProvider==="mock"?"MOCK_LOCAL_ONLY":"DISABLED", adminProvisioning: "CLI only: npm run admin:bootstrap" });
   });
   route("POST", "/admins/:id/disable", "admins.manage", async (c, p, fp) => {
     const a = await admin.disableAdmin(c.params.id, p.adminId, { enforceNotSelf: true });
     await aud(p, fp, "ADMIN_DISABLED", "ADMIN", a.id); ok(c.res, { disabled: true });
+  }, { sensitive: true, body: false });
+  route("POST", "/admins/:id/unlock", "admins.manage", async (c, p, fp) => {
+    await admin.unlockAdmin(c.params.id, p.adminId);
+    ok(c.res, { unlocked: true });
   }, { sensitive: true, body: false });
   route("POST", "/admins/:id/role", "admins.manage", async (c, p, fp, b) => {
     if (!["SUPER_ADMIN", "REPORT_REVIEWER", "BILLING_REVIEWER"].includes(b.role)) throw badRequest("Эрхийн төрөл буруу байна.");

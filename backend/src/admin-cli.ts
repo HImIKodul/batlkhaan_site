@@ -44,6 +44,10 @@ async function main() {
   } else if (command === "disable" || command === "enable") {
     const email = arg("email"); if (!email) throw new Error("--email is required");
     await svc.setStatus(email, command === "disable" ? "DISABLED" : "ACTIVE"); console.log(command === "disable" ? "Administrator disabled and sessions revoked." : "Administrator re-enabled (MFA must be confirmed again at next login).");
+  } else if (command === "unlock") {
+    const email = arg("email"); if (!email) throw new Error("--email is required");
+    const u = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } }); const a = u ? await prisma.adminAccount.findUnique({ where: { userId: u.id } }) : null; if (!a) throw new Error("Administrator not found");
+    await svc.unlockAdmin(a.id, null); console.log("Administrator sign-in lock lifted.");
   } else if (command === "list") {
     const rows = await prisma.adminAccount.findMany({ orderBy: { createdAt: "asc" } });
     for (const a of rows) { const u = await prisma.user.findUnique({ where: { id: a.userId }, select: { email: true } }); console.log(`${a.role.padEnd(16)} ${a.status.padEnd(12)} ${u?.email}`); }

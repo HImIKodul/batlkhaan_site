@@ -80,7 +80,7 @@
 .mmri-loading-fact__source{margin:10px 0 0;font-size:13px;line-height:1.4;color:#667085}
 @keyframes mmri-fact-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.mmri-loading-fact{animation:none}}
-@media (prefers-reduced-transparency:reduce){.mmri-loading-fact{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff}}
+@media (prefers-reduced-transparency:reduce){.mmri-loading-fact{-webkit-backdrop-filter:none;backdrop-filter:none;background:#0c1d4a}}
 /* Loading screens: the skeleton wrapper had no styles, so its announcement text showed and the boot screen fell back to the legacy dark ground. */
 .mmri-skeleton__sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 main.mmri-route-loading{min-height:100dvh;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(ellipse at 50% 0,#fff,#EEF2F8 70%)}
@@ -171,3 +171,13 @@ html:root body.mmri-prism-page .mmri-button:is(.mmri-button--primary,.mmri-butto
 .report-waiting__dates>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:10px 14px;border:1px solid rgba(160,190,255,.35);border-radius:14px;background:rgba(8,22,60,.55)}
 .report-waiting__dates dt{font-size:14px;opacity:.85}.report-waiting__dates dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
 .report-waiting__stage{font-size:16px}.report-waiting__stage b{margin-left:6px;padding:4px 12px;border-radius:999px;border:1px solid rgba(160,190,255,.5);background:rgba(8,22,60,.6)}
+
+/* The card sits on the dark glass of the app (--hg-l1 is navy there), so its text must be light. The old colours were written for a white card and left the description and the source unreadable. */
+html:root body .mmri-loading-fact{color:#fff}
+html:root body .mmri-loading-fact__kicker{color:#cfe0ff}
+html:root body .mmri-loading-fact__text strong{color:#fff}
+html:root body .mmri-loading-fact__text span{color:#eef3ff}
+html:root body .mmri-loading-fact__source{color:#c6d6f5}
+.mmri-loading-fact__swap{animation:mmri-fact-swap .45s ease both}
+@keyframes mmri-fact-swap{from{opacity:.35}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.mmri-loading-fact__swap{animation:none}}

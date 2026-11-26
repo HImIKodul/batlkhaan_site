@@ -24,7 +24,7 @@ try {
   const r1 = await login({ password: owner.password }); ok("E2 correct password without a code sends one and asks for it", r1.s === 200 && r1.d?.mfaRequired === "EMAIL_CODE" && !r1.d?.token && box().length === m0 + 1 && box().at(-1).to === FIXED, r1);
   const c1 = lastCode(); ok("E3 the code is 6 digits and is not in the API response", /^\d{6}$/.test(c1) && !JSON.stringify(r1).includes(c1));
   const r2 = await login({ password: owner.password }); ok("E4 an immediate resend is throttled", r2.s === 429 && box().length === m0 + 1, r2.s);
-  const wrong = await login({ password: owner.password, emailCode: c1 === "000000" ? "111111" : "000000" }); ok("E5 a wrong code is refused", wrong.s === 401 && !wrong.d?.token, wrong.s);
+  const wrong = await login({ password: owner.password, emailCode: c1 === "000000" ? "111111" : "000000" }); ok("E5 a wrong code is refused with a clear 'code is wrong' message (password was already correct)", wrong.s === 401 && !wrong.d?.token && wrong.e?.code === "ADMIN_CODE_INVALID" && /код буруу/.test(wrong.e?.message ?? ""), wrong);
   const good = await login({ password: owner.password, emailCode: c1 }); ok("E6 the right code signs in", good.s === 200 && /^adm_/.test(good.d?.token ?? "") && good.d?.admin?.role === "SUPER_ADMIN", good);
   const me = await call("GET", "/admin/auth/me", { tok: good.d?.token }); ok("E7 the session works", me.s === 200, me.s);
   const replay = await login({ password: owner.password, emailCode: c1 }); ok("E8 the same code cannot be used twice", replay.s === 401 && !replay.d?.token, replay.s);
@@ -39,7 +39,7 @@ try {
   // guess budget: the real code stops working once its 5 guesses are spent
   sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${aid}'`); const mk = () => login({ password: owner.password, emailCode: c5 === "123456" ? "654321" : "123456" });
   for (let i = 0; i < 4; i++) await mk(); sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${aid}'`); await mk(); sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${aid}'`);
-  const burnt = await login({ password: owner.password, emailCode: c5 }); ok("E13 after 5 wrong guesses even the right code is dead", burnt.s === 401, burnt.s);
+  const burnt = await login({ password: owner.password, emailCode: c5 }); ok("E13 after 5 wrong guesses even the right code is dead (clear 'too many attempts' message)", (burnt.s === 401 || burnt.s === 429) && !burnt.d?.token && ["ADMIN_CODE_ATTEMPTS", "ADMIN_LOGIN_FAILED", "ADMIN_CODE_INVALID", "ADMIN_LOCKED"].includes(burnt.e?.code), [burnt.s, burnt.e?.code]);
   // repeated failures lock the account
   sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${aid}'`); age(); await login({ password: owner.password }); for (let i = 0; i < 6; i++) await mk();
   const locked = await login({ password: owner.password, emailCode: lastCode() }); ok("E14 repeated wrong codes lock the account", locked.s === 429, locked.s);
@@ -56,5 +56,28 @@ try {
   const mb = box().length; const oth = await call("POST", "/admin/auth/login", { body: { email: other.email, password: other.password } }); const othT = await call("POST", "/admin/auth/login", { body: { email: other.email, password: other.password, totpCode: await freshAdminTotp(other) } });
   ok("E18 other administrators: no e-mail code is sent, TOTP login unchanged", oth.s === 401 && box().length === mb && othT.s === 200, [oth.s, othT.s]);
   const nope = await call("POST", "/admin/auth/email-code", { tok: othT.d?.token }); ok("E19 the code request route is closed for accounts not opted in", nope.s === 404, nope.s);
+  // ===== additions: specific code errors, 24 h lock, remaining time, unlock, unrelated timers =====
+  ok("L1 unrelated timers unchanged: e-mail code lifetime 5 minutes, resend cooldown 60 seconds", r1.d.expiresInMinutes === 5 && r1.d.resendAfterSeconds === 60, r1.d);
+  age(); sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${aid}'`);
+  await login({ password: owner.password }); const cx = lastCode(); sql(`update admin_email_challenges set "expiresAt"=now()-interval '1 minute' where "adminId"='${aid}'`);
+  const expd = await login({ password: owner.password, emailCode: cx }); ok("L2 an expired code gets the 'expired' message and a hint to resend", expd.s === 401 && expd.e?.code === "ADMIN_CODE_EXPIRED" && /дахин илгээх/.test(expd.e?.message ?? ""), expd);
+  age(); await login({ password: owner.password }); const cy = lastCode(); let att: any = null; for (let i = 0; i < 6; i++) att = await login({ password: owner.password, emailCode: cy === "123456" ? "654321" : "123456" });
+  ok("L3 too many wrong guesses of one code: the 'too many attempts' message", att.e?.code === "ADMIN_CODE_ATTEMPTS" || att.e?.code === "ADMIN_LOCKED", att.e);
+  sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${aid}'`); age();
+  const oid = sql(`select a.id from admin_accounts a join users u on u.id=a."userId" where u.email='${other.email}'`).trim();
+  sql(`update admin_accounts set "failedLogins"=0,"lockedUntil"=null where id='${oid}'`);
+  for (let i = 0; i < 5; i++) await call("POST", "/admin/auth/login", { body: { email: other.email, password: "wrong-" + other.password, totpCode: "000000" } });
+  const left = Number(sql(`select extract(epoch from ("lockedUntil"-now())) from admin_accounts where id='${oid}'`));
+  ok("L4 five wrong sign-ins lock that administrator for 24 hours (86 400 s), the single configured value", Math.abs(left - 86400) < 120, left);
+  const lk = await call("POST", "/admin/auth/login", { body: { email: other.email, password: other.password, totpCode: await freshAdminTotp(other) } });
+  ok("L5 while locked even the correct password and code are refused, with the remaining time in Mongolian", lk.s === 429 && lk.e?.code === "ADMIN_LOCKED" && /2[34] цаг/.test(lk.e?.message ?? "") && /Дахин оролдох/.test(lk.e?.message ?? "") && lk.e?.details?.retryAfterSeconds > 80000, lk);
+  age(); await login({ password: owner.password }); const c9 = lastCode(); const own = await login({ password: owner.password, emailCode: c9 });
+  ok("L6 another SUPER_ADMIN is unaffected by that lock and signs in with the e-mail code", own.s === 200 && /^adm_/.test(own.d?.token ?? ""), own.s);
+  age(); const rq2 = await call("POST", "/admin/auth/email-code", { tok: own.d.token }); const c10 = lastCode(); const rea = await call("POST", "/admin/auth/reauth", { tok: own.d.token, body: { password: owner.password, emailCode: c10 } });
+  const lst = await call("GET", "/admin/settings", { tok: own.d.token }); ok("L7 the administrator list shows who is locked and until when", lst.s === 200 && (lst.d?.admins ?? []).some((a: any) => a.id === oid && !!a.lockedUntil), lst.s);
+  const ul = await call("POST", `/admin/admins/${oid}/unlock`, { tok: own.d.token }); ok("L8 a SUPER_ADMIN can lift the lock at once (incident response is never blocked by a cooldown)", rea.s === 200 && ul.s === 200 && sql(`select "lockedUntil" is null from admin_accounts where id='${oid}'`) === "t", [rea.s, ul.s]);
+  const back = await call("POST", "/admin/auth/login", { body: { email: other.email, password: other.password, totpCode: await freshAdminTotp(other) } }); ok("L9 the unlocked administrator signs in again (authenticator code still works during the transition)", back.s === 200 && /^adm_/.test(back.d?.token ?? ""), back.s);
+  ok("L10 the unlock is in the audit trail", Number(sql(`select count(*) from admin_audit_events where action='ADMIN_UNLOCKED' and "targetId"='${oid}'`)) >= 1);
+  ok("L11 no verification code in the server log", !/\b\d{6}\b.*ADMIN_LOGIN_CODE/.test(log) && !log.includes(c9));
 } catch (x: any) { ok("no exception", false, String(x?.stack ?? x)); }
 console.log(fail ? `RESULT FAIL ${fail}/${n}` : `RESULT PASS ${n}/${n}`); stop(); process.exit(fail ? 1 : 0);

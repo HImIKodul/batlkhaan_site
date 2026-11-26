@@ -26,7 +26,17 @@ const MAX_EMAIL_CODES_PER_HOUR = 5, MAX_EMAIL_CODE_GUESSES = 5;
 export const emailOtpEnabledFor = (email: string): boolean =>
   (process.env.MMRI_ADMIN_EMAIL_OTP ?? "off").trim().toLowerCase() === "on" &&
   (process.env.MMRI_ADMIN_EMAIL_OTP_ACCOUNTS ?? "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean).includes(email.trim().toLowerCase());
-const MAX_FAILS = 5, LOCK_MS = 15 * 60_000;
+const MAX_FAILS = 5;
+/** ONE place for the administrator account lock that follows MAX_FAILS wrong sign-in attempts (password, authenticator code or e-mail code): 24 hours by default (MMRI_ADMIN_LOCK_SECONDS, 60 s to 7 days).
+    It is NOT the e-mail code lifetime (ADMIN_EMAIL_CODE_TTL_MINUTES), the code resend cooldown (ADMIN_EMAIL_CODE_COOLDOWN_SECONDS), the re-authentication window (REAUTH_WINDOW_MS), the session timers, the QPay QR lifetime or the 24 h customer report deadline.
+    The lock belongs to the one failing account: every other administrator keeps working, and a SUPER_ADMIN can lift it at once (POST /admins/:id/unlock, CLI `admin unlock`). */
+export const ADMIN_LOCK_DEFAULT_SECONDS = 86_400;
+export const adminLockSeconds = (): number => { const n = Number(process.env.MMRI_ADMIN_LOCK_SECONDS ?? ADMIN_LOCK_DEFAULT_SECONDS); return Number.isFinite(n) ? Math.max(60, Math.min(604_800, Math.floor(n))) : ADMIN_LOCK_DEFAULT_SECONDS; };
+export const lockedMessageMn = (until: Date, now = new Date()): string => {
+  const secs = Math.max(1, Math.ceil((until.getTime() - now.getTime()) / 1000)), h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60);
+  const left = h > 0 ? `${h} цаг${m ? ` ${m} минут` : ""}` : m > 0 ? `${m} минут` : "1 минутаас бага";
+  return `Хэт олон буруу оролдлого хийсэн тул энэ админы нэвтрэлт түр хаагдлаа. Дахин оролдох боломжтой болох хугацаа: ${left}. Яаралтай бол өөр SUPER_ADMIN нээж өгч болно.`;
+};
 const sha = (t: string) => createHash("sha256").update(`mmri-admin-session:${t}`).digest("hex");
 
 export class AdminService {
@@ -109,6 +119,15 @@ export class AdminService {
     await this.audit(admin.id, status === "DISABLED" ? "ADMIN_DISABLED" : "ADMIN_ENABLED", "SUCCESS", null, { type: "ADMIN", id: admin.id }, { by: by ?? "CLI" });
   }
 
+  /** Lifts the sign-in lock of one administrator (incident response, or a mistyped password). Audited; sessions are not created, the administrator still has to sign in. */
+  async unlockAdmin(adminId: string, by: string | null = null) {
+    const a = await prisma.adminAccount.findUnique({ where: { id: adminId }, select: { id: true, lockedUntil: true, failedLogins: true } });
+    if (!a) throw new ApiError(404, "NOT_FOUND", "Админ олдсонгүй.");
+    await prisma.adminAccount.update({ where: { id: adminId }, data: { lockedUntil: null, failedLogins: 0 } });
+    await this.audit(adminId, "ADMIN_UNLOCKED", "SUCCESS", null, { type: "ADMIN", id: adminId }, { by: by ?? "CLI", wasLocked: !!(a.lockedUntil && a.lockedUntil > new Date()) });
+    return { unlocked: true };
+  }
+
   /** Decrypts the stored MFA secret; returns null (fail closed, same denial as a wrong code) when it is missing or cannot be decrypted. */
   private readSecret(enc: string | null | undefined): { secret: string | null; unreadable: boolean } {
     if (!enc) return { secret: null, unreadable: false };
@@ -117,7 +136,7 @@ export class AdminService {
   /** Atomic failure counter (no read-modify-write): increments in the database, then applies the lock when the threshold is reached. */
   private async recordFailure(adminId: string) {
     const u = await prisma.adminAccount.update({ where: { id: adminId }, data: { failedLogins: { increment: 1 } }, select: { failedLogins: true } });
-    if (u.failedLogins >= MAX_FAILS) await prisma.adminAccount.update({ where: { id: adminId }, data: { lockedUntil: new Date(Date.now() + LOCK_MS) } });
+    if (u.failedLogins >= MAX_FAILS) await prisma.adminAccount.update({ where: { id: adminId }, data: { lockedUntil: new Date(Date.now() + adminLockSeconds() * 1000) } });
   }
 
 
@@ -152,15 +171,16 @@ export class AdminService {
     await this.audit(adminId, "ADMIN_EMAIL_CODE", "SUCCESS", fp, undefined, { event: "sent" });
   }
   /** Spends one guess (atomically, at most MAX_EMAIL_CODE_GUESSES per code across all instances), then compares in constant time and consumes the code with a conditional update: a code works exactly once. */
-  private async claimEmailCode(adminId: string, codeRaw: unknown): Promise<boolean> {
+  private async claimEmailCode(adminId: string, codeRaw: unknown): Promise<"OK" | "INVALID" | "EXPIRED" | "ATTEMPTS"> {
     const code = String(codeRaw ?? "").replace(/\s/g, ""); const now = new Date();
     const ch = await prisma.adminEmailChallenge.findFirst({ where: { adminId, usedAt: null, expiresAt: { gt: now } }, orderBy: { createdAt: "desc" } });
-    if (!ch) return false;
+    if (!ch) return "EXPIRED";
     const spent = await prisma.adminEmailChallenge.updateMany({ where: { id: ch.id, usedAt: null, attempts: { lt: MAX_EMAIL_CODE_GUESSES }, expiresAt: { gt: now } }, data: { attempts: { increment: 1 } } });
-    if (spent.count !== 1 || !/^\d{6}$/.test(code)) return false;
+    if (spent.count !== 1) return "ATTEMPTS";
+    if (!/^\d{6}$/.test(code)) return "INVALID";
     const a = Buffer.from(this.emailCodeHash(adminId, ch.id, code)), b = Buffer.from(ch.codeHash);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-    return (await prisma.adminEmailChallenge.updateMany({ where: { id: ch.id, usedAt: null, expiresAt: { gt: new Date() } }, data: { usedAt: new Date() } })).count === 1;
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return "INVALID";
+    return (await prisma.adminEmailChallenge.updateMany({ where: { id: ch.id, usedAt: null, expiresAt: { gt: new Date() } }, data: { usedAt: new Date() } })).count === 1 ? "OK" : "EXPIRED";
   }
   /** Authenticated resend for a re-authentication prompt. */
   async requestEmailCode(p: AdminPrincipal, fp: RequestFingerprint) {
@@ -175,7 +195,7 @@ export class AdminService {
     const admin = user ? await prisma.adminAccount.findUnique({ where: { userId: user.id } }) : null;
     const dummy = "scrypt$32768$8$1$AAAAAAAAAAAAAAAAAAAAAA$" + "A".repeat(86);
     const pwOk = await verifyPassword(String(input.password ?? ""), user?.passwordHash ?? dummy, this.config.passwordPepper).catch(() => false);
-    if (admin?.lockedUntil && admin.lockedUntil > new Date()) { await this.audit(admin.id, "ADMIN_LOGIN", "DENIED", fp, undefined, { reason: "locked" }); throw new ApiError(429, "ADMIN_LOCKED", MSG.locked); }
+    if (admin?.lockedUntil && admin.lockedUntil > new Date()) { await this.audit(admin.id, "ADMIN_LOGIN", "DENIED", fp, undefined, { reason: "locked" }); throw new ApiError(429, "ADMIN_LOCKED", lockedMessageMn(admin.lockedUntil), { retryAfterSeconds: Math.max(1, Math.ceil((admin.lockedUntil.getTime() - Date.now()) / 1000)) }); }
     const { secret, unreadable } = this.readSecret(admin?.mfaSecretEnc);
     const step = secret ? verifyTotp(secret, String(input.totpCode ?? "").replace(/\s/g, "")) : null;
     const replay = step !== null && admin && BigInt(step) <= admin.mfaLastStep;
@@ -191,7 +211,13 @@ export class AdminService {
         await this.issueEmailCode(admin.id, user.email, fp);
         return { mfaRequired: "EMAIL_CODE" as const, expiresInMinutes: ADMIN_EMAIL_CODE_TTL_MINUTES, resendAfterSeconds: ADMIN_EMAIL_CODE_COOLDOWN_SECONDS };
       }
-      if (!(await this.claimEmailCode(admin.id, input.emailCode))) return denied("email_code");
+      const claim = await this.claimEmailCode(admin.id, input.emailCode);
+      if (claim !== "OK") {   // the password is already verified here, so naming the problem with the CODE reveals nothing to a stranger
+        await this.recordFailure(admin.id); await this.audit(admin.id, "ADMIN_LOGIN", "FAILURE", fp, undefined, { reason: "email_code_" + claim.toLowerCase() });
+        if (claim === "EXPIRED") throw new ApiError(401, "ADMIN_CODE_EXPIRED", "Кодын хугацаа дууссан эсвэл ашиглагдсан байна. «Код дахин илгээх» товчийг дарна уу.");
+        if (claim === "ATTEMPTS") throw new ApiError(429, "ADMIN_CODE_ATTEMPTS", "Код хэт олон удаа буруу оруулагдсан байна. «Код дахин илгээх» товчоор шинэ код аваарай.");
+        throw new ApiError(401, "ADMIN_CODE_INVALID", "Баталгаажуулах код буруу байна.");
+      }
       const now2 = Date.now(); const token2 = "adm_" + randomBytes(32).toString("base64url");
       const session2 = await prisma.$transaction(async tx => {
         await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
@@ -253,7 +279,7 @@ export class AdminService {
     };
     if (admin && user && emailOtpEnabledFor(user.email) && String((input as any).emailCode ?? "").trim() && !String(input.totpCode ?? "").trim()) {
       if (admin.status !== "ACTIVE" || (admin.lockedUntil && admin.lockedUntil > new Date()) || user.status !== "ACTIVE" || user.erasedAt || !pwOk) return deny(!pwOk ? "password" : "state");
-      if (!(await this.claimEmailCode(admin.id, (input as any).emailCode))) return deny("email_code");
+      if ((await this.claimEmailCode(admin.id, (input as any).emailCode)) !== "OK") return deny("email_code");
       const sess = await prisma.adminSession.findUnique({ where: { id: p.sessionId } }); const nowR = new Date();
       if (!sess || sess.revokedAt || sess.expiresAt <= nowR || sess.absoluteExpiresAt <= nowR) return deny("session");
       await prisma.adminSession.update({ where: { id: p.sessionId }, data: { reauthAt: nowR } });
