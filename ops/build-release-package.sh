@@ -26,7 +26,7 @@ B="$OUT/backend"
 cp -r "$W/be/dist" "$B/dist"; cp "$BACKEND/package.json" "$BACKEND/package-lock.json" "$B/"
 cp -r "$BACKEND/prisma" "$B/prisma"; cp -r "$BACKEND/pdf_renderer" "$B/pdf_renderer"; cp -r "$BACKEND/resources" "$B/resources"
 rm -f "$B/pdf_renderer/render_report_pdf_b4_proposed.py"
-mkdir -p "$B/scripts"; for f in gmail-authorize.mjs qpay-smoke.mjs; do [ -f "$BACKEND/scripts/$f" ] && cp "$BACKEND/scripts/$f" "$B/scripts/"; done
+mkdir -p "$B/scripts"; for f in gmail-authorize.mjs gmail-check.mjs qpay-smoke.mjs; do [ -f "$BACKEND/scripts/$f" ] && cp "$BACKEND/scripts/$f" "$B/scripts/"; done
 # Only the methodology the runtime/import actually uses (older generations and v2 runtime bundles are NOT shipped).
 M="$B/methodology"; mkdir -p "$M"
 cp -r "$BACKEND/methodology/domain-question-banks" "$M/"; cp -r "$BACKEND/methodology/recommendation-contracts" "$M/"
