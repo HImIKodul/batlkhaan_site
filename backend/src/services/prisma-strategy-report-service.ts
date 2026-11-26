@@ -536,6 +536,8 @@ export class PrismaStrategyReportService {
       }
       /* A draft started by hand without AI gets the dated plan built from the same frozen diagnosis; a person edits and approves it before anything is published. */
       if(withoutAi&&this.annualPlanProvider){const plan=deterministicAnnualPlan(payload);if(plan){result={...result,narrative:{...result.narrative,annualPlan:plan}};planOutcome="READY"}}
+      /* A paid report always carries a dated 12-month plan bound to this payload: when no AI plan was produced (provider disabled, unavailable or rejected), the plan built deterministically from the same frozen diagnosis is attached. It still passes the review gate and the three-page check before anything is published. */
+      if(payload.priorityActions.length&&!planForPayload(result.narrative.annualPlan,payload.payloadHash)){const plan=deterministicAnnualPlan(payload);if(plan){result={...result,narrative:{...result.narrative,annualPlan:plan}};planOutcome=planOutcome?`${planOutcome}; DETERMINISTIC_FALLBACK`:"DETERMINISTIC_FALLBACK"}}
       /* Company logo snapshot (immutable asset id + hash). Reports issued later keep this logo even if the company replaces or removes it. */
       {
         const owner=await prisma.assessment.findUnique({where:{id:assessmentId},select:{companyId:true}});

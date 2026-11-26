@@ -99,10 +99,10 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
  const saveDraftNow=async(value:number|null,attempt=0,gen=selectionGen.current):Promise<boolean>=>{
   const id=session.assessmentId;
   if(!id||!question||!routingMeta?.questionIssueId||!online)return false;
-  const seq=++draftSeq.current;
+  const seq=draftSeq.current=Math.max(draftSeq.current+1,Date.now());
   setDraftState('saving');setDraftError('');
   try{
-   await api.saveDraft(id,{questionIssueId:routingMeta.questionIssueId,questionId:question.id,draft:value===null?{}:{optionIndex:value},expectedAssessmentRevision:routingMeta.assessmentRevision});
+   await api.saveDraft(id,{questionIssueId:routingMeta.questionIssueId,questionId:question.id,draft:value===null?{}:{optionIndex:value},expectedAssessmentRevision:routingMeta.assessmentRevision,clientSequence:seq});
    if(seq!==draftSeq.current)return true;           // a newer choice is already being saved; it decides the final state
    if(gen!==selectionGen.current)return true;       // a newer choice exists but is not saved yet: keep its local record and its pending save
    clearLocalDraft(id);

@@ -1,5 +1,5 @@
 import { prisma } from "../../db.js";
-import { PrismaAssessmentEngine } from "../../services/prisma-assessment-engine.js";
+import { PrismaAssessmentEngine, publicDraftValue } from "../../services/prisma-assessment-engine.js";
 import { numberOrNull } from "../presenters.js";
 import type { PrismaStrategyReportService } from "../../services/prisma-strategy-report-service.js";
 import { DOMAIN_CODES } from "../../domain-methodology.js";
@@ -119,7 +119,7 @@ export class AssessmentQueryService {
       routingRevision:a.routingRevision,
       eventSequence:a.eventSequence,
       saveStatus:"SAVED",
-      draft:draft&&open&&draft.questionIssueId===open.questionIssueId?{questionIssueId:draft.questionIssueId,questionId:open.id,draft:draft.draft,draftRevision:draft.draftRevision,serverAckAt:draft.serverAckAt}:null
+      draft:draft&&open&&draft.questionIssueId===open.questionIssueId?{questionIssueId:draft.questionIssueId,questionId:open.id,draft:publicDraftValue(draft.draft),draftRevision:draft.draftRevision,serverAckAt:draft.serverAckAt}:null
     };
   }
 

@@ -22,10 +22,10 @@ export function planHeight(stages: Array<{ headingMn: string; guide?: PlanStageG
 /** The plan in full; when it is longer than one page holds, it drops only what page 2 already says for the same work: first what the work covers, then the second sentence of the later priorities, last of all the second sentence of every step. */
 export function deterministicAnnualPlan(payload: FrozenReportPayload): AnnualPlanReady | null {
   let plan: AnnualPlanReady | null = null;
-  for (const detail of [3, 2, 1, 0]) { plan = buildPlan(payload, detail); if (!plan || planHeight(plan.stages) <= PAGE_HEIGHT) break; }
+  for (const detail of [3, 2, 1, 0, -1]) { plan = buildPlan(payload, detail); if (!plan || planHeight(plan.stages) <= PAGE_HEIGHT) break; }
   return plan;
 }
-const PAGE_HEIGHT = 680; // the page holds about 660; the estimate was 22 to 77 above the real height in every measured report
+const PAGE_HEIGHT = 662; // the page holds about 652 after the heading; the estimate was only 10 above the real height in the tightest measured report (Marketing, 676 against 666), 22 to 77 above in the others
 function buildPlan(payload: FrozenReportPayload, detail: number): AnnualPlanReady | null {
   if (!payload.guidance?.priorities.length) return null;
   const named = payload.guidance.names, p = orderedPriorities(payload), W = planWindowDays(planStartDate(payload.generatedAt));
@@ -59,5 +59,17 @@ function buildPlan(payload: FrozenReportPayload, detail: number): AnnualPlanRead
     stage("E5", H[4], 270, W - 270, ["E4"], g(4, "Жилийн үр дүнгийн дүгнэлт, дараагийн жилийн ажлын жагсаалт", detail < 1 && p[4] ? check(4) : `${p[4] ? `${check(4)}, ` : ""}дахин оношилгооны дүнг энэ тайлантай харьцуулсан эсэх`, "Дээрх ажлуудыг хариуцсан хүмүүс"), [...act(1, "embedMn"), ...act(2, "embedMn"), ...(p[3]?.g.evidence ? [] : act(3, "embedMn")), ...next(4),
       { textMn: `Жилийн эцэст ажил бүрийн үр дүнг хоёрдугаар хуудсанд заасан шалгах аргаар үнэлж, дахин оношилгоо хийнэ.${detail > 0 && p[4] && !p[4].g.evidence ? ` «${name(4)}» ажлыг дараагийн жил үргэлжлүүлэх эсэхийг шийднэ.` : ""}`, recommendationIds: all }])
   ].filter(s => s.actions.length);
+  /* Last resort when even the shortest wording is taller than the page (measured: a Marketing plan with five actions on one capability, 665 against about 652 that fit): drop, one at a time from the longest stage, an action that only repeats work already planned earlier, so that every finding is still covered and every stage keeps its first action and the closing review. */
+  if (detail < 0) {
+    const covered = (skip: unknown) => { const c = new Map<string, number>(); for (const st of stages) for (const a of st.actions) if (a !== skip) for (const r of a.recommendationIds) c.set(r, (c.get(r) ?? 0) + 1); return c; };
+    while (planHeight(stages) > PAGE_HEIGHT - 30) {
+      const longest = [...stages].sort((x, y) => y.actions.length - x.actions.length)[0];
+      if (!longest || longest.actions.length <= 3) break;
+      const idx = longest.actions.length - 2;   // the last action closes the year; the one before it is the least needed
+      const c = covered(longest.actions[idx]);
+      if (!longest.actions[idx].recommendationIds.every(r => (c.get(r) ?? 0) > 0)) break;
+      longest.actions.splice(idx, 1);
+    }
+  }
   return materializeAnnualPlan(stages, payload, { kind: "DETERMINISTIC", model: "guidance" });
 }

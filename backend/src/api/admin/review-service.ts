@@ -143,6 +143,12 @@ export class ReviewService {
     const r = await checkPdfLayoutBudget(published.payload, narrative);
     if (!r.fits) throw new ApiError(422, "PDF_LAYOUT_BUDGET", "Нэмсэн тайлбаруудын нийт урт PDF тайлангийн 3 хуудсанд багтахгүй байна. Тайлбаруудыг (ялангуяа давуу, сул талын тайлбар бүрийг ойролцоогоор 100 тэмдэгтээс, тэргүүлэх ажлын тайлбарыг 300 тэмдэгтээс) товчилж дахин хадгална уу.");
   }
+  /** A paid report is never approved or published without its dated 12-month plan, bound to this exact payload (same hash the PDF and the web report require). */
+  async assertDatedPlan(assessmentId: string, narrative: NarrativeDraft) {
+    const published: any = await this.reports.readPublishedReport(assessmentId);
+    if (!published.payload.priorityActions?.length) return;
+    if (!planForPayload((narrative as any).annualPlan, published.payload.payloadHash)) throw new ApiError(422, "ANNUAL_PLAN_REQUIRED", "Огноотой 12 сарын төлөвлөгөө энэ тайланд байхгүй эсвэл тайлангийн одоогийн хувилбартай таарахгүй байна. Төлөвлөгөөг үүсгээд дахин батална уу.");
+  }
   async validate(assessmentId: string, narrative: NarrativeDraft) {
     const published: any = await this.reports.readPublishedReport(assessmentId);
     return validateNarrativeDraft(published.payload, narrative);
@@ -328,6 +334,7 @@ export class ReviewService {
     // Publishable = exactly the state the customer report page accepts (validation.state === "PASS"). REPAIR_REQUIRED would be approved here and then refused to the customer.
     const v = await this.validate(r.assessmentId, rev.narrative as any);
     if (v.state !== "PASS") throw new ApiError(422, v.state === "GENERATION_BLOCKED" ? "VALIDATION_BLOCKED" : "VALIDATION_NOT_PUBLISHABLE", v.state === "GENERATION_BLOCKED" ? "Тайлан баталгаажуулалтад тэнцсэнгүй (тооцоолсон баримтаас зөрсөн агуулга)." : validationMessageMn(v.issues), { state: v.state, issues: v.issues.slice(0, 8) });
+    await this.assertDatedPlan(r.assessmentId, rev.narrative as any);
     await this.assertPdfBudget(r.assessmentId, rev.narrative as any);
     const flat = JSON.stringify(rev.narrative);
     if (FORBIDDEN.test(flat) || /[—―]/.test(flat)) throw new ApiError(422, "TERMINOLOGY", "Тайланд хориглосон нэр томьёо эсвэл урт зураас үлдсэн байна.");
@@ -390,6 +397,7 @@ export class ReviewService {
     if (!snap) { await this.abortPublish(reviewId, "NO_SNAPSHOT"); throw new ApiError(409, "NO_SNAPSHOT", "Тайлангийн суурь хувилбар олдсонгүй."); }
     const v = await this.validate(r.assessmentId, narrative);
     if (v.state !== "PASS") { await this.abortPublish(reviewId, `validation ${v.state}`); throw new ApiError(422, "VALIDATION_NOT_PUBLISHABLE", "Тайлан баталгаажуулалтыг бүрэн давахгүй тул нийтлэх боломжгүй.", { state: v.state, issues: v.issues.slice(0, 8) }); }
+    try { await this.assertDatedPlan(r.assessmentId, narrative); } catch (e: any) { await this.abortPublish(reviewId, String(e?.message ?? e)); throw e; }
     /* REP-02: stage -> verify -> atomic commit. The candidate PDF is rendered and checked (3 pages) BEFORE any database change; the snapshot, the artifact row and the review status then change in ONE transaction.
        If anything fails the previously published snapshot/artifact pair is exactly as it was (nothing to compensate), and the review returns to APPROVED for a retry. */
     let staged: any;
