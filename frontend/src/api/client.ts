@@ -131,6 +131,7 @@ export const api={
  getBillingStatus:(companyId:string)=>request<BillingStatus>(`/companies/${companyId}/billing/status`),
  createBillingInvoice:(companyId:string,planCode:BillingPlanCode,domainCode:string='marketing')=>request<BillingInvoice>(`/companies/${companyId}/billing/invoices`,{method:'POST',body:JSON.stringify({planCode,domainCode})}),
  getBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}`),
+ regenerateBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}/regenerate`,{method:'POST'}),
  reconcileBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}/reconcile`,{method:'POST'}),
  mockPayBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}/mock-pay`,{method:'POST'}),
  cancelBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}`,{method:'DELETE'}),

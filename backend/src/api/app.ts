@@ -346,8 +346,15 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,invoice);
   });
 
+  router.add("POST","/api/v1/billing/invoices/:invoiceId/regenerate",async({res,principal,params})=>{
+    await billingInvoiceAccess(principal!.userId,params.invoiceId,COMPANY_ADMIN);
+    reconcileLimiter.check(`regenerate:${principal!.userId}:${params.invoiceId}`);
+    ok(res,await billing.regenerateInvoice(params.invoiceId,principal!.userId));
+  });
   router.add("DELETE","/api/v1/billing/invoices/:invoiceId",async({res,principal,params})=>{
     await billingInvoiceAccess(principal!.userId,params.invoiceId,COMPANY_ADMIN);
+    /* A MANUAL invoice may already have been paid at the bank and nobody here can see that: a customer cannot cancel it. It is closed only through the administrator workflow after the bank statement was checked. */
+    const own=await prisma.billingInvoice.findUnique({where:{id:params.invoiceId},select:{provider:true}}); if(own?.provider==="MANUAL")throw new ApiError(409,"MANUAL_INVOICE_CANNOT_BE_CANCELLED_BY_CUSTOMER","Гараар төлөх нэхэмжлэхийг тусламжийн баг шалгаж хаана. Тусламжийн багтай холбогдоно уу.");
     ok(res,await billing.cancelInvoice(params.invoiceId));
   });
 
@@ -448,7 +455,10 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,await queries.companyDiagnosisLifecycle(params.companyId));
   });
 
+  /* Ordinary customers do not manage organisation members, invitations or roles. The routes answer 404 unless the owner deliberately turns member management on (MMRI_CUSTOMER_MEMBER_MANAGEMENT=on); existing memberships and records are untouched. */
+  const requireMemberManagement=()=>{if((process.env.MMRI_CUSTOMER_MEMBER_MANAGEMENT??"off").trim().toLowerCase()!=="on")throw notFound("Route not found")};
   router.add("POST","/api/v1/companies/:companyId/members",async({req,res,principal,params})=>{
+    requireMemberManagement();
     const b=await readJson(req,config.requestBodyLimitBytes);
     const role=String(b.role??"") as CompanyRole; if(!ALL_ROLES.includes(role))throw badRequest("Invalid company role");
     const email=String(b.email??"").trim().toLowerCase();
@@ -480,12 +490,14 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
 
   /* MMRI-24: members can be listed (OWNER/ADMIN) and individually revoked. The last OWNER can never be removed (service guard + DB trigger). */
   router.add("GET","/api/v1/companies/:companyId/members",async({res,principal,params})=>{
+    requireMemberManagement();
     await requireCompanyRole(principal!.userId,params.companyId,COMPANY_ADMIN);
     const rows=await prisma.companyMembership.findMany({where:{companyId:params.companyId},include:{user:{select:{id:true,email:true,displayName:true,status:true}}},orderBy:{createdAt:"asc"}});
     ok(res,rows.map((r:any)=>({userId:r.userId,email:r.user.email,displayName:r.user.displayName,status:r.user.status,role:r.role,createdAt:r.createdAt,isSelf:r.userId===principal!.userId})));
   });
 
   router.add("DELETE","/api/v1/companies/:companyId/members/:userId",async({req,res,principal,params})=>{
+    requireMemberManagement();
     try{
       await prisma.$transaction(async(tx:any)=>{
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${params.companyId}))`;

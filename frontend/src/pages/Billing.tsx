@@ -82,6 +82,8 @@ export default function Billing(){
  useEffect(()=>{void load()},[areaId,code]);
  const create=async()=>{if(!session.companyId||busy)return;setBusy(true);setError('');try{const i=await api.createBillingInvoice(session.companyId,code,areaId);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);
   await refresh()}catch(e:any){if(!alreadyOwned(e))setError(e?.message||'Төлбөрийн код үүсгэж чадсангүй.')}finally{setBusy(false)}};
+ /* RELOAD / expired code: the server verifies the old invoice with the provider, cancels it there and issues a genuinely NEW invoice and QR with a fresh lifetime. Paid invoices come back as PAID. */
+ const regenerate=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{const i=await api.regenerateBillingInvoice(invoice.id);setInvoice(i);localStorage.setItem(`mmri.invoiceArea.${i.id}`,areaId);if(i.status==='PAID'){sessionStorage.setItem(`business:paid.${areaId}`,mode);openSuccess()}await refresh()}catch(e:any){if(!alreadyOwned(e))setError(e instanceof ApiError&&e.status===429?'QR код хэт олон удаа шинэчлэгдлээ. Хэсэг хүлээгээд дахин оролдоно уу.':(e?.message||'QR кодыг шинэчилж чадсангүй. Төлбөр хийсэн бол «Төлбөр шалгах» дарна уу.'))}finally{setBusy(false)}};
  const check=async()=>{if(!invoice||busy)return;setBusy(true);setError('');try{
   // Ask the server to verify with the payment provider; the cached status alone could lag behind a real payment. Invoices the provider cannot check (mock/manual) fall back to a plain status read.
   let latest:BillingInvoice;
@@ -146,7 +148,7 @@ export default function Billing(){
    <header className="billing-qr__head"><span>{mode==='retake'?'ДАХИН ОНОШИЛГОО':'ОНОШИЛГОО'}</span><h1 id="billing-qr-title"><DomainBadge id={area.id}/> <span>{domainNameMn(area.id)}</span></h1><strong className="billing-qr__price">{money(amount)}</strong></header>
    {error&&<div className="billing-domain-error" role="alert" aria-live="assertive"><Icon name="alert" size={18}/>{error}</div>}
    {noCode?<Button variant="secondary" onClick={()=>void create()}>Дахин оролдох</Button>:<div className="billing-qr__box">
-    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><small>Энэ кодоор бүү төл. Шинэ код авна уу.</small><Button loading={busy} onClick={()=>void create()}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
+    {expired?<div className="billing-qr__wait is-expired" role="status"><span>QR кодын хугацаа дууссан</span><small>Энэ кодоор бүү төл. Шинэ код авна уу.</small><Button loading={busy} onClick={()=>void (invoice&&invoice.provider==='QPAY'?regenerate():create())}>QR код шинэчлэх</Button></div>:!invoice?<div className="billing-qr__wait" role="status"><i aria-hidden="true"/><span>QR код бэлтгэж байна…</span></div>
      :demo?<div className="billing-qr__demo-box"><QrCode area={areaId} text={`BUSINESSMRI-DEMO-QR NOT-A-PAYMENT ${areaId}`} label="Туршилтын DEMO QR, төлбөр биш"/><b className="billing-qr__demo-badge">DEMO · ТӨЛБӨР БИШ</b></div>
      :codeText?<QrCode area={areaId} text={codeText} plain={plainQr} onColor={setColoredQr} label={`${area.name} оношилгооны төлбөрийн QR`}/>
      :codeImage?<img src={codeImage} alt={`${area.name} оношилгооны төлбөрийн QR`} width={260} height={260}/>
@@ -157,11 +159,13 @@ export default function Billing(){
     <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||expired}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
    </div>}
    {demo&&<p className="billing-qr__demo-note" role="note">Туршилтын QR. Уншуулах шаардлагагүй. «Тест төлбөр хийх» товч дарахад оношилгоо нээгдэнэ.</p>}
+   {!demo&&invoice&&!expired&&!manual&&invoice.senderInvoiceNo&&<p className="billing-qr__ref">Гүйлгээний утга <b>{invoice.senderInvoiceNo}</b><small> Банкны аппаар QR уншуулбал автоматаар бөглөгдөнө. Өөрчлөх шаардлагагүй.</small></p>}
    {timed&&left!==null&&!expired&&<p className="billing-qr__expiry">{<>QR код хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
    {!demo&&invoice&&!expired&&<BankLinks invoice={invoice}/>}
    {invoice&&!expired&&!demo&&<p className="billing-qr__how">{manual?'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөрийг ажилтан шалгаж баталгаажуулсны дараа оношилгоо нээгдэнэ.':'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөр баталгаажмагц оношилгоо нээгдэнэ.'}</p>}
    <p className={`billing-qr__status${invoice&&!expired?' is-waiting':''}`} role="status" aria-live="polite">{invoice&&!expired?(demo&&demoSent?'Тест төлбөр баталгаажлаа. Оношилгоо нээгдэж байна…':'Төлбөр хүлээж байна…'):''}</p>
    {invoice&&!demo&&!expired&&<Button variant="secondary" loading={busy} onClick={check}>Төлбөр шалгах</Button>}
+   {invoice&&!demo&&!expired&&!manual&&invoice.provider==='QPAY'&&<Button variant="secondary" loading={busy} onClick={()=>void regenerate()}>Шинэчлэх</Button>}
   </section>
  </PageContainer></AppShell>;
 }

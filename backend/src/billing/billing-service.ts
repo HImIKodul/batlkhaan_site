@@ -128,7 +128,7 @@ export class BillingService {
     const callbackUrl=`${this.config.billingCallbackBaseUrl}/api/v1/billing/qpay/callback/${encodeURIComponent(local.id)}?token=${encodeURIComponent(callbackToken)}`;
     let remote:Awaited<ReturnType<PaymentProviderAdapter["createInvoice"]>>;
     try{
-      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`BusinessMRI.mn ${DOMAIN_INVOICE_LABEL[domainCode]??domainCode} ${PLAN_META[planCode].name}`,amountMnt,callbackUrl});
+      remote=await this.provider.createInvoice({senderInvoiceNo,receiverCode:companyId,description:`BusinessMRI.mn ${DOMAIN_INVOICE_LABEL[domainCode]??domainCode} ${PLAN_META[planCode].name} ${senderInvoiceNo}`,amountMnt,callbackUrl});
     }catch(error:any){
       // Compare-and-set: only a still-CREATED row may become FAILED (a concurrent cancel/recovery decision is never overwritten).
       await prisma.billingInvoice.updateMany({where:{id:local.id,status:"CREATED"},data:{status:"FAILED",failureReason:String(error?.message??"Provider error").slice(0,500)}}).catch(()=>{});
@@ -205,8 +205,8 @@ export class BillingService {
 
 
   /** PAY-02. Local invoice lifetime for provider-hosted (QPay) invoices. A QR the provider has expired must not be handed back forever as the "open" invoice. MANUAL invoices are never retired
-      automatically (a customer may have paid by bank transfer and be waiting for an administrator). MMRI_INVOICE_TTL_MINUTES (default 30, min 5); MMRI_INVOICE_TTL_APPLY_ALL=on extends it to every provider (disposable tests). */
-  invoiceTtlMinutes():number{const n=Number(process.env.MMRI_INVOICE_TTL_MINUTES??30);return Number.isFinite(n)?Math.max(5,Math.min(1440,Math.floor(n))):30}
+      automatically (a customer may have paid by bank transfer and be waiting for an administrator). MMRI_INVOICE_TTL_MINUTES (default 10, min 5); MMRI_INVOICE_TTL_APPLY_ALL=on extends it to every provider (disposable tests). */
+  invoiceTtlMinutes():number{const n=Number(process.env.MMRI_INVOICE_TTL_MINUTES??10);return Number.isFinite(n)?Math.max(5,Math.min(1440,Math.floor(n))):10}
   private invoiceTtlApplies(provider:string):boolean{return provider==="QPAY"||(process.env.MMRI_INVOICE_TTL_APPLY_ALL??"off").trim().toLowerCase()==="on"&&provider!=="MANUAL"}
   /** ISO time after which an open invoice is replaced on the next purchase attempt (null when no local lifetime applies). */
   invoiceExpiresAt(invoice:{provider:string;createdAt:Date;status:string}):string|null{
@@ -225,6 +225,29 @@ export class BillingService {
         throw error;
       }
     }
+  }
+  /** RELOAD: a genuinely NEW QPay invoice and QR. The old invoice is first verified with the provider and only then cancelled there; a paid one is never cancelled (it is activated and returned as PAID).
+      If the provider cannot be asked, nothing new is created (no competing payable codes). Repeated clicks, parallel tabs and retries converge on ONE open invoice: a replaced invoice returns its successor,
+      and createInvoice() re-checks "open invoice exists" under the purchase advisory lock. Old invoices stay in the history. */
+  async regenerateInvoice(invoiceId:string,userId:string){
+    const inv=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
+    if(!inv)throw notFound("Billing invoice not found");
+    if(inv.status==="PAID"||inv.status==="REFUNDED")return this.presentInvoice(inv);
+    if(inv.provider!==this.provider.name||inv.provider!=="QPAY")throw new ApiError(409,"REGENERATE_NOT_AVAILABLE","Энэ нэхэмжлэхийг шинэчлэх боломжгүй. Тусламжийн багтай холбогдоно уу.");
+    const planCode=inv.planCode as "DIAGNOSTIC"|"RETAKE";
+    const successor=async()=>prisma.billingInvoice.findFirst({where:{companyId:inv.companyId,domainCode:inv.domainCode,planCode,provider:"QPAY",status:{in:["CREATED","PENDING"]},createdAt:{gt:inv.createdAt}},orderBy:{createdAt:"desc"}});
+    if(inv.status==="CANCELLED"||inv.status==="FAILED"){const next=await successor();if(next)return this.presentInvoice(next)}
+    else{
+      const hour=await prisma.billingInvoice.count({where:{companyId:inv.companyId,domainCode:inv.domainCode,planCode,createdAt:{gt:new Date(Date.now()-3_600_000)}}});
+      const max=Math.max(2,Number(process.env.MMRI_INVOICE_REGENERATE_PER_HOUR??8)||8);
+      if(hour>=max)throw new ApiError(429,"REGENERATE_RATE_LIMITED","QR код хэт олон удаа шинэчлэгдлээ. Хэсэг хүлээгээд дахин оролдоно уу.");
+      if(Date.now()-inv.createdAt.getTime()<5_000)return this.presentInvoice(inv);   // double click: the code is only seconds old
+      try{await this.cancelInvoice(inv.id)}catch(error:any){
+        if(error instanceof ApiError&&error.code==="PAID_INVOICE_CANNOT_BE_CANCELLED"){const paid=await prisma.billingInvoice.findUnique({where:{id:inv.id}});return this.presentInvoice(paid)}
+        throw error;
+      }
+    }
+    return this.createInvoice(inv.companyId,userId,planCode,inv.domainCode);
   }
   async cancelInvoice(invoiceId:string){
     const invoice=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
