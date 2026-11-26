@@ -39,6 +39,9 @@ export function checkPlanLanguage(stages: TextStage[], windowDays: number, names
   for (const { stage, text } of all) if (/нотолгооны зам|хүчинтэй шууд нотолгоо|нотолгоог? бүрдүүл|(?:Хариуцах|Ажлын хэмжүүр|Төлөв|Хариуцагч|Хэмжүүр)\s*:/iu.test(text)) bad("ROBOTIC_PHRASE", `Compliance wording in ${stage.id}, say it plainly: ${quote(text)}`);
   if (ceremonial >= 3) bad("ROBOTIC_PHRASE", `${ceremonial} sentences restate the diagnosis or use compliance wording; say what the company does instead`);
 
+  /* The plan is read as flowing text: no label-and-colon headings, no colon before a list. Clock times such as 10:30 are not colons in this sense. */
+  for (const s of stages) for (const t of [s.headingMn, s.dependencyNoteMn ?? "", ...(s.actions ?? []).map(a => a?.textMn ?? "")]) if (/(?<!\d)[:：]|[:：](?!\d)/u.test(String(t))) bad("COLON", `${s.id} uses a colon, write a full sentence instead: ${quote(String(t))}`);
+
   const orders = all.filter(x => !endsFinite(x.text));
   if (orders.length >= 2 && orders.length > all.length * 0.15) bad("VERB_FORM", `${orders.length} of ${all.length} sentences end in a bare command or an unfinished form; write what the company does ("тогтооно", "харьцуулна"), for example the sentence ending "...${orders[0].text.slice(-60)}"`);
 

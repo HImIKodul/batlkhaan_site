@@ -33,7 +33,10 @@ function buildPlan(payload: FrozenReportPayload, detail: number): AnnualPlanRead
   /* An action is introduced by the plain name of its work (the same name as on page 2), never by a number; a capability that has two priorities also names its side. */
   const twice = (i: number) => p.some((y, j) => j !== i && y.g.capabilityMn === p[i].g.capabilityMn);
   const name = (i: number) => `${withPlainNames(p[i].g.capabilityMn, named)}${twice(i) && p[i].g.labelMn ? ` (${p[i].g.labelMn})` : ""}`;
-  const act = (i: number, k: "startMn" | "runMn" | "embedMn") => p[i] ? [{ textMn: `${name(i)}: ${trim(k === "startMn" && detail < 2 ? p[i].g.steps.briefMn ?? p[i].g.steps.startMn : p[i].g.steps[k], i)}`, recommendationIds: [`F${p[i].n}`] }] : [];
+  const act = (i: number, k: "startMn" | "runMn" | "embedMn") => p[i] ? [{ textMn: `«${name(i)}»${LINKS[(i + (k === "startMn" ? 0 : k === "runMn" ? 1 : 2)) % 2]}${lower(trim(k === "startMn" && detail < 2 ? p[i].g.steps.briefMn ?? p[i].g.steps.startMn : p[i].g.steps[k], i))}`, recommendationIds: [`F${p[i].n}`] }] : [];
+  /* No colon after the name of the work: the name is quoted and the sentence continues in lower case (an abbreviation or a number at the start stays as written). */
+  const LINKS = [" ажилд ", " ажлын хувьд "];
+  const lower = (t: string) => /^\p{Lu}[\p{Ll}]/u.test(t) ? t[0].toLocaleLowerCase("mn-MN") + t.slice(1) : t;
   const short = (t: string) => t.split(/;|, дараа нь /u)[0];
   /* Documents named once, in the stage whose work creates them. */
   const told = new Set<string>();
@@ -54,7 +57,7 @@ function buildPlan(payload: FrozenReportPayload, detail: number): AnnualPlanRead
     stage("E3", H[2], 105, 75, ["E2"], g(2, results([1, "runMn"], [2, "runMn"], [3, p[3]?.g.evidence ? "runMn" : "startMn"]), check(1), owners(1, 3)), [...act(1, "runMn"), ...act(2, "runMn"), ...begin(3)]),
     stage("E4", H[3], 180, 90, ["E3"], g(3, results([3, "runMn"], [4, p[4]?.g.evidence ? "runMn" : "startMn"]), p[2] ? check(2, 3) : check(0), owners(3, 4)), [...act(0, "embedMn"), ...next(3), ...begin(4)]),
     stage("E5", H[4], 270, W - 270, ["E4"], g(4, "Жилийн үр дүнгийн дүгнэлт, дараагийн жилийн ажлын жагсаалт", detail < 1 && p[4] ? check(4) : `${p[4] ? `${check(4)}, ` : ""}дахин оношилгооны дүнг энэ тайлантай харьцуулсан эсэх`, "Дээрх ажлуудыг хариуцсан хүмүүс"), [...act(1, "embedMn"), ...act(2, "embedMn"), ...(p[3]?.g.evidence ? [] : act(3, "embedMn")), ...next(4),
-      { textMn: `Жилийн дүгнэлт: ажил бүрийн үр дүнг хоёрдугаар хуудсанд заасан шалгах аргаар үнэлж, дахин оношилгоо хийнэ.${detail > 0 && p[4] && !p[4].g.evidence ? ` «${name(4)}» ажлыг дараагийн жил үргэлжлүүлэх эсэхийг шийднэ.` : ""}`, recommendationIds: all }])
+      { textMn: `Жилийн эцэст ажил бүрийн үр дүнг хоёрдугаар хуудсанд заасан шалгах аргаар үнэлж, дахин оношилгоо хийнэ.${detail > 0 && p[4] && !p[4].g.evidence ? ` «${name(4)}» ажлыг дараагийн жил үргэлжлүүлэх эсэхийг шийднэ.` : ""}`, recommendationIds: all }])
   ].filter(s => s.actions.length);
   return materializeAnnualPlan(stages, payload, { kind: "DETERMINISTIC", model: "guidance" });
 }

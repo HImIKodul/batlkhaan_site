@@ -897,15 +897,15 @@ class PlanStage(Flowable):
     def wrap(self, availWidth, availHeight):
         self.text_w = availWidth - PLAN_GUTTER
         same = (self.stage.get("guide") or {}).get("goalMn") == self.stage.get("headingMn")  # the heading is the goal itself: said once
-        self.parts = [Paragraph(text(self.stage.get("dateLabel")), self.date_style), Paragraph(("Зорилго: " if same else "") + text(self.stage.get("headingMn")), self.head_style)]
+        self.parts = [Paragraph(text(self.stage.get("dateLabel")), self.date_style), Paragraph(text(self.stage.get("headingMn")), self.head_style)]
         if self.stage.get("dependencyNoteMn"):
             self.parts.append(Paragraph(text(self.stage["dependencyNoteMn"]), self.note_style))
         guide = self.stage.get("guide") or {}
         if guide.get("goalMn") and not same:
-            self.parts.append(Paragraph("<font name='MMRINotoBold'>Зорилго:</font> " + text(guide["goalMn"]).rstrip(".") + ".", self.body_style))
+            self.parts.append(Paragraph("<font name='MMRINotoBold'>Зорилго</font> " + text(guide["goalMn"]).rstrip(".") + ".", self.body_style))
         for a in self.stage.get("actions") or []:
             self.parts.append(Paragraph("&#8226;&nbsp;" + text(a.get("textMn")), self.body_style))
-        tail = " ".join("<font name='MMRINotoBold'>" + label + ":</font> " + text(guide[key]).rstrip(".") + "." for key, label in (("ownerMn", "Хариуцах"), ("resultMn", "Гарах үр дүн"), ("doneMn", "Дууссаныг шалгах")) if guide.get(key))
+        tail = " ".join("<font name='MMRINotoBold'>" + label + "</font> " + text(guide[key]).rstrip(".") + "." for key, label in (("ownerMn", "Хариуцах"), ("resultMn", "Гарах үр дүн"), ("doneMn", "Дууссаныг шалгах")) if guide.get(key))
         if tail:
             self.parts.append(Paragraph(tail, self.note_style))
         h = 0
@@ -946,7 +946,7 @@ def annual_plan_pages(source, st, content_width):
     head = [
         p("03 · 12 САРЫН ТӨЛӨВЛӨГӨӨ", st["eyebrow"]),
         p("12 сарын хэрэгжилтийн төлөвлөгөө", st["page_title"]),
-        p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Санал болгосон албан тушаал танайд байхгүй бол хариуцах хүнээ томилно.", st["body"]) if RULES2 else p("Төлөвлөгөөний хугацаа: " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна" + (". Зарим" if GUIDED else "; зарим") + " ажил зэрэгцэн явагдана.", st["body"]),
+        p("Төлөвлөгөөний хугацаа " + text(plan.get("periodLabel")) + ". Санал болгосон албан тушаал танайд байхгүй бол хариуцах хүнээ томилно.", st["body"]) if RULES2 else p("Төлөвлөгөөний хугацаа " + text(plan.get("periodLabel")) + ". Төлөвлөгөө нэг жилийн бүх хугацааг хамарна" + (". Зарим" if GUIDED else "; зарим") + " ажил зэрэгцэн явагдана.", st["body"]),
         Spacer(1, (2 if RULES2 else 3) * mm),
     ]
     # The platypus frame keeps 6 pt of padding on every side: measure with the width and height the frame really gives, otherwise text wraps into more
