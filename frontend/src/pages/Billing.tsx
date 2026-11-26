@@ -187,7 +187,7 @@ export default function Billing(){
    {invoice&&!demo&&!expired&&!manual&&invoice.provider==='QPAY'&&<Button variant="secondary" loading={busy} onClick={()=>void regenerate()}>Шинэ QR авах</Button>}
    {invoice&&!demo&&!expired&&!manual&&invoice.provider==='QPAY'&&<><Button ref={cancelBtnRef} variant="secondary" disabled={busy} onClick={()=>setConfirmCancel(true)}>Нэхэмжлэл цуцлах</Button><p className="billing-qr__cancel-note">Зөвхөн төлөгдөөгүй энэ QR нэхэмжлэлийг цуцална. Өмнөх төлбөр, бүртгэлд нөлөөлөхгүй.</p></>}
   </section>
- {confirmCancel&&<div className="billing-success-modal billing-cancel-modal" role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" aria-describedby="cancel-text" onKeyDown={e=>{if(e.key==='Escape'&&!busy){setConfirmCancel(false);cancelBtnRef.current?.focus()}}}><div>
+ {confirmCancel&&<div className="billing-cancel-modal" role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" aria-describedby="cancel-text" onKeyDown={e=>{if(e.key==='Escape'&&!busy){setConfirmCancel(false);cancelBtnRef.current?.focus()}}}><div>
   <h2 id="cancel-title">Нэхэмжлэл цуцлах уу?</h2>
   <p id="cancel-text">Одоогийн төлөгдөөгүй QR нэхэмжлэл цуцлагдаж, энэ QR кодоор төлбөр хийх боломжгүй болно. Төлбөр аль хэдийн хийгдсэн бол цуцлахгүй. Шаардлагатай үед шинэ QR авч болно.</p>
   <div className="billing-cancel-actions"><Button variant="secondary" disabled={busy} autoFocus onClick={()=>{setConfirmCancel(false);cancelBtnRef.current?.focus()}}>Буцах</Button><Button variant="danger" loading={busy} onClick={()=>void cancelInvoice()}>Нэхэмжлэл цуцлах</Button></div>
