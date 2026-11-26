@@ -27,13 +27,14 @@ export default function Login(){
  const companyOk=mode==='login'||(bizName.trim().length>0&&!!findLegalForm(bizForm));
  const canSubmit=!busy&&emailOk&&passwordOk&&matchOk&&companyOk;
  const friendlyError=(message:string)=>{const m=message.toLowerCase();if(m.includes('invalid email or password'))return 'Имэйл эсвэл нууц үг буруу байна.';if(m.includes('already exists'))return 'Энэ имэйлээр бүртгэл аль хэдийн үүссэн байна.';if(m.includes('10')&&m.includes('128'))return 'Нууц үг хамгийн багадаа 10 тэмдэгт байна.';if(m.includes('valid email'))return 'Зөв имэйл хаяг оруулна уу.';return message||'Үйлдэл хийгдсэнгүй.'};
- const destinationAfterLogin=async()=>{
+ /* api.login() wipes the private browser state (mmri.* keys), so the sign-up draft is read BEFORE it and handed over. */
+ const readCompanyDraft=()=>{try{const draft=localStorage.getItem(COMPANY_DRAFT_KEY)||'';const owner=localStorage.getItem(COMPANY_DRAFT_EMAIL_KEY)||'';return draft&&owner===email.trim().toLowerCase()?draft:''}catch{return ''}};
+ const destinationAfterLogin=async(draft:string)=>{
   /* MMRI-08: never silently pick the first company; several companies and no remembered choice send the user to the company selector in settings. */
   const {companies,company,needsChoice}=await api.resolveActiveCompany();
   if(!companies.length){
    /* The company typed at sign-up (same browser, same e-mail) becomes the company now; nothing is asked twice. */
-   try{const draft=localStorage.getItem(COMPANY_DRAFT_KEY)||'';const owner=localStorage.getItem(COMPANY_DRAFT_EMAIL_KEY)||'';
-    if(draft&&owner===email.trim().toLowerCase()){const sp=splitBusinessName(draft,null);const lf=findLegalForm(sp.form);if(sp.name&&lf){const c=await api.createCompany({name:draft});rememberLegalForm(c.id,lf.code);localStorage.removeItem(COMPANY_DRAFT_KEY);localStorage.removeItem(COMPANY_DRAFT_EMAIL_KEY)}}}catch(e){console.warn('Company from sign-up draft failed',e)}
+   try{if(draft){const sp=splitBusinessName(draft,null);const lf=findLegalForm(sp.form);if(sp.name&&lf){const c=await api.createCompany({name:draft});rememberLegalForm(c.id,lf.code)}}}catch(e){console.warn('Company from sign-up draft failed',e)}
    return 'profile' as const;
   }
   if(needsChoice||!company)return 'settings' as const;
@@ -46,13 +47,13 @@ export default function Login(){
  };
  const submit=async()=>{
   if(!canSubmit){setError(!emailOk?'Зөв имэйл хаяг оруулна уу.':!passwordOk?(mode==='register'?'Нууц үг хамгийн багадаа 10 тэмдэгт байна.':'Нууц үгээ оруулна уу.'):!matchOk?'Нууц үг хоёр талбарт ижил байх ёстой.':'Байгууллагын нэр болон хэлбэрээ сонгоно уу.');return}
-  setError('');setBusy(true);
+  setError('');setBusy(true);const signupDraft=mode==='login'?readCompanyDraft():'';
   // Stage 1: authentication. Only failures here may be reported as login/registration errors.
   try{if(mode==='login')await api.login({email:email.trim(),password});else {const r=await api.register({email:email.trim(),password});try{localStorage.setItem(COMPANY_DRAFT_KEY,joinBusinessName(bizName.trim(),bizForm));localStorage.setItem(COMPANY_DRAFT_EMAIL_KEY,email.trim().toLowerCase())}catch{/* private mode: the company is asked again after sign-in */}rememberVerificationEmail(email.trim());if(r.delivery==='FAILED')sessionStorage.setItem('mmri.verifyDeliveryFailed','1');setPassword('');setConfirm('');setBusy(false);go('verify');return}}
   catch(e:any){setError(e instanceof ApiError&&e.code==='CORS_ORIGIN_DENIED'?'Энэ хаягаар хандах эрхгүй байна. Админтай холбогдоно уу.':friendlyError(e?.message||''));setBusy(false);return}
   // Stage 2: the session is valid. A data-loading failure must not look like a credentials error; the destination page loads its own data and reports its own errors.
   let destination:'profile'|'billing'|'home'|'settings'='home';
-  try{destination=await destinationAfterLogin()}catch(e){console.warn('Post-login data loading failed',e)}
+  try{destination=await destinationAfterLogin(signupDraft)}catch(e){console.warn('Post-login data loading failed',e)}
   setBusy(false);go(destination);
  };
  return <div className="auth">

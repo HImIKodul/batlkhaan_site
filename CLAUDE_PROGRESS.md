@@ -1013,3 +1013,11 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Dated plan: extra compaction level (Marketing A now 3 pages, strict render passes, 10/10 probe reports), deterministic plan fallback at generation, approval and publication require a payload-bound plan (ANNUAL_PLAN_REQUIRED).
 - Metric wording: fallback conclusion says "албан ёсны дүн" for official scores; web report shows the partial label for QUICK_ESTIMATE.
 - Not changed (owner decision): QUICK 280 ceiling/coverage and one-capability priority slots are contract/policy bound; see report.
+
+## 2026-11-26 (10) Final integration
+- Merged fix/codex-audit (80d013d, bc1d83d, e045ea9; only CLAUDE_PROGRESS.md conflicted). draft-ordering test 3/3, codex-diagnosis-audit probes run; access/report gate 60/60 again on the merged code.
+- Sign-up in steps (e-mail -> password + repeat + company name and legal form -> six-digit code -> login, never auto-login); no personal name; company typed at sign-up is created at the first sign-in of that e-mail in the same browser (login wipes mmri.* storage, so the draft is read before it); login page = e-mail, password, forgot link, registration link only. Register/resend now say honestly when the code could not be mailed (delivery FAILED). Browser suite 54/54 at 1440 and 390, mock mailbox.
+- Login page: one facts card (data/businessFacts.json = BusinessMRI_100_facts.json as delivered, 100 facts, text only), shuffle deck without replacement persisted in localStorage (frontend/scripts/test-fact-deck.mts 9/9: 25 cycles x 100 unique, no repeat across the boundary); facts removed from loading screens.
+- Question cards (lg lg--soft + stronger navy face), report PDF button label "PDF тайлан татах"; browser journey (cards, selected state, revoke message, 24 h notice with Ulaanbaatar dates, publish, real 3-page PDF download) PASS at both widths.
+- Owner decisions (not changed): QUICK hard maximum of 280 questions leaves coverage at about 21-49 % in the audit probe; one-capability priority slots.
+- Still unverified: real e-mail delivery (Gmail invalid_grant), real QPay, real AI, Windows deployment.
