@@ -23,25 +23,30 @@ export function Pager({page,pageSize,total,onPage}:{page:number;pageSize:number;
 export function useAsync<T>(fn:()=>Promise<T>,deps:unknown[]){const [state,set]=useState<{loading:boolean;error:string;data:T|null}>({loading:true,error:'',data:null});const run=useCallback(()=>{set(s=>({...s,loading:true,error:''}));fn().then(data=>set({loading:false,error:'',data}),e=>set({loading:false,error:(e as Error).message||'Алдаа гарлаа',data:null}))},deps);// eslint-disable-line react-hooks/exhaustive-deps
  useEffect(()=>{run()},[run]);return {...state,reload:run}}
 
+const EMAIL_CODE_UI=import.meta.env.VITE_ADMIN_EMAIL_CODE==='on';   // build-time opt-in; off by default (authenticator-app code only)
+
 function ReauthModal({onDone,onCancel}:{onDone:(ok:boolean)=>void;onCancel:()=>void}){
- const [pw,setPw]=useState('');const [code,setCode]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);const first=useRef<HTMLInputElement>(null);
+ const [pw,setPw]=useState('');const [code,setCode]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);const [byMail,setByMail]=useState(false);const first=useRef<HTMLInputElement>(null);
  useEffect(()=>{first.current?.focus()},[]);
  const cancelRef=useRef(onCancel);cancelRef.current=onCancel;
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();cancelRef.current()}};document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key)},[]);
- const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{await adminApi.reauth(pw,code.replace(/\s/g,''));onDone(true)}catch(x){setErr((x as Error).message)}finally{setBusy(false)}};
+ const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{await adminApi.reauth(pw,code.replace(/\s/g,''),byMail?code.replace(/\s/g,''):undefined);onDone(true)}catch(x){setErr((x as Error).message)}finally{setBusy(false)}};
  return <div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="reauth-title"><form className="adm-modal__box" onSubmit={submit}><h2 id="reauth-title">Дахин баталгаажуулах</h2><p>Энэ үйлдэл нууц үг ба MFA кодоор дахин баталгаажуулахыг шаардана.</p>
   <label>Нууц үг<input ref={first} type="password" autoComplete="current-password" value={pw} onChange={e=>setPw(e.target.value)} required/></label>
-  <label>MFA код (6 орон)<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" value={code} onChange={e=>setCode(e.target.value)} required/></label>
+  <label>{byMail?'Имэйлээр ирсэн код (6 орон)':'MFA код (6 орон)'}<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" value={code} onChange={e=>setCode(e.target.value)} required/></label>
+  {EMAIL_CODE_UI&&<button type="button" className="adm-btn" disabled={busy} onClick={async()=>{setBusy(true);setErr('');try{await adminApi.sendReauthCode();setByMail(true)}catch(x){setErr((x as AdminApiError).status===429?'Түр хүлээгээд дахин оролдоно уу.':'Код илгээж чадсангүй. Authenticator кодоо ашиглана уу.')}finally{setBusy(false)}}}>Имэйлээр код авах</button>}
   {err&&<div className="adm-error" role="alert">{err}</div>}<div className="adm-modal__row"><button type="button" className="adm-btn" onClick={onCancel}>Цуцлах</button><button type="submit" className="adm-btn adm-btn--primary" disabled={busy||pw.length<8||code.replace(/\s/g,'').length!==6}>Баталгаажуулах</button></div></form></div>
 }
 
 function Login({onLoggedIn}:{onLoggedIn:()=>void}){
- const [email,setEmail]=useState('');const [pw,setPw]=useState('');const [code,setCode]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);
- const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{const r=await adminApi.login(email.trim(),pw,code.replace(/\s/g,''));adminSession.token=r.token;setPw('');setCode('');onLoggedIn()}catch(x){setErr((x as AdminApiError).status===429?'Хэт олон буруу оролдлого. Түр хүлээгээд дахин оролдоно уу.':'Нэвтрэх мэдээлэл буруу байна.')}finally{setBusy(false)}};
+ const [email,setEmail]=useState('');const [pw,setPw]=useState('');const [code,setCode]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);const [byMail,setByMail]=useState(false);const [note,setNote]=useState('');
+ const sendCode=async()=>{setBusy(true);setErr('');setNote('');try{await adminApi.sendLoginCode(email.trim(),pw);setByMail(true);setNote('Код имэйлд илгээгдлээ. 5 минутын дотор оруулна уу.')}catch(x){const st=(x as AdminApiError).status;setErr(st===429?'Түр хүлээгээд дахин оролдоно уу.':st===503?'Код илгээж чадсангүй. Authenticator кодоо ашиглана уу.':'Нэвтрэх мэдээлэл буруу байна.')}finally{setBusy(false)}};
+ const submit=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setErr('');try{const c=code.replace(/\s/g,'');const r=await adminApi.login(email.trim(),pw,byMail?'':c,byMail?c:undefined);adminSession.token=r.token;setPw('');setCode('');onLoggedIn()}catch(x){setErr((x as AdminApiError).status===429?'Хэт олон буруу оролдлого. Түр хүлээгээд дахин оролдоно уу.':'Нэвтрэх мэдээлэл буруу байна.')}finally{setBusy(false)}};
  return <main className="adm-login"><form className="adm-login__card" onSubmit={submit}><div className="adm-login__brand">BusinessMRI.mn</div><h1 data-route-heading tabIndex={-1}>Удирдлагын төв</h1><p>Зөвхөн эрх бүхий администраторт.</p>
   <label>Имэйл<input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
   <label>Нууц үг<input type="password" autoComplete="current-password" value={pw} onChange={e=>setPw(e.target.value)} required/></label>
-  <label>MFA код<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" placeholder="000000" value={code} onChange={e=>setCode(e.target.value)} required/></label>
+  <label>{byMail?'Имэйлээр ирсэн код':'MFA код'}<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" placeholder="000000" value={code} onChange={e=>setCode(e.target.value)} required/></label>
+  {EMAIL_CODE_UI&&<button type="button" className="adm-btn" disabled={busy||!email||!pw} onClick={sendCode}>Имэйлээр код авах</button>}{note&&<div className="adm-note" role="status">{note}</div>}
   {err&&<div className="adm-error" role="alert">{err}</div>}<button type="submit" className="adm-btn adm-btn--primary adm-btn--wide" disabled={busy||!email||!pw||code.replace(/\s/g,'').length!==6}>{busy?'Нэвтэрч байна':'Нэвтрэх'}</button></form></main>
 }
 

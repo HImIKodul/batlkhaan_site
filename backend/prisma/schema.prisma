@@ -1957,6 +1957,7 @@ model AdminAccount {
   user                    User                     @relation(fields: [userId], references: [id], onUpdate: NoAction)
   notificationReads       AdminNotificationRead[]
   sessions                AdminSession[]
+  emailChallenges         AdminEmailChallenge[]
   paymentDisputeEvents    PaymentDisputeEvent[]
   paymentDisputes         PaymentDispute[]
   reportReviewRevisions   ReportReviewRevision[]
@@ -2281,4 +2282,21 @@ model SupportMailMessage {
 
   @@index([threadId, sentAt])
   @@map("support_mail_messages")
+}
+
+/// One-time e-mail verification code for administrator sign-in / re-authentication. Only a salted hash is stored; the code itself is never persisted or logged.
+model AdminEmailChallenge {
+  id        String    @id @default(cuid())
+  adminId   String
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  ipHash    String?
+  createdAt DateTime  @default(now())
+  admin     AdminAccount @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, createdAt])
+  @@index([expiresAt])
+  @@map("admin_email_challenges")
 }

@@ -48,6 +48,7 @@ export function registerAdminRoutes(d: AdminDeps) {
     ok(ctx.res, await admin.login(body, fp));
   }, false);
   route("POST", "/auth/logout", null, async (c, p, fp) => { await admin.logout(p, fp); ok(c.res, { loggedOut: true }); }, { body: false });
+  route("POST", "/auth/email-code", null, async (c, p, fp) => { d.loginLimiter.check(`admin:emailcode:${p.adminId}`); ok(c.res, await admin.requestEmailCode(p, fp)); }, { body: false });
   route("POST", "/auth/reauth", null, async (c, p, fp, b) => { d.loginLimiter.check(`admin:reauth:${p.adminId}`); await admin.reauth(p, b, fp); ok(c.res, { reauthenticatedForMinutes: 5 }); });
   route("GET", "/auth/me", null, async (c, p) => {
     const unread = await prisma.adminNotification.count({ where: { reads: { none: { adminId: p.adminId } } } });

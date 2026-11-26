@@ -21,8 +21,10 @@ async function request<T>(method:string,path:string,body?:unknown,retried=false)
  throw new AdminApiError(r.status,safe(j?.error?.message),code,j?.error?.details);
 }
 export const adminApi={
- login:(email:string,password:string,totpCode:string)=>request<{token:string;expiresAt:string;admin:{id:string;email:string;role:AdminMe['role']}}>('POST','/auth/login',{email,password,totpCode}),
- logout:()=>request('POST','/auth/logout',{}),me:()=>request<AdminMe>('GET','/auth/me'),reauth:(password:string,totpCode:string)=>request('POST','/auth/reauth',{password,totpCode}),
+ login:(email:string,password:string,totpCode:string,emailCode?:string)=>request<{token:string;expiresAt:string;admin:{id:string;email:string;role:AdminMe['role']}}>('POST','/auth/login',emailCode?{email,password,emailCode}:{email,password,totpCode}),
+ sendLoginCode:(email:string,password:string)=>request<{mfaRequired:'EMAIL_CODE';expiresInMinutes:number;resendAfterSeconds:number}>('POST','/auth/login',{email,password}),
+ sendReauthCode:()=>request<{sent:boolean}>('POST','/auth/email-code',{}),
+ logout:()=>request('POST','/auth/logout',{}),me:()=>request<AdminMe>('GET','/auth/me'),reauth:(password:string,totpCode:string,emailCode?:string)=>request('POST','/auth/reauth',emailCode?{password,emailCode}:{password,totpCode}),
  get:<T=any>(path:string)=>request<T>('GET',path),post:<T=any>(path:string,body:unknown={})=>request<T>('POST',path,body),put:<T=any>(path:string,body:unknown)=>request<T>('PUT',path,body)
 };
 export const fmt=(v?:string|Date|null)=>{if(!v)return '-';const d=new Date(v);if(Number.isNaN(d.getTime()))return '-';const z=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`}
