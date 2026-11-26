@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from './UI';
 import { Icon } from './Icon';
-import { LoadingFact } from './LoadingFact';
 
 type BaseStateProps={title?:string;description?:string;className?:string};
 
@@ -50,7 +49,7 @@ export function ReportSkeletonBody(){
 /* Section skeletons: each reuses the destination's real class names so its own layout rules apply; content is a shimmering placeholder (transparent text keeps real widths). */
 const blk=(w?:number|string,h?:number|string,n?:number):React.CSSProperties=>({width:w,height:h,...(n?({['--n' as string]:n} as React.CSSProperties):{})});
 /* Renders skeleton bodies as DIRECT children of the destination container (so child-combinator layout rules still match); announced once, with the delayed fun fact. */
-export function SkeletonHost({label,children}:{label:string;children:React.ReactNode}){return <><span className="mmri-skeleton__sr" role="status" aria-live="polite" aria-busy="true">{label}</span>{children}<LoadingFact/></>}
+export function SkeletonHost({label,children}:{label:string;children:React.ReactNode}){return <><span className="mmri-skeleton__sr" role="status" aria-live="polite" aria-busy="true">{label}</span>{children}</>}
 export function HubSkeletonBody(){
  return <><header className="diagnosis-square-head" aria-hidden="true"><h1 className="diagnosis-square-head__title mmri-sk">Оношилгоо</h1></header>
   <section className="diagnosis-square-grid" aria-hidden="true">{[0,1,2,3,4].map(i=><button key={i} type="button" disabled tabIndex={-1} className="diagnosis-square cat-tile"><span className="cat-tile__foot"><i className="cat-tile__orb mmri-skeleton__orb"/><span className="cat-tile__name"><span className="mmri-sk" style={blk('100%')}>{'\u00a0'}</span></span><i className="cat-tile__orb cat-tile__orb--spacer"/></span></button>)}</section></>;
@@ -98,7 +97,7 @@ export function SkeletonScreen({label='Өгөгдлийг бэлтгэж бай�
  else if(variant==='form')body=<><SkeletonCard className="mmri-skeleton__form-card" aria-hidden="true"><SkeletonLine className="is-title"/>{Array.from({length:6},(_,i)=><div className="mmri-skeleton__field" key={i}><SkeletonLine className="is-small"/><span/></div>)}<div className="mmri-skeleton__actions"><span/><span/></div></SkeletonCard></>;
  else if(variant==='dashboard')body=<><div className="mmri-skeleton__tile-grid" aria-hidden="true">{Array.from({length:5},(_,i)=><SkeletonCard key={i} className="mmri-skeleton__tile"><span className="mmri-skeleton__icon"/><SkeletonLine className="is-medium"/><SkeletonLine className="is-small"/></SkeletonCard>)}</div><div className="mmri-skeleton__content-grid" aria-hidden="true"><SkeletonCard><SkeletonLine className="is-title"/><SkeletonLine className="is-wide"/><SkeletonLine className="is-medium"/></SkeletonCard><SkeletonCard><SkeletonLine className="is-title"/><SkeletonLine className="is-wide"/><SkeletonLine className="is-short"/></SkeletonCard></div></>;
  else body=<><div className="mmri-skeleton__tile-grid mmri-skeleton__tile-grid--three" aria-hidden="true">{Array.from({length:3},(_,i)=><SkeletonCard key={i} className="mmri-skeleton__tile"><span className="mmri-skeleton__icon"/><SkeletonLine className="is-medium"/><SkeletonLine className="is-small"/></SkeletonCard>)}</div><SkeletonCard className="mmri-skeleton__wide-card" aria-hidden="true"><SkeletonLine className="is-title"/><SkeletonLine className="is-wide"/><SkeletonLine className="is-medium"/><SkeletonLine className="is-short"/></SkeletonCard></>;
- return <section className={`mmri-skeleton mmri-skeleton--${variant} mmri-skel ${variant==='questionnaire'?'mmri-questionnaire ':''}${className}`.trim()} data-skeleton-variant={variant} role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span className="mmri-skeleton__sr">{accessible}</span>{['questionnaire','report','hub','history','billing','profile','home'].includes(variant)?null:head}{body}<LoadingFact/></section>;
+ return <section className={`mmri-skeleton mmri-skeleton--${variant} mmri-skel ${variant==='questionnaire'?'mmri-questionnaire ':''}${className}`.trim()} data-skeleton-variant={variant} role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span className="mmri-skeleton__sr">{accessible}</span>{['questionnaire','report','hub','history','billing','profile','home'].includes(variant)?null:head}{body}</section>;
 }
 
 export function LoadingState({label='Түр хүлээнэ үү...',description='Шаардлагатай мэдээллийг бэлтгэж байна.',className='',variant='generic'}:{label?:string;description?:string;className?:string;variant?:SkeletonVariant}){

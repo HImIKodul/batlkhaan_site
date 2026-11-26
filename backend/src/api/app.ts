@@ -135,9 +135,12 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     // Invitation-only pilot: with the list set, only these addresses can open an account (existing accounts, sign-in and recovery are untouched). Unset = open registration.
     if(!registrationAllowed(String(body.email??""))){await finishMailRequest(started);throw new ApiError(403,"REGISTRATION_BY_INVITATION","Туршилтын хугацаанд зөвхөн урилгатай имэйлээр бүртгүүлэх боломжтой.")}
     await auth.register({email:body.email,password:body.password,displayName:body.displayName},fingerprint(req,config));
-    try{await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
+    let delivery:"SENT"|"NOT_DELIVERED"|"SKIPPED"="SKIPPED";
+    try{delivery=await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){delivery="NOT_DELIVERED";console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
     await finishMailRequest(started);
-    json(res,202,{data:{accepted:true,message:"Имэйлдээ илгээсэн 6 оронтой баталгаажуулах кодыг оруулна уу."}});
+    /* Never pretend: when the code could not be mailed the person is told so (the account exists and "resend" works). SKIPPED reveals nothing about existing accounts. */
+    if(delivery==="NOT_DELIVERED")json(res,202,{data:{accepted:true,delivery:"FAILED",message:"Баталгаажуулах кодыг имэйлээр илгээж чадсангүй. Түр хүлээгээд «Код дахин авах» товчийг дарна уу."}});
+    else json(res,202,{data:{accepted:true,message:"Имэйлдээ илгээсэн 6 оронтой баталгаажуулах кодыг оруулна уу."}});
   },false);
 
   router.add("POST","/api/v1/auth/login",async({req,res})=>{
@@ -167,9 +170,11 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     const body=await readJson(req,config.requestBodyLimitBytes);
     const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
     authAccountLimiter.check(`verify:acct:${emailKey}`);
-    try{await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
+    let delivery:"SENT"|"NOT_DELIVERED"|"SKIPPED"="SKIPPED";
+    try{delivery=await emailVerification.requestCode(body.email,fingerprint(req,config))}catch(e:any){delivery="NOT_DELIVERED";console.error(JSON.stringify({event:"email_verification_request_failed",reason:String(e?.message??e).slice(0,160)}))}
     await finishMailRequest(started);
-    json(res,202,{data:{accepted:true,message:"Хэрэв энэ имэйл баталгаажаагүй бүртгэлтэй бол шинэ код илгээлээ. Имэйлээ шалгана уу."}});
+    if(delivery==="NOT_DELIVERED")json(res,202,{data:{accepted:true,delivery:"FAILED",message:"Баталгаажуулах кодыг имэйлээр илгээж чадсангүй. Түр хүлээгээд дахин оролдоно уу."}});
+    else json(res,202,{data:{accepted:true,message:"Хэрэв энэ имэйл баталгаажаагүй бүртгэлтэй бол шинэ код илгээлээ. Имэйлээ шалгана уу."}});
   },false);
   /* Registration code check (body: email + 6-digit code). Same answer and the same minimum duration for every failure, so it cannot be used to probe which addresses exist. */
   router.add("POST","/api/v1/auth/email-verification/confirm",async({req,res})=>{

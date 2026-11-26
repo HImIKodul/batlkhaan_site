@@ -37,13 +37,14 @@ export class EmailVerificationService {
   }
 
   /** Registration and "resend": always silent about whether the address exists. */
-  async requestCode(emailRaw: unknown, fp: RequestFingerprint): Promise<void> {
+  /** SENT = mailed, NOT_DELIVERED = the provider refused or failed (the caller may tell the person honestly: the code did NOT leave), SKIPPED = nothing to send (unknown/verified account or throttled; says nothing about the account). */
+  async requestCode(emailRaw: unknown, fp: RequestFingerprint): Promise<"SENT" | "NOT_DELIVERED" | "SKIPPED"> {
     const email = String(emailRaw ?? "").trim().toLowerCase();
     const emailHash = hashAuditValue(email, this.config.auditSalt);
     const user = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? await prisma.user.findUnique({ where: { email } }) : null;
     if (!user || user.status !== "ACTIVE" || user.erasedAt || !user.emailVerificationRequired || user.emailVerifiedAt) {
       await this.audit(null, "EMAIL_CODE_REQUESTED_NO_ACCOUNT", fp, { emailHash });
-      return;
+      return "SKIPPED";
     }
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
     const now = new Date();
@@ -62,7 +63,7 @@ export class EmailVerificationService {
       } });
       return { id: row.id };
     });
-    if (!issued) { await this.audit(user.id, "EMAIL_CODE_REQUEST_THROTTLED", fp); return; }
+    if (!issued) { await this.audit(user.id, "EMAIL_CODE_REQUEST_THROTTLED", fp); return "SKIPPED"; }
     let result;
     try {
       result = await this.mailer.send({
@@ -79,6 +80,7 @@ export class EmailVerificationService {
     }
     if (!result.delivered) await prisma.passwordResetToken.deleteMany({ where: { id: issued.id } }).catch(() => undefined);
     await this.audit(user.id, result.delivered ? "EMAIL_CODE_REQUESTED" : "EMAIL_CODE_REQUESTED_NOT_DELIVERED", fp, { provider: result.provider });
+    return result.delivered ? "SENT" : "NOT_DELIVERED";
   }
 
   /** Verifies the code and marks the mailbox as owned. Changes nothing else. */

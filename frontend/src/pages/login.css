@@ -37,3 +37,16 @@
 .auth__code{font-size:28px;font-weight:700;letter-spacing:.45em;text-align:center;font-variant-numeric:tabular-nums;padding-left:.45em}
 .auth__code::placeholder{letter-spacing:.45em;opacity:.45}
 @media (max-width:420px){.auth__code{font-size:24px;letter-spacing:.35em;padding-left:.35em}}
+
+/* Interesting-facts card (replaces the headline and the three proof chips): navy glass like the other cards, light text, tappable. */
+.auth-fact{display:grid;gap:12px;align-content:center;justify-items:start;width:100%;max-width:560px;min-height:220px;padding:clamp(20px,3vw,32px);text-align:left;color:#fff;font:inherit;cursor:pointer;border:1px solid rgba(170,196,255,.42);border-radius:26px;background:linear-gradient(180deg,rgba(14,32,84,.82),rgba(9,22,62,.88));-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 22px 44px -26px rgba(0,8,40,.75)}
+.auth-fact:hover{border-color:rgba(200,220,255,.62)}.auth-fact:focus-visible{outline:3px solid #fff;outline-offset:3px}.auth-fact:active{background:linear-gradient(180deg,rgba(18,40,100,.86),rgba(11,26,72,.9))}
+.auth-fact__kicker{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#cfe0ff}
+.auth-fact__text{display:block;font-size:clamp(20px,2.3vw,27px);line-height:1.42;font-weight:600;color:#fff;overflow-wrap:anywhere}
+.auth-fact__swap{display:block;animation:auth-fact-swap .4s ease both}
+.auth-fact__hint{font-size:14px;color:#c6d6f5}
+@keyframes auth-fact-swap{from{opacity:.35}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.auth-fact__swap{animation:none}}
+.auth__step-note{margin:0;font-size:14px;line-height:1.5;color:var(--mmri-color-text-muted,#cfe0ff)}
+.auth__switch{margin:0;text-align:center;font-size:15px}.auth__switch a,.auth__switch button{color:inherit;font:inherit;text-decoration:underline;background:none;border:0;padding:0;cursor:pointer}
+.auth__email-locked{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}

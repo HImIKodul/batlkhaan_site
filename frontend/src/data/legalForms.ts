@@ -98,3 +98,7 @@ export function joinBusinessName(name:string,form:string){
  if(!n)return abbr;
  return endsWithWord(n,abbr)||n.toLocaleLowerCase('mn-MN')===abbr.toLocaleLowerCase('mn-MN')?n:`${n} ${abbr}`;
 }
+
+/** Company name typed during sign-up (name + legal form). It is turned into the company at the first sign-in of THAT e-mail address; localStorage keys, same-browser only. */
+export const COMPANY_DRAFT_KEY='mmri.companyNameDraft';
+export const COMPANY_DRAFT_EMAIL_KEY='mmri.companyDraftEmail';

@@ -256,7 +256,7 @@ export function AssessmentInline({onCompleted,onAnswerAccepted}:Props){
 
   {!online&&<div className="mmri-questionnaire__network" role="alert"><strong>Интернет холболт тасарсан байна.</strong><span>Одоогийн сонголтыг серверт илгээх боломжгүй. Холболт сэргэх хүртэл энэ хуудсыг хаахгүй байгаарай.</span></div>}
 
-  <form className="mmri-questionnaire__form" key={question.id} onSubmit={(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();void submit()}}>
+  <form className="mmri-questionnaire__form lg lg--soft" key={question.id} onSubmit={(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();void submit()}}>
    <div className="mmri-questionnaire__question-head">
     <h1 ref={questionTitleRef} tabIndex={-1}>{displaySentence(question.textMn)}</h1>
    </div>
