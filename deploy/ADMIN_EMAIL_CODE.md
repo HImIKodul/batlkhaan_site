@@ -15,7 +15,7 @@ The screen shows the "Имэйлээр код авах" button only when the fro
 2. Apply migration `20261126120000_admin_email_challenges` (additive: one new table). Confirm the runtime DB role can use it: `SELECT 1 FROM admin_email_challenges LIMIT 1;` as the runtime role.
    If it answers "permission denied", the default privileges from `deploy/POSTGRES_LEAST_PRIVILEGE.md` are missing: grant SELECT, INSERT, UPDATE, DELETE on the table to the runtime role.
 3. The administrator account whose address is the owner support mailbox must exist (create it with the existing admin CLI; do not delete the current administrator yet).
-4. Set `MMRI_ADMIN_EMAIL_OTP=on`, `MMRI_ADMIN_EMAIL_OTP_ACCOUNTS=support@businessmri.mn`, restart the API, build the frontend with `VITE_ADMIN_EMAIL_CODE=on`.
+4. Set `MMRI_ADMIN_EMAIL_OTP=on`, `MMRI_ADMIN_EMAIL_OTP_ACCOUNTS=<the owner support mailbox>`, restart the API, build the frontend with `VITE_ADMIN_EMAIL_CODE=on`.
 5. Sign in with the e-mail code in one browser **while a second browser stays signed in with TOTP**. Try a re-authentication. Only then consider retiring the old administrator.
 Recovery: remove the account from `MMRI_ADMIN_EMAIL_OTP_ACCOUNTS` (or set the flag off) and restart: the authenticator works again. Mail failure never blocks the TOTP path.
 
