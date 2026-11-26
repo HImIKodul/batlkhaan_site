@@ -119,3 +119,19 @@ CODEX_PROGRESS/**/clean-source/
 
 # 4.x.8 CANDIDATE methodology bundles are generated (scripts/build-businessmri-v2.8-candidates.py), never committed; only their manifest is.
 backend/methodology/businessmri-v2.7-runtime-bundles-CANDIDATE/MMRI_*.json
+
+# ---- Generated regression evidence (written by backend/scripts/step*-regression.mjs and friends; regenerate, never track) ----
+/STEP*.json
+/STEP*.csv
+/BACKEND_STEP15_SYNTHETIC_E2E_REPORT.json
+/STEP11_AUDIT/
+backend/STEP07_RESULTS_*.json
+
+# ---- Local-only data: database dumps, QA credentials, mock mailbox, local API log (never commit) ----
+*.dump
+*.dump.sha256
+*.sql.gz
+local-dev-credentials.env
+credentials.local
+backend/.mock-mailbox/
+backend/local-api.log

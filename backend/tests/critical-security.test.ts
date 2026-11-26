@@ -246,8 +246,8 @@ describe('registration e-mail code is a separate process from password recovery 
  it('only the same purpose is voided when a new code is issued, and a password-reset request is unaffected',async()=>{await verify.requestCode(user.email,{});expect(db.passwordResetToken.updateMany.mock.calls[0][0].where).toMatchObject({purpose:EMAIL_CODE_PURPOSE,usedAt:null})});
  it.each([['cooldown',()=>db.passwordResetToken.findFirst.mockResolvedValue({createdAt:new Date()})],['hourly cap',()=>db.passwordResetToken.count.mockResolvedValue(5)]])('resend is throttled by %s without sending mail',async(_n,arm)=>{arm();await verify.requestCode(user.email,{});expect(mailer.send).not.toHaveBeenCalled();expect(db.passwordResetToken.create).not.toHaveBeenCalled()});
  it('unknown and already-verified addresses get no mail and no error (no enumeration)',async()=>{
-  db.user.findUnique.mockResolvedValueOnce(null);await expect(verify.requestCode('nobody@example.invalid',{})).resolves.toBeUndefined();
-  db.user.findUnique.mockResolvedValueOnce({...user,emailVerificationRequired:true,emailVerifiedAt:new Date()});await expect(verify.requestCode(user.email,{})).resolves.toBeUndefined();expect(mailer.send).not.toHaveBeenCalled();
+  db.user.findUnique.mockResolvedValueOnce(null);await expect(verify.requestCode('nobody@example.invalid',{})).resolves.toBe('SKIPPED');   // nothing sent; the API answers the same way as for a sent code
+  db.user.findUnique.mockResolvedValueOnce({...user,emailVerificationRequired:true,emailVerifiedAt:new Date()});await expect(verify.requestCode(user.email,{})).resolves.toBe('SKIPPED');expect(mailer.send).not.toHaveBeenCalled();
  });
  it('the correct code marks the e-mail verified and changes nothing else',async()=>{
   db.passwordResetToken.findFirst.mockResolvedValue(codeRow('123456'));await verify.verifyCode(user.email,' 123 456 ',{});

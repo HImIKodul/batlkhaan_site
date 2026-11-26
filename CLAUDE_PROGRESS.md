@@ -1021,3 +1021,10 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Question cards (lg lg--soft + stronger navy face), report PDF button label "PDF тайлан татах"; browser journey (cards, selected state, revoke message, 24 h notice with Ulaanbaatar dates, publish, real 3-page PDF download) PASS at both widths.
 - Owner decisions (not changed): QUICK hard maximum of 280 questions leaves coverage at about 21-49 % in the audit probe; one-capability priority slots.
 - Still unverified: real e-mail delivery (Gmail invalid_grant), real QPay, real AI, Windows deployment.
+
+## 2026-11-27 Local recovery and repository cleanup
+- Local API failure: backend/.env had been recreated from the example (database URL pointed at port 5432 where nothing listens, password not the container's, MMRI_AI_REPORT_PROVIDER=openai with REQUIRED=true and no key = refuses to start). Fixed: .env now targets the clean local database mmri_dev_clean on 127.0.0.1:55432, port 4300 (what the Vite proxy uses), AI and QPay off, mock mail. The old file is kept as backend/.env.broken-20261127 (ignored).
+- The existing database `mmri` (323 users: 294 @mmri.test, the rest QA/owner/erased) was NOT modified; verified dump in ~/mmri-backups (161 MB, 82 table data entries, sha256 file next to it). A new empty database mmri_dev_clean was created with backend/scripts/local-dev-db.sh (41 migrations, five methodology bundles ACTIVE) and holds 1 synthetic customer + 1 synthetic SUPER_ADMIN (credentials in ~/mmri-secrets/local-dev-credentials.env).
+- Friend's push (2b18b1d): three deployment files only (host compose override, env template with every value empty, migration gate script); no data, dump or secret; one server hostname in a comment.
+- Removed (git rm, recoverable): generated evidence JSON/CSV at the root and in backend/ (scripts rewrite them; now ignored), dead step reports and runners, six one-off CSS probes in qa/, the unused LoadingFact component and old facts. api-static-check expects the regenerate route; one critical-security assertion updated to the new requestCode result.
+- docs/LOCAL_DEVELOPMENT.md describes the local setup.

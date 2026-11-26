@@ -27,7 +27,7 @@ const expected=[
 // 2026-11-05: password recovery, data export, data erasure
 "POST /api/v1/auth/email-verification/request","POST /api/v1/auth/email-verification/confirm","POST /api/v1/auth/password-reset/request","POST /api/v1/auth/password-reset/confirm","GET /api/v1/account/export","GET /api/v1/companies/:companyId/export","POST /api/v1/companies/:companyId/erase","POST /api/v1/account/erase",
 // 2026-11-06: admin system customer-side endpoints
-"GET /api/v1/assessments/:assessmentId/review-status","POST /api/v1/billing/invoices/:invoiceId/dispute","GET /api/v1/companies/:companyId/disputes","POST /api/v1/support/cases",
+"GET /api/v1/assessments/:assessmentId/review-status","POST /api/v1/billing/invoices/:invoiceId/regenerate","POST /api/v1/billing/invoices/:invoiceId/dispute","GET /api/v1/companies/:companyId/disputes","POST /api/v1/support/cases",
   // Added by the functional-repair phase (MMRI-23, MMRI-24); security-reviewed: all three require a company-admin role, limit/offset are clamped, removal is advisory-locked with a last-owner guard.
   "GET /api/v1/companies/:companyId/billing/invoices","GET /api/v1/companies/:companyId/members","DELETE /api/v1/companies/:companyId/members/:userId",
   // company logo (2026-11-22)
