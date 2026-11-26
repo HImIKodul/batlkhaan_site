@@ -69,6 +69,25 @@ try {
   for (const other of ["marketing", "it", "finance", "people"]) { const x = await start(other); ok(`payment for operations does not open ${other}`, x.s === 402, x); }
   const opened = await start("operations"); ok("the purchased diagnosis starts immediately after the callback", opened.s === 201, opened);
   ok("the right is used exactly once", Number(sql(`select count(*) from company_entitlements where "companyId"='${f1.co}' and "assessmentsUsed"=1 and "domainCode"='operations'`)) === 1 && Number(sql(`select count(*) from assessments where "companyId"='${f1.co}'`)) === 1);
+  // OLD MANUAL INVOICE UNDER QPAY (production switched from MANUAL to QPAY with manual invoices possibly still open)
+  const { provision, freshAdminTotp, call: acall } = await import("./lib/admin-qa.mjs" as any);
+  const LC = await mk("ql"), uid = sql(`select id from users limit 1`).trim(), mid = crypto.randomUUID();
+  sql(`insert into billing_invoices (id,"companyId","createdByUserId","planCode","amountMnt",provider,"senderInvoiceNo","callbackTokenHash",status,"domainCode","updatedAt") values ('${mid}','${LC.co}','${uid}','DIAGNOSTIC',300000,'MANUAL','MMRILEGACY${Date.now()}','legacyhash','CREATED','marketing',now())`);
+  const nBodies = st.bodies.length, rows = (c: any) => Number(sql(`select count(*) from billing_invoices where "companyId"='${c.co}'`));
+  const L1 = await inv(LC, "marketing"); ok("LEG-1 an old MANUAL invoice is not handed back as the QPay purchase", L1.s === 409 && L1.e?.code === "OTHER_PROVIDER_INVOICE_OPEN" && !L1.d?.qrText, L1);
+  const Lp = await Promise.all(Array.from({ length: 4 }, () => inv(LC, "marketing"))); ok("LEG-2 repeated clicks create no QPay invoice and no duplicate row", Lp.every(x => x.s === 409) && rows(LC) === 1 && st.bodies.length === nBodies, { rows: rows(LC), bodies: st.bodies.length - nBodies });
+  ok("LEG-3 the old invoice is left untouched (not cancelled)", sql(`select status from billing_invoices where id='${mid}'`).trim() === "CREATED" && ents(LC) === 0);
+  const Lf = await inv(LC, "finance"); ok("LEG-4 another diagnosis still gets its own QPay invoice", Lf.s === 201 && Lf.d.provider === "QPAY" && rows(LC) === 2, Lf);
+  const sup = provision("SUPER_ADMIN", "legacy"); const LG = await acall("POST", "/admin/auth/login", { body: { email: sup.email, password: sup.password, totpCode: await freshAdminTotp(sup) } }); const atok = LG.d?.token; ok("LEG-5 administrator signs in", LG.s === 200 && !!atok, LG.s);
+  await acall("POST", "/admin/auth/reauth", { tok: atok, body: { password: sup.password, totpCode: await freshAdminTotp(sup) } });
+  const mc = (id: string, body: any) => acall("POST", `/admin/billing/invoices/${id}/manual-confirm`, { tok: atok, body: { reason: "bank statement checked in QA", ...body } });
+  const w = await mc(mid, { paymentReference: "BANK-QA-1", amountMnt: 299999 }); ok("LEG-6 wrong amount is refused and opens nothing", w.s === 409 && ents(LC) === 0 && sql(`select status from billing_invoices where id='${mid}'`).trim() === "CREATED", w);
+  const q = await mc(Lf.d.id, { paymentReference: "BANK-QA-2", amountMnt: 300000 }); ok("LEG-7 a QPay invoice cannot be confirmed by hand", q.s === 409 && q.e?.code === "PAYMENT_PROVIDER_MISMATCH" && ents(LC) === 0, q);
+  const g = await mc(mid, { paymentReference: "BANK-QA-1", amountMnt: 300000 }); ok("LEG-8 a paid MANUAL invoice is confirmed while the system is in QPAY mode", g.s === 200 && sql(`select status from billing_invoices where id='${mid}'`).trim() === "PAID", g);
+  ok("LEG-9 exactly the purchased diagnosis becomes available, once", ents(LC) === 1 && Number(sql(`select count(*) from company_entitlements where "companyId"='${LC.co}' and status='ACTIVE' and "domainCode"='marketing'`)) === 1);
+  const g2 = await mc(mid, { paymentReference: "BANK-QA-1", amountMnt: 300000 }); ok("LEG-10 confirming again is idempotent (no second entitlement)", g2.s === 200 && ents(LC) === 1, g2);
+  const sL = (d: string) => call(B, "POST", `/companies/${LC.co}/assessments`, { tok: LC.tok, body: { domainCode: d } });
+  const lm = await sL("finance"); ok("LEG-11 the unpaid finance QPay invoice opens nothing", lm.s === 402, lm);
   ok("no secret or token in the server log", !/qa-secret|Bearer t|Basic cWE/.test(log)); ok("few sign-ins for the whole run", st.tokens <= 12, st.tokens);
 } catch (x: any) { ok("no exception", false, String(x?.stack ?? x)); }
 console.log(fail ? `RESULT FAIL ${fail}` : "RESULT PASS"); api.kill("SIGKILL"); fake.close(); process.exit(fail ? 1 : 0);
