@@ -62,6 +62,15 @@ function useSecondsLeft(invoice:BillingInvoice|null){
  return expiresAt?Math.max(0,Math.floor((Date.parse(expiresAt)-(Date.now()+offset))/1000)):null;
 }
 
+function PayeeDetails({payee}:{payee:{holderName:string;iban:string}}){
+ const [copied,setCopied]=useState(false);
+ const copy=async()=>{try{await navigator.clipboard.writeText(payee.iban);setCopied(true);window.setTimeout(()=>setCopied(false),2000)}catch{/* clipboard unavailable: the IBAN stays selectable text */}};
+ const grouped=payee.iban.replace(/(.{4})/g,'$1 ').trim();
+ return <section className="billing-payee" aria-label="Данс хүлээн авагчийн мэдээлэл">
+  <dl><div><dt>Эзэмшигчийн нэр</dt><dd>{payee.holderName}</dd></div><div><dt>IBAN дансны дугаар</dt><dd><span className="billing-payee__iban">{grouped}</span><button type="button" className="billing-payee__copy" onClick={()=>void copy()}>{copied?'Хуулсан':'Хуулах'}</button></dd></div></dl>
+  <p className="billing-payee__warn" role="note"><b>Анхааруулга</b> Төлбөр шилжүүлэхээсээ өмнө дансны эзэмшигчийн нэр болон IBAN дансны дугаарыг сайтар нягтална уу. Мэдээлэл зөрүүтэй байвал төлбөр шилжүүлэхгүй, <a href="mailto:support@businessmri.mn">support@businessmri.mn</a> хаягаар холбогдоно уу.</p>
+ </section>;
+}
 export default function Billing(){
  const requestedArea=((sessionStorage.getItem('business:billingArea')||'marketing') as BusinessAreaId);const area=businessAreaById(requestedArea);const areaId=area.id;useAmbientEnvironment(areaId);const mode=sessionStorage.getItem('business:billingMode')==='retake'?'retake':'first';const code:BillingPlanCode=mode==='retake'?'RETAKE':'DIAGNOSTIC';const palette=areaReportPalette[area.id];
  const [plans,setPlans]=useState<BillingCatalogPlan[]>([]);const [status,setStatus]=useState<BillingStatus|null>(null);const [invoice,setInvoice]=useState<BillingInvoice|null>(null);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [showSuccess,setShowSuccess]=useState(false);const successActionRef=useRef<HTMLButtonElement|null>(null);const successDialogRef=useRef<HTMLDivElement|null>(null);const successRestoreRef=useRef<HTMLElement|null>(null);
@@ -159,7 +168,7 @@ export default function Billing(){
     <button type="button" className="billing-qr__test-btn" onClick={demoPay} disabled={busy||demoSent||expired}>{busy?'Баталгаажуулж байна…':demoSent?'Тест төлбөр баталгаажлаа':'Тест төлбөр хийх'}</button>
    </div>}
    {demo&&<p className="billing-qr__demo-note" role="note">Туршилтын QR. Уншуулах шаардлагагүй. «Тест төлбөр хийх» товч дарахад оношилгоо нээгдэнэ.</p>}
-   {!demo&&invoice&&!expired&&!manual&&invoice.senderInvoiceNo&&<p className="billing-qr__ref">Гүйлгээний утга <b>{invoice.senderInvoiceNo}</b><small> Банкны аппаар QR уншуулбал автоматаар бөглөгдөнө. Өөрчлөх шаардлагагүй.</small></p>}
+   {!demo&&invoice&&!expired&&plan?.payee&&<PayeeDetails payee={plan.payee}/>}
    {timed&&left!==null&&!expired&&<p className="billing-qr__expiry">{<>QR код хүчинтэй хугацаа: <b>{String(Math.floor(left/60)).padStart(2,'0')}:{String(left%60).padStart(2,'0')}</b></>}</p>}
    {!demo&&invoice&&!expired&&<BankLinks invoice={invoice}/>}
    {invoice&&!expired&&!demo&&<p className="billing-qr__how">{manual?'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөрийг ажилтан шалгаж баталгаажуулсны дараа оношилгоо нээгдэнэ.':'Банкны аппаараа QR кодыг уншуулж төлнө. Төлбөр баталгаажмагц оношилгоо нээгдэнэ.'}</p>}

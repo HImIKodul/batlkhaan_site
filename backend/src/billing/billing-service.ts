@@ -71,10 +71,22 @@ export class BillingService {
     }
   }
 
+  /** Customer-facing account details (holder name and IBAN), only from the owner-approved settings MMRI_PAYEE_ACCOUNT_HOLDER and MMRI_PAYEE_IBAN. Nothing is displayed unless BOTH are present and the IBAN passes the ISO 13616 mod-97 check;
+      a typo in the setting therefore hides the block instead of showing a wrong account. Display only: invoices, references and verification are untouched. */
+  payeeAccount():{holderName:string;iban:string}|null{
+    const holder=(process.env.MMRI_PAYEE_ACCOUNT_HOLDER??"").replace(/\s+/g," ").trim();
+    const iban=(process.env.MMRI_PAYEE_IBAN??"").replace(/\s+/g,"").toUpperCase();
+    if(holder.length<2||holder.length>120||/[\u0000-\u001f<>]/.test(holder)||!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban))return null;
+    const digits=(iban.slice(4)+iban.slice(0,4)).replace(/[A-Z]/g,c=>String(c.charCodeAt(0)-55));
+    let r=0;for(const ch of digits)r=(r*10+Number(ch))%97;
+    return r===1?{holderName:holder,iban}:null;
+  }
+
   catalog(){
+    const payee=this.config.billingProvider==="grant"?null:this.payeeAccount();
     return (["DIAGNOSTIC","RETAKE"] as BillingPlanCode[]).map(code=>{
       const amountMnt=code==="RETAKE"?this.config.retakePriceMnt:this.config.diagnosticPriceMnt;
-      return {code,...PLAN_META[code],amountMnt,currency:"MNT",available:amountMnt!==null,provider:this.config.billingProvider==="grant"?"GRANT":this.provider.name,testMode:this.config.billingProvider!=="grant"&&this.provider.name==="MOCK",manualMode:this.provider.name==="MANUAL",grantMode:this.config.billingProvider==="grant"};
+      return {code,...PLAN_META[code],amountMnt,currency:"MNT",available:amountMnt!==null,provider:this.config.billingProvider==="grant"?"GRANT":this.provider.name,testMode:this.config.billingProvider!=="grant"&&this.provider.name==="MOCK",manualMode:this.provider.name==="MANUAL",grantMode:this.config.billingProvider==="grant",payee};
     });
   }
 
