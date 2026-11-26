@@ -37,4 +37,4 @@ Do not switch billing mode, create invoices or enable the e-mail code as part of
 - Migration role vs runtime role must stay separate (least privilege).
 
 ## Unresolved production dependencies (none are done)
-Live backend version · old MANUAL invoices vs bank records · verified backup + restore · Gmail OAuth (`invalid_grant`) · `support@businessmri.mn` SUPER_ADMIN provisioning and a real e-mail-code login · one real QPay payment with verified entitlement · real Android/iPhone bank-app scans of each colored QR.
+Live backend version · old MANUAL invoices vs bank records · verified backup + restore · Gmail OAuth (`invalid_grant`) · the owner support mailbox SUPER_ADMIN provisioning and a real e-mail-code login · one real QPay payment with verified entitlement · real Android/iPhone bank-app scans of each colored QR.
