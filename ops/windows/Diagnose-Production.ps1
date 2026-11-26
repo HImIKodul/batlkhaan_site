@@ -13,34 +13,34 @@ param([string]$OutFile = "$env:TEMP\mmri-diagnosis.txt", [string]$BackendDir = "
 $ErrorActionPreference = 'Continue'
 $out = New-Object System.Collections.Generic.List[string]
 function W($t) { $out.Add([string]$t) }
-function H($t) { W ""; W ("=== " + $t + " ===") }
+function Section($t) { W ""; W ("=== " + $t + " ===") }
 
-H "Host"
+Section "Host"
 $os = Get-CimInstance Win32_OperatingSystem
 W "Computer: $env:COMPUTERNAME  OS: $($os.Caption) build $($os.BuildNumber)  Installed: $($os.InstallDate)  LastBoot: $($os.LastBootUpTime)"
 W "Server time: $(Get-Date -Format o)  TimeZone: $((Get-TimeZone).Id)"
 W "CPU: $((Get-CimInstance Win32_Processor | Select-Object -First 1).Name)  RAM GB: $([math]::Round($os.TotalVisibleMemorySize/1MB,1))  FreeRAM GB: $([math]::Round($os.FreePhysicalMemory/1MB,1))"
 Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Used -ne $null } | ForEach-Object { W "Disk $($_.Name): used $([math]::Round($_.Used/1GB,1)) GB free $([math]::Round($_.Free/1GB,1)) GB" }
 
-H "Windows activation / evaluation (Standard Evaluation must not be the long-term production licence)"
+Section "Windows activation / evaluation (Standard Evaluation must not be the long-term production licence)"
 try { Get-CimInstance SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -and $_.Name -like 'Windows*' } | ForEach-Object { W "License: $($_.Name) status=$($_.LicenseStatus) (1=Licensed) graceMinutes=$($_.GracePeriodRemaining)" } } catch { W "license query failed: $($_.Exception.Message)" }
 try { W ("slmgr: " + ((cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /xpr) -join ' ')) } catch {}
 try { W ("Latest hotfixes: " + ((Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 5 | ForEach-Object { "$($_.HotFixID)($($_.InstalledOn.ToString('yyyy-MM-dd')))" }) -join ', ')) } catch {}
 
-H "Listening ports (who is exposed)"
+Section "Listening ports (who is exposed)"
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Sort-Object LocalPort | ForEach-Object {
   $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue
   W ("{0,-18}:{1,-6} {2}" -f $_.LocalAddress, $_.LocalPort, $p.ProcessName) }
 W "(Expect: 80/443 by IIS only; Node API and PostgreSQL on 127.0.0.1 ONLY. 3389/RDP, 5432, 4000 on 0.0.0.0 = exposure to fix.)"
 
-H "Firewall profiles and inbound allow rules on key ports"
+Section "Firewall profiles and inbound allow rules on key ports"
 Get-NetFirewallProfile | ForEach-Object { W "Profile $($_.Name): enabled=$($_.Enabled)" }
 Get-NetFirewallRule -Direction Inbound -Enabled True -Action Allow -ErrorAction SilentlyContinue | ForEach-Object {
   $pf = $_ | Get-NetFirewallPortFilter; $af = $_ | Get-NetFirewallAddressFilter
   if ($pf.LocalPort -match '^(80|443|3389|5432|4000|4010|5173|5176)$') { W ("Rule '{0}' port={1} remote={2}" -f $_.DisplayName, $pf.LocalPort, $af.RemoteAddress) } }
 try { $rdp = (Get-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server').fDenyTSConnections; W "RDP enabled: $($rdp -eq 0)" } catch {}
 
-H "IIS / ARR (reverse proxy) - sites, bindings, rewrite rules"
+Section "IIS / ARR (reverse proxy) - sites, bindings, rewrite rules"
 try {
   Import-Module WebAdministration -ErrorAction Stop
   Get-Website | ForEach-Object { W "Site $($_.Name) state=$($_.State) path=$($_.PhysicalPath) bindings=$(($_.Bindings.Collection | ForEach-Object { $_.protocol + ':' + $_.bindingInformation }) -join '; ')" }
@@ -56,12 +56,12 @@ try {
 } catch { W "IIS module not available: $($_.Exception.Message)" }
 foreach ($c in (Get-ChildItem Cert:\LocalMachine\My -ErrorAction SilentlyContinue | Where-Object { $_.Subject -like '*businessmri*' })) { W "Certificate $($c.Subject) expires $($c.NotAfter.ToString('yyyy-MM-dd')) thumbprint $($c.Thumbprint.Substring(0,8))..." }
 
-H "Application processes and services"
+Section "Application processes and services"
 Get-CimInstance Win32_Process -Filter "Name='node.exe'" | ForEach-Object { W "node pid=$($_.ProcessId) started=$($_.CreationDate) cmd=$($_.CommandLine -replace '(?i)(password|secret|token|key)=\S+','$1=***')" }
 Get-CimInstance Win32_Service | Where-Object { $_.PathName -match 'node|nssm|pm2|postgres|mmri' -or $_.Name -match 'mmri|postgres|pm2' } | ForEach-Object { W "Service $($_.Name) state=$($_.State) start=$($_.StartMode) account=$($_.StartName) path=$($_.PathName -replace '(?i)(password|secret|token|key)=\S+','$1=***')" }
 Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskName -match 'mmri|backup|pg_dump' } | ForEach-Object { W "Task $($_.TaskName) state=$($_.State) lastRun=$((Get-ScheduledTaskInfo $_).LastRunTime) lastResult=$((Get-ScheduledTaskInfo $_).LastTaskResult)" }
 
-H "Backend configuration (whitelisted, non-secret keys only)"
+Section "Backend configuration (whitelisted, non-secret keys only)"
 if (-not $BackendDir) {
   $n = Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Select-Object -First 1
   if ($n -and $n.CommandLine -match '([A-Za-z]:\\[^"]*?)\\(dist|src)\\') { $BackendDir = $Matches[1] }
@@ -77,13 +77,13 @@ if ($BackendDir -and (Test-Path "$BackendDir\.env")) {
 if ($BackendDir -and (Test-Path "$BackendDir\package.json")) { W ("backend package.json version: " + ((Get-Content "$BackendDir\package.json" -Raw | ConvertFrom-Json).version)) }
 foreach ($u in 'http://127.0.0.1:4000/health','http://127.0.0.1:4000/ready') { try { $r = Invoke-WebRequest -UseBasicParsing -Uri $u -TimeoutSec 10; W "GET $u -> $($r.StatusCode) $($r.Content.Substring(0,[Math]::Min(200,$r.Content.Length)))  x-mmri-release=$($r.Headers['x-mmri-release'])" } catch { W "GET $u failed: $($_.Exception.Message)" } }
 
-H "Frontend build identity (what IIS actually serves)"
+Section "Frontend build identity (what IIS actually serves)"
 foreach ($s in (Get-Website -ErrorAction SilentlyContinue)) {
   $idx = Join-Path $s.PhysicalPath 'index.html'
   if (Test-Path $idx) { $h = (Get-FileHash $idx -Algorithm SHA256).Hash.Substring(0,16); W "Site $($s.Name): index.html modified $((Get-Item $idx).LastWriteTime) sha256:$h"; W ("  asset refs: " + ((Select-String -Path $idx -Pattern 'assets/[^"]+' -AllMatches).Matches.Value -join ', ')) }
 }
 
-H "PostgreSQL (read-only aggregate counts; no personal data printed)"
+Section "PostgreSQL (read-only aggregate counts; no personal data printed)"
 Get-CimInstance Win32_Service | Where-Object { $_.Name -match 'postgres' } | ForEach-Object { W "PG service $($_.Name) state=$($_.State)" }
 $pgConf = Get-ChildItem "$env:ProgramFiles\PostgreSQL" -Recurse -Filter postgresql.conf -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($pgConf) { Select-String -Path $pgConf.FullName -Pattern '^\s*(listen_addresses|port|max_connections)\s*=' | ForEach-Object { W $_.Line.Trim() } }
@@ -101,10 +101,10 @@ if ($Psql -and $PgDatabase -and $PgUser -and (Test-Path $Psql)) {
   W "Database name: $PgDatabase (confirm it equals the DATABASE_URL database of the running backend; never print DATABASE_URL)"
 } else { W "Database counts skipped (pass -Psql -PgDatabase -PgUser; export PGPASSWORD for this session only)." }
 
-H "Backups (existence and age only)"
+Section "Backups (existence and age only)"
 Get-ChildItem -Path C:\,D:\ -Recurse -Include *.dump,*.backup,*.sql,*.sql.gz,*.zip -ErrorAction SilentlyContinue -Depth 3 | Where-Object { $_.Length -gt 1MB -and $_.FullName -match 'backup|mmri|pg' } | Sort-Object LastWriteTime -Descending | Select-Object -First 8 | ForEach-Object { W "$($_.FullName) $([math]::Round($_.Length/1MB,1)) MB $($_.LastWriteTime)" }
 
-H "Recent errors (counts only)"
+Section "Recent errors (counts only)"
 try { $ev = Get-WinEvent -FilterHashtable @{LogName='Application'; Level=2; StartTime=(Get-Date).AddDays(-2)} -MaxEvents 200 -ErrorAction Stop; W "Application errors last 48h: $($ev.Count); top sources: $((($ev | Group-Object ProviderName | Sort-Object Count -Descending | Select-Object -First 5 | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join ', '))" } catch { W "Event log query: $($_.Exception.Message)" }
 
 $out | Set-Content -Path $OutFile -Encoding UTF8

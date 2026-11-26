@@ -3,7 +3,8 @@
    usage: node scripts/qpay-smoke.mjs /path/to/qpay.env [--sandbox-invoice] */
 import fs from 'node:fs';import crypto from 'node:crypto';
 const file=process.argv[2];if(!file)throw new Error('path of the credentials file required');
-if((fs.statSync(file).mode&0o077)!==0)throw new Error('credentials file must be private (chmod 600)');
+if(process.platform==='win32')console.log('NOTE Windows: file permissions are not checked here. Restrict the file with icacls (Administrators, SYSTEM and the API service account only).');
+else if((fs.statSync(file).mode&0o077)!==0)throw new Error('credentials file must be private (chmod 600)');
 const env=Object.fromEntries(fs.readFileSync(file,'utf8').split('\n').map(l=>/^([A-Z_]+)='(.*)'$/.exec(l)).filter(Boolean).map(m=>[m[1],m[2]]));
 const base=String(env.QPAY_BASE_URL||'').replace(/\/+$/,'');if(!['https://merchant.qpay.mn','https://merchant-sandbox.qpay.mn'].includes(base))throw new Error('unknown QPay address');
 const sandbox=base.includes('sandbox');const req=async(path,o={})=>{const r=await fetch(base+path,{redirect:'error',signal:AbortSignal.timeout(15000),...o});let b={};try{b=await r.json()}catch{}return{s:r.status,b}};

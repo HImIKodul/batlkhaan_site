@@ -9,13 +9,16 @@ Every step that changes production needs the owner's approval. Stages A and B ar
 - Not inspected (no server access): server `.env`, database, migration level, service, backups.
 - End-to-end tests use a LOCAL FAKE provider (`backend/scripts/qa-gate-qpay-e2e.mts`). They are not QPay verification.
 
+## Step 1: inspect, back up, restore test (no deployment)
+Run in an elevated PowerShell on the server. Neither script has been run or syntax-checked in PowerShell by us. The database steps of the second one were reproduced on Linux against a temporary database. Read both first.
+1. `.\Diagnose-Production.ps1 -OutFile C:\Temp\mmri-diagnosis.txt` (read only: host, IIS/ARR sites and rewrite rules, processes, ports, existing backups).
+2. `.\Step1-InspectBackupRestore.ps1 -BackendDir <running backend> -PgDatabase <db> -PgUser postgres -BackupRoot <new folder> -ReleaseDir <extracted package> -PgBin <PostgreSQL bin>`
+
+Do NOT use `Backup-Postgres.ps1` for a pre-change backup: it deletes `mmri-*.dump` files older than 14 days in its folder and does not check the `pg_dump` exit code.
+The restore is proven only if every summary line is PASS. Copy the backup folder to encrypted storage off the server.
+
 ## A. Deploy the release, still in manual mode
-1. On the server, read only: `powershell -ExecutionPolicy Bypass -File .\Diagnose-Production.ps1 -OutFile C:\Temp\mmri-diagnosis.txt` (add `-Psql`, `-PgDatabase`, `-PgUser` for database counts).
-2. Backups, before anything changes:
-   - database: `Backup-Postgres.ps1 -OffsiteDir <other machine>` with `MMRI_BACKUP_DATABASE_URL` set (the script has not been run on Windows by us);
-   - report files: copy the folder in `MMRI_REPORT_STORAGE_DIR`;
-   - the service `.env` and the current release folder, kept untouched.
-3. Prove the dump restores: restore it into a NEW database and compare row counts of users, companies, assessments, billing_invoices, company_entitlements. A `.sha256` and `pg_restore --list` alone do not prove this.
+1-3. Run Step 1 again right before deployment; all lines PASS. Keep the current release folder untouched.
 4. `npx prisma migrate status` (owner role, operator shell). Review every pending migration before `prisma migrate deploy`.
 5. Deploy API and frontend from the same package (the countdown fix needs both). Follow `DEPLOYMENT_RUNBOOK.md`.
 6. Check: `/api/v1/billing/plans` still says MANUAL, five payment pages show their colour, no countdown, QR black.

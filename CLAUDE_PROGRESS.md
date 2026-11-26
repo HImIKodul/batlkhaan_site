@@ -958,3 +958,7 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Coloured QR: deep category shades (8:1) on white, OFF by default (`VITE_MMRI_COLOR_QR_AREAS`; per-device preview `mmri.qrColorPreview`), black above 77 modules, black/colour switch for customers (billing/qrColor.ts). QR bytes now UTF-8 (library default truncated non-ASCII). jsQR + ZXing exact-payload decode: 1000/1000 and 33/33 checks (synthetic payloads; no bank-app scan).
 - qpay-smoke on the local production credential file: sign-in, refresh, payment/check PASS; invoice code unverified. Fake-provider e2e 32/32 on a temporary Postgres (now also: paid domain starts at once, other four stay 402).
 - Cutover risk: open MANUAL invoices are reused in QPay mode. Procedure and owner approvals: deploy/QPAY_ACTIVATION.md.
+
+## 2026-11-26 (3) QPay activation Step 1 (no server access)
+- This computer has no route to the server. From outside: IIS/ARR, live frontend = d449445 file names, backend has routes up to 4df4d6d or later; ports 21, 80, 443, 3389, 5985 accept connections from this network (5432, 4000, 22, 5986 did not). Nothing changed.
+- New `ops/windows/Step1-InspectBackupRestore.ps1` (never run in PowerShell; its SQL/dump/restore steps passed on a temporary Postgres: 87/87 tables). Fixed: `H` function shadowed by the Get-History alias (also in Diagnose-Production.ps1), qpay-smoke refusing every file on Windows. Backup-Postgres.ps1 deletes old dumps: not for pre-change backups.
