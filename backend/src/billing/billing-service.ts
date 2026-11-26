@@ -116,6 +116,9 @@ export class BillingService {
       // MMRI-11: the pre-lock check above can be stale (a payment may have activated since). Re-decide eligibility under the same lock activation takes.
       await this.assertPurchaseEligible(tx,companyId,planCode,domainCode);
       const open=await tx.billingInvoice.findFirst({where:{companyId,domainCode,planCode,amountMnt,status:{in:["CREATED","PENDING"]}},orderBy:{createdAt:"desc"}});
+      /* An open invoice from another provider (e.g. an old MANUAL invoice after the switch to QPAY) is neither handed back as if it were payable here nor duplicated: it may already have been paid at the bank.
+         An administrator confirms it (Payments) or, after checking the bank statement, cancels it. */
+      if(open&&open.provider!==this.provider.name)throw new ApiError(409,"OTHER_PROVIDER_INVOICE_OPEN","Өмнө үүсгэсэн гараар төлөх нэхэмжлэх нээлттэй байна. Төлбөр хийсэн бол тусламжийн багтай холбогдоно уу, төлөөгүй бол тэд нэхэмжлэхийг хааж шинэ QPay нэхэмжлэх нээнэ.");
       if(open)return {existing:open,local:null};
       const created=await tx.billingInvoice.create({data:{companyId,domainCode,createdByUserId:userId,planCode,amountMnt,provider:this.provider.name,senderInvoiceNo,callbackTokenHash:hashToken(callbackToken),status:"CREATED"}});
       return {existing:null,local:created};
@@ -323,7 +326,8 @@ export class BillingService {
   }
 
   async confirmManualPayment(invoiceId:string,rawReference:unknown,rawAmount:unknown){
-    if(this.provider.name!=="MANUAL")throw new ApiError(404,"NOT_FOUND","Route not found");
+    /* Not gated on the current provider mode: an invoice issued while the system was in MANUAL mode may be paid after the switch to QPAY, and the administrator must still be able to confirm it (exact amount + bank reference required;
+       a QPAY/MOCK invoice is refused below). */
     const invoice=await prisma.billingInvoice.findUnique({where:{id:invoiceId}});
     if(!invoice)throw notFound("Billing invoice not found");
     if(invoice.provider!=="MANUAL")throw new ApiError(409,"PAYMENT_PROVIDER_MISMATCH","This invoice is not a manual-payment invoice.");
