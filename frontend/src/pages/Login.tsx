@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import { PasswordInput } from '../components/PasswordInput';
 import { PageContainer,go,routeHref } from '../components/AppShell';
 import { Button,Card,Field,Input,Tabs } from '../components/UI';
 import { ApiError,api,session } from '../api/client';
@@ -54,7 +55,7 @@ export default function Login(){
     <form id="mmri-auth-panel" className="auth__form" key={mode} role="tabpanel" aria-labelledby={`mmri-auth-panel-tab-${mode}`} onSubmit={e=>{e.preventDefault();void submit()}}>
      {mode==='register'&&<Field label="Нэр"><Input value={name} onChange={e=>setName(e.target.value)} placeholder="Таны нэр" autoComplete="name"/></Field>}
      <Field label="Имэйл"><Input type="email" autoComplete="email" inputMode="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@company.mn" required/></Field>
-     <Field label="Нууц үг"><Input type="password" autoComplete={mode==='login'?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••••" minLength={mode==='register'?10:undefined} maxLength={128} required/>{mode==='register'&&<small className="auth__hint">Хамгийн багадаа 10 тэмдэгт.</small>}</Field>
+     <Field label="Нууц үг"><PasswordInput className="mmri-input" autoComplete={mode==='login'?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••••" minLength={mode==='register'?10:undefined} maxLength={128} required/>{mode==='register'&&<small className="auth__hint">Хамгийн багадаа 10 тэмдэгт.</small>}</Field>
      {notice&&<div role="status"><p>{notice}</p></div>}
      <a className="auth__forgot" href="#/verify-email">Имэйлээ баталгаажуулаагүй юу? Код оруулах</a>
      {error&&<div className="mmri-support-alert is-error" role="alert">{error}</div>}

@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import { PasswordInput } from '../components/PasswordInput';
 import { PageContainer,routeHref } from '../components/AppShell';
 import { Button,Card,Field,Input } from '../components/UI';
 import { api,ApiError } from '../api/client';
@@ -23,8 +24,8 @@ export default function ResetPassword(){
     {done?<div className="auth__done" role="status"><p><b>Нууц үг амжилттай солигдлоо.</b></p><p>Аюулгүй байдлын үүднээс бүх төхөөрөмжөөс гарсан. Шинэ нууц үгээрээ нэвтэрнэ үү.</p><a className="mmri-button mmri-button--primary" href="#/login">Нэвтрэх</a></div>
     :!tokenShape?<div className="auth__done" role="alert"><p><b>Холбоос буруу байна.</b></p><p>Имэйл дэх холбоосыг бүтнээр нь нээнэ үү, эсвэл нэвтрэх хуудаснаас шинэ холбоос авна уу.</p><a className="mmri-button mmri-button--primary" href="#/forgot-password">Шинэ холбоос авах</a></div>
     :<form className="auth__form" onSubmit={e=>{e.preventDefault();void submit()}}>
-     <Field label="Шинэ нууц үг"><Input type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} minLength={10} maxLength={128} required autoFocus/><small className="auth__hint">Хамгийн багадаа 10 тэмдэгт.</small></Field>
-     <Field label="Шинэ нууц үгээ давтах"><Input type="password" autoComplete="new-password" value={again} onChange={e=>setAgain(e.target.value)} required/></Field>
+     <Field label="Шинэ нууц үг"><PasswordInput className="mmri-input" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} minLength={10} maxLength={128} required autoFocus/><small className="auth__hint">Хамгийн багадаа 10 тэмдэгт.</small></Field>
+     <Field label="Шинэ нууц үгээ давтах"><PasswordInput className="mmri-input" autoComplete="new-password" value={again} onChange={e=>setAgain(e.target.value)} required/></Field>
      {error&&<div className="mmri-support-alert is-error" role="alert">{error}{error.includes('хүчингүй')&&<> <a href="#/forgot-password">Шинэ холбоос авах</a></>}</div>}
      <Button type="submit" fullWidth loading={busy} disabled={busy||!lengthOk||!match}>Нууц үг солих</Button>
     </form>}

@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import { PasswordInput } from '../components/PasswordInput';
 import { AppShell,PageContainer } from '../components/AppShell';
 import { Button,Field,Input } from '../components/UI';
 import { Icon } from '../components/Icon';
@@ -24,14 +25,14 @@ export default function AccountData(){
    <p><button type="button" className="account-manage__export" disabled={!!busy} onClick={()=>void exportCompany()}>Устгахын өмнө мэдээллээ татах</button></p>
    <form onSubmit={e=>{e.preventDefault();void eraseCompany()}} autoComplete="off">
     <Field label={`Байгууллагын нэрийг яг бичнэ үү ${companyName}`}><Input value={coName} onChange={e=>setCoName(e.target.value)} autoComplete="off"/></Field>
-    <Field label="Нууц үг"><Input type="password" value={coPw} onChange={e=>setCoPw(e.target.value)} autoComplete="current-password"/></Field>
+    <Field label="Нууц үг"><PasswordInput className="mmri-input" value={coPw} onChange={e=>setCoPw(e.target.value)} autoComplete="current-password"/></Field>
     <Button type="submit" variant="danger" loading={busy==='dc'} disabled={!!busy||!coName.trim()||!coPw}>Өгөгдлөө устгах</Button></form></>:<p>Устгах байгууллагын өгөгдөл алга.</p>}
   </section>
   <section className="account-data__card account-data__danger lg lg--soft" aria-labelledby="del-account"><h2 id="del-account">Бүртгэл устгах</h2>
    <p>Бүртгэл устсаны дараа дахин нэвтрэх боломжгүй. Төлбөрийн бүртгэл хадгалагдана.</p>
    <form onSubmit={e=>{e.preventDefault();void eraseAccount()}} autoComplete="off">
     <Field label="Имэйл хаягаа бичиж баталгаажуулна уу"><Input type="email" value={acEmail} onChange={e=>setAcEmail(e.target.value)} autoComplete="off"/></Field>
-    <Field label="Нууц үг"><Input type="password" value={acPw} onChange={e=>setAcPw(e.target.value)} autoComplete="current-password"/></Field>
+    <Field label="Нууц үг"><PasswordInput className="mmri-input" value={acPw} onChange={e=>setAcPw(e.target.value)} autoComplete="current-password"/></Field>
     <Button type="submit" variant="danger" loading={busy==='da'} disabled={!!busy||!acEmail.trim()||!acPw}>Бүртгэлээ устгах</Button></form>
   </section>
  </PageContainer></AppShell>;
