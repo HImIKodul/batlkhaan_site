@@ -1,0 +1,16 @@
+# Host-specific override (NOT committed). Use together with docker-compose.production.yml.
+services:
+  migrate:
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    # repo gate calls db:verify:diagnosis without an id (always fails); host variant: see deploy/host/
+    command: ["bash","/opt/mmri-host/connected-production-db-gate.host.sh"]
+    volumes:
+      - ./host/connected-production-db-gate.host.sh:/opt/mmri-host/connected-production-db-gate.host.sh:ro
+      - /etc/mmri/pg-ca.crt:/etc/mmri/pg-ca.crt:ro   # private CA for sslaccept=strict
+  api:
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    environment:
+      TRUST_PROXY_HOPS: "2"       # IIS (host) -> nginx (web) -> api
+    ports: ["127.0.0.1:4000:4000"] # loopback only, for local /ready and /metrics
+    volumes:
+      - /etc/mmri/pg-ca.crt:/etc/mmri/pg-ca.crt:ro   # private CA for sslaccept=strict
