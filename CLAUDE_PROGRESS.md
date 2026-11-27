@@ -1036,3 +1036,11 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Sign-in on every NEW device needs a six-digit e-mail code (`/auth/login` -> `/auth/login/verify`); `trusted_devices` (30 days, hashed cookie secret, revoked by password change/reset/erase). Admins without an authenticator use the e-mail code; authenticator admins keep TOTP. Flag `MMRI_LOGIN_DEVICE_VERIFICATION=off` disables the customer step.
 - Migrations: `20261127090000_user_identities`, `20261127110000_trusted_devices` (additive).
 - Local services: `~/.config/systemd/user/mmri-api.service` and `mmri-web.service` (enabled, linger on, never start a second copy); container restart policy `unless-stopped`.
+
+## 2026-11-28 (2) — Remaining administration items
+- 12-month plan is edited IN PLACE in the review (`data-pf` hooks in `AnnualTimeline`, saved through the existing validated `PUT /reviews/:id/annual-plan`); the separate plan form and `AnnualPlanEditor.tsx` are removed.
+- Authenticator administrators now also need the e-mailed code on an untrusted device (authenticator is only checked, not spent, until the final request); trusted device skips only the e-mail code.
+- Entitlement sync is event-driven: `entitlement-events.ts` long poll (`GET /companies/:id/entitlement-events`), woken by grant/revoke and confirmed payments; 30 s safety check remains.
+- Finance "canonical capability name" failure was caused by the new editor rebuilding claim titles from display-transformed text (fixed: raw title is restored on save). Fresh fixtures pass for all five domains.
+- `src/qa-review-fixtures.ts` + `scripts/local-e2e/` give repeatable lifecycle tests on disposable fixtures.
+- User systemd units verified (start, duplicate prevention, SIGKILL recovery, database dependency). Full reboot recovery NOT tested.

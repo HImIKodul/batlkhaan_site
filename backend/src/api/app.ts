@@ -11,6 +11,7 @@ import { ConcurrencyGate } from "./concurrency-gate.js";
 import { AuthService } from "./auth/auth-service.js";
 import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
 import { EMAIL_CODE_COOLDOWN_SECONDS, EMAIL_CODE_TTL_MINUTES, EmailVerificationService } from "./auth/email-verification-service.js";
+import { waitForEntitlementChange } from "./account/entitlement-events.js";
 import { GoogleTokenVerifier } from "./auth/google-token.js";
 import { clearTrustedCookie, createTrustedDevice, isTrustedDevice, loginDeviceVerificationOn, trustedCookie, TRUSTED_DEVICE_COOKIE } from "./auth/trusted-device.js";
 import { registrationAllowed, createMailer } from "./mail/mailer.js";
@@ -107,6 +108,7 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   const apiLimiter=new MemoryRateLimiter(config.apiRateLimit,config.rateLimitWindowMs);
   const authIpLimiter=new MemoryRateLimiter(config.authIpRateLimit,config.rateLimitWindowMs);
   const authAccountLimiter=new MemoryRateLimiter(config.authAccountRateLimit,config.rateLimitWindowMs);
+  const entitlementEventsLimiter=new MemoryRateLimiter(40,60_000);   // one 25 s long poll per page: ~3 a minute, 40 leaves room for several tabs
   const refreshLimiter=new MemoryRateLimiter(config.refreshRateLimit,config.rateLimitWindowMs);
   const notificationLimiter=new MemoryRateLimiter(120,config.rateLimitWindowMs);
   const operationalMetrics=new OperationalMetrics();
@@ -244,6 +246,13 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
 
   /* Data export and erasure (see docs/DATA_LIFECYCLE.md). Exports are attachments, never cached. Erasure needs the OWNER role, the password and an exact typed confirmation. */
   const exportHeaders=(name:string)=>({"content-disposition":`attachment; filename="${name}"`,"cache-control":"no-store"});
+  /* Long poll: answers as soon as an administrator grant/revoke or a confirmed payment changes this company's access (or after ~25 s). Membership is checked like any company read; the answer carries only a counter. */
+  router.add("GET","/api/v1/companies/:companyId/entitlement-events",async({req,res,principal,params,query})=>{
+    await requireCompanyRole(principal!.userId,params.companyId,ALL_ROLES);
+    entitlementEventsLimiter.check(`entev:user:${principal!.userId}`);
+    const since=Number(query.get("since")??0)||0;let closed=false;req.on("close",()=>{closed=true});
+    ok(res,await waitForEntitlementChange(params.companyId,since,25_000,()=>closed));
+  });
   router.add("GET","/api/v1/account/export",async({req,res,principal})=>{
     authAccountLimiter.check(`export:user:${principal!.userId}`);
     json(res,200,{data:await dataLifecycle.exportAccount(principal!.userId,fingerprint(req,config))},exportHeaders("mmri-account-export.json"));

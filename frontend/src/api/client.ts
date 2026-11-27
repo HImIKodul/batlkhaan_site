@@ -135,6 +135,8 @@ export const api={
  getAiProfileConsent:(companyId:string)=>request<{granted:boolean;version:string;changedAt:string|null}>(`/companies/${companyId}/ai-profile-consent`),
  setAiProfileConsent:(companyId:string,granted:boolean,version:string)=>request<{granted:boolean;version:string;changedAt:string|null}>(`/companies/${companyId}/ai-profile-consent`,{method:'PUT',body:JSON.stringify({granted,version})}),
  createSupportCase:(body:{category:string;subject:string;message:string;companyId?:string})=>request<{id:string;status:string}>('/support/cases',{method:'POST',body:JSON.stringify(body)}),
+ /** Long poll (~25 s): resolves as soon as access for this company changes (administrator grant/revoke, confirmed payment). */
+ waitEntitlementChange:(companyId:string,since:number)=>request<{seq:number;changed:boolean}>(`/companies/${companyId}/entitlement-events?since=${since}`),
  getBillingStatus:(companyId:string)=>request<BillingStatus>(`/companies/${companyId}/billing/status`),
  createBillingInvoice:(companyId:string,planCode:BillingPlanCode,domainCode:string='marketing')=>request<BillingInvoice>(`/companies/${companyId}/billing/invoices`,{method:'POST',body:JSON.stringify({planCode,domainCode})}),
  getBillingInvoice:(invoiceId:string)=>request<BillingInvoice>(`/billing/invoices/${invoiceId}`),

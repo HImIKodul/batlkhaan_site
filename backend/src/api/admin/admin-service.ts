@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto
 import type { Mailer } from "../mail/mailer.js";
 import { prisma } from "../../db.js";
 import type { ApiConfig } from "../config.js";
-import { isTrustedDevice } from "../auth/trusted-device.js";
+import { isTrustedDevice, loginDeviceVerificationOn } from "../auth/trusted-device.js";
 import { ApiError } from "../errors.js";
 import { hashAuditValue, hashPassword, verifyPassword } from "../auth/crypto.js";
 import { decryptSecret, encryptSecret, newTotpSecret, verifyTotp } from "./totp.js";
@@ -240,6 +240,21 @@ export class AdminService {
       return { token: token2, expiresAt: session2.expiresAt, userId: user.id, admin: { id: admin.id, email: user.email, role: admin.role as AdminRole, permissions: ROLE_PERMISSIONS[admin.role as AdminRole] } };
     }
     if (!admin || !user || user.status !== "ACTIVE" || user.erasedAt || (user.emailVerificationRequired && !user.emailVerifiedAt) || !pwOk || admin.status === "DISABLED" || step === null || replay) return denied(!admin ? "unknown" : admin.status === "DISABLED" ? "disabled" : !pwOk ? "password" : unreadable ? "mfa_secret_unreadable" : "mfa");
+    /* EVERY administrator on an untrusted device also proves the mailbox: authenticator code AND a six-digit e-mail code. The authenticator code is only CHECKED here (the step is spent in the transaction below,
+       on the final request), so asking for the e-mail code never burns it. A trusted device (revocable cookie bound to this user) skips only the e-mail code, never the authenticator. */
+    if (loginDeviceVerificationOn() && !trusted) {
+      if (!String(input.emailCode ?? "").trim()) {
+        await this.issueEmailCode(admin.id, user.email, fp);
+        return { mfaRequired: "EMAIL_CODE" as const, expiresInMinutes: ADMIN_EMAIL_CODE_TTL_MINUTES, resendAfterSeconds: ADMIN_EMAIL_CODE_COOLDOWN_SECONDS };
+      }
+      const claim = await this.claimEmailCode(admin.id, input.emailCode);
+      if (claim !== "OK") {
+        await this.recordFailure(admin.id); await this.audit(admin.id, "ADMIN_LOGIN", "FAILURE", fp, undefined, { reason: "email_code_" + claim.toLowerCase() });
+        if (claim === "EXPIRED") throw new ApiError(401, "ADMIN_CODE_EXPIRED", "Кодын хугацаа дууссан эсвэл ашиглагдсан байна. «Код дахин авах» товчийг дарна уу.");
+        if (claim === "ATTEMPTS") throw new ApiError(429, "ADMIN_CODE_ATTEMPTS", "Код хэт олон удаа буруу оруулагдсан байна. «Код дахин авах» товчоор шинэ код аваарай.");
+        throw new ApiError(401, "ADMIN_CODE_INVALID", "Баталгаажуулах код буруу байна.");
+      }
+    }
     const token = "adm_" + randomBytes(32).toString("base64url"); const now = Date.now();
     /* Check-and-advance of the TOTP step is ONE conditional UPDATE: of any number of simultaneous requests carrying the same code, exactly one matches "mfaLastStep < step". A concurrent disable is also respected (status must still not be DISABLED). */
     const session = await prisma.$transaction(async tx => {
@@ -252,7 +267,7 @@ export class AdminService {
     });
     if (!session) return denied("mfa_replay");
     await this.audit(admin.id, "ADMIN_LOGIN", "SUCCESS", fp);
-    return { token, expiresAt: session.expiresAt, admin: { id: admin.id, email: user.email, role: admin.role as AdminRole, permissions: ROLE_PERMISSIONS[admin.role as AdminRole] } };
+    return { token, expiresAt: session.expiresAt, userId: user.id, admin: { id: admin.id, email: user.email, role: admin.role as AdminRole, permissions: ROLE_PERMISSIONS[admin.role as AdminRole] } };
   }
 
   /** Resolves the bearer token to a principal. Role, status and permissions always come from the database, never from the request. */

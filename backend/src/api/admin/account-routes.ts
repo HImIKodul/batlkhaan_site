@@ -1,6 +1,7 @@
 import { prisma } from "../../db.js";
 import { ApiError, badRequest, notFound } from "../errors.js";
 import { ok } from "../http/respond.js";
+import { notifyEntitlementChange } from "../account/entitlement-events.js";
 import type { RouteContext } from "../http/router.js";
 import type { AdminPrincipal, Permission } from "./admin-service.js";
 
@@ -212,6 +213,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       }
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, note: note || null, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", reactivated: out.reactivated, assessmentId: out.assessmentId, cancelledInvoiceIds: out.cancelledInvoiceIds, qpayInvoicesRetired: retired, qpayInvoicesStillOpen: kept, ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "COMPANY", id }, { entitlementId: out.entitlementId, domainCode: domain });
+      notifyEntitlementChange(id);
       ok(c.res, { granted: true, ...out, domainCode: domain, qpayInvoicesStillOpen: kept.length });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_GRANTED", "COMPANY", id, e, reason); }
   }, { sensitive: true });
@@ -242,6 +244,7 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "ENTITLEMENT", id }, { reason, note: note || null, ...out });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "COMPANY", id: out.companyId }, { entitlementId: id, domainCode: out.domainCode });
+      notifyEntitlementChange(out.companyId);
       ok(c.res, { revoked: true, answersKept: true, runningAssessments: out.runningAssessmentIds.length });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_REVOKED", "ENTITLEMENT", id, e, reason); }
   }, { sensitive: true });

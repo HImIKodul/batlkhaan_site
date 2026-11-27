@@ -135,3 +135,4 @@ local-dev-credentials.env
 credentials.local
 backend/.mock-mailbox/
 backend/local-api.log
+backend/scripts/local-e2e/jar-*.txt

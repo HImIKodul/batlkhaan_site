@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { prisma } from "../db.js";
+import { notifyEntitlementChange } from "../api/account/entitlement-events.js";
 import type { Prisma } from "@prisma/client";
 import type { ApiConfig } from "../api/config.js";
 import { customerNotifications } from "../api/notifications/notification-service.js";
@@ -394,7 +395,13 @@ export class BillingService {
     },{isolationLevel:"Serializable"} as any);
   }
 
+  /** Confirmed payment: the normal activation, then every waiting customer page of that company is woken. */
   private async activatePaidInvoice(invoiceId:string,verification:ProviderPaymentResult){
+    const out=await this.activatePaidInvoiceCore(invoiceId,verification);
+    try{const inv=await prisma.billingInvoice.findUnique({where:{id:invoiceId},select:{companyId:true}});if(inv)notifyEntitlementChange(inv.companyId)}catch{/* the slow fallback check still finds it */}
+    return out;
+  }
+  private async activatePaidInvoiceCore(invoiceId:string,verification:ProviderPaymentResult){
     if(!verification.paid)throw new ApiError(409,"PAYMENT_NOT_CONFIRMED","Төлбөр баталгаажаагүй байна.");
     const paidAmount=Number(verification.paidAmountMnt);
     if(!Number.isSafeInteger(paidAmount)||paidAmount<=0)throw new ApiError(502,"INVALID_PROVIDER_PAYMENT_AMOUNT","Төлбөрийн үйлчилгээ баталгаажуулах боломжгүй дүн буцаалаа.");

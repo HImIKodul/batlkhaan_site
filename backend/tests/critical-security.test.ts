@@ -1,8 +1,8 @@
 import {createHash} from 'node:crypto';
-import {beforeEach,describe,it,expect,vi} from 'vitest';
+import {afterAll,beforeAll,beforeEach,describe,it,expect,vi} from 'vitest';
 const db=vi.hoisted(()=>{
  const model=()=>Object.fromEntries(['findUnique','findFirst','create','update','updateMany','count','upsert','deleteMany'].map(k=>[k,vi.fn()]));
- return {user:model(),passwordResetToken:model(),authAuditEvent:model(),refreshSession:model(),trustedDevice:model(),adminAccount:model(),adminSession:model(),adminAuditEvent:model(),billingInvoice:model(),billingPaymentTransaction:model(),companyEntitlement:model(),$queryRaw:vi.fn(),$executeRaw:vi.fn(),$transaction:vi.fn()};
+ return {user:model(),passwordResetToken:model(),authAuditEvent:model(),refreshSession:model(),trustedDevice:model(),adminEmailChallenge:model(),adminAccount:model(),adminSession:model(),adminAuditEvent:model(),billingInvoice:model(),billingPaymentTransaction:model(),companyEntitlement:model(),$queryRaw:vi.fn(),$executeRaw:vi.fn(),$transaction:vi.fn()};
 });
 vi.mock('../src/db.js',()=>({prisma:db}));
 import {PasswordResetService} from '../src/api/auth/password-reset-service.js';
@@ -150,6 +150,8 @@ async function adminFixture(){
  return {account,person,password,code:hotp(base32Decode(secret),totpStep()),service:new AdminService(config)};
 }
 describe('administrator credential and MFA session boundaries',()=>{
+ /* The authenticator-only behaviour below is the device-verification-OFF configuration; the ON behaviour (e-mail code on top of the authenticator) has its own tests after it. */
+ const prevFlag=process.env.MMRI_LOGIN_DEVICE_VERIFICATION;beforeAll(()=>{process.env.MMRI_LOGIN_DEVICE_VERIFICATION='off'});afterAll(()=>{if(prevFlag===undefined)delete process.env.MMRI_LOGIN_DEVICE_VERIFICATION;else process.env.MMRI_LOGIN_DEVICE_VERIFICATION=prevFlag});
  it('valid password plus TOTP produces only a hashed opaque session in storage',async()=>{
   const {service,password,code}=await adminFixture();const r=await service.login({email:user.email,password,totpCode:code},{});
   expect(r.token).toMatch(/^adm_[A-Za-z0-9_-]{43}$/);const stored=db.adminSession.create.mock.calls[0][0].data.tokenHash;expect(stored).toMatch(/^[a-f0-9]{64}$/);expect(stored).not.toContain(r.token);expect(db.adminSession.create.mock.calls[0][0].data.expiresAt.getTime()-Date.now()).toBeGreaterThan(899000);expect(db.adminSession.create.mock.calls[0][0].data.absoluteExpiresAt.getTime()-Date.now()).toBeGreaterThan(28799000);expect(db.adminAccount.updateMany.mock.calls[0][0].where.mfaLastStep.lt).toBeTypeOf('bigint');
@@ -263,5 +265,22 @@ describe('registration e-mail code is a separate process from password recovery 
  it('a registration code can never reset a password, and a reset token can never verify an e-mail',async()=>{
   db.passwordResetToken.findUnique.mockResolvedValue(row({purpose:EMAIL_CODE_PURPOSE}));await expect(reset.confirmReset(token,'NewPassword123!',{})).rejects.toMatchObject({code:'INVALID_RESET_TOKEN'});expect(db.user.update).not.toHaveBeenCalled();
   db.passwordResetToken.findFirst.mockResolvedValue(null);await expect(verify.verifyCode(user.email,token,{})).rejects.toMatchObject({code:'INVALID_VERIFICATION_CODE'});expect(db.user.update).not.toHaveBeenCalled();
+ });
+});
+
+describe('administrator e-mail code on an untrusted device (device verification ON)',()=>{
+ it('authenticator alone never opens a session and never spends the authenticator step',async()=>{
+  const prev=process.env.MMRI_LOGIN_DEVICE_VERIFICATION;process.env.MMRI_LOGIN_DEVICE_VERIFICATION='on';
+  try{const {service,password,code}=await adminFixture();
+   await expect(service.login({email:user.email,password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_CODE_DELIVERY_UNAVAILABLE'});   // the code could not be mailed here (no mailer): still no session
+   expect(db.adminSession.create).not.toHaveBeenCalled();expect(db.adminAccount.updateMany).not.toHaveBeenCalled();
+  }finally{if(prev===undefined)delete process.env.MMRI_LOGIN_DEVICE_VERIFICATION;else process.env.MMRI_LOGIN_DEVICE_VERIFICATION=prev}
+ });
+ it('a wrong e-mail code on top of a valid authenticator code is refused and counted',async()=>{
+  const prev=process.env.MMRI_LOGIN_DEVICE_VERIFICATION;process.env.MMRI_LOGIN_DEVICE_VERIFICATION='on';
+  try{const {service,password,code}=await adminFixture();db.adminEmailChallenge.findFirst.mockResolvedValue(null);
+   await expect(service.login({email:user.email,password,totpCode:code,emailCode:'123456'},{})).rejects.toMatchObject({code:'ADMIN_CODE_EXPIRED'});
+   expect(db.adminSession.create).not.toHaveBeenCalled();
+  }finally{if(prev===undefined)delete process.env.MMRI_LOGIN_DEVICE_VERIFICATION;else process.env.MMRI_LOGIN_DEVICE_VERIFICATION=prev}
  });
 });

@@ -1,4 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
+import { useEntitlementEvents } from '../api/useEntitlementEvents';
 import { domainNameMn } from '../data/domainOrder';
 import DomainBadge from '../components/DomainBadge';
 import qrcode from 'qrcode-generator';
@@ -152,7 +153,7 @@ export default function Billing(){
 /* QR view opens immediately: create the invoice as soon as the page is ready (no button). */
  useEffect(()=>{if(loading||invoice||busy||error||!plan||!session.companyId)return;const key=`${areaId}:${code}`;if(autoCreateRef.current===key)return;autoCreateRef.current=key;void create()},[loading,plan,invoice,busy,error,areaId,code]);
  /* Access is granted by the payment provider confirmation or by an authorised administrator: poll the entitlement, then close this view and open the diagnosis. */
- useEffect(()=>{if(loading||!session.companyId)return;const t=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>undefined)},5_000);return()=>window.clearInterval(t)},[loading,areaId]);   // also while a QR code is showing: an administrator grant must open the diagnosis at once
+ useEntitlementEvents(()=>{if(!loading&&session.companyId)void refresh().catch(()=>undefined)},[loading,areaId]);   // event-driven (also while a QR code is showing): an administrator grant opens the diagnosis at once
  /* DEMO provider only (testing UX, no server call): an example QR validity countdown and an example payment action that never counts as a payment. */
  const [demoSent,setDemoSent]=useState(false);
  useEffect(()=>{const ent=status?.entitlements?.find(e=>e.domainCode===areaId&&e.status==='ACTIVE'&&e.planCode===code);if(!ent)return;sessionStorage.setItem(`business:paid.${areaId}`,mode);heroIntent.area=areaId;heroIntent.at=Date.now();go('analysis')},[status,areaId,code]);

@@ -7,6 +7,7 @@
  */
 import "dotenv/config";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
 import { writeFileSync, readFileSync, chmodSync } from "node:fs";
 import { prisma } from "./db.js";
 import { hashPassword } from "./api/auth/crypto.js";
@@ -38,7 +39,7 @@ const CREDENTIALS_FILE = new URL("../.qa-credentials.local", import.meta.url);
  * Key 2 exists because a loopback address can also be an SSH/port-forward tunnel to a remote database, which no host check can
  * detect. The seed never prints the connection string or credentials.
  */
-function assertLocalDevDatabase() {
+export function assertLocalDevDatabase() {
   let u: URL;
   try { u = new URL(process.env.DATABASE_URL ?? ""); } catch { throw new Error("QA seed refused: DATABASE_URL is missing or invalid."); }
   const target = `${u.hostname}:${u.port || "5432"}${u.pathname}`;
@@ -55,7 +56,7 @@ function assertLocalDevDatabase() {
  * root-cause / recommendation pipeline legitimately produce weak capabilities: a first diagnosis with several clearly weak
  * modules, then a retake that improves some of them and leaves others weak. Nothing here writes actions or plans directly.
  */
-const SCENARIOS: Record<string, { first: number[]; retake: number[] }> = {
+export const SCENARIOS: Record<string, { first: number[]; retake: number[] }> = {
   marketing: { first: [30, 35, 62, 28, 70, 33, 66, 58], retake: [33, 31, 78, 29, 82, 55, 74, 64] },
   it: { first: [28, 35, 62, 30, 70], retake: [38, 36, 78, 32, 85] },
   finance: { first: [32, 26, 66, 58, 34], retake: [40, 52, 80, 70, 36] },
@@ -428,7 +429,7 @@ async function resolveOwnerIdentity() {
   return { user, company: membership.company };
 }
 
-async function seedAssessment(args: { domain: string; methodologyVersion: string; qbVersion: string; index: number; companyId: string; userId: string; entitlementId: string; def: MethodologyDefinition; moduleTargets: number[]; completedAt: Date; previousAssessmentId?: string | null; rootAssessmentId?: string | null; }) {
+export async function seedAssessment(args: { domain: string; methodologyVersion: string; qbVersion: string; index: number; companyId: string; userId: string; entitlementId: string; def: MethodologyDefinition; moduleTargets: number[]; completedAt: Date; previousAssessmentId?: string | null; rootAssessmentId?: string | null; }) {
   const engine = new PrismaAssessmentEngine();
   const reports = new PrismaStrategyReportService(engine);
   const assessment = await engine.createAssessment(args.companyId, args.methodologyVersion, args.userId, args.entitlementId, args.domain);
@@ -527,4 +528,5 @@ async function main() {
   console.log(OWNER_EMAIL ? "\nOwner QA data ready (local only). No password or credentials file was read or written." : "\nQA account ready (local only). Credentials are in backend/.qa-credentials.local (git-ignored).");
 }
 
-main().catch(err => { console.error("QA seed failed:", err instanceof Error ? err.message : err); process.exitCode = 1; }).finally(async () => { await prisma.$disconnect(); });
+/* Importable by the disposable-fixture script (qa-review-fixtures.ts); runs the full seed only when started directly. */
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch(err => { console.error("QA seed failed:", err instanceof Error ? err.message : err); process.exitCode = 1; }).finally(async () => { await prisma.$disconnect(); });
