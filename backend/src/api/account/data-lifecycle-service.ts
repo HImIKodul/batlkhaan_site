@@ -163,6 +163,7 @@ export class DataLifecycleService {
       if (await customerNotificationsTablePresent(tx)) await tx.customerNotification.deleteMany({ where: { userId } });
       const memberships = await tx.companyMembership.deleteMany({ where: { userId } });
       await tx.refreshSession.deleteMany({ where: { userId } });
+      await tx.trustedDevice.deleteMany({ where: { userId } });
       await tx.passwordResetToken.deleteMany({ where: { userId } });
       await tx.user.update({ where: { id: userId }, data: { email: `erased+${userId}@erased.invalid`, displayName: null, passwordHash, status: "DISABLED", tokenVersion: { increment: 1 }, erasedAt: now } });
       await tx.authAuditEvent.create({ data: { userId, eventType: "ACCOUNT_ERASED", ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt), metadata: { membershipsRemoved: memberships.count } as any } });

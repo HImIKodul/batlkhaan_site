@@ -11,12 +11,12 @@ const blankStage=(startDay:number,ref:string):Stage=>({headingMn:'',startDay,dur
 const dayLabel=(start:string,d:number)=>{const x=new Date(`${start}T00:00:00Z`);x.setUTCDate(x.getUTCDate()+d);return x.toISOString().slice(0,10).replace(/-/g,'.')};
 export default function AnnualPlanEditor({id,canEdit,onSaved,onClose}:{id:string;canEdit:boolean;onSaved:(m:string)=>void;onClose:()=>void}){
  const {loading,error,data,reload}=useAsync(()=>adminApi.get(`/reviews/${id}/annual-plan`),[id]);
- const [draft,setDraft]=useState<Stage[]|null>(null);const [reason,setReason]=useState('');const [busy,setBusy]=useState(false);const [issues,setIssues]=useState<string[]>([]);
+ const [draft,setDraft]=useState<Stage[]|null>(null);const [reason,setReason]=useState('Шууд засвар');const [busy,setBusy]=useState(false);const [issues,setIssues]=useState<string[]>([]);
  if(loading&&!data)return <Loading/>;if(error||!data)return <Err text={error||'Төлөвлөгөөг ачаалж чадсангүй.'} retry={reload}/>;
  const stages:Stage[]=draft??data.plan?.stages??[];const set=(f:(s:Stage[])=>void)=>{const c:Stage[]=JSON.parse(JSON.stringify(stages));f(c);setDraft(c)};
  const firstRef=data.actions[0]?.id??'';
  const start=()=>setDraft([0,90,180,270].map((d,i)=>({...blankStage(d,data.actions[i]?.id??firstRef),durationDays:i===3?data.windowDays-270:90})));
- const save=async()=>{setBusy(true);setIssues([]);try{const o=await adminApi.put(`/reviews/${id}/annual-plan`,{baseRevision:data.revision,reason,plan:{stages:stages.map(({guide,headingMn,startDay,durationDays,dependencyNoteMn,actions})=>({guide,headingMn,startDay,durationDays,dependencyNoteMn,actions}))}});setDraft(null);setReason('');reload();onSaved(`12 сарын төлөвлөгөө хадгалагдлаа. Хамрах хугацаа: ${o.periodLabel}.`)}catch(e){const x=e as AdminApiError&{details?:any};const d=(x as any).details?.issues;setIssues(Array.isArray(d)&&d.length?d.map((i:any)=>i.message):[x.message])}finally{setBusy(false)}};
+ const save=async()=>{setBusy(true);setIssues([]);try{const o=await adminApi.put(`/reviews/${id}/annual-plan`,{baseRevision:data.revision,reason,plan:{stages:stages.map(({guide,headingMn,startDay,durationDays,dependencyNoteMn,actions})=>({guide,headingMn,startDay,durationDays,dependencyNoteMn,actions}))}});setDraft(null);reload();onSaved(`12 сарын төлөвлөгөө хадгалагдлаа. Хамрах хугацаа: ${o.periodLabel}.`)}catch(e){const x=e as AdminApiError&{details?:any};const d=(x as any).details?.issues;setIssues(Array.isArray(d)&&d.length?d.map((i:any)=>i.message):[x.message])}finally{setBusy(false)}};
  return <section className="adm-card ad-plan" aria-label="12 сарын төлөвлөгөө засах"><header className="ad-plan__head"><h2>12 сарын төлөвлөгөө</h2><button type="button" className="adm-link" onClick={onClose}>Хаах</button></header>
   <p className="adm-note">Эхлэх өдөр {dayLabel(data.startDate,0)}. Хугацааг өдрөөр оруулна, хоосон завсрыг систем нөхнө. Энд хиймэл оюун ашиглахгүй.</p>
   {!stages.length&&<p className="adm-note">Энэ тайланд төлөвлөгөө үүсээгүй байна. {canEdit&&<button type="button" className="adm-btn" onClick={start}>Гараар эхлэх</button>}</p>}
@@ -32,7 +32,6 @@ export default function AnnualPlanEditor({id,canEdit,onSaved,onClose}:{id:string
   </fieldset>)}
   {issues.length>0&&<div className="adm-error" role="alert"><ul>{issues.map((m,i)=><li key={i}>{m}</li>)}</ul></div>}
   {canEdit&&stages.length>0&&<div className="ad-plan__foot">{stages.length<8&&<button type="button" className="adm-btn" onClick={()=>set(c=>{c.push(blankStage(Math.min(data.windowDays-30,(c[c.length-1]?.startDay??0)+60),firstRef))})}>Үе шат нэмэх</button>}
-   <label className="adm-reason">Засварын шалтгаан<input value={reason} maxLength={400} onChange={e=>setReason(e.target.value)}/></label>
-   <button type="button" className="adm-btn adm-btn--primary" disabled={busy||!draft||reason.trim().length<3} onClick={()=>void save()}>{busy?'Шалгаж байна…':'Төлөвлөгөөг хадгалах'}</button></div>}
+      <button type="button" className="adm-btn" disabled={busy||!draft} onClick={()=>void save()}>{busy?'Шалгаж байна…':'Төлөвлөгөөг хадгалах'}</button></div>}
  </section>;
 }

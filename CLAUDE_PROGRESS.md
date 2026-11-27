@@ -1028,3 +1028,11 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Friend's push (2b18b1d): three deployment files only (host compose override, env template with every value empty, migration gate script); no data, dump or secret; one server hostname in a comment.
 - Removed (git rm, recoverable): generated evidence JSON/CSV at the root and in backend/ (scripts rewrite them; now ignored), dead step reports and runners, six one-off CSS probes in qa/, the unused LoadingFact component and old facts. api-static-check expects the regenerate route; one critical-security assertion updated to the new requestCode result.
 - docs/LOCAL_DEVELOPMENT.md describes the local setup.
+
+## 2026-11-28 — Administration consoles, e-mail-code sign-in, report review/recall
+- Roles shown to people: Sadmin (SUPER_ADMIN), Admin (REPORT_REVIEWER; legacy BILLING_REVIEWER treated the same), User. Permissions are enforced on the server (`ROLE_PERMISSIONS`, `console-routes.ts`).
+- Sadmin console: ADMIN SHIT (accounts, create/password/delete, five-domain access via the existing grant/revoke) / PAYMENTS (real invoices) / DATA (businesses, dated diagnoses with question text + answers, Excel). Admin console: ХЯНАХ ТАЙЛАН (24 h countdown from the stored submission time, negative when overdue) / ДУУССАН ТАЙЛАН (БУЦААХ = recall).
+- Review = the customer's own report components with `contenteditable` paragraphs; ХАДГАЛАХ = private draft, ИЛГЭЭХ = existing guarded approve+publish. No AI call anywhere in save/publish/recall.
+- Sign-in on every NEW device needs a six-digit e-mail code (`/auth/login` -> `/auth/login/verify`); `trusted_devices` (30 days, hashed cookie secret, revoked by password change/reset/erase). Admins without an authenticator use the e-mail code; authenticator admins keep TOTP. Flag `MMRI_LOGIN_DEVICE_VERIFICATION=off` disables the customer step.
+- Migrations: `20261127090000_user_identities`, `20261127110000_trusted_devices` (additive).
+- Local services: `~/.config/systemd/user/mmri-api.service` and `mmri-web.service` (enabled, linger on, never start a second copy); container restart policy `unless-stopped`.

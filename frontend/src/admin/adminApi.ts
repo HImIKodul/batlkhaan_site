@@ -3,7 +3,7 @@ import { DOMAIN_ORDER,DOMAIN_NAME_MN } from '../data/domainOrder';
    All permission decisions are made by the server; the role shown in the UI is only used to hide controls that would be refused anyway. */
 const BASE=(import.meta.env.VITE_API_BASE_URL??'/api/v1').replace(/\/$/,'')+'/admin';
 const KEY='mmri.adminToken.v1';
-export type AdminMe={id:string;email:string;role:'SUPER_ADMIN'|'REPORT_REVIEWER'|'BILLING_REVIEWER';permissions:string[];unreadNotifications:number;reauthValid:boolean};
+export type AdminMe={id:string;email:string;role:'SUPER_ADMIN'|'REPORT_REVIEWER'|'BILLING_REVIEWER';permissions:string[];unreadNotifications:number;reauthValid:boolean;usesEmailCode?:boolean};
 export class AdminApiError extends Error{status:number;code?:string;details?:any;constructor(status:number,message:string,code?:string,details?:any){super(message);this.status=status;this.code=code;this.details=details}}
 export const adminSession={get token(){try{return sessionStorage.getItem(KEY)}catch{return null}},set token(v:string|null){try{v?sessionStorage.setItem(KEY,v):sessionStorage.removeItem(KEY)}catch{/* ignore */}}};
 let reauthHandler:(()=>Promise<boolean>)|null=null;
@@ -12,7 +12,7 @@ let unauthorizedHandler:(()=>void)|null=null;
 export const setUnauthorizedHandler=(fn:(()=>void)|null)=>{unauthorizedHandler=fn};
 const safe=(m:unknown)=>{const t=String(m??'');return t&&t.length<300&&!/[\n`{}]|=>|invocation|prisma|\/home\//i.test(t)?t:'Үйлдлийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.'};
 async function request<T>(method:string,path:string,body?:unknown,retried=false):Promise<T>{
- const r=await fetch(BASE+path,{method,headers:{'Content-Type':'application/json',...(adminSession.token?{Authorization:`Bearer ${adminSession.token}`}:{})},body:body===undefined?undefined:JSON.stringify(body),credentials:'omit'});
+ const r=await fetch(BASE+path,{method,headers:{'Content-Type':'application/json',...(adminSession.token?{Authorization:`Bearer ${adminSession.token}`}:{})},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin'});
  const text=await r.text();let j:any=null;try{j=text?JSON.parse(text):null}catch{/* non-json */}
  if(r.ok)return (j?.data??j) as T;
  const code=j?.error?.code;
@@ -21,8 +21,7 @@ async function request<T>(method:string,path:string,body?:unknown,retried=false)
  throw new AdminApiError(r.status,safe(j?.error?.message),code,j?.error?.details);
 }
 export const adminApi={
- login:(email:string,password:string,totpCode:string,emailCode?:string)=>request<{token:string;expiresAt:string;admin:{id:string;email:string;role:AdminMe['role']}}>('POST','/auth/login',emailCode?{email,password,emailCode}:{email,password,totpCode}),
- sendLoginCode:(email:string,password:string)=>request<{mfaRequired:'EMAIL_CODE';expiresInMinutes:number;resendAfterSeconds:number}>('POST','/auth/login',{email,password}),
+ login:(body:{email:string;password:string;totpCode?:string;emailCode?:string;trustDevice?:boolean})=>request<{token?:string;expiresAt?:string;admin?:{id:string;email:string;role:AdminMe['role']};mfaRequired?:'EMAIL_CODE';resendAfterSeconds?:number}>('POST','/auth/login',{totpCode:'',...body}),
  sendReauthCode:()=>request<{sent:boolean}>('POST','/auth/email-code',{}),
  logout:()=>request('POST','/auth/logout',{}),me:()=>request<AdminMe>('GET','/auth/me'),reauth:(password:string,totpCode:string,emailCode?:string)=>request('POST','/auth/reauth',emailCode?{password,emailCode}:{password,totpCode}),
  get:<T=any>(path:string)=>request<T>('GET',path),post:<T=any>(path:string,body:unknown={})=>request<T>('POST',path,body),put:<T=any>(path:string,body:unknown)=>request<T>('PUT',path,body)
@@ -43,3 +42,10 @@ export const ACTION_MN:Record<string,string>={
 export const TARGET_MN:Record<string,string>={ROUTE:'Хуудас',REVIEW:'Тайлан',SYSTEM:'Систем',ADMIN:'Админ',USER:'Хэрэглэгч',COMPANY:'Компани',SUPPORT_MAIL:'Дэмжлэгийн имэйл',ENTITLEMENT:'Оношилгооны эрх'};
 export const actionMn=(code?:string|null)=>code?(ACTION_MN[code]??code.replace(/_/g,' ').toLowerCase()):'-';
 export const targetMn=(code?:string|null)=>code?(TARGET_MN[code]??code):'-';
+
+/** Dates and times in Mongolia (Asia/Ulaanbaatar), whatever the browser's own zone is. */
+const UB=(o:Intl.DateTimeFormatOptions)=>new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ulaanbaatar',hourCycle:'h23',...o});
+export const fmtUb=(v?:string|Date|null)=>{if(!v)return '-';const d=new Date(v);if(Number.isNaN(d.getTime()))return '-';const p=Object.fromEntries(UB({year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(d).map(x=>[x.type,x.value]));return `${p.year}.${p.month}.${p.day} ${p.hour}:${p.minute}`};
+export const fmtUbDate=(v?:string|Date|null)=>fmtUb(v).slice(0,10);
+/** Hour:minute countdown, e.g. 24:00, 01:20, 00:00, -00:01, -28:40. Negative once the deadline has passed. */
+export function countdown(ms:number){const neg=ms<=-60000;const m=Math.floor(Math.abs(ms)/60000);const z=(n:number)=>String(n).padStart(2,'0');return `${neg?'-':''}${z(Math.floor(m/60))}:${z(m%60)}`}

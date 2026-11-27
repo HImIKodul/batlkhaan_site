@@ -3,7 +3,6 @@ import { ApiError, badRequest, notFound } from "../errors.js";
 import { ok } from "../http/respond.js";
 import type { RouteContext } from "../http/router.js";
 import type { AdminPrincipal, Permission } from "./admin-service.js";
-import { customerNotifications } from "../notifications/notification-service.js";
 
 /* SUPER_ADMIN account management: customer accounts, e-mail, activation, and read-only entitlement origin and history.
    Every route here needs the "accounts.manage" permission (SUPER_ADMIN only, decided on the server from the database role). Every change is a
@@ -208,12 +207,11 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       // After the decision is saved: retire a waiting QPay code through the verified cancellation flow. If the provider says it was paid, the normal payment path records it once; if it cannot be cancelled it stays open and reconcilable.
       const retired: string[] = [], kept: string[] = [];
       if (d.cancelProviderInvoice) {
-        const waiting = await prisma.billingInvoice.findMany({ where: { companyId: id, domainCode: domain, provider: "QPAY", status: { in: ["CREATED", "PENDING"] } }, select: { id: true } });
+        const waiting = await prisma.billingInvoice.findMany({ where: { companyId: id, domainCode: domain, provider: { in: ["QPAY", "MOCK"] }, status: { in: ["CREATED", "PENDING"] } }, select: { id: true } });
         for (const w of waiting) { try { await d.cancelProviderInvoice(w.id); retired.push(w.id); } catch { kept.push(w.id); } }
       }
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "ENTITLEMENT", id: out.entitlementId }, { reason, note: note || null, companyId: id, domainCode: domain, plan: out.plan, origin: "ADMIN_GRANT", reactivated: out.reactivated, assessmentId: out.assessmentId, cancelledInvoiceIds: out.cancelledInvoiceIds, qpayInvoicesRetired: retired, qpayInvoicesStillOpen: kept, ...(d.pilotGrant ? { pilot: true, authorizationRef, pilotAuthorizedBy: d.pilotGrant.authorizedBy, pilotExpiresAt: d.pilotGrant.expiresAt.toISOString() } : {}) });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_GRANTED", "SUCCESS", fp, { type: "COMPANY", id }, { entitlementId: out.entitlementId, domainCode: domain });
-      await customerNotifications.accessChanged("GRANTED", id, domain, out.entitlementId, note || null, at).catch(() => undefined);
       ok(c.res, { granted: true, ...out, domainCode: domain, qpayInvoicesStillOpen: kept.length });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_GRANTED", "COMPANY", id, e, reason); }
   }, { sensitive: true });
@@ -244,7 +242,6 @@ export function registerAccountRoutes(d: AccountRouteDeps) {
       });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "ENTITLEMENT", id }, { reason, note: note || null, ...out });
       await audit(p.adminId, "ADMIN_ENTITLEMENT_REVOKED", "SUCCESS", fp, { type: "COMPANY", id: out.companyId }, { entitlementId: id, domainCode: out.domainCode });
-      await customerNotifications.accessChanged("REVOKED", out.companyId, out.domainCode, id, note || null, at).catch(() => undefined);
       ok(c.res, { revoked: true, answersKept: true, runningAssessments: out.runningAssessmentIds.length });
     } catch (e) { return fail(p, fp, "ADMIN_ENTITLEMENT_REVOKED", "ENTITLEMENT", id, e, reason); }
   }, { sensitive: true });

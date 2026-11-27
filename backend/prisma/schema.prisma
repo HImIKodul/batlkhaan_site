@@ -787,6 +787,7 @@ model User {
   calibrationReleasesActivated CalibrationRelease[]  @relation("CalibrationReleaseActivator")
   adminAccount                 AdminAccount?
   identities                   UserIdentity[]
+  trustedDevices               TrustedDevice[]
   paymentDisputeEvents        PaymentDisputeEvent[]
   paymentDisputes              PaymentDispute[]
   supportCaseEvents            SupportCaseEvent[]
@@ -2315,4 +2316,21 @@ model UserIdentity {
   @@unique([provider, subject])
   @@index([userId])
   @@map("user_identities")
+}
+
+/// Revocable "remember this device" credential. The browser holds a random secret in an HttpOnly cookie; only its SHA-256 hash is stored here. Never a browser fingerprint.
+model TrustedDevice {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  userAgentHash String?
+  createdAt     DateTime  @default(now())
+  lastUsedAt    DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@map("trusted_devices")
 }

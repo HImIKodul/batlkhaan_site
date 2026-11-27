@@ -38,11 +38,11 @@ export class EmailVerificationService {
 
   /** Registration and "resend": always silent about whether the address exists. */
   /** SENT = mailed, NOT_DELIVERED = the provider refused or failed (the caller may tell the person honestly: the code did NOT leave), SKIPPED = nothing to send (unknown/verified account or throttled; says nothing about the account). */
-  async requestCode(emailRaw: unknown, fp: RequestFingerprint): Promise<"SENT" | "NOT_DELIVERED" | "SKIPPED"> {
+  async requestCode(emailRaw: unknown, fp: RequestFingerprint, opts: { login?: boolean } = {}): Promise<"SENT" | "NOT_DELIVERED" | "SKIPPED"> {
     const email = String(emailRaw ?? "").trim().toLowerCase();
     const emailHash = hashAuditValue(email, this.config.auditSalt);
     const user = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? await prisma.user.findUnique({ where: { email } }) : null;
-    if (!user || user.status !== "ACTIVE" || user.erasedAt || !user.emailVerificationRequired || user.emailVerifiedAt) {
+    if (!user || user.status !== "ACTIVE" || user.erasedAt || (!opts.login && (!user.emailVerificationRequired || user.emailVerifiedAt))) {
       await this.audit(null, "EMAIL_CODE_REQUESTED_NO_ACCOUNT", fp, { emailHash });
       return "SKIPPED";
     }
@@ -51,7 +51,7 @@ export class EmailVerificationService {
     const issued = await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
       const current = await tx.user.findUnique({ where: { id: user.id } });
-      if (!current || current.email !== email || current.status !== "ACTIVE" || current.erasedAt || !current.emailVerificationRequired || current.emailVerifiedAt) return null;
+      if (!current || current.email !== email || current.status !== "ACTIVE" || current.erasedAt || (!opts.login && (!current.emailVerificationRequired || current.emailVerifiedAt))) return null;
       const recent = await tx.passwordResetToken.count({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, createdAt: { gt: new Date(now.getTime() - 3_600_000) } } });
       const latest = await tx.passwordResetToken.findFirst({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE }, orderBy: { createdAt: "desc" } });
       if (recent >= MAX_CODES_PER_HOUR || (latest && now.getTime() - latest.createdAt.getTime() < EMAIL_CODE_COOLDOWN_SECONDS * 1000)) return null;
@@ -69,7 +69,7 @@ export class EmailVerificationService {
       result = await this.mailer.send({
         to: user.email,
         kind: "EMAIL_VERIFICATION",
-        subject: MSG.subject,
+        subject: opts.login ? "BusinessMRI.mn: нэвтрэх баталгаажуулах код" : MSG.subject,
         text: `Сайн байна уу.\n\nТаны BusinessMRI.mn бүртгэлийг баталгаажуулах код:\n\n${code}\n\nКод ${EMAIL_CODE_TTL_MINUTES} минутын дотор, зөвхөн нэг удаа ажиллана. Кодыг BusinessMRI.mn сайтын «Имэйл баталгаажуулах» хуудсанд оруулна уу. Энэ код нууц үг солихад ашиглагдахгүй.\nХэрэв та бүртгүүлээгүй бол энэ имэйлийг үл тоомсорлоно уу. Кодыг хэнд ч дамжуулж болохгүй.`
       });
     } catch {
@@ -84,20 +84,20 @@ export class EmailVerificationService {
   }
 
   /** Verifies the code and marks the mailbox as owned. Changes nothing else. */
-  async verifyCode(emailRaw: unknown, codeRaw: unknown, fp: RequestFingerprint): Promise<void> {
+  async verifyCode(emailRaw: unknown, codeRaw: unknown, fp: RequestFingerprint, opts: { login?: boolean } = {}): Promise<void> {
     const email = String(emailRaw ?? "").trim().toLowerCase();
     const code = String(codeRaw ?? "").replace(/\s+/g, "");
     const reject = async (userId: string | null): Promise<never> => { await this.audit(userId, "EMAIL_CODE_REJECTED", fp); throw new ApiError(400, "INVALID_VERIFICATION_CODE", MSG.invalid); };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !CODE_PATTERN.test(code)) return reject(null);
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || user.status !== "ACTIVE" || user.erasedAt || !user.emailVerificationRequired || user.emailVerifiedAt) return reject(null);
+    if (!user || user.status !== "ACTIVE" || user.erasedAt || (!opts.login && (!user.emailVerificationRequired || user.emailVerifiedAt))) return reject(null);
     /* SEC-02: the whole decision (read the live code, count earlier wrong guesses, compare, record a wrong guess, consume on success) runs in ONE transaction that holds the user row lock. Parallel guesses are therefore
        serialised per account: each one sees every earlier rejection, so the failed-attempt cap holds across workers. A wrong guess is audited INSIDE the transaction and committed (the rejection is thrown afterwards). */
     const outcome = await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
       const now = new Date();
       const current = await tx.user.findUnique({ where: { id: user.id } });
-      if (!current || current.status !== "ACTIVE" || current.erasedAt || !current.emailVerificationRequired || current.emailVerifiedAt) return "REJECT" as const;
+      if (!current || current.status !== "ACTIVE" || current.erasedAt || (!opts.login && (!current.emailVerificationRequired || current.emailVerifiedAt))) return "REJECT" as const;
       const row = await tx.passwordResetToken.findFirst({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, usedAt: null, expiresAt: { gt: now } }, orderBy: { createdAt: "desc" } });
       if (!row) { await this.audit(user.id, "EMAIL_CODE_REJECTED", fp, undefined, tx); return "REJECT" as const; }
       const wrong = await tx.authAuditEvent.count({ where: { userId: user.id, eventType: "EMAIL_CODE_REJECTED", createdAt: { gt: row.createdAt } } });
@@ -110,13 +110,14 @@ export class EmailVerificationService {
       if (a.length !== b.length || !timingSafeEqual(a, b)) { await this.audit(user.id, "EMAIL_CODE_REJECTED", fp, undefined, tx); return "REJECT" as const; }
       const claimed = await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
       if (claimed.count !== 1) return "REJECT" as const;
-      await tx.user.update({ where: { id: user.id }, data: { emailVerifiedAt: now } });
-      await tx.passwordResetToken.updateMany({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE, usedAt: null }, data: { usedAt: now } });
+      if (!current.emailVerifiedAt) await tx.user.update({ where: { id: user.id }, data: { emailVerifiedAt: now } });
+      // A code that was spent successfully must not keep the resend cooldown / hourly budget of the NEXT sign-in: the person proved the mailbox, so the finished codes are removed.
+      await tx.passwordResetToken.deleteMany({ where: { userId: user.id, purpose: EMAIL_CODE_PURPOSE } });
       await this.audit(user.id, "EMAIL_CODE_VERIFIED", fp, undefined, tx);
       return "OK" as const;
     }, { maxWait: 10_000, timeout: 15_000 });
     if (outcome !== "OK") throw new ApiError(400, "INVALID_VERIFICATION_CODE", MSG.invalid);
-    await customerNotifications.emailVerified(user.id);
+    if (!opts.login) await customerNotifications.emailVerified(user.id);
   }
 
   private audit(userId: string | null, eventType: string, fp: RequestFingerprint, metadata?: unknown, client: any = prisma) {

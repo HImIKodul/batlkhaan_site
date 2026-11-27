@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../../db.js";
 import type { ApiConfig } from "../config.js";
 import { ApiError, unauthorized } from "../errors.js";
+import { revokeTrustedDevices } from "./trusted-device.js";
 import { GOOGLE_PROVIDER, type GoogleClaims } from "./google-token.js";
 import { hashAuditValue, hashPassword, hashRefreshToken, newRefreshToken, signAccessToken, validatePasswordPolicy, verifyPassword } from "./crypto.js";
 
@@ -33,6 +34,19 @@ export class AuthService {
       } catch (error: any) { if (error?.code !== "P2002") throw error; }
     }
     return { accepted: true };
+  }
+
+  /** Password check WITHOUT a session (first step of the e-mail-code sign-in). Same generic 401 for every failure. An account whose e-mail is not verified yet passes this step: the code that follows is what verifies it. */
+  async verifyCredentials(input: { email: string; password: string }, fp: RequestFingerprint): Promise<{ id: string; email: string }> {
+    const email = normalizeEmail(input.email);
+    const user = await prisma.user.findUnique({ where: { email } });
+    const passwordHash = user?.passwordHash ?? await this.dummyPasswordHash;
+    const valid = await verifyPassword(String(input.password ?? ""), passwordHash, this.config.passwordPepper).catch(() => false);
+    if (!user || !valid || user.status !== "ACTIVE" || user.erasedAt) {
+      await this.audit(user?.id ?? null, "LOGIN_FAILURE", fp, { emailHash: hashAuditValue(email, this.config.auditSalt), reason: !user ? "UNKNOWN_EMAIL" : !valid ? "BAD_PASSWORD" : "ACCOUNT_NOT_ACTIVE" });
+      throw unauthorized("Invalid email or password");
+    }
+    return { id: user.id, email: user.email };
   }
 
   async login(input: { email: string; password: string }, fp: RequestFingerprint) {
@@ -109,6 +123,7 @@ export class AuthService {
       if (!current || current.passwordHash !== user.passwordHash || current.tokenVersion !== user.tokenVersion) throw new ApiError(409, "ACCOUNT_CHANGED", "Бүртгэл өөрчлөгдсөн тул дахин оролдоно уу.");
       const updated = await tx.user.update({ where: { id: userId }, data: { passwordHash, tokenVersion: { increment: 1 } } });
       await tx.refreshSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+      await revokeTrustedDevices(userId, tx);
       const session = await this.issueSession(updated, fp, tx);
       await tx.authAuditEvent.create({ data: { userId, eventType: "PASSWORD_CHANGED", ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt) } });
       return { user: publicUser(updated), ...session };

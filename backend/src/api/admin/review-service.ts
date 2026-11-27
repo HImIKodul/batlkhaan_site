@@ -375,6 +375,14 @@ export class ReviewService {
     await this.releaseLock(reviewId, adminId);
     return { status: "PUBLISHED", alreadyPublished: false, publishedRevision: out.publishedRevision, approvedNow };
   }
+  /** Withdraws a published report (БУЦААХ): the customer loses online and PDF access at once (every customer path is gated on status PUBLISHED), the review returns to IN_REVIEW with every revision, the original
+      submission time and therefore the ORIGINAL deadline unchanged. Nothing is deleted, no AI is called and the customer is not notified. Republishing goes through the normal approve step. */
+  async recall(reviewId: string) {
+    const r: any = await prisma.reportReview.findUnique({ where: { id: reviewId } }); if (!r) throw new ApiError(404, "NOT_FOUND", "Олдсонгүй.");
+    if (r.status !== "PUBLISHED") throw new ApiError(409, "INVALID_STATE", "Зөвхөн илгээсэн тайланг буцаана.");
+    const done = await prisma.reportReview.updateMany({ where: { id: reviewId, status: "PUBLISHED" }, data: { status: "IN_REVIEW", publishedAt: null, publishedByAdminId: null, publishedRevision: null, approvedAt: null, approvedByAdminId: null, approvedRevision: null, approvedNarrativeHash: null, version: { increment: 1 } } });
+    if (done.count !== 1) throw new ApiError(409, "CONFLICT", "Тайлан өөрчлөгдсөн байна. Хуудсыг шинэчилнэ үү.");
+  }
   /** PUBLISHING is an exclusive state: while it holds, edits, returns and a second publisher are all refused by guarded updates. */
   private async abortPublish(reviewId: string, reason: string) {
     await prisma.reportReview.updateMany({ where: { id: reviewId, status: "PUBLISHING" }, data: { status: "APPROVED", lastError: reason.slice(0, 300), version: { increment: 1 } } });

@@ -10,8 +10,9 @@ import { ApiError, badRequest, conflict, notFound } from "./errors.js";
 import { ConcurrencyGate } from "./concurrency-gate.js";
 import { AuthService } from "./auth/auth-service.js";
 import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
-import { EmailVerificationService } from "./auth/email-verification-service.js";
+import { EMAIL_CODE_COOLDOWN_SECONDS, EMAIL_CODE_TTL_MINUTES, EmailVerificationService } from "./auth/email-verification-service.js";
 import { GoogleTokenVerifier } from "./auth/google-token.js";
+import { clearTrustedCookie, createTrustedDevice, isTrustedDevice, loginDeviceVerificationOn, trustedCookie, TRUSTED_DEVICE_COOKIE } from "./auth/trusted-device.js";
 import { registrationAllowed, createMailer } from "./mail/mailer.js";
 import { LifecycleMailService } from "./mail/lifecycle-mail.js";
 import { DataLifecycleService } from "./account/data-lifecycle-service.js";
@@ -144,12 +145,37 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     else json(res,202,{data:{accepted:true,message:"Имэйлдээ илгээсэн 6 оронтой баталгаажуулах кодыг оруулна уу."}});
   },false);
 
+  /* Sign-in with e-mail code on every NEW device. Step 1 (this route) checks the password; a trusted device (revocable 30-day cookie, bound to this user) gets the session at once, any other device gets a
+     six-digit code by e-mail and NO session. Step 2 (/auth/login/verify) needs password + code. The mail is sent only after the password is correct, so nobody can be mail-bombed. */
+  const deviceCookieOf=(req:any)=>parseCookies(req.headers.cookie)[TRUSTED_DEVICE_COOKIE];
   router.add("POST","/api/v1/auth/login",async({req,res})=>{
     const ip=clientIp(req,config); authIpLimiter.check(`login:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
     const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
     authAccountLimiter.check(`login:acct:${emailKey}`);
+    if(loginDeviceVerificationOn()){
+      const who=await auth.verifyCredentials({email:body.email,password:body.password},fingerprint(req,config));
+      if(!(await isTrustedDevice(who.id,deviceCookieOf(req)))){
+        let delivery:"SENT"|"NOT_DELIVERED"|"SKIPPED"="SKIPPED";
+        try{delivery=await emailVerification.requestCode(who.email,fingerprint(req,config),{login:true})}catch(e:any){delivery="NOT_DELIVERED";console.error(JSON.stringify({event:"login_code_request_failed",reason:String(e?.message??e).slice(0,160)}))}
+        /* Never pretend: a code that did not leave is reported as such. SKIPPED = a code was sent a moment ago (cooldown); the person can still use it. */
+        if(delivery==="NOT_DELIVERED"){json(res,503,{error:{code:"LOGIN_CODE_NOT_SENT",message:"Баталгаажуулах кодыг имэйлээр илгээж чадсангүй. Түр хүлээгээд дахин оролдоно уу."}});return}
+        ok(res,{verificationRequired:true,codeSent:delivery==="SENT",resendAfterSeconds:EMAIL_CODE_COOLDOWN_SECONDS,expiresInMinutes:EMAIL_CODE_TTL_MINUTES});return;
+      }
+    }
     const result=await auth.login({email:body.email,password:body.password},fingerprint(req,config));
     res.setHeader("set-cookie",refreshCookie(result.refreshToken,config));
+    ok(res,{user:result.user,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
+  },false);
+  router.add("POST","/api/v1/auth/login/verify",async({req,res})=>{
+    const ip=clientIp(req,config); authIpLimiter.check(`login-verify:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
+    const emailKey=hashAuditValue(String(body.email??"").trim().toLowerCase(),config.auditSalt)??"missing";
+    authAccountLimiter.check(`login-verify:acct:${emailKey}`);
+    const started=Date.now();
+    const who=await auth.verifyCredentials({email:body.email,password:body.password},fingerprint(req,config));
+    try{await emailVerification.verifyCode(who.email,body.code,fingerprint(req,config),{login:true})}
+    catch(e){const w=EMAIL_CODE_MIN_RESPONSE_MS-(Date.now()-started);if(w>0)await new Promise(r=>setTimeout(r,w));throw e}
+    const result=await auth.login({email:body.email,password:body.password},fingerprint(req,config));
+    res.setHeader("set-cookie",[refreshCookie(result.refreshToken,config),...(body.trustDevice===true?[trustedCookie(await createTrustedDevice(who.id,hashAuditValue(fingerprint(req,config).userAgent,config.auditSalt)),config)]:[])]);
     ok(res,{user:result.user,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
   },false);
 

@@ -87,7 +87,10 @@ export const api={
  register:(body:{email:string;password:string})=>request<{accepted:boolean;message:string;delivery?:'FAILED'}>('/auth/register',{method:'POST',body:JSON.stringify(body),retryAuth:false}),
  requestEmailVerification:(email:string)=>request<{accepted:boolean;message:string;delivery?:'FAILED'}>('/auth/email-verification/request',{method:'POST',body:JSON.stringify({email}),retryAuth:false}),
  confirmEmailVerification:(email:string,code:string)=>request<{verified:boolean}>('/auth/email-verification/confirm',{method:'POST',body:JSON.stringify({email,code}),retryAuth:false}),
- async login(body:{email:string;password:string}){const x=await request<AuthResponse>('/auth/login',{method:'POST',body:JSON.stringify(body),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
+ /** Step 1: password. A trusted device gets the session; any other device gets {verificationRequired:true} and an e-mail code (no session yet). */
+ async login(body:{email:string;password:string}):Promise<AuthResponse|{verificationRequired:true;codeSent:boolean;resendAfterSeconds:number;expiresInMinutes:number}>{const x=await request<any>('/auth/login',{method:'POST',body:JSON.stringify(body),retryAuth:false});if(x.verificationRequired)return x;session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x as AuthResponse},
+ /** Step 2: password + six-digit code (+ optionally remember this device for 30 days). */
+ async verifyLogin(body:{email:string;password:string;code:string;trustDevice:boolean}){const x=await request<AuthResponse>('/auth/login/verify',{method:'POST',body:JSON.stringify(body),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
  requestPasswordReset:(email:string)=>request<{accepted:boolean;message:string}>('/auth/password-reset/request',{method:'POST',body:JSON.stringify({email}),retryAuth:false}),
  async confirmPasswordReset(token:string,password:string){const x=await request<{reset:boolean;message:string}>('/auth/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password}),retryAuth:false});session.clear();return x},
  exportAccountData:()=>requestBlob('/account/export','mmri-account-export.json'),

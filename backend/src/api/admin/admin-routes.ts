@@ -9,6 +9,9 @@ import { AdminService, type AdminPrincipal, type Permission } from "./admin-serv
 import { OPEN_STATUSES, REVIEW_HOURS, ReviewService } from "./review-service.js";
 import { hashAuditValue } from "../auth/crypto.js";
 import { registerAccountRoutes } from "./account-routes.js";
+import { parseCookies } from "../auth/cookies.js";
+import { createTrustedDevice, trustedCookie, TRUSTED_DEVICE_COOKIE } from "../auth/trusted-device.js";
+import { registerConsoleRoutes } from "./console-routes.js";
 import { scanReport } from "./review-scan.js";
 import type { SupportMailService } from "../mail/support-mail-service.js";
 
@@ -45,14 +48,19 @@ export function registerAdminRoutes(d: AdminDeps) {
   router.add("POST", A + "/auth/login", async ctx => {
     const fp = d.fingerprint(ctx.req); d.loginLimiter.check(`admin:login:ip:${fp.ip}`); const body = await d.readJson(ctx.req, config.requestBodyLimitBytes);
     d.loginLimiter.check(`admin:login:acct:${hashAuditValue(String(body.email ?? "").toLowerCase(), config.auditSalt)}`);
-    ok(ctx.res, await admin.login(body, fp));
+    const td = parseCookies(ctx.req.headers.cookie)[TRUSTED_DEVICE_COOKIE];
+    const out: any = await admin.login({ ...body, trustedDeviceToken: td }, fp);
+    const { userId, ...publicOut } = out;
+    if (publicOut.token && userId && body.trustDevice === true) ctx.res.setHeader("set-cookie", trustedCookie(await createTrustedDevice(userId, hashAuditValue(fp.userAgent, config.auditSalt)), config));
+    ok(ctx.res, publicOut);
   }, false);
   route("POST", "/auth/logout", null, async (c, p, fp) => { await admin.logout(p, fp); ok(c.res, { loggedOut: true }); }, { body: false });
   route("POST", "/auth/email-code", null, async (c, p, fp) => { d.loginLimiter.check(`admin:emailcode:${p.adminId}`); ok(c.res, await admin.requestEmailCode(p, fp)); }, { body: false });
   route("POST", "/auth/reauth", null, async (c, p, fp, b) => { d.loginLimiter.check(`admin:reauth:${p.adminId}`); await admin.reauth(p, b, fp); ok(c.res, { reauthenticatedForMinutes: 5 }); });
   route("GET", "/auth/me", null, async (c, p) => {
     const unread = await prisma.adminNotification.count({ where: { reads: { none: { adminId: p.adminId } } } });
-    ok(c.res, { id: p.adminId, email: p.email, role: p.role, permissions: p.permissions, unreadNotifications: unread, reauthValid: !!p.reauthAt && Date.now() - p.reauthAt.getTime() < 300_000 });
+    const own = await prisma.adminAccount.findUnique({ where: { id: p.adminId }, select: { mfaSecretEnc: true } });
+    ok(c.res, { usesEmailCode: !own?.mfaSecretEnc, id: p.adminId, email: p.email, role: p.role, permissions: p.permissions, unreadNotifications: unread, reauthValid: !!p.reauthAt && Date.now() - p.reauthAt.getTime() < 300_000 });
   });
 
   // ----- dashboard (all numbers come from the database) -----
@@ -295,6 +303,7 @@ export function registerAdminRoutes(d: AdminDeps) {
     await aud(p, fp, "ADMIN_ROLE_CHANGED", "ADMIN", a.id, { to: b.role }); ok(c.res, { role: b.role });
   }, { sensitive: true });
   registerAccountRoutes({ route, audit: (id, action, outcome, fp, target, meta) => admin.audit(id, action, outcome, fp as any, target, meta), pageOf, pilotGrant: config.pilotGrant, cancelProviderInvoice: (invoiceId: string) => d.billing.cancelInvoice(invoiceId) });
+  registerConsoleRoutes({ route, audit: (id, action, outcome, fp, target, meta) => admin.audit(id, action, outcome, fp as any, target, meta), config, admin, reviews, respond: (res, data) => ok(res, data) });
   route("POST", "/maintenance/run", "admins.manage", async (c, p, fp) => { const out = await reviews.maintenance(); await aud(p, fp, "MAINTENANCE_RUN", "SYSTEM", "reviews", out); ok(c.res, out); }, { sensitive: true, body: false });
 }
 void json;

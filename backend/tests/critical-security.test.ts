@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {beforeEach,describe,it,expect,vi} from 'vitest';
 const db=vi.hoisted(()=>{
  const model=()=>Object.fromEntries(['findUnique','findFirst','create','update','updateMany','count','upsert','deleteMany'].map(k=>[k,vi.fn()]));
- return {user:model(),passwordResetToken:model(),authAuditEvent:model(),refreshSession:model(),adminAccount:model(),adminSession:model(),adminAuditEvent:model(),billingInvoice:model(),billingPaymentTransaction:model(),companyEntitlement:model(),$queryRaw:vi.fn(),$executeRaw:vi.fn(),$transaction:vi.fn()};
+ return {user:model(),passwordResetToken:model(),authAuditEvent:model(),refreshSession:model(),trustedDevice:model(),adminAccount:model(),adminSession:model(),adminAuditEvent:model(),billingInvoice:model(),billingPaymentTransaction:model(),companyEntitlement:model(),$queryRaw:vi.fn(),$executeRaw:vi.fn(),$transaction:vi.fn()};
 });
 vi.mock('../src/db.js',()=>({prisma:db}));
 import {PasswordResetService} from '../src/api/auth/password-reset-service.js';

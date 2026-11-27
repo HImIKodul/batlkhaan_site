@@ -59,3 +59,5 @@
 button.auth__forgot{background:none;border:0;cursor:pointer;font-family:inherit;color:var(--wp-ink2,#cfe0ff)}
 .auth__email-locked button.auth__forgot{color:#cfe0ff;text-decoration:underline;min-height:44px}
 .auth__email-locked button.auth__forgot:hover{color:#fff}
+
+.auth__trust{display:flex;gap:10px;align-items:center;min-height:44px;font-size:14.5px;color:var(--wp-ink,#fff)}.auth__trust input{width:20px;height:20px}

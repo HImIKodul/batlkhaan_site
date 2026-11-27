@@ -95,6 +95,7 @@ export class PasswordResetService {
       if (claimed.count !== 1) throw new ApiError(400, "INVALID_RESET_TOKEN", MSG.invalidToken);
       await tx.user.update({ where: { id: row.userId }, data: { passwordHash, tokenVersion: { increment: 1 } } });
       await tx.refreshSession.updateMany({ where: { userId: row.userId, revokedAt: null }, data: { revokedAt: now } });
+      await tx.trustedDevice.updateMany({ where: { userId: row.userId, revokedAt: null }, data: { revokedAt: now } });
       // Administrator sessions are separate opaque tokens that ignore tokenVersion: revoke them in the same transaction so no old admin token outlives the reset. MFA enrolment is untouched.
       const adminAccount = await tx.adminAccount.findUnique({ where: { userId: row.userId }, select: { id: true } });
       if (adminAccount) await tx.adminSession.updateMany({ where: { adminId: adminAccount.id, revokedAt: null }, data: { revokedAt: now } });
