@@ -3,8 +3,8 @@ import json, os, re, subprocess, sys, threading, time
 HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, "admin-flow.py")).read().split("# ---------- A.")[0])
 BACKEND = "/home/kirby/MMRI_RECOVERY_1f0e28e/backend"
-qa = dict(l.strip().split("=", 1) for l in open(BACKEND + "/.qa-credentials.local") if "=" in l)
-REV_EMAIL, REV_PW = "qa.reviewer@example.test", "Qa-Reviewer-Pass-1"
+REV_EMAIL, REV_PW = cr["REVIEWER_EMAIL"], cr["REVIEWER_PASSWORD"]   # the permanent demonstration Admin (nothing is created here)
+qa = {"email": cr["CUSTOMER_EMAIL"], "password": cr["CUSTOMER_PASSWORD"]}
 DOMAINS = ["marketing", "it", "finance", "people", "operations"]
 
 # ---- disposable fixtures
@@ -17,11 +17,9 @@ fx = json.loads(line[0][9:]); FIX = fx["fixtures"]; print(f"fixtures {fx['runTag
 # ---- sessions (authenticator + e-mail code for Sadmin; e-mail code for the reviewer; trusted-device cookies are reused between runs)
 while (time.time() % 30) > 4: time.sleep(0.5)
 sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], cr["ADMIN_TOTP_SECRET"], name="sadmin"); check("Sadmin signs in (authenticator + e-mail code / trusted device)", s == 200, str(d)[:200]); st = d["data"]["token"]
-if not any(r["email"] == REV_EMAIL for r in sa.call("GET", "/admin/console/accounts", tok=st)[1]["data"]["items"]):
-    check("create reviewer Admin", sa.call("POST", "/admin/console/accounts", {"email": REV_EMAIL, "password": REV_PW, "role": "Admin"}, tok=st)[0] == 200)
 ac, s, d = admin_login(REV_EMAIL, REV_PW, None, name="reviewer"); check("Admin signs in", s == 200, str(d)[:200]); at = d["data"]["token"]
 AD = lambda m, p, b=None: ac.call(m, "/admin" + p, b, tok=at)
-cu = Client("qacustomer"); s, d = cu.call("POST", "/auth/login", {"email": qa["email"], "password": qa["password"]})
+cu = Client("democustomer"); s, d = cu.call("POST", "/auth/login", {"email": qa["email"], "password": qa["password"]})
 if d.get("data", {}).get("verificationRequired"): s, d = cu.call("POST", "/auth/login/verify", {"email": qa["email"], "password": qa["password"], "code": code_for(qa["email"]), "trustDevice": True})
 ct = d["data"]["accessToken"]; CU = lambda p, raw=False: cu.call("GET", p, tok=ct, raw=raw)
 BLOCK = ["/report", "/results", "/report-payload", "/report/pdf", "/report/pdf/metadata"]
@@ -82,5 +80,6 @@ for dom in DOMAINS:
 n_ai = subprocess.run(["docker", "exec", "mmri-v3-local-postgres-1", "psql", "-U", subprocess.run(["docker", "exec", "mmri-v3-local-postgres-1", "printenv", "POSTGRES_USER"], capture_output=True, text=True).stdout.strip(), "-d", "mmri_dev_clean", "-Atc",
     "select count(*) from report_review_revisions where \"reviewId\" like '" + fx["runTag"] + "%' and source not in ('MANUAL','GENERATED')"], capture_output=True, text=True).stdout.strip()
 check("no AI-sourced revision exists for this run", n_ai == "0", n_ai)
+cleanup("fixtures", "--run-tag=" + fx["runTag"])   # the disposable assessments, reviews and report files of this run
 print("FAILED:", FAILS if FAILS else "none")
 sys.exit(1 if FAILS else 0)

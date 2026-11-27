@@ -28,7 +28,29 @@ Start from `backend/.env.example`. For local work set at least:
 
 `PASSWORD_PEPPER` must never change once accounts exist in a database: a different pepper makes every stored password unusable.
 
-## Synthetic accounts
+## Demonstration accounts (exactly three)
 
-Create a customer through the normal sign-up (mock mailbox: `backend/.mock-mailbox/outbox.jsonl` holds the six-digit code) and an administrator with
-`npx tsx src/admin-cli.ts bootstrap --email <e-mail> --role SUPER_ADMIN --password-stdin`. Keep credentials outside the repository (for example `~/mmri-secrets/`).
+| Role | Sign-in | E-mail |
+|---|---|---|
+| Sadmin | `http://127.0.0.1:5291/#/admin` | `dev.admin@mmri.test` |
+| Admin | `http://127.0.0.1:5291/#/admin` | `dev.reviewer@mmri.test` |
+| User (example company "Алтан Говь Трейд ХХК") | `http://127.0.0.1:5291/#/login` | `dev.customer@mmri.test` |
+
+Passwords and the authenticator secret live ONLY in `~/mmri-secrets/local-dev-credentials.env` (never in Git). On a new device every account also needs the six-digit e-mail code; the Sadmin additionally needs the authenticator code
+(`python3 ~/mmri-secrets/local-admin-code.py`). Latest e-mail code of one account (the mock mailer writes it to `backend/.mock-mailbox/outbox.jsonl`):
+
+    python3 backend/scripts/local-mail-code.py dev.customer@mmri.test
+
+The example User demonstrates, per category: Marketing = two published reports + a retake in progress (access granted by the Sadmin); IT = published first report + retake awaiting review (countdown running);
+Finance = published first report + retake awaiting review (overdue); People = two published reports + paid access ready, not started, plus created / pending / failed / cancelled payment attempts;
+Operations = two published reports, no further access (payment required). The Admin has both lists (ХЯНАХ ТАЙЛАН with a positive and an overdue countdown, ДУУССАН ТАЙЛАН with 8 reports).
+
+## Rebuilding or checking the demonstration data (local only)
+
+    cd backend
+    MMRI_QA_SEED_LOCAL_DB=127.0.0.1:55432/mmri_dev_clean npx tsx src/qa-cleanup.ts reset-demo --keep=<sadmin>,<admin>,<user>   # keeps three accounts + the user's company, removes everything else
+    MMRI_QA_SEED_LOCAL_DB=127.0.0.1:55432/mmri_dev_clean MMRI_QA_EMAIL=<user e-mail> npm run qa:seed                        # deterministic completed diagnoses and payment states (company must still carry the QA name)
+    python3 scripts/local-e2e/stage-demo.py                                                                                # company information, reviews, awaiting / overdue reports, retake in progress
+    python3 scripts/local-e2e/verify-demo.py                                                                               # checks everything through the real APIs
+
+The e2e scripts in `backend/scripts/local-e2e/` use disposable fixtures (their own company) and remove their own records afterwards (`src/qa-cleanup.ts`).

@@ -14,10 +14,11 @@ class Client:
             try: s.jar.load(ignore_discard=True)
             except Exception: pass
         s.op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(s.jar))
+        s.writer = str(__import__('uuid').uuid4())   # browser-tab id the API uses for the single-writer lease of a diagnosis
     def save(s):
         if s.path: s.jar.save(ignore_discard=True)
     def call(s, method, path, body=None, tok=None, raw=False):
-        h = {"content-type": "application/json"}
+        h = {"content-type": "application/json", "x-mmri-writer-id": s.writer}
         if tok: h["authorization"] = "Bearer " + tok
         r = urllib.request.Request(W + path, data=json.dumps(body).encode() if body is not None else None, headers=h, method=method)
         try:
@@ -49,6 +50,13 @@ def admin_login(email, password, totp_secret=None, name=None, wait_cooldown=True
             s, d = c.call("POST", "/admin/auth/login", body2)
             if s == 200: break
     return c, s, d
+
+BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(globals().get('__file__', 'x'))))) if '__file__' in globals() else os.path.dirname(os.getcwd())
+def cleanup(*args):
+    """Removes the records a test created (disposable fixtures, throw-away accounts, test access rows) so no run leaves demonstration data behind."""
+    import subprocess as _sp
+    r = _sp.run(["npx", "tsx", "src/qa-cleanup.ts", *args], cwd=BACKEND_DIR, env=dict(os.environ, MMRI_QA_SEED_LOCAL_DB="127.0.0.1:55432/mmri_dev_clean"), capture_output=True, text=True, timeout=900)
+    print("cleanup", " ".join(args), "->", (r.stdout.strip().splitlines() or [r.stderr.strip()[-200:]])[-1])
 def check(name, cond, extra=""):
     print(("PASS " if cond else "FAIL ") + name + (f"  [{extra}]" if (not cond and extra) else ""))
     if not cond: FAILS.append(name)
@@ -127,6 +135,7 @@ check("B deleted user cannot sign in", uc.call("POST", "/auth/login", {"email": 
 # Excel export of a business
 if biz:
     s, raw = adm.call("GET", f"/admin/console/businesses/{biz[0]['id']}/export.xlsx", tok=st, raw=True); check("B business Excel export", s == 200 and raw[:2] == b"PK")
-    open(os.environ.get("SCR", ".") + "/business.xlsx", "wb").write(raw)
+    import tempfile; open(os.path.join(tempfile.gettempdir(), "mmri-e2e-business.xlsx"), "wb").write(raw)   # outside the project
     s, d = A("GET", f"/console/businesses/{biz[0]['id']}"); check("B business detail", s == 200 and "company" in d["data"] and "diagnoses" in d["data"])
 print("FAILED:", FAILS if FAILS else "none")
+cleanup("test-accounts")

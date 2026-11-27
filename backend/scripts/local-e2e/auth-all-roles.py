@@ -29,3 +29,4 @@ if st:
     uid = [r["id"] for r in sa_c.call("GET", "/admin/console/accounts?q=" + ea, tok=st)[1]["data"]["items"]][0]
     sa_c.call("POST", f"/admin/console/accounts/{uid}/delete", {"confirmEmail": ea}, tok=st)
 print("FAILED:", FAILS if FAILS else "none")
+cleanup("test-accounts")
