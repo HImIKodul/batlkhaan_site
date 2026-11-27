@@ -786,7 +786,8 @@ model User {
   calibrationReviews           CalibrationReview[]   @relation("CalibrationReviewer")
   calibrationReleasesActivated CalibrationRelease[]  @relation("CalibrationReleaseActivator")
   adminAccount                 AdminAccount?
-  paymentDisputeEvents         PaymentDisputeEvent[]
+  identities                   UserIdentity[]
+  paymentDisputeEvents        PaymentDisputeEvent[]
   paymentDisputes              PaymentDispute[]
   supportCaseEvents            SupportCaseEvent[]
   supportCases                 SupportCase[]
@@ -2299,4 +2300,19 @@ model AdminEmailChallenge {
   @@index([adminId, createdAt])
   @@index([expiresAt])
   @@map("admin_email_challenges")
+}
+
+/// External sign-in identity (Google Identity Services). `subject` is the provider's stable account id; the e-mail address is never the key.
+model UserIdentity {
+  id        String   @id @default(cuid())
+  userId    String
+  provider  String
+  subject   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@index([userId])
+  @@map("user_identities")
 }

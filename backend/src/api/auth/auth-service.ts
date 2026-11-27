@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../../db.js";
 import type { ApiConfig } from "../config.js";
-import { unauthorized } from "../errors.js";
-import { hashAuditValue, hashPassword, hashRefreshToken, newRefreshToken, signAccessToken, verifyPassword } from "./crypto.js";
+import { ApiError, unauthorized } from "../errors.js";
+import { GOOGLE_PROVIDER, type GoogleClaims } from "./google-token.js";
+import { hashAuditValue, hashPassword, hashRefreshToken, newRefreshToken, signAccessToken, validatePasswordPolicy, verifyPassword } from "./crypto.js";
 
 /** MMRI-16: a refresh token that was rotated this recently may be presented once more by a second tab/request that read the same cookie before the rotated one arrived. Beyond this window reuse is treated as theft. */
 export const REFRESH_REUSE_GRACE_MS = 10_000;
@@ -53,6 +54,64 @@ export class AuthService {
       const session=await this.issueSession(updated,fp,tx);
       await tx.authAuditEvent.create({data:{userId:user.id,eventType:"LOGIN_SUCCESS",ipHash:hashAuditValue(fp.ip,this.config.auditSalt),userAgentHash:hashAuditValue(fp.userAgent,this.config.auditSalt)}});
       return {user:publicUser(updated),...session};
+    });
+  }
+
+  /** Google sign-in with an ALREADY VERIFIED token (see GoogleTokenVerifier). Accounts are keyed by Google's stable subject, never by e-mail:
+      an existing e-mail/password account is NEVER linked or logged into through a matching Google e-mail (that would be an account takeover path). */
+  async googleSignIn(claims: GoogleClaims, fp: RequestFingerprint) {
+    const known = await prisma.userIdentity.findUnique({ where: { provider_subject: { provider: GOOGLE_PROVIDER, subject: claims.subject } }, include: { user: true } });
+    let user: any = known?.user ?? null; let isNew = false;
+    if (!user) {
+      if (!claims.emailVerified) { await this.audit(null, "GOOGLE_LOGIN_UNVERIFIED_EMAIL", fp); throw new ApiError(403, "GOOGLE_EMAIL_NOT_VERIFIED", "Google имэйл хаяг баталгаажаагүй байна."); }
+      if (await prisma.user.findUnique({ where: { email: claims.email }, select: { id: true } })) {
+        await this.audit(null, "GOOGLE_LOGIN_EMAIL_EXISTS", fp, { emailHash: hashAuditValue(claims.email, this.config.auditSalt) });
+        throw new ApiError(409, "GOOGLE_EMAIL_EXISTS", "Энэ имэйлээр бүртгэл өмнө нь үүссэн байна. Имэйл болон нууц үгээрээ нэвтэрнэ үү.");
+      }
+      const passwordHash = await hashPassword(randomUUID() + randomUUID(), this.config.passwordPepper);   // unusable: the person signs in with Google, or sets a password through "forgot password"
+      try {
+        user = await prisma.$transaction(async tx => {
+          const u = await tx.user.create({ data: { email: claims.email, passwordHash, displayName: cleanName(claims.name), emailVerificationRequired: true, emailVerifiedAt: new Date() } });
+          await tx.userIdentity.create({ data: { userId: u.id, provider: GOOGLE_PROVIDER, subject: claims.subject } });
+          return u;
+        });
+        isNew = true;
+      } catch (error: any) {
+        if (error?.code !== "P2002") throw error;
+        throw new ApiError(409, "GOOGLE_EMAIL_EXISTS", "Энэ имэйлээр бүртгэл өмнө нь үүссэн байна. Имэйл болон нууц үгээрээ нэвтэрнэ үү.");
+      }
+    }
+    if (user.status !== "ACTIVE" || user.erasedAt) { await this.audit(user.id, "GOOGLE_LOGIN_FAILURE", fp, { reason: "ACCOUNT_NOT_ACTIVE" }); throw unauthorized("Invalid email or password"); }
+    return prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
+      const current = await tx.user.findUnique({ where: { id: user.id } });
+      if (!current || current.status !== "ACTIVE" || current.erasedAt) throw unauthorized("Invalid email or password");
+      const updated = await tx.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+      const session = await this.issueSession(updated, fp, tx);
+      await tx.authAuditEvent.create({ data: { userId: user.id, eventType: isNew ? "GOOGLE_REGISTER_SUCCESS" : "GOOGLE_LOGIN_SUCCESS", ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt) } });
+      return { user: publicUser(updated), ...session };
+    });
+  }
+
+  /** Signed-in password change: needs the CURRENT password. Every other session is ended (token version + refresh sessions) and a fresh session is issued for this device. */
+  async changePassword(userId: string, input: { currentPassword: unknown; newPassword: unknown }, fp: RequestFingerprint) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.status !== "ACTIVE" || user.erasedAt) throw unauthorized("Session is no longer valid");
+    if (await prisma.adminAccount.findUnique({ where: { userId }, select: { id: true } })) throw new ApiError(403, "ADMIN_ACCOUNT_PROTECTED", "Админ бүртгэлийн нууц үгийг энд солих боломжгүй.");
+    const valid = await verifyPassword(String(input.currentPassword ?? ""), user.passwordHash, this.config.passwordPepper).catch(() => false);
+    if (!valid) { await this.audit(userId, "PASSWORD_CHANGE_REJECTED", fp); throw new ApiError(403, "PASSWORD_INCORRECT", "Одоогийн нууц үг буруу байна."); }
+    try { validatePasswordPolicy(String(input.newPassword ?? "")); } catch { throw new ApiError(400, "WEAK_PASSWORD", "Нууц үг 10-аас 128 тэмдэгт байх ёстой."); }
+    if (String(input.newPassword) === String(input.currentPassword)) throw new ApiError(400, "PASSWORD_UNCHANGED", "Шинэ нууц үг одоогийнхоос өөр байх ёстой.");
+    const passwordHash = await hashPassword(String(input.newPassword), this.config.passwordPepper);
+    return prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
+      const current = await tx.user.findUnique({ where: { id: userId } });
+      if (!current || current.passwordHash !== user.passwordHash || current.tokenVersion !== user.tokenVersion) throw new ApiError(409, "ACCOUNT_CHANGED", "Бүртгэл өөрчлөгдсөн тул дахин оролдоно уу.");
+      const updated = await tx.user.update({ where: { id: userId }, data: { passwordHash, tokenVersion: { increment: 1 } } });
+      await tx.refreshSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+      const session = await this.issueSession(updated, fp, tx);
+      await tx.authAuditEvent.create({ data: { userId, eventType: "PASSWORD_CHANGED", ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt) } });
+      return { user: publicUser(updated), ...session };
     });
   }
 

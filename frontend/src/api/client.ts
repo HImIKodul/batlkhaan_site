@@ -92,9 +92,13 @@ export const api={
  async confirmPasswordReset(token:string,password:string){const x=await request<{reset:boolean;message:string}>('/auth/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password}),retryAuth:false});session.clear();return x},
  exportAccountData:()=>requestBlob('/account/export','mmri-account-export.json'),
  exportCompanyData:(companyId:string)=>requestBlob(`/companies/${companyId}/export`,'mmri-company-export.json'),
+ exportCompanyWorkbook:(companyId:string)=>requestBlob(`/companies/${companyId}/export.xlsx`,'businessmri-data.xlsx'),
  async eraseCompanyData(companyId:string,confirmName:string,password:string){const x=await request<{erased:boolean;assessmentsRemoved:number;reportFilesRemoved:number;retained:string[]}>(`/companies/${companyId}/erase`,{method:'POST',body:JSON.stringify({confirmName,password}),retryAuth:false});if(session.companyId===companyId){session.assessmentId=null;session.companyId=null;session.companyName=null}return x},
  async eraseAccountData(confirmEmail:string,password:string){const x=await request<{erased:boolean;retained:string[]}>('/account/erase',{method:'POST',body:JSON.stringify({confirmEmail,password}),retryAuth:false});session.clear();return x},
  me:()=>request<User>('/auth/me'),
+ getAuthConfig:()=>request<{googleClientId:string|null}>('/auth/config',{retryAuth:false}),
+ async googleLogin(credential:string){const x=await request<AuthResponse>('/auth/google',{method:'POST',body:JSON.stringify({credential}),retryAuth:false});session.clear(true);session.userId=x.user.id;session.accessToken=x.accessToken;return x},
+ async changePassword(currentPassword:string,newPassword:string){const x=await request<{changed:boolean;accessToken:string}>('/auth/password/change',{method:'POST',body:JSON.stringify({currentPassword,newPassword}),retryAuth:false});session.accessToken=x.accessToken;return x},
  async logout(){
   const assessmentId=session.assessmentId;
   try{

@@ -1,16 +1,16 @@
 import React,{useId,useMemo,useRef,useState} from 'react';
 import { Field,Input } from './UI';
-import { isAmbiguousAbbr,joinBusinessName,legalFormByCode,searchLegalForms,splitBusinessName,type LegalForm } from '../data/legalForms';
+import { joinBusinessName,legalFormByCode,legalFormLabel,searchLegalForms,splitBusinessName,type LegalForm } from '../data/legalForms';
 
-/* `form` is the official index code (e.g. "11"). The field shows the abbreviation only; the list shows abbreviation first and, only where
-   several official forms share it, the short note and the index code. Search accepts abbreviation, full name, note, code or an English alias. */
+/* `form` is the stable internal code of the legal-entity form (e.g. "11"); it is never displayed. Both fields are full width and stacked (name first, form below).
+   Every option and the selected value show the abbreviation with its full name in parentheses. Search accepts abbreviation, full name, note or an English alias. */
 type Props={name:string;form:string;onNameChange:(v:string)=>void;onFormChange:(v:string)=>void;error?:string;formError?:string};
 
 export function BusinessNameFields({name,form,onNameChange,onFormChange,error,formError}:Props){
  const [open,setOpen]=useState(false);const [active,setActive]=useState(0);const [query,setQuery]=useState<string|null>(null);
  const listId=useId();const root=useRef<HTMLDivElement|null>(null);
  const selected=legalFormByCode(form);
- const shown=query??selected?.abbr??'';
+ const shown=query??(selected?legalFormLabel(selected):'');
  const matches=useMemo(()=>searchLegalForms(query??''),[query]);
  const pick=(f:LegalForm)=>{onFormChange(f.code);setQuery(null);setOpen(false)};
  const closeList=()=>{
@@ -27,16 +27,17 @@ export function BusinessNameFields({name,form,onNameChange,onFormChange,error,fo
  const onNameBlur=()=>{if(!selected){const s=splitBusinessName(name);if(s.form){onNameChange(s.name);onFormChange(s.form)}}};
  const preview=name.trim()&&selected?joinBusinessName(name,form):'';
  return <div className="business-name-fields">
-  <Field label="Байгууллагын нэр" error={error}><Input value={name} onChange={e=>onNameChange(e.target.value)} onBlur={onNameBlur} autoComplete="organization" autoFocus/></Field>
+  <Field label="Байгууллагын оноосон нэр" error={error}><Input value={name} onChange={e=>onNameChange(e.target.value)} onBlur={onNameBlur} autoComplete="organization" autoFocus/></Field>
   <div className="business-name-fields__form" ref={root} onBlur={e=>{if(!root.current?.contains(e.relatedTarget as Node))closeList()}}>
-   <Field label="Хэлбэр" error={formError}>
-    <Input role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list" aria-activedescendant={open&&matches[active]?`${listId}-${active}`:undefined} placeholder="ХХК, ХК, ..." value={shown} autoComplete="off" onChange={e=>{setQuery(e.target.value);if(!e.target.value)onFormChange('');setActive(0);setOpen(true)}} onFocus={e=>{setOpen(true);e.currentTarget.select()}} onKeyDown={onKey}/>
+   <Field label="Хуулийн этгээдийн хэлбэр" error={formError}>
+    <Input role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list" aria-activedescendant={open&&matches[active]?`${listId}-${active}`:undefined} placeholder="Жагсаалтаас сонгох эсвэл хайх" value={shown} autoComplete="off" onChange={e=>{setQuery(e.target.value);if(!e.target.value)onFormChange('');setActive(0);setOpen(true)}} onFocus={e=>{setOpen(true);e.currentTarget.select()}} onKeyDown={onKey}/>
    </Field>
    {open&&<div id={listId} role="listbox" aria-label="Хуулийн этгээдийн хэлбэр" className="mmri-choice-select__menu business-name-fields__menu">
-    {matches.length?matches.map((f,i)=>{const amb=isAmbiguousAbbr(f.abbr);return <button key={f.code} id={`${listId}-${i}`} type="button" role="option" aria-selected={f.code===form} title={f.nameMn+(f.note?`, ${f.note}`:'')} tabIndex={-1} className={`${i===active?'is-active':''}${f.code===form?' is-selected':''}`.trim()} onMouseDown={e=>e.preventDefault()} onMouseEnter={()=>setActive(i)} onClick={()=>pick(f)}>
-     <b>{f.abbr}</b>{amb&&<><span>{f.note}</span><i>{f.code}</i></>}
-    </button>}):<p className="business-name-fields__empty">Олдсонгүй. Товчлол эсвэл нэрээр хайна уу.</p>}
+    {matches.length?matches.map((f,i)=>{return <button key={f.code} id={`${listId}-${i}`} type="button" role="option" aria-selected={f.code===form} title={legalFormLabel(f)} tabIndex={-1} className={`${i===active?'is-active':''}${f.code===form?' is-selected':''}`.trim()} onMouseDown={e=>e.preventDefault()} onMouseEnter={()=>setActive(i)} onClick={()=>pick(f)}>
+     <b>{legalFormLabel(f)}</b>
+    </button>}):<p className="business-name-fields__empty">Олдсонгүй. Товчлол эсвэл бүтэн нэрээр хайна уу.</p>}
    </div>}
+   {selected&&<p className="business-name-fields__selected">{legalFormLabel(selected)}</p>}
    {preview&&<p className="business-name-fields__preview" aria-live="polite">Бүртгэгдэх нэр: <strong>{preview}</strong></p>}
   </div>
  </div>;

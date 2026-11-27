@@ -342,7 +342,7 @@ export function AppShell({route,children}:{route:RouteName;children:React.ReactN
   <ShellHeader route={route}/>
   {!online&&<div className="mmri-offline-banner" role="status"><Icon name="offline" size={18}/><div><b>Сүлжээний холболт тасарсан</b><span>Баталгаажаагүй өөрчлөлтийг хадгалагдсан гэж үзэхгүй.</span></div></div>}
   <main id="main-content" className="mmri-shell-main" tabIndex={-1}>{children}</main>
-  <footer className="mmri-legal-footer" aria-label="Хууль зүйн холбоосууд"><span>© BusinessMRI.mn</span><nav aria-label="Хууль зүй"><a href="#/privacy">Нууцлалын бодлого</a><a href="#/terms">Үйлчилгээний нөхцөл</a></nav></footer>
+  <footer className="mmri-legal-footer" aria-label="Хууль зүйн холбоосууд"><span>© BusinessMRI.mn</span><a className="mmri-legal-footer__support" href="mailto:support@businessmri.mn">support@businessmri.mn</a><nav aria-label="Хууль зүй"><a href="#/privacy">Нууцлалын бодлого</a><a href="#/terms">Үйлчилгээний нөхцөл</a></nav></footer>
   {loggedIn&&<nav className="mmri-bottom-nav" aria-label="Мобайл үндсэн цэс">
    {primaryNav.map(([target,label])=>{
     const active=mainActive(route,target);

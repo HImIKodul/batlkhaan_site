@@ -88,6 +88,14 @@ export class DataLifecycleService {
       note: "Question text is identified by questionId. Hashes, payment provider secrets and QR payloads are not exported. Scores and report content of an assessment still under review are withheld until it is published." };
   }
 
+  /** Excel (.xlsx) form of the company export. Built from the same permission-checked, explicit-field exports as the JSON version. */
+  async exportCompanyWorkbook(userId: string, companyId: string, fp: RequestFingerprint): Promise<Buffer> {
+    const company = await this.exportCompany(userId, companyId, fp);
+    const account = await this.exportAccount(userId, fp);
+    const { companyWorkbook } = await import("./export-workbook.js");
+    return companyWorkbook(account, company);
+  }
+
   async eraseCompany(userId: string, companyId: string, input: { confirmName?: unknown; password?: unknown }, fp: RequestFingerprint) {
     await requireCompanyRole(userId, companyId, ["OWNER"] as any);
     const company = await prisma.company.findUnique({ where: { id: companyId }, select: { id: true, name: true, erasedAt: true } });

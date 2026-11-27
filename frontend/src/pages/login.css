@@ -47,6 +47,15 @@
 .auth-fact__hint{font-size:14px;color:#c6d6f5}
 @keyframes auth-fact-swap{from{opacity:.35}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.auth-fact__swap{animation:none}}
-.auth__step-note{margin:0;font-size:14px;line-height:1.5;color:var(--mmri-color-text-muted,#cfe0ff)}
+.auth__step-note{margin:0;font-size:14px;line-height:1.5;color:var(--wp-ink2,#33435A)}
 .auth__switch{margin:0;text-align:center;font-size:15px}.auth__switch a,.auth__switch button{color:inherit;font:inherit;text-decoration:underline;background:none;border:0;padding:0;cursor:pointer}
 .auth__email-locked{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}
+.auth__email-locked{min-width:0;color:var(--wp-ink,#162333)}.auth__email-locked span{display:grid;gap:2px;min-width:0}.auth__email-locked small{font-size:13px;color:var(--wp-ink3,#566683)}.auth__email-locked b{font-size:16px;font-weight:600;color:var(--wp-ink,#162333);overflow-wrap:anywhere}
+.auth__google{display:grid;gap:10px;justify-items:center}.auth__google-slot{display:flex;justify-content:center;width:100%;min-height:44px}
+.auth__or{display:flex;align-items:center;gap:12px;width:100%;margin:2px 0 0;font-size:13px;color:var(--wp-ink3,#566683)}.auth__or::before,.auth__or::after{content:"";flex:1;height:1px;background:rgba(51,67,90,.22)}
+
+/* "Имэйл солих" is a <button>: without these rules the browser default (white box, white text) made it invisible. */
+.auth__email-locked{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+button.auth__forgot{background:none;border:0;cursor:pointer;font-family:inherit;color:var(--wp-ink2,#cfe0ff)}
+.auth__email-locked button.auth__forgot{color:#cfe0ff;text-decoration:underline;min-height:44px}
+.auth__email-locked button.auth__forgot:hover{color:#fff}

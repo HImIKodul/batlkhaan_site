@@ -11,6 +11,7 @@ import { ConcurrencyGate } from "./concurrency-gate.js";
 import { AuthService } from "./auth/auth-service.js";
 import { PasswordResetService, PASSWORD_RESET_MIN_RESPONSE_MS } from "./auth/password-reset-service.js";
 import { EmailVerificationService } from "./auth/email-verification-service.js";
+import { GoogleTokenVerifier } from "./auth/google-token.js";
 import { registrationAllowed, createMailer } from "./mail/mailer.js";
 import { LifecycleMailService } from "./mail/lifecycle-mail.js";
 import { DataLifecycleService } from "./account/data-lifecycle-service.js";
@@ -152,6 +153,26 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
     ok(res,{user:result.user,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
   },false);
 
+  /* Google sign-in (Google Identity Services). Enabled ONLY when MMRI_GOOGLE_CLIENT_ID (the public OAuth client id, no secret) is configured; the web app hides the button otherwise. */
+  const googleVerifier=new GoogleTokenVerifier(String(process.env.MMRI_GOOGLE_CLIENT_ID??"").trim());
+  router.add("GET","/api/v1/auth/config",async({res})=>{ok(res,{googleClientId:googleVerifier.enabled?String(process.env.MMRI_GOOGLE_CLIENT_ID).trim():null})},false);
+  router.add("POST","/api/v1/auth/google",async({req,res})=>{
+    const ip=clientIp(req,config); authIpLimiter.check(`google:ip:${ip}`); const body=await readJson(req,config.requestBodyLimitBytes);
+    const claims=await googleVerifier.verify(body.credential);
+    authAccountLimiter.check(`google:acct:${hashAuditValue(claims.subject,config.auditSalt)??"x"}`);
+    const result=await auth.googleSignIn(claims,fingerprint(req,config));
+    res.setHeader("set-cookie",refreshCookie(result.refreshToken,config));
+    ok(res,{user:result.user,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
+  },false);
+  /* Signed-in password change (current password required). Ends every other session and returns a fresh one for this device. */
+  router.add("POST","/api/v1/auth/password/change",async({req,res,principal})=>{
+    authIpLimiter.check(`pwchange:ip:${clientIp(req,config)}`);authAccountLimiter.check(`pwchange:user:${principal!.userId}`);
+    const body=await readJson(req,config.requestBodyLimitBytes);
+    const result=await auth.changePassword(principal!.userId,{currentPassword:body.currentPassword,newPassword:body.newPassword},fingerprint(req,config));
+    res.setHeader("set-cookie",refreshCookie(result.refreshToken,config));
+    ok(res,{changed:true,accessToken:result.accessToken,accessTokenExpiresIn:result.accessTokenExpiresIn});
+  });
+
   /* Password recovery. The request endpoint answers identically for known and unknown addresses and takes at least a fixed time either way. */
   router.add("POST","/api/v1/auth/password-reset/request",async({req,res})=>{
     const started=Date.now();
@@ -204,6 +225,12 @@ export function createApi(config:ApiConfig=loadApiConfig()) {
   router.add("GET","/api/v1/companies/:companyId/export",async({req,res,principal,params})=>{
     authAccountLimiter.check(`export:user:${principal!.userId}`);
     json(res,200,{data:await dataLifecycle.exportCompany(principal!.userId,params.companyId,fingerprint(req,config))},exportHeaders("mmri-company-export.json"));
+  });
+  router.add("GET","/api/v1/companies/:companyId/export.xlsx",async({req,res,principal,params})=>{
+    authAccountLimiter.check(`export:user:${principal!.userId}`);
+    const book=await dataLifecycle.exportCompanyWorkbook(principal!.userId,params.companyId,fingerprint(req,config));
+    res.writeHead(200,{"content-type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","content-length":book.length,...exportHeaders("businessmri-data.xlsx")});
+    res.end(book);
   });
   router.add("POST","/api/v1/companies/:companyId/erase",async({req,res,principal,params})=>{
     authIpLimiter.check(`erase:ip:${clientIp(req,config)}`);authAccountLimiter.check(`erase:user:${principal!.userId}`);

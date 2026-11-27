@@ -59,15 +59,16 @@
 .profile-onboarding>header{display:grid;gap:6px}
 .profile-onboarding>header>span{font-size:var(--mmri-type-meta-size);letter-spacing:.12em;font-weight:700;color:var(--mmri-color-text-muted)}
 .profile-company-card{display:grid;gap:16px}
-.business-name-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;align-items:start}
+.business-name-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
 .business-name-fields__form{position:relative}
 .business-name-fields__menu{max-height:280px;padding:6px;border-radius:18px}
-.business-name-fields__menu button{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr) auto;align-items:center;gap:4px 12px;width:100%;min-height:42px;padding:8px 12px;border-radius:12px;text-align:left;transition:background-color var(--wp-dur,.2s) ease,box-shadow var(--wp-dur,.2s) ease}
-.business-name-fields__menu button b{font-size:15px;font-weight:700;letter-spacing:.01em}
+.business-name-fields__menu button{display:block;width:100%;min-height:44px;padding:8px 12px;border-radius:12px;text-align:left;transition:background-color var(--wp-dur,.2s) ease,box-shadow var(--wp-dur,.2s) ease}
+.business-name-fields__menu button b{display:block;font-size:15px;font-weight:600;line-height:1.35;color:var(--wp-ink,#162333);white-space:normal;overflow-wrap:anywhere}
 .business-name-fields__menu button span{min-width:0;font-size:13px;line-height:1.3;color:var(--wp-ink3,#5B6B7E);text-align:left}
 .business-name-fields__menu button i{font-style:normal;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:999px;color:var(--wp-ink2,#344457);background:rgba(173,209,238,.35);border:1px solid rgba(173,209,238,.7)}
 .business-name-fields__menu button.is-active{background:rgba(173,209,238,.28);box-shadow:inset 0 0 0 1px rgba(127,166,255,.35)}
 .business-name-fields__menu button.is-selected b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-radius:50%;background:#2FA67A;vertical-align:middle}
+.business-name-fields__selected{margin:8px 2px 0;font-size:14px;line-height:1.4;font-weight:600;color:var(--wp-ink,#162333);white-space:normal;overflow-wrap:anywhere}
 .business-name-fields__preview{margin:8px 2px 0;font-size:13px;color:var(--wp-ink3,#5B6B7E)}.business-name-fields__preview strong{color:var(--wp-ink,#162333)}
 .business-name-fields__empty{margin:0;padding:10px 12px;color:var(--mmri-color-text-faint)}
 .profile-question-jump{display:flex;flex-wrap:wrap;gap:6px}
@@ -192,3 +193,17 @@ html:root body.mmri-prism-page .company-logo-editor .company-logo-editor__initia
 html:root body.mmri-prism-page:not(.mmri-admin) .account-manage button.mmri-button:disabled{opacity:1}
 html:root body.mmri-prism-page:not(.mmri-admin) .account-manage button.mmri-button--danger:disabled{background:#6b2f3b;color:#f6e6ea;border-color:rgba(255,255,255,.22)}
 html:root body.mmri-prism-page:not(.mmri-admin) .account-manage button.mmri-button--secondary:disabled{color:rgba(255,255,255,.8);background:rgba(255,255,255,.06);border-style:dashed}
+
+/* Erase/confirm dialogs in Settings: dark ink on the light dialog panel (the page theme is dark, the panel is not), and action buttons keep their natural width. */
+.account-data__card>button.mmri-button,.account-data__card>p>button.mmri-button{justify-self:start}
+.account-data__warn{padding:10px 12px;border-radius:12px;border:1px solid rgba(217,83,79,.45);background:rgba(217,83,79,.1)}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-dialog :is(h2,h3,.mmri-dialog__title){color:#162333}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-dialog :is(p,label,span,.mmri-field__label){color:#1f2d3f}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-dialog label{font-size:14px;font-weight:600}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-dialog .mmri-support-alert.is-error{color:#7a1b17}
+
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-dialog{background:#eef2fb;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog.mmri-dialog-layer{background:rgba(6,14,46,.72)}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-button--secondary{background:#fff;color:#162333;border:1px solid #8a9bb5}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-button--danger{background:#b3261e;color:#fff;border:1px solid #8c1c16}
+html:root body.mmri-prism-page:not(.mmri-admin) .account-erase-dialog .mmri-button--danger:disabled{opacity:.75}
