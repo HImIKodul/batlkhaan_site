@@ -4,6 +4,7 @@ import { adminApi,adminSession,setReauthHandler,setUnauthorizedHandler,AdminApiE
 import { usePrismBody } from '../design/prismPage';
 import { useDomainTheme } from '../design/domainTheme';
 import { RoleChip } from './Console';
+import { adminGuard,UNSAVED_MN } from './unsavedGuard';
 import './admin.css';
 
 const ReviewReportEditor=lazy(()=>import('./ReviewReportEditor'));
@@ -62,11 +63,23 @@ function Login({onLoggedIn}:{onLoggedIn:()=>void}){
 export default function AdminApp(){
  useDomainTheme(null);usePrismBody(true);
  const [hash,setHash]=useState(window.location.hash);const [me,setMe]=useState<AdminMe|null>(null);const [state,setState]=useState<'loading'|'out'|'in'>(adminSession.token?'loading':'out');const [reauth,setReauth]=useState<null|((ok:boolean)=>void)>(null);
- useEffect(()=>{const h=()=>{setHash(window.location.hash);window.scrollTo(0,0)};window.addEventListener('hashchange',h);return()=>window.removeEventListener('hashchange',h)},[]);
+ useEffect(()=>{const set=()=>{const t=document.querySelector('.adm-top') as HTMLElement|null;const sticky=t&&['sticky','fixed'].includes(getComputedStyle(t).position);document.documentElement.style.setProperty('--adm-top-h',`${sticky?Math.ceil(t!.getBoundingClientRect().height)+8:0}px`)   /* the report bar sits under the first header only while that header stays on screen */};set();window.addEventListener('resize',set);const o=typeof ResizeObserver!=='undefined'?new ResizeObserver(set):null;const t=document.querySelector('.adm-top');if(t&&o)o.observe(t);return()=>{window.removeEventListener('resize',set);o?.disconnect()}},[state,hash]);
+ const prevHash=useRef(window.location.hash);
+ useEffect(()=>{const h=()=>{if(window.location.hash===prevHash.current)return;if(adminGuard.dirty&&isAdminHash(prevHash.current)&&!window.confirm(UNSAVED_MN)){window.location.hash=prevHash.current;return}adminGuard.dirty=false;prevHash.current=window.location.hash;setHash(window.location.hash);window.scrollTo(0,0)};window.addEventListener('hashchange',h);return()=>window.removeEventListener('hashchange',h)},[]);
  const load=useCallback(async()=>{if(!adminSession.token){setState('out');return}try{setMe(await adminApi.me());setState('in')}catch{adminSession.token=null;setState('out')}},[]);
  useEffect(()=>{void load()},[load]);
  useEffect(()=>{setUnauthorizedHandler(()=>{setMe(null);setState('out');if(!/#\/admin\/login/.test(window.location.hash))window.location.hash=adminHref('login')});setReauthHandler(()=>new Promise<boolean>(resolve=>setReauth(()=>(ok:boolean)=>{setReauth(null);resolve(ok)})));return()=>{setUnauthorizedHandler(null);setReauthHandler(null)}},[]);
  const route=useMemo(()=>parse(hash),[hash]);
+ /* Section totals shown beside the two Admin section names: always the real totals (search and filters never change them), refreshed on every route change, after publish / save / recall and every 30 s. */
+ const [counts,setCounts]=useState<{review:number;done:number}|null>(null);
+ const isAdminOnly=state==='in'&&!!me&&me.role!=='SUPER_ADMIN';
+ useEffect(()=>{if(!isAdminOnly)return;let live=true;const load=()=>{void adminApi.get('/console/report-counts').then((c:any)=>{if(live)setCounts(c)}).catch(()=>undefined)};load();window.addEventListener('adm-counts',load);const t=window.setInterval(load,30000);return()=>{live=false;window.removeEventListener('adm-counts',load);window.clearInterval(t)}},[isAdminOnly,hash]);
+ /* Unsaved report changes: a click on any admin link, the browser's back/forward and closing or refreshing the page ask first. */
+ useEffect(()=>{
+  const click=(e:MouseEvent)=>{if(!adminGuard.dirty)return;const a=(e.target as HTMLElement).closest?.('a[href^="#/admin"]') as HTMLAnchorElement|null;if(a&&!window.confirm(UNSAVED_MN)){e.preventDefault();e.stopPropagation()}else if(a)adminGuard.dirty=false};
+  const before=(e:BeforeUnloadEvent)=>{if(adminGuard.dirty){e.preventDefault();e.returnValue=UNSAVED_MN;return UNSAVED_MN}};
+  document.addEventListener('click',click,true);window.addEventListener('beforeunload',before);
+  return()=>{document.removeEventListener('click',click,true);window.removeEventListener('beforeunload',before)}},[]);
  useEffect(()=>{document.title='Удирдлагын төв · BusinessMRI.mn'},[]);
  if(state==='loading')return <main className="adm-login"><Loading/></main>;
  if(state==='out'||!me){if(route.section!=='login')window.location.hash=adminHref('login');return <Login onLoggedIn={()=>{window.location.hash=adminHref();void load()}}/>}
@@ -79,8 +92,8 @@ export default function AdminApp(){
  if(route.section==='login'||route.section===''){window.location.hash=adminHref(home);return null}
  const allowed=nav.some(([k])=>k===section)||review;
  return <div className="adm-shell cn-shell">
-  <header className="adm-top"><a className="adm-brand" href={adminHref(home)}>BusinessMRI.mn</a><nav className="adm-nav cn-nav" aria-label="Удирдлага">{nav.map(([k,l])=><a key={k} href={adminHref(k)} aria-current={section===k||(k==='reports'&&review)?'page':undefined} className={section===k||(k==='reports'&&review)?'is-active':''}>{l}</a>)}</nav><div className="adm-top__right"><RoleChip role={sadmin?'Sadmin':'Admin'}/><button type="button" className="adm-btn" onClick={()=>void logout()}>Гарах</button></div></header>
-  <main id="adm-main" className="adm-main" tabIndex={-1}><Suspense fallback={<Loading/>}>{!allowed?<Page title="Хандах эрхгүй"><Empty text="Энэ хэсэгт хандах эрх танд байхгүй."/></Page>:review?<ReviewReportEditor id={route.id} me={me}/>:<Console section={section} id={route.id}/>}</Suspense></main>
+  <header className="adm-top"><a className="adm-brand" href={adminHref(home)}>BusinessMRI.mn</a><nav className="adm-nav cn-nav" aria-label="Удирдлага">{nav.map(([k,l])=><a key={k} href={adminHref(k)} aria-current={section===k||(k==='reports'&&review)?'page':undefined} className={section===k||(k==='reports'&&review)?'is-active':''}>{l}{!sadmin&&counts?` (${k==='reports'?counts.review:counts.done})`:''}</a>)}</nav><div className="adm-top__right"><RoleChip role={sadmin?'Sadmin':'Admin'}/><button type="button" className="adm-btn" onClick={()=>void logout()}>Гарах</button></div></header>
+  <main id="adm-main" className="adm-main" tabIndex={-1}><Suspense fallback={<Loading/>}>{!allowed?<Page title="Хандах эрхгүй"><Empty text="Энэ хэсэгт хандах эрх танд байхгүй."/></Page>:review?<ReviewReportEditor id={route.id} me={me}/>:<Console section={section} id={route.id} meEmail={me.email}/>}</Suspense></main>
   {reauth&&<ReauthModal onDone={reauth} onCancel={()=>reauth(false)}/>}
  </div>
 }

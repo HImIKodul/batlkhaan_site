@@ -1044,3 +1044,9 @@ Hero material follows the approved reference (bright liquid glass, shared catego
 - Finance "canonical capability name" failure was caused by the new editor rebuilding claim titles from display-transformed text (fixed: raw title is restored on save). Fresh fixtures pass for all five domains.
 - `src/qa-review-fixtures.ts` + `scripts/local-e2e/` give repeatable lifecycle tests on disposable fixtures.
 - User systemd units verified (start, duplicate prevention, SIGKILL recovery, database dependency). Full reboot recovery NOT tested.
+
+## 2026-11-28 (3) — Admin / Sadmin usability (18 items)
+- Admin report editor: plan text colours scoped to `.ad-report` (the customer report/PDF CSS is untouched), sticky report bar under the first header (`--adm-top-h`, measured), unsaved-change guard (`unsavedGuard.ts`), save/send confirmations, conflict message that keeps local edits, undo/redo history (clears after a save), Ctrl/Cmd+S, search + category filters and real section totals (`GET /console/report-counts`).
+- Sadmin: role filter, payment filters/details/Excel export (`paymentRows` shared by list and export, formula-injection guard), DATA search, per-diagnosis Excel (`/console/businesses/:id/diagnoses/:aid/export.xlsx`, company-scoped), last successful sign-in, `POST /console/accounts/:id/revoke-sessions`, confirmations for grant/revoke/password/delete/sign-out-everywhere.
+- Account detail "access" now means an ACTIVE entitlement or a used one with an unfinished diagnosis (a completed diagnosis no longer shows as access, so a retake can be granted).
+- No migration. Tests: `scripts/local-e2e/console-features.py` (API) plus browser suites run during the task (not kept in the repo).

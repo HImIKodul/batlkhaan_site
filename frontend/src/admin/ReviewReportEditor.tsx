@@ -1,6 +1,8 @@
 import React,{useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import { adminApi,AdminApiError,fmtUb,countdown,type AdminMe } from './adminApi';
 import { Page,Empty,Err,Loading,useAsync,adminHref } from './AdminApp';
+import { adminGuard } from './unsavedGuard';
+import { countsChanged } from './Console';
 import { buildReportModel,mnCustomerText,PageOne,PageTwo,PageThree } from '../pages/Report';
 import { businessAreaById,type BusinessAreaId } from '../data/businessEvaluation';
 import { useDomainTheme } from '../design/domainTheme';
@@ -26,7 +28,11 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
  const [edits,setEdits]=useState<Record<string,string>>({});const plan=useAsync(()=>adminApi.get(`/reviews/${id}/annual-plan`),[id,tick]);const [planEdits,setPlanEdits]=useState<Record<string,string>>({});const [ver,setVer]=useState(0);   // remounts the report after an edit: the browser's own text nodes and React's must never be mixed
  const [busy,setBusy]=useState(false);const [msg,setMsg]=useState<{t:'ok'|'err';m:string}|null>(null);const [lockMsg,setLockMsg]=useState('');const [confirm,setConfirm]=useState(false);const [viewOnly,setViewOnly]=useState(false);
  const [, setClock]=useState(0);useEffect(()=>{const t=window.setInterval(()=>setClock(x=>x+1),5000);return()=>window.clearInterval(t)},[]);
- const wrap=useRef<HTMLDivElement>(null);const can=(p:string)=>me.permissions.includes(p);
+ const wrap=useRef<HTMLDivElement>(null);const busyRef=useRef(false);
+ /* Edit history of this open report (undo / redo): snapshots of the unsaved overlay maps; it starts again after a successful save. Undo and redo only change what is on screen, never the server. */
+ const hist=useRef<{past:{e:Record<string,string>;p:Record<string,string>}[];future:{e:Record<string,string>;p:Record<string,string>}[]}>({past:[],future:[]});const [,setHistTick]=useState(0);
+ const now=useRef({edits:{} as Record<string,string>,plan:{} as Record<string,string>});
+ const can=(p:string)=>me.permissions.includes(p);
  const r=meta.data?.review;const status:string=r?.status??'';const allClaims:any[]=meta.data?.claims??[];const claims:any[]=allClaims.filter(c=>c.editable!==false);
  const editableState=['IN_REVIEW','READY_FOR_APPROVAL','APPROVED'].includes(status)&&can('reports.edit');
  // a freshly arrived report is taken over automatically (no extra button)
@@ -66,11 +72,18 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
   const pf=(e.target as HTMLElement).closest?.('[data-pf]') as HTMLElement|null;
   if(pf&&canEdit){const key=pf.dataset.pf!;const now=norm(pf.innerText||'');if(!now){pf.innerText=pf.dataset.orig||'';return}if(now===pf.dataset.orig)return;
    if(key.endsWith(':date')&&!parseRange(now,plan.data?.startDate)){setMsg({t:'err',m:'Огноог «2026 оны 9-р сарын 8 - 10-р сарын 22» хэлбэрээр бичнэ үү.'});pf.innerText=pf.dataset.orig||'';return}
-   setPlanEdits(p=>({...p,[key]:now}));setVer(v=>v+1);return}
-  const el=(e.target as HTMLElement).closest?.('[data-claim]') as HTMLElement|null;if(!el||!canEdit)return;const cid=el.dataset.claim!;const now=norm(el.innerText||'');if(!now){el.innerText=el.dataset.orig||'';return}if(now===el.dataset.orig)return;{setEdits(p=>({...p,[cid]:(el.dataset.prefix||'')+now}));setVer(v=>v+1)}};
+   remember();setPlanEdits(p=>({...p,[key]:now}));setVer(v=>v+1);return}
+  const el=(e.target as HTMLElement).closest?.('[data-claim]') as HTMLElement|null;if(!el||!canEdit)return;const cid=el.dataset.claim!;const now=norm(el.innerText||'');if(!now){el.innerText=el.dataset.orig||'';return}if(now===el.dataset.orig)return;{remember();setEdits(p=>({...p,[cid]:(el.dataset.prefix||'')+now}));setVer(v=>v+1)}};
  const onKeyDown=(e:React.KeyboardEvent)=>{if(e.key==='Enter'&&(e.target as HTMLElement).closest?.('[data-claim]'))e.preventDefault()};
  const dirty=Object.keys(edits).length+Object.keys(planEdits).length;
- const run=async(fn:()=>Promise<any>,ok:(o:any)=>string)=>{setBusy(true);setMsg(null);try{const o=await fn();setMsg({t:'ok',m:ok(o)});setEdits({});setPlanEdits({});setVer(v=>v+1);reload();return o}catch(e){const x=e as AdminApiError;setMsg({t:'err',m:x.status===500?'Үйлдэл амжилтгүй боллоо. Тайлан хэрэглэгчид нээгдээгүй. Дахин оролдоно уу.':x.message});if(x.status===409)reload()}finally{setBusy(false);setConfirm(false)}};
+ now.current={edits,plan:planEdits};
+ useEffect(()=>{adminGuard.dirty=dirty>0;return()=>{adminGuard.dirty=false}},[dirty]);   // the shell warns before leaving while this is true
+ const remember=()=>{hist.current.past.push({e:now.current.edits,p:now.current.plan});if(hist.current.past.length>200)hist.current.past.shift();hist.current.future=[];setHistTick(t=>t+1)};
+ const undo=()=>{const h=hist.current;const x=h.past.pop();if(!x)return;h.future.push({e:now.current.edits,p:now.current.plan});setEdits(x.e);setPlanEdits(x.p);setVer(v=>v+1);setHistTick(t=>t+1)};
+ const redo=()=>{const h=hist.current;const x=h.future.pop();if(!x)return;h.past.push({e:now.current.edits,p:now.current.plan});setEdits(x.e);setPlanEdits(x.p);setVer(v=>v+1);setHistTick(t=>t+1)};
+ const CONFLICT_MN='Өөр админ энэ тайланг өөрчилсөн байна. Таны засвар хадгалагдаагүй, дэлгэц дээр хэвээр байна. Нөгөө админы өөрчлөлтийг дарж бичихгүйн тулд засвараа өөр газар хадгалаад хуудсыг шинэчлээд дахин засна уу.';
+ /* One request at a time (busyRef): a double click or Ctrl+S during a save can never send it twice. A conflict keeps the local edits on screen and never reloads over them. */
+ const run=async(fn:()=>Promise<any>,ok:(o:any)=>string|{t:'ok'|'err';m:string})=>{if(busyRef.current)return;busyRef.current=true;setBusy(true);setMsg(null);try{const o=await fn();const r=ok(o);setMsg(typeof r==='string'?{t:'ok',m:r}:r);setEdits({});setPlanEdits({});hist.current={past:[],future:[]};setVer(v=>v+1);reload();countsChanged();return o}catch(e){const x=e as AdminApiError;setMsg({t:'err',m:x.status===409?CONFLICT_MN:x.status===500?'Үйлдэл амжилтгүй боллоо. Тайлан хэрэглэгчид нээгдээгүй. Дахин оролдоно уу.':x.message})}finally{busyRef.current=false;setBusy(false);setConfirm(false)}};
  /* Plan wording first (existing validated plan endpoint: same dates, gaps and 3-page-fit rules), then the report text; each save creates its own append-only revision. */
  const savePlan=async(baseRevision:number)=>{const base=plan.data;const stages:any[]=JSON.parse(JSON.stringify(base.plan.stages));
   for(const [k,v] of Object.entries(planEdits)){const [i,f]=k.split(':');const st=stages[Number(i)];if(!st)continue;
@@ -82,9 +95,16 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
   if(Object.keys(edits).length)out=await adminApi.put(`/reviews/${id}/draft`,{baseRevision:rev,reason:'Шууд засвар',edits:Object.entries(edits).map(([claimId,text])=>({claimId,text}))});
   return out};
  /* ХАДГАЛАХ: private draft only. Nothing is published, regenerated or restarted; the countdown is untouched. */
- const save=()=>run(async()=>dirty?saveAll():{revision:meta.data.revision},o=>o?.validation&&o.validation.state!=='PASS'?`Хадгаллаа. Анхааруулга: ${(o.validation.issues||[]).slice(0,2).map((i:any)=>describeIssue(i)).join(' ')}`:'Хадгалагдлаа. Тайлан хэрэглэгчид харагдахгүй.');
+ const save=()=>run(async()=>dirty?saveAll():{revision:meta.data.revision},o=>o?.validation&&o.validation.state!=='PASS'?{t:'err' as const,m:`Өөрчлөлт хадгалагдсан боловч тайланд засах зүйл байна: ${(o.validation.issues||[]).slice(0,2).map((i:any)=>describeIssue(i)).join(' ')}`}:'Амжилттай хадгаллаа.');
  /* ИЛГЭЭХ: saves the latest edits, then publishes that exact reviewed version (the server does it in one guarded step). */
  const release=()=>run(async()=>{let rev=meta.data.revision;if(dirty){const o=await saveAll();rev=o.revision}return adminApi.post(`/reviews/${id}/approve`,{baseRevision:rev})},()=>'Тайлан хэрэглэгчид илгээгдлээ.');
+ const fnRef=useRef({save:()=>{},undo:()=>{},redo:()=>{},canEdit:false});fnRef.current={save:()=>void save(),undo,redo,canEdit};
+ /* Ctrl/Cmd+S = ХАДГАЛАХ (never publishes), Ctrl/Cmd+Z = undo, Ctrl+Shift+Z / Ctrl+Y = redo. Only active while this report editor is open. */
+ useEffect(()=>{const k=(e:KeyboardEvent)=>{if(!(e.ctrlKey||e.metaKey))return;const key=e.key.toLowerCase();
+  if(key==='s'){e.preventDefault();if(fnRef.current.canEdit&&!busyRef.current)fnRef.current.save();return}
+  if(key==='z'&&!e.shiftKey){const el=document.activeElement as HTMLElement|null;if(el?.isContentEditable&&el.dataset.orig!==undefined&&norm(el.innerText||'')!==el.dataset.orig){e.preventDefault();el.innerText=el.dataset.orig;return}e.preventDefault();fnRef.current.undo();return}
+  if((key==='z'&&e.shiftKey)||key==='y'){e.preventDefault();fnRef.current.redo()}};
+  document.addEventListener('keydown',k);return()=>document.removeEventListener('keydown',k)},[]);
  if((view.loading&&!view.data)||(meta.loading&&!meta.data))return <Page title="Тайлан"><Loading/></Page>;
  if(view.error||meta.error||!view.data||!meta.data||!model)return <Page title="Тайлан"><Err text={view.error||meta.error||'Тайлан ачаалж чадсангүй.'} retry={reload}/><p><a className="adm-btn" href={adminHref('reports')}>Буцах</a></p></Page>;
  const published=status==='PUBLISHED';
@@ -93,6 +113,7 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
   <div className="ad-bar" role="toolbar" aria-label="Тайлангийн үйлдэл">
    <a className="adm-btn" href={adminHref(published?'done':'reports')}>Буцах</a>
    <div className="ad-bar__title"><b>{view.data.companyName}</b><small>{area.name}{r?.deadlineAt&&!published?<> · үлдсэн хугацаа <b className={left<0?'cn-left is-over':'cn-left'}>{countdown(left)}</b></>:''}{r?.submittedAt?` · илгээсэн ${fmtUb(r.submittedAt)}`:''}</small></div>
+   {canEdit&&<span className="ad-undo"><button type="button" className="adm-btn adm-btn--sm" aria-label="Буцаах (Ctrl+Z)" title="Буцаах (Ctrl+Z)" disabled={busy||hist.current.past.length===0} onClick={undo}>↶</button><button type="button" className="adm-btn adm-btn--sm" aria-label="Дахин хийх (Ctrl+Shift+Z)" title="Дахин хийх (Ctrl+Shift+Z)" disabled={busy||hist.current.future.length===0} onClick={redo}>↷</button></span>}
    {canEdit&&<button type="button" className="adm-btn adm-btn--primary adm-btn--big" disabled={busy} onClick={()=>void save()}>ХАДГАЛАХ</button>}
    {canEdit&&can('reports.approve')&&<button type="button" className="adm-btn adm-btn--primary adm-btn--big adm-btn--release" disabled={busy} onClick={()=>setConfirm(true)}>ИЛГЭЭХ</button>}
   </div>
@@ -101,7 +122,7 @@ export default function ReviewReportEditor({id,me}:{id:string;me:AdminMe}){
   {published&&<div className="adm-note" role="status">Тайлан хэрэглэгчид илгээгдсэн. Засахын тулд ДУУССАН ТАЙЛАН хэсгээс буцаана уу.</div>}
   {canEdit&&<p className="adm-note ad-hint">Тайлангийн текст дээр шууд дарж засна. Засвараа ХАДГАЛАХ товчоор хадгална.{dirty>0?` (Хадгалаагүй засвар: ${dirty})`:''}</p>}
   <div className="ad-body"><div ref={wrap} className={`ad-report report-v3${canEdit?' is-editable':''}`} onBlur={onBlur} onKeyDown={onKeyDown}><main key={ver} className="report-three-pages report-screen-only"><PageOne m={model}/><PageTwo m={model}/><PageThree m={model} reviewer/></main></div></div>
-  {confirm&&<div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="rel-title"><div className="adm-modal__box adm-confirm"><h2 id="rel-title">Тайланг илгээх үү?</h2><p>Таны засварласан тайлан хэрэглэгчид одоо нээгдэж, PDF татах боломжтой болно. Тайланг дараа нь ДУУССАН ТАЙЛАН хэсгээс буцааж болно.</p>
-   <div className="adm-modal__row"><button type="button" className="adm-btn" onClick={()=>setConfirm(false)} disabled={busy}>Болих</button><button type="button" className="adm-btn adm-btn--primary" disabled={busy} onClick={()=>void release()}>{busy?'Илгээж байна…':'ИЛГЭЭХ'}</button></div></div></div>}
+  {confirm&&<div className="adm-modal" role="dialog" aria-modal="true" aria-labelledby="rel-title"><div className="adm-modal__box adm-confirm"><h2 id="rel-title">Тайланг хэрэглэгчид илгээх үү?</h2>
+   <div className="adm-modal__row"><button type="button" className="adm-btn" onClick={()=>setConfirm(false)} disabled={busy}>БОЛИХ</button><button type="button" className="adm-btn adm-btn--primary" disabled={busy} onClick={()=>void release()}>{busy?'Илгээж байна…':'ИЛГЭЭХ'}</button></div></div></div>}
  </div>;
 }

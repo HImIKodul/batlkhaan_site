@@ -234,3 +234,22 @@
  .cn-shell .adm-nav.cn-nav{position:static;display:flex;width:100%;order:3;margin:0;padding:0;background:none;box-shadow:none;border:0;transform:none;opacity:1;visibility:visible}
  .cn-table td[data-label]::before{content:attr(data-label);display:block;font-size:12px;opacity:.7;margin-bottom:2px}
 }
+
+/* ===== Admin report editor ===== */
+/* 1.1 The customer plan is light text on a DARK page; the editor shows the same three pages on a LIGHT panel, so those light colours became invisible. Scoped to the editor (.ad-report) only: the customer report and the PDF are unchanged. */
+.ad-report .page-three :is(.report-timeline__date,.report-timeline__body h3,.report-timeline__note,.report-timeline__goal,.report-timeline__body ul,.report-timeline__body li,.report-timeline__body b){color:#10254B;-webkit-text-fill-color:#10254B;opacity:1;text-shadow:none}
+.ad-report .page-three .report-timeline__date{color:#1c4ea6;-webkit-text-fill-color:#1c4ea6}
+.ad-report .page-three .report-timeline__note,.ad-report .page-three .report-timeline__note b{color:#2F4A70;-webkit-text-fill-color:#2F4A70}
+.ad-report [contenteditable]:focus{outline:2px solid #2358d2;outline-offset:2px;border-radius:6px;background:rgba(255,255,255,.75)}
+.ad-report [contenteditable]::selection,.ad-report [contenteditable] *::selection{background:#bcd3ff;color:#10254B;-webkit-text-fill-color:#10254B}
+/* 1.2 The report bar sits directly beneath the (sticky) first header: --adm-top-h is measured by the shell. */
+.ad-bar{top:var(--adm-top-h,0px);z-index:25}
+.ad-undo{display:inline-flex;gap:4px}.adm-btn--sm{min-height:36px;min-width:36px;padding:0 10px;font-size:18px;line-height:1}
+/* list filters */
+.cn-filters{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0 14px}.cn-filters .cn-search{margin:0;flex:1 1 260px}
+.cn-select{min-height:48px;padding:0 12px;font:inherit;border-radius:12px;border:2px solid var(--c,#8aa0c8);background:#fff;color:#162333;max-width:100%}
+.cn-seg{display:inline-flex;gap:6px;flex-wrap:wrap}.cn-seg__b{min-height:44px;padding:0 16px;font:inherit;font-weight:700;border-radius:999px;border:2px solid #8aa0c8;background:#fff;color:#162333;cursor:pointer}
+.cn-seg__b.is-on{background:#162333;color:#fff;border-color:#162333}.cn-seg__b--User.is-on{background:#1f8a5b;border-color:#1f8a5b}.cn-seg__b--Admin.is-on{background:#1c63d6;border-color:#1c63d6}.cn-seg__b--Sadmin.is-on{background:#7a3fd0;border-color:#7a3fd0}
+.cn-date{display:grid;gap:2px;font-size:12px;font-weight:600}.cn-date input{min-height:44px;padding:0 10px;font:inherit;border-radius:12px;border:1px solid #8aa0c8}
+.cn-sec__row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cn-sec__row .cn-sec__head{flex:1 1 auto;width:auto}
+@media (max-width:720px){.cn-filters{gap:8px}.cn-filters .cn-search,.cn-select{flex:1 1 100%}.cn-seg__b{min-height:40px;padding:0 12px}.ad-bar{gap:8px;padding:8px 10px}}

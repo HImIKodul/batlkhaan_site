@@ -7,6 +7,7 @@ Run against the local stack (web 5291 -> API 4300, database `mmri_dev_clean`, mo
 | `review-lifecycle.py` | Review, save, publish, recall and republish for ALL FIVE domains on **fresh disposable fixtures** (`src/qa-review-fixtures.ts`), so it is repeatable: customer blocking, plan + text edits, concurrent ИЛГЭЭХ, PDF = 3 pages, no AI revision. |
 | `auth-email-code.py` | The same sign-in for Sadmin, Admin and User: password -> e-mail code -> access; trusted device skips the code; stated expiry = real expiry. |
 | `sync-events.py` | A grant / revoke wakes a waiting customer page within milliseconds. |
+| `console-features.py` | Console features: payment filters / details / filter-aware Excel export, per-diagnosis export scoping, report counts, last sign-in, sign out of all devices (uses one throw-away account, removed afterwards). |
 | `verify-demo.py` | The permanent demonstration data (three accounts, every customer state, both consoles). |
 | `stage-demo.py` | Builds the staged states of the demonstration data (not a test). |
 | `admin-flow.py` | Account, role, console and Excel checks (also the shared helpers). |
