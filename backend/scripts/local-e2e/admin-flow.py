@@ -33,20 +33,15 @@ def code_for(email):
         if j.get("to") == email:
             m = re.search(r"\n(\d{6})\n", j.get("text", "")); c = m.group(1) if m else c
     return c
-def totp(secret):
-    key = base64.b32decode(secret + "=" * (-len(secret) % 8)); c = struct.pack(">Q", int(time.time() // 30))
-    h = hmac.new(key, c, hashlib.sha1).digest(); o = h[-1] & 15
-    return "%06d" % ((struct.unpack(">I", h[o:o + 4])[0] & 0x7fffffff) % 1000000)
 
-def admin_login(email, password, totp_secret=None, name=None, wait_cooldown=True):
-    """Signs an administrator in the way the app does: authenticator (if any) + e-mail code on an untrusted device; trusted-device cookie reused when present."""
+def admin_login(email, password, _unused=None, name=None, wait_cooldown=True):
+    """Signs an administrator in the way the app does: password, then the e-mailed six-digit code on an untrusted device; a trusted-device cookie is reused when present."""
     c = Client(name)
-    body = {"email": email, "password": password, "totpCode": totp(totp_secret) if totp_secret else "", "trustDevice": True}
+    body = {"email": email, "password": password, "trustDevice": True}
     s, d = c.call("POST", "/admin/auth/login", body)
     if s == 200 and d.get("data", {}).get("mfaRequired") == "EMAIL_CODE":
         for _ in range(3):
             body2 = dict(body); body2["emailCode"] = code_for(email)
-            if totp_secret: body2["totpCode"] = totp(totp_secret)
             s, d = c.call("POST", "/admin/auth/login", body2)
             if s == 200: break
     return c, s, d
@@ -85,9 +80,9 @@ s, d = cl.call("POST", "/auth/password/change", {"currentPassword": pw, "newPass
 s, d = cl.call("POST", "/auth/login", {"email": me, "password": pw + "x"}); check("A password change revoked trusted device", d.get("data", {}).get("verificationRequired") is True)
 
 # ---------- B. Sadmin console ----------
-adm, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], cr["ADMIN_TOTP_SECRET"], name="sadmin")
+adm, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], None, name="sadmin")
 if s != 200: print("admin login failed", s, d); sys.exit(1)
-st = d["data"]["token"]; check("B Sadmin signs in (authenticator kept)", d["data"]["admin"]["role"] == "SUPER_ADMIN")
+st = d["data"]["token"]; check("B Sadmin signs in ", d["data"]["admin"]["role"] == "SUPER_ADMIN")
 A = lambda m, p, b=None, t=st, c=adm: c.call(m, "/admin" + p, b, tok=t)
 s, d = A("GET", "/console/accounts"); rows = d["data"]["items"]; check("B accounts list has n,email,role only", s == 200 and rows and set(rows[0]) == {"n", "id", "email", "role"} and {r["role"] for r in rows} <= {"User", "Admin", "Sadmin"}, str(rows[:1]))
 check("B search by email", len(A("GET", "/console/accounts?q=" + me)[1]["data"]["items"]) == 1)
@@ -105,11 +100,11 @@ s, d = A("GET", "/console/accounts/" + uid); check("B user detail shows 5 domain
 uc = Client(); s, d = uc.call("POST", "/auth/login", {"email": eu, "password": pw}); check("B created User: first login asks for code", d.get("data", {}).get("verificationRequired") is True)
 s, d = uc.call("POST", "/auth/login/verify", {"email": eu, "password": pw, "code": code_for(eu)}); check("B created User verified by code", s == 200 and "accessToken" in d.get("data", {}))
 # created admin: email-code sign-in
-ac = Client(); s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw, "totpCode": ""}); check("B created Admin: code step", s == 200 and d["data"].get("mfaRequired") == "EMAIL_CODE", str(d))
-check("B Admin wrong code refused", ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw, "totpCode": "", "emailCode": "000000"})[0] == 401)
-s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw, "totpCode": "", "emailCode": code_for(ea), "trustDevice": True}); check("B Admin signs in with email code", s == 200 and d["data"]["admin"]["role"] == "REPORT_REVIEWER", str(d)); at = d["data"]["token"]
+ac = Client(); s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw}); check("B created Admin: code step", s == 200 and d["data"].get("mfaRequired") == "EMAIL_CODE", str(d))
+check("B Admin wrong code refused", ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw, "emailCode": "000000"})[0] == 401)
+s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw, "emailCode": code_for(ea), "trustDevice": True}); check("B Admin signs in with email code", s == 200 and d["data"]["admin"]["role"] == "REPORT_REVIEWER", str(d)); at = d["data"]["token"]
 check("B Admin trusted cookie", any(c.name == "mmri_td" for c in ac.jar))
-s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw, "totpCode": ""}); check("B Admin trusted device skips code", s == 200 and "token" in d.get("data", {}), str(d)); at2 = d.get("data", {}).get("token", at)
+s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw}); check("B Admin trusted device skips code", s == 200 and "token" in d.get("data", {}), str(d)); at2 = d.get("data", {}).get("token", at)
 # normal admin permissions
 Aa = lambda m, p, b=None: ac.call(m, "/admin" + p, b, tok=at2)
 check("B Admin may read review queue", Aa("GET", "/console/review-queue")[0] == 200)
@@ -121,7 +116,7 @@ check("B Admin cannot grant access", Aa("POST", "/companies/x/entitlements/grant
 # password change invalidates everything
 s, d = A("POST", f"/console/accounts/{aid}/password", {"password": pw + "N"}); check("B Sadmin changes Admin password", s == 200, str(d))
 check("B old Admin session ended", Aa("GET", "/console/review-queue")[0] == 401)
-s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw + "N", "totpCode": ""}); check("B trusted device revoked after password change (code required again)", d.get("data", {}).get("mfaRequired") == "EMAIL_CODE" or d.get("error", {}).get("code") == "ADMIN_CODE_THROTTLED", str(d))
+s, d = ac.call("POST", "/admin/auth/login", {"email": ea, "password": pw + "N"}); check("B trusted device revoked after password change (code required again)", d.get("data", {}).get("mfaRequired") == "EMAIL_CODE" or d.get("error", {}).get("code") == "ADMIN_CODE_THROTTLED", str(d))
 # payments
 s, d = A("GET", "/console/payments"); check("B payments list shape", s == 200 and (not d["data"]["items"] or set(d["data"]["items"][0]) == {"n", "id", "company", "domain", "domainLabel", "status", "date"}))
 # deletion safeguards

@@ -11,7 +11,7 @@ Windows Server + IIS (ARR reverse proxy, `ops/release-assets/iis/web.config`) in
 3. `cd backend && npm ci --omit=dev && npx prisma generate`, create `backend/.env` from `ops/release-assets/backend.env.production.example` (all secrets random, 64+ chars, file ACL restricted to the service account).
 4. Migrate: `npx prisma migrate deploy` (35 migrations; fingerprint in `deploy/MIGRATION_CHAIN_SHA256.txt`).
 5. **Fresh database only:** `node ops/provision-methodologies.mjs` (needs `MMRI_PROVISION_FIVE_DOMAINS_OK=YES`, `MMRI_ENVIRONMENT=production`, `MMRI_PROVISION_ACTIVATE=YES`, `MMRI_PRODUCTION_PROMOTION_OK=YES`). Installs the five domains (61,440 questions). Skip when upgrading the existing database.
-6. First administrator: `node dist/admin-cli.js bootstrap --email <owner> --role SUPER_ADMIN --password-stdin` (authenticator secret shown once).
+6. First administrator: `node dist/admin-cli.js bootstrap --email <owner> --role SUPER_ADMIN --password-stdin`.
 7. Service: `ops/release-assets/windows/Install-Service.ps1` (NSSM, runs `node dist/api/server.js`), IIS site serving `frontend/dist` with the ARR rule for `/api/`.
 8. Validate: `/ready` shows database ok; `MMRI_BASE_URL=http://127.0.0.1:4000 node ops/smoke-test.mjs`.
 

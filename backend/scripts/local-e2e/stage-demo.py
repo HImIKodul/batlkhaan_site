@@ -55,8 +55,7 @@ for dom, n in PUB + WAITING:
 inprog = sql(f"select id from assessments where \"companyId\"='{cid}' and \"domainCode\"='marketing' and status='IN_PROGRESS' limit 1")
 cu, ct = customer()
 if not inprog:
-    while (time.time() % 30) > 4: time.sleep(0.5)
-    sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], cr["ADMIN_TOTP_SECRET"], name="sadmin"); check("Sadmin signs in", s == 200, str(d)[:160]); st = d["data"]["token"]
+    sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], None, name="sadmin"); check("Sadmin signs in", s == 200, str(d)[:160]); st = d["data"]["token"]
     if not sql(f"select 1 from assessments where \"companyId\"='{cid}' and \"domainCode\"='marketing' and status in ('PROFILE_PENDING','PAUSED')"):
         s, d = sa.call("POST", f"/admin/companies/{cid}/entitlements/grant", {"domainCode": "marketing"}, tok=st); check("Marketing retake access granted by the Sadmin", s == 200, str(d)[:200])
         s, a = cu.call("POST", f"/companies/{cid}/assessments", {"domainCode": "marketing"}, tok=ct); check("retake created", s == 201, str(a)[:200]); aid = a["data"]["id"]

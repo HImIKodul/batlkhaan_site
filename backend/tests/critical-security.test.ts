@@ -9,12 +9,11 @@ import {PasswordResetService} from '../src/api/auth/password-reset-service.js';
 import {EmailVerificationService,EMAIL_CODE_PURPOSE} from '../src/api/auth/email-verification-service.js';
 import {AuthService} from '../src/api/auth/auth-service.js';
 import {hashPassword,verifyPassword} from '../src/api/auth/crypto.js';
-import {AdminService,ROLE_PERMISSIONS} from '../src/api/admin/admin-service.js';
+import {AdminService,ROLE_PERMISSIONS,ADMIN_EMAIL_CODE_TTL_MINUTES,ADMIN_EMAIL_CODE_COOLDOWN_SECONDS} from '../src/api/admin/admin-service.js';
 import {DataLifecycleService} from '../src/api/account/data-lifecycle-service.js';
 import {registerAccountRoutes} from '../src/api/admin/account-routes.js';
 import {registerAdminRoutes} from '../src/api/admin/admin-routes.js';
 import {Router} from '../src/api/http/router.js';
-import {base32Decode,hotp,totpStep,encryptSecret} from '../src/api/admin/totp.js';
 import {BillingService} from '../src/billing/billing-service.js';
 const config:any={issuer:'critical-tests',audience:'critical-tests',adminSessionIdleMinutes:15,auditSalt:'synthetic-audit-salt',passwordPepper:'synthetic-pepper',accessTokenSecret:'synthetic-secret',passwordResetTtlMinutes:30,publicAppUrl:'https://example.invalid',refreshTokenTtlSeconds:3600,accessTokenTtlSeconds:900,billingProvider:'mock',environment:'development'};
 const user:any={id:'u1',email:'owner@example.invalid',status:'ACTIVE',tokenVersion:1,emailVerificationRequired:false,emailVerifiedAt:null,erasedAt:null};
@@ -142,42 +141,63 @@ describe('reset versus session issuance races (mock transaction)',()=>{
  });
 });
 async function adminFixture(){
- const password='SyntheticAdminPassword123!',secret='JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
- const account={id:'ad1',userId:'u1',role:'SUPER_ADMIN',status:'ACTIVE',failedLogins:0,lockedUntil:null,mfaLastStep:BigInt(totpStep()-2),mfaSecretEnc:encryptSecret(secret,config.accessTokenSecret+':admin-mfa')};
+ const password='SyntheticAdminPassword123!';
+ const account={id:'ad1',userId:'u1',role:'SUPER_ADMIN',status:'ACTIVE',failedLogins:0,lockedUntil:null,mfaLastStep:BigInt(0),mfaSecretEnc:null};
  const person={...user,passwordHash:await hashPassword(password,config.passwordPepper)};
  db.user.findUnique.mockResolvedValue(person);db.adminAccount.findUnique.mockResolvedValue(account);db.adminAccount.update.mockResolvedValue({failedLogins:1});db.adminAccount.updateMany.mockResolvedValue({count:1});
  const session={id:'as1',expiresAt:new Date(Date.now()+60000),absoluteExpiresAt:new Date(Date.now()+60000),revokedAt:null};db.adminSession.create.mockResolvedValue(session);db.adminSession.findUnique.mockResolvedValue(session);
- return {account,person,password,code:hotp(base32Decode(secret),totpStep()),service:new AdminService(config)};
+ db.adminEmailChallenge.count.mockResolvedValue(0);db.adminEmailChallenge.findFirst.mockResolvedValue(null);db.adminEmailChallenge.create.mockResolvedValue({id:'ch1'});db.adminEmailChallenge.update.mockResolvedValue({});db.adminEmailChallenge.updateMany.mockResolvedValue({count:1});db.trustedDevice.findUnique.mockResolvedValue(null);
+ const mailer={provider:'mock',send:vi.fn().mockResolvedValue({delivered:true,provider:'mock'})};
+ return {account,person,password,mailer,service:new AdminService(config,mailer as any)};
 }
-describe('administrator credential and MFA session boundaries',()=>{
- /* The authenticator-only behaviour below is the device-verification-OFF configuration; the ON behaviour (e-mail code on top of the authenticator) has its own tests after it. */
- const prevFlag=process.env.MMRI_LOGIN_DEVICE_VERIFICATION;beforeAll(()=>{process.env.MMRI_LOGIN_DEVICE_VERIFICATION='off'});afterAll(()=>{if(prevFlag===undefined)delete process.env.MMRI_LOGIN_DEVICE_VERIFICATION;else process.env.MMRI_LOGIN_DEVICE_VERIFICATION=prevFlag});
- it('valid password plus TOTP produces only a hashed opaque session in storage',async()=>{
-  const {service,password,code}=await adminFixture();const r=await service.login({email:user.email,password,totpCode:code},{});
-  expect(r.token).toMatch(/^adm_[A-Za-z0-9_-]{43}$/);const stored=db.adminSession.create.mock.calls[0][0].data.tokenHash;expect(stored).toMatch(/^[a-f0-9]{64}$/);expect(stored).not.toContain(r.token);expect(db.adminSession.create.mock.calls[0][0].data.expiresAt.getTime()-Date.now()).toBeGreaterThan(899000);expect(db.adminSession.create.mock.calls[0][0].data.absoluteExpiresAt.getTime()-Date.now()).toBeGreaterThan(28799000);expect(db.adminAccount.updateMany.mock.calls[0][0].where.mfaLastStep.lt).toBeTypeOf('bigint');
+/* Every administrator signs in like every customer: password, then a six-digit e-mail code on an untrusted device, then access. There is no authenticator step. */
+describe('administrator sign-in: password + e-mail code (no authenticator)',()=>{
+ it('the password alone never opens a session: a six-digit code is mailed instead, and its stated lifetime is the real one',async()=>{
+  const {service,password,mailer}=await adminFixture();
+  const r:any=await service.login({email:user.email,password},{});
+  expect(r.mfaRequired).toBe('EMAIL_CODE');expect(r.expiresInMinutes).toBe(ADMIN_EMAIL_CODE_TTL_MINUTES);expect(r.resendAfterSeconds).toBe(ADMIN_EMAIL_CODE_COOLDOWN_SECONDS);
+  expect(db.adminSession.create).not.toHaveBeenCalled();
+  const mail=mailer.send.mock.calls[0][0];expect(mail.to).toBe(user.email);expect(mail.text).toMatch(/\b\d{6}\b/);expect(mail.text).toContain(`${ADMIN_EMAIL_CODE_TTL_MINUTES} минут`);
+  const expiresAt:Date=db.adminEmailChallenge.create.mock.calls[0][0].data.expiresAt;expect(Math.abs(expiresAt.getTime()-(Date.now()+ADMIN_EMAIL_CODE_TTL_MINUTES*60_000))).toBeLessThan(5000);
  });
- it.each(['disabled-user','erased-user','disabled-admin','missing-mfa','tampered-secret'])('fails closed on %s',async mode=>{
-  const {service,password,code,person,account}=await adminFixture();
-  if(mode==='disabled-user')db.user.findUnique.mockResolvedValue({...person,status:'DISABLED'});if(mode==='erased-user')db.user.findUnique.mockResolvedValue({...person,erasedAt:new Date()});if(mode==='disabled-admin')db.adminAccount.findUnique.mockResolvedValue({...account,status:'DISABLED'});if(mode==='tampered-secret')db.adminAccount.findUnique.mockResolvedValue({...account,mfaSecretEnc:'v1.invalid.invalid.invalid'});
-  await expect(service.login({email:user.email,password,totpCode:mode==='missing-mfa'?'':code},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(db.adminSession.create).not.toHaveBeenCalled();
+ it('an authenticator code sent by an old client is ignored: it never replaces the e-mail code',async()=>{
+  const {service,password}=await adminFixture();
+  const r:any=await service.login({email:user.email,password,totpCode:'123456'},{});expect(r.mfaRequired).toBe('EMAIL_CODE');expect(db.adminSession.create).not.toHaveBeenCalled();
  });
- it('a concurrent replay losing the MFA conditional update creates no session',async()=>{
-  const {service,password,code}=await adminFixture();db.adminAccount.updateMany.mockResolvedValue({count:0});await expect(service.login({email:user.email,password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(db.adminSession.create).not.toHaveBeenCalled();
+ it('a wrong password sends no code and counts a failure',async()=>{
+  const {service,mailer}=await adminFixture();
+  await expect(service.login({email:user.email,password:'wrong-password-123'},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(mailer.send).not.toHaveBeenCalled();expect(db.adminSession.create).not.toHaveBeenCalled();expect(db.adminAccount.update).toHaveBeenCalled();
  });
- it('login lockout blocks even valid credentials',async()=>{
-  const {service,password,code,account}=await adminFixture();db.adminAccount.findUnique.mockResolvedValue({...account,lockedUntil:new Date(Date.now()+60000)});await expect(service.login({email:user.email,password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_LOCKED'});expect(db.adminSession.create).not.toHaveBeenCalled();
+ it.each(['disabled-user','erased-user','disabled-admin'])('fails closed on %s without mailing a code',async mode=>{
+  const {service,password,person,account,mailer}=await adminFixture();
+  if(mode==='disabled-user')db.user.findUnique.mockResolvedValue({...person,status:'DISABLED'});if(mode==='erased-user')db.user.findUnique.mockResolvedValue({...person,erasedAt:new Date()});if(mode==='disabled-admin')db.adminAccount.findUnique.mockResolvedValue({...account,status:'DISABLED'});
+  await expect(service.login({email:user.email,password},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(mailer.send).not.toHaveBeenCalled();expect(db.adminSession.create).not.toHaveBeenCalled();
  });
- it('reauthentication cannot bypass persistent lockout',async()=>{
-  const {service,password,code,account}=await adminFixture();db.adminAccount.findUnique.mockResolvedValue({...account,lockedUntil:new Date(Date.now()+60000)});await expect(service.reauth({adminId:'ad1',sessionId:'as1'} as any,{password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(db.adminSession.update).not.toHaveBeenCalled();
+ it('the right code opens only a hashed opaque session; a wrong or used code does not',async()=>{
+  const {service,password,account}=await adminFixture();
+  const hash=(service as any).emailCodeHash(account.id,'ch1','482913');
+  db.adminEmailChallenge.findFirst.mockResolvedValue({id:'ch1',codeHash:hash});
+  await expect(service.login({email:user.email,password,emailCode:'000000'},{})).rejects.toMatchObject({code:'ADMIN_CODE_INVALID'});expect(db.adminSession.create).not.toHaveBeenCalled();
+  const r:any=await service.login({email:user.email,password,emailCode:'482913'},{});
+  expect(r.token).toMatch(/^adm_[A-Za-z0-9_-]{43}$/);const stored=db.adminSession.create.mock.calls[0][0].data.tokenHash;expect(stored).toMatch(/^[a-f0-9]{64}$/);expect(stored).not.toContain(r.token);
  });
- it('reauthentication cannot refresh a revoked session',async()=>{
-  const {service,password,code}=await adminFixture();db.adminSession.findUnique.mockResolvedValue({revokedAt:new Date()});await expect(service.reauth({adminId:'ad1',sessionId:'as1'} as any,{password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(db.adminSession.update).not.toHaveBeenCalled();
+ it('an expired or already used code is refused',async()=>{
+  const {service,password}=await adminFixture();db.adminEmailChallenge.findFirst.mockResolvedValue(null);
+  await expect(service.login({email:user.email,password,emailCode:'482913'},{})).rejects.toMatchObject({code:'ADMIN_CODE_EXPIRED'});expect(db.adminSession.create).not.toHaveBeenCalled();
  });
- it('a concurrent password reset wins over admin login',async()=>{
-  const {service,password,code,person}=await adminFixture();db.user.findUnique.mockResolvedValueOnce(person).mockResolvedValue({...person,tokenVersion:2});await expect(service.login({email:user.email,password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_LOGIN_FAILED'});expect(db.adminSession.create).not.toHaveBeenCalled();
+ it('too many wrong guesses on one code are refused (attempt restriction)',async()=>{
+  const {service,password,account}=await adminFixture();
+  db.adminEmailChallenge.findFirst.mockResolvedValue({id:'ch1',codeHash:(service as any).emailCodeHash(account.id,'ch1','482913')});db.adminEmailChallenge.updateMany.mockResolvedValue({count:0});
+  await expect(service.login({email:user.email,password,emailCode:'482913'},{})).rejects.toMatchObject({code:'ADMIN_CODE_ATTEMPTS'});expect(db.adminSession.create).not.toHaveBeenCalled();
  });
- it('the fifth failed credential check atomically sets a fifteen minute lockout',async()=>{
-  const {service,code}=await adminFixture();db.adminAccount.update.mockResolvedValue({failedLogins:5});await expect(service.login({email:user.email,password:'wrong',totpCode:code},{})).rejects.toMatchObject({status:401});expect(db.adminAccount.update.mock.calls[0][0].data.failedLogins).toEqual({increment:1});expect(db.adminAccount.update.mock.calls[1][0].data.lockedUntil.getTime()-Date.now()).toBeGreaterThan(899000);
+ it('a trusted device (valid, unexpired, this user) skips the code; another user\'s or a revoked credential does not',async()=>{
+  const {service,password,mailer}=await adminFixture();const token='t'.repeat(43);
+  db.trustedDevice.findUnique.mockResolvedValue({id:'td1',userId:user.id,revokedAt:null,expiresAt:new Date(Date.now()+60_000)});db.trustedDevice.update.mockResolvedValue({});
+  const ok:any=await service.login({email:user.email,password,trustedDeviceToken:token},{});expect(ok.token).toMatch(/^adm_/);expect(mailer.send).not.toHaveBeenCalled();
+  db.adminSession.create.mockClear();
+  for(const bad of [{userId:'someone-else',revokedAt:null,expiresAt:new Date(Date.now()+60_000)},{userId:user.id,revokedAt:new Date(),expiresAt:new Date(Date.now()+60_000)},{userId:user.id,revokedAt:null,expiresAt:new Date(Date.now()-1000)}]){
+   db.trustedDevice.findUnique.mockResolvedValue({id:'td1',...bad});const r:any=await service.login({email:user.email,password,trustedDeviceToken:token},{});expect(r.mfaRequired).toBe('EMAIL_CODE');expect(db.adminSession.create).not.toHaveBeenCalled();
+  }
  });
 });
 describe('QPay callback authentication and transaction recovery',()=>{
@@ -265,22 +285,5 @@ describe('registration e-mail code is a separate process from password recovery 
  it('a registration code can never reset a password, and a reset token can never verify an e-mail',async()=>{
   db.passwordResetToken.findUnique.mockResolvedValue(row({purpose:EMAIL_CODE_PURPOSE}));await expect(reset.confirmReset(token,'NewPassword123!',{})).rejects.toMatchObject({code:'INVALID_RESET_TOKEN'});expect(db.user.update).not.toHaveBeenCalled();
   db.passwordResetToken.findFirst.mockResolvedValue(null);await expect(verify.verifyCode(user.email,token,{})).rejects.toMatchObject({code:'INVALID_VERIFICATION_CODE'});expect(db.user.update).not.toHaveBeenCalled();
- });
-});
-
-describe('administrator e-mail code on an untrusted device (device verification ON)',()=>{
- it('authenticator alone never opens a session and never spends the authenticator step',async()=>{
-  const prev=process.env.MMRI_LOGIN_DEVICE_VERIFICATION;process.env.MMRI_LOGIN_DEVICE_VERIFICATION='on';
-  try{const {service,password,code}=await adminFixture();
-   await expect(service.login({email:user.email,password,totpCode:code},{})).rejects.toMatchObject({code:'ADMIN_CODE_DELIVERY_UNAVAILABLE'});   // the code could not be mailed here (no mailer): still no session
-   expect(db.adminSession.create).not.toHaveBeenCalled();expect(db.adminAccount.updateMany).not.toHaveBeenCalled();
-  }finally{if(prev===undefined)delete process.env.MMRI_LOGIN_DEVICE_VERIFICATION;else process.env.MMRI_LOGIN_DEVICE_VERIFICATION=prev}
- });
- it('a wrong e-mail code on top of a valid authenticator code is refused and counted',async()=>{
-  const prev=process.env.MMRI_LOGIN_DEVICE_VERIFICATION;process.env.MMRI_LOGIN_DEVICE_VERIFICATION='on';
-  try{const {service,password,code}=await adminFixture();db.adminEmailChallenge.findFirst.mockResolvedValue(null);
-   await expect(service.login({email:user.email,password,totpCode:code,emailCode:'123456'},{})).rejects.toMatchObject({code:'ADMIN_CODE_EXPIRED'});
-   expect(db.adminSession.create).not.toHaveBeenCalled();
-  }finally{if(prev===undefined)delete process.env.MMRI_LOGIN_DEVICE_VERIFICATION;else process.env.MMRI_LOGIN_DEVICE_VERIFICATION=prev}
  });
 });

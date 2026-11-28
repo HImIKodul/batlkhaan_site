@@ -59,8 +59,7 @@ export function registerAdminRoutes(d: AdminDeps) {
   route("POST", "/auth/reauth", null, async (c, p, fp, b) => { d.loginLimiter.check(`admin:reauth:${p.adminId}`); await admin.reauth(p, b, fp); ok(c.res, { reauthenticatedForMinutes: 5 }); });
   route("GET", "/auth/me", null, async (c, p) => {
     const unread = await prisma.adminNotification.count({ where: { reads: { none: { adminId: p.adminId } } } });
-    const own = await prisma.adminAccount.findUnique({ where: { id: p.adminId }, select: { mfaSecretEnc: true } });
-    ok(c.res, { usesEmailCode: !own?.mfaSecretEnc, id: p.adminId, email: p.email, role: p.role, permissions: p.permissions, unreadNotifications: unread, reauthValid: !!p.reauthAt && Date.now() - p.reauthAt.getTime() < 300_000 });
+    ok(c.res, { id: p.adminId, email: p.email, role: p.role, permissions: p.permissions, unreadNotifications: unread, reauthValid: !!p.reauthAt && Date.now() - p.reauthAt.getTime() < 300_000 });
   });
 
   // ----- dashboard (all numbers come from the database) -----

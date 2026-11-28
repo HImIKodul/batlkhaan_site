@@ -5,7 +5,6 @@ import type { ApiConfig } from "../config.js";
 import { isTrustedDevice, loginDeviceVerificationOn } from "../auth/trusted-device.js";
 import { ApiError } from "../errors.js";
 import { hashAuditValue, hashPassword, verifyPassword } from "../auth/crypto.js";
-import { decryptSecret, encryptSecret, newTotpSecret, verifyTotp } from "./totp.js";
 import type { RequestFingerprint } from "../auth/auth-service.js";
 
 export type AdminRole = "SUPER_ADMIN" | "REPORT_REVIEWER" | "BILLING_REVIEWER";
@@ -21,15 +20,11 @@ export interface AdminPrincipal { adminId: string; userId: string; email: string
 
 const MSG = { codeDelivery: "Баталгаажуулах кодыг илгээж чадсангүй. Түр хүлээгээд дахин оролдоно уу.", codeThrottled: "Код хэт олон удаа хүссэн байна. Нэг минут хүлээгээд дахин оролдоно уу.", badLogin: "Нэвтрэх мэдээлэл буруу байна.", locked: "Хэт олон буруу оролдлого хийсэн тул түр хаагдлаа. Хэсэг хүлээгээд дахин оролдоно уу.", session: "Нэвтрэлтийн хугацаа дууссан байна. Дахин нэвтэрнэ үү.", forbidden: "Энэ үйлдлийг хийх эрх танд байхгүй байна.", reauth: "Энэ үйлдэл нууц үг ба MFA кодоор дахин баталгаажуулахыг шаардана." };
 export const REAUTH_WINDOW_MS = 5 * 60_000;
-/* E-MAIL CODE (second factor, opt-in per account, OFF by default). Active only when MMRI_ADMIN_EMAIL_OTP=on AND the account's e-mail is listed in MMRI_ADMIN_EMAIL_OTP_ACCOUNTS.
-   TOTP keeps working for every account at all times, so enabling this can never lock the owner out; turning TOTP off is a separate, later, deliberate step. */
+/* E-MAIL CODE: the one verification step for every administrator (and, through EmailVerificationService, for every customer): a six-digit code mailed to the account's own address on every device that is not trusted. */
 export const ADMIN_EMAIL_CODE_TTL_MINUTES = 5, ADMIN_EMAIL_CODE_COOLDOWN_SECONDS = 60;
 const MAX_EMAIL_CODES_PER_HOUR = 5, MAX_EMAIL_CODE_GUESSES = 5;
-export const emailOtpEnabledFor = (email: string): boolean =>
-  (process.env.MMRI_ADMIN_EMAIL_OTP ?? "off").trim().toLowerCase() === "on" &&
-  (process.env.MMRI_ADMIN_EMAIL_OTP_ACCOUNTS ?? "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean).includes(email.trim().toLowerCase());
 const MAX_FAILS = 5;
-/** ONE place for the administrator account lock that follows MAX_FAILS wrong sign-in attempts (password, authenticator code or e-mail code): 24 hours by default (MMRI_ADMIN_LOCK_SECONDS, 60 s to 7 days).
+/** ONE place for the administrator account lock that follows MAX_FAILS wrong sign-in attempts (password or e-mail code): 24 hours by default (MMRI_ADMIN_LOCK_SECONDS, 60 s to 7 days).
     It is NOT the e-mail code lifetime (ADMIN_EMAIL_CODE_TTL_MINUTES), the code resend cooldown (ADMIN_EMAIL_CODE_COOLDOWN_SECONDS), the re-authentication window (REAUTH_WINDOW_MS), the session timers, the QPay QR lifetime or the 24 h customer report deadline.
     The lock belongs to the one failing account: every other administrator keeps working, and a SUPER_ADMIN can lift it at once (POST /admins/:id/unlock, CLI `admin unlock`). */
 export const ADMIN_LOCK_DEFAULT_SECONDS = 86_400;
@@ -43,7 +38,6 @@ const sha = (t: string) => createHash("sha256").update(`mmri-admin-session:${t}`
 
 export class AdminService {
   constructor(private readonly config: ApiConfig, private readonly mailer: Mailer | null = null) {}
-  private mfaKey() { return this.config.accessTokenSecret + ":admin-mfa"; }
 
   async audit(adminId: string | null, action: string, outcome: "SUCCESS" | "DENIED" | "FAILURE", fp: RequestFingerprint | null, target?: { type?: string; id?: string }, metadata?: Record<string, unknown>) {
     // never store passwords, tokens, MFA codes, keys or full report bodies in audit metadata
@@ -59,24 +53,13 @@ export class AdminService {
     const existing = await prisma.user.findUnique({ where: { email }, include: { } });
     if (existing) { const a = await prisma.adminAccount.findUnique({ where: { userId: existing.id } }); if (a) throw new Error("This e-mail is already an administrator"); throw new Error("This e-mail is already a customer account; use a dedicated admin e-mail"); }
     const passwordHash = await hashPassword(input.password, this.config.passwordPepper);
-    const secret = newTotpSecret();
     const result = await prisma.$transaction(async tx => {
       const user = await tx.user.create({ data: { email, passwordHash, displayName: "Administrator" } });
-      const admin = await tx.adminAccount.create({ data: { userId: user.id, role: input.role, status: "PENDING_MFA", mfaSecretEnc: encryptSecret(secret, this.mfaKey()), createdByAdminId: input.createdByAdminId } });
+      const admin = await tx.adminAccount.create({ data: { userId: user.id, role: input.role, status: "ACTIVE", createdByAdminId: input.createdByAdminId } });
       return { user, admin };
     });
     await this.audit(result.admin.id, "ADMIN_CREATED", "SUCCESS", null, { type: "ADMIN", id: result.admin.id }, { role: input.role, by: input.createdByAdminId ?? "CLI" });
-    return { adminId: result.admin.id, email, role: input.role, totpSecret: secret };
-  }
-
-  async resetMfa(email: string) {
-    const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
-    const admin = user ? await prisma.adminAccount.findUnique({ where: { userId: user.id } }) : null;
-    if (!admin) throw new Error("Administrator not found");
-    const secret = newTotpSecret();
-    await prisma.$transaction([prisma.adminAccount.update({ where: { id: admin.id }, data: { mfaSecretEnc: encryptSecret(secret, this.mfaKey()), status: "PENDING_MFA", mfaLastStep: 0, failedLogins: 0, lockedUntil: null } }), prisma.adminSession.updateMany({ where: { adminId: admin.id, revokedAt: null }, data: { revokedAt: new Date() } })]);
-    await this.audit(admin.id, "ADMIN_MFA_RESET", "SUCCESS", null, { type: "ADMIN", id: admin.id }, { by: "CLI" });
-    return { totpSecret: secret };
+    return { adminId: result.admin.id, email, role: input.role };
   }
 
   /** Serialises every change that can remove an active SUPER_ADMIN (disable, demote) with a transaction-scoped PostgreSQL advisory lock; the "another active SUPER_ADMIN remains" check is re-evaluated INSIDE the lock, so two concurrent changes cannot both pass it. */
@@ -130,11 +113,6 @@ export class AdminService {
     return { unlocked: true };
   }
 
-  /** Decrypts the stored MFA secret; returns null (fail closed, same denial as a wrong code) when it is missing or cannot be decrypted. */
-  private readSecret(enc: string | null | undefined): { secret: string | null; unreadable: boolean } {
-    if (!enc) return { secret: null, unreadable: false };
-    try { return { secret: decryptSecret(enc, this.mfaKey()), unreadable: false }; } catch { return { secret: null, unreadable: true }; }
-  }
   /** Atomic failure counter (no read-modify-write): increments in the database, then applies the lock when the threshold is reached. */
   private async recordFailure(adminId: string) {
     const u = await prisma.adminAccount.update({ where: { id: adminId }, data: { failedLogins: { increment: 1 } }, select: { failedLogins: true } });
@@ -186,32 +164,26 @@ export class AdminService {
   }
   /** Authenticated resend for a re-authentication prompt. */
   async requestEmailCode(p: AdminPrincipal, fp: RequestFingerprint) {
-    const own = await prisma.adminAccount.findUnique({ where: { id: p.adminId }, select: { mfaSecretEnc: true } });
-    if (!emailOtpEnabledFor(p.email) && own?.mfaSecretEnc) throw new ApiError(404, "NOT_FOUND", "Route not found");
     await this.issueEmailCode(p.adminId, p.email, fp);
     return { sent: true, expiresInMinutes: ADMIN_EMAIL_CODE_TTL_MINUTES, resendAfterSeconds: ADMIN_EMAIL_CODE_COOLDOWN_SECONDS };
   }
 
-  async login(input: { email: unknown; password: unknown; totpCode: unknown; emailCode?: unknown; trustedDeviceToken?: unknown }, fp: RequestFingerprint) {
+  async login(input: { email: unknown; password: unknown; totpCode?: unknown; emailCode?: unknown; trustedDeviceToken?: unknown }, fp: RequestFingerprint) {
     const email = String(input.email ?? "").trim().toLowerCase();
     const user = await prisma.user.findUnique({ where: { email } });
     const admin = user ? await prisma.adminAccount.findUnique({ where: { userId: user.id } }) : null;
     const dummy = "scrypt$32768$8$1$AAAAAAAAAAAAAAAAAAAAAA$" + "A".repeat(86);
     const pwOk = await verifyPassword(String(input.password ?? ""), user?.passwordHash ?? dummy, this.config.passwordPepper).catch(() => false);
     if (admin?.lockedUntil && admin.lockedUntil > new Date()) { await this.audit(admin.id, "ADMIN_LOGIN", "DENIED", fp, undefined, { reason: "locked" }); throw new ApiError(429, "ADMIN_LOCKED", lockedMessageMn(admin.lockedUntil), { retryAfterSeconds: Math.max(1, Math.ceil((admin.lockedUntil.getTime() - Date.now()) / 1000)) }); }
-    const { secret, unreadable } = this.readSecret(admin?.mfaSecretEnc);
-    const step = secret ? verifyTotp(secret, String(input.totpCode ?? "").replace(/\s/g, "")) : null;
-    const replay = step !== null && admin && BigInt(step) <= admin.mfaLastStep;
     const denied = async (reason: string) => {
       if (admin) await this.recordFailure(admin.id);
       await this.audit(admin?.id ?? null, "ADMIN_LOGIN", "FAILURE", fp, undefined, { reason });
       throw new ApiError(401, "ADMIN_LOGIN_FAILED", MSG.badLogin);
     };
-    /* E-MAIL CODE PATH: only for opted-in accounts that did not submit a TOTP code. The code is mailed only AFTER the password has been verified (no mail bombing, no account probing). */
-    /* An administrator WITHOUT an authenticator (e.g. created in the console) always uses the e-mail code; one with an authenticator keeps it (and may opt in to the e-mail code as before). The code also verifies the
-       account's e-mail address, and a trusted device (revocable 30-day cookie bound to this user) skips the code. */
+    /* EVERY administrator signs in the same way as every customer: password, then a six-digit code mailed to the account's own address, on every device that is not trusted. The code is mailed only AFTER the password
+       has been verified (no mail bombing, no account probing). A trusted device (revocable 30-day cookie bound to this user) skips the code. A successful code also verifies the account's e-mail address. */
     const trusted = !!(admin && user && input.trustedDeviceToken && await isTrustedDevice(user.id, String(input.trustedDeviceToken)));
-    if (admin && user && (emailOtpEnabledFor(email) || !admin.mfaSecretEnc) && !String(input.totpCode ?? "").trim()) {
+    if (admin && user) {
       if (user.status !== "ACTIVE" || user.erasedAt || !pwOk || admin.status === "DISABLED") return denied(!pwOk ? "password" : "disabled");
       if (trusted && !String(input.emailCode ?? "").trim()) { /* trusted device: no code */ }
       else if (!String(input.emailCode ?? "").trim()) {
@@ -239,35 +211,7 @@ export class AdminService {
       await this.audit(admin.id, "ADMIN_LOGIN", "SUCCESS", fp, undefined, { method: "email_code" });
       return { token: token2, expiresAt: session2.expiresAt, userId: user.id, admin: { id: admin.id, email: user.email, role: admin.role as AdminRole, permissions: ROLE_PERMISSIONS[admin.role as AdminRole] } };
     }
-    if (!admin || !user || user.status !== "ACTIVE" || user.erasedAt || (user.emailVerificationRequired && !user.emailVerifiedAt) || !pwOk || admin.status === "DISABLED" || step === null || replay) return denied(!admin ? "unknown" : admin.status === "DISABLED" ? "disabled" : !pwOk ? "password" : unreadable ? "mfa_secret_unreadable" : "mfa");
-    /* EVERY administrator on an untrusted device also proves the mailbox: authenticator code AND a six-digit e-mail code. The authenticator code is only CHECKED here (the step is spent in the transaction below,
-       on the final request), so asking for the e-mail code never burns it. A trusted device (revocable cookie bound to this user) skips only the e-mail code, never the authenticator. */
-    if (loginDeviceVerificationOn() && !trusted) {
-      if (!String(input.emailCode ?? "").trim()) {
-        await this.issueEmailCode(admin.id, user.email, fp);
-        return { mfaRequired: "EMAIL_CODE" as const, expiresInMinutes: ADMIN_EMAIL_CODE_TTL_MINUTES, resendAfterSeconds: ADMIN_EMAIL_CODE_COOLDOWN_SECONDS };
-      }
-      const claim = await this.claimEmailCode(admin.id, input.emailCode);
-      if (claim !== "OK") {
-        await this.recordFailure(admin.id); await this.audit(admin.id, "ADMIN_LOGIN", "FAILURE", fp, undefined, { reason: "email_code_" + claim.toLowerCase() });
-        if (claim === "EXPIRED") throw new ApiError(401, "ADMIN_CODE_EXPIRED", "Кодын хугацаа дууссан эсвэл ашиглагдсан байна. «Код дахин авах» товчийг дарна уу.");
-        if (claim === "ATTEMPTS") throw new ApiError(429, "ADMIN_CODE_ATTEMPTS", "Код хэт олон удаа буруу оруулагдсан байна. «Код дахин авах» товчоор шинэ код аваарай.");
-        throw new ApiError(401, "ADMIN_CODE_INVALID", "Баталгаажуулах код буруу байна.");
-      }
-    }
-    const token = "adm_" + randomBytes(32).toString("base64url"); const now = Date.now();
-    /* Check-and-advance of the TOTP step is ONE conditional UPDATE: of any number of simultaneous requests carrying the same code, exactly one matches "mfaLastStep < step". A concurrent disable is also respected (status must still not be DISABLED). */
-    const session = await prisma.$transaction(async tx => {
-      await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
-      const currentUser = await tx.user.findUnique({where:{id:user.id}});
-      if(!currentUser || currentUser.status !== "ACTIVE" || currentUser.erasedAt || currentUser.passwordHash !== user.passwordHash || currentUser.tokenVersion !== user.tokenVersion) return null;
-      const adv = await tx.adminAccount.updateMany({ where: { id: admin.id, mfaLastStep: { lt: BigInt(step) }, status: { not: "DISABLED" }, OR:[{lockedUntil:null},{lockedUntil:{lte:new Date()}}] }, data: { failedLogins: 0, lockedUntil: null, mfaLastStep: BigInt(step), status: "ACTIVE" } });
-      if (adv.count !== 1) return null;
-      return tx.adminSession.create({ data: { adminId: admin.id, tokenHash: sha(token), expiresAt: new Date(now + this.config.adminSessionIdleMinutes * 60_000), absoluteExpiresAt: new Date(now + 8 * 3_600_000), reauthAt: new Date(now), ipHash: hashAuditValue(fp.ip, this.config.auditSalt), userAgentHash: hashAuditValue(fp.userAgent, this.config.auditSalt) } });
-    });
-    if (!session) return denied("mfa_replay");
-    await this.audit(admin.id, "ADMIN_LOGIN", "SUCCESS", fp);
-    return { token, expiresAt: session.expiresAt, userId: user.id, admin: { id: admin.id, email: user.email, role: admin.role as AdminRole, permissions: ROLE_PERMISSIONS[admin.role as AdminRole] } };
+    return denied(!admin || !user ? "unknown" : !pwOk ? "password" : "disabled");
   }
 
   /** Resolves the bearer token to a principal. Role, status and permissions always come from the database, never from the request. */
@@ -289,42 +233,23 @@ export class AdminService {
     if (opts.sensitive && (!p.reauthAt || Date.now() - p.reauthAt.getTime() > REAUTH_WINDOW_MS)) { await this.audit(p.adminId,"ADMIN_REAUTH_REQUIRED","DENIED",fp,undefined,{permission}); throw new ApiError(401, "ADMIN_REAUTH_REQUIRED", MSG.reauth); }
   }
 
-  async reauth(p: AdminPrincipal, input: { password: unknown; totpCode: unknown }, fp: RequestFingerprint) {
+  /** Re-confirmation before a sensitive change: the current password and a fresh six-digit code mailed to the account's own address. */
+  async reauth(p: AdminPrincipal, input: { password: unknown; emailCode?: unknown }, fp: RequestFingerprint) {
     const admin = await prisma.adminAccount.findUnique({ where: { id: p.adminId } });
     const user = admin ? await prisma.user.findUnique({ where: { id: admin.userId } }) : null;
     const pwOk = user ? await verifyPassword(String(input.password ?? ""), user.passwordHash, this.config.passwordPepper).catch(() => false) : false;
-    const { secret, unreadable } = this.readSecret(admin?.mfaSecretEnc);
-    const step = secret ? verifyTotp(secret, String(input.totpCode ?? "").replace(/\s/g, "")) : null;
     const deny = async (reason: string) => {
       if (admin) await this.recordFailure(admin.id);
       await this.audit(p.adminId, "ADMIN_REAUTH", "FAILURE", fp, undefined, { reason });
       throw new ApiError(401, "ADMIN_LOGIN_FAILED", MSG.badLogin);
     };
-    if (admin && user && (emailOtpEnabledFor(user.email) || !admin.mfaSecretEnc) && String((input as any).emailCode ?? "").trim() && !String(input.totpCode ?? "").trim()) {
-      if (admin.status !== "ACTIVE" || (admin.lockedUntil && admin.lockedUntil > new Date()) || user.status !== "ACTIVE" || user.erasedAt || !pwOk) return deny(!pwOk ? "password" : "state");
-      if ((await this.claimEmailCode(admin.id, (input as any).emailCode)) !== "OK") return deny("email_code");
-      const sess = await prisma.adminSession.findUnique({ where: { id: p.sessionId } }); const nowR = new Date();
-      if (!sess || sess.revokedAt || sess.expiresAt <= nowR || sess.absoluteExpiresAt <= nowR) return deny("session");
-      await prisma.adminSession.update({ where: { id: p.sessionId }, data: { reauthAt: nowR } });
-      await prisma.adminAccount.update({ where: { id: admin.id }, data: { failedLogins: 0 } });
-      await this.audit(p.adminId, "ADMIN_REAUTH", "SUCCESS", fp, undefined, { method: "email_code" });
-      return;
-    }
-    if (!admin || admin.status !== "ACTIVE" || (admin.lockedUntil && admin.lockedUntil > new Date()) || !user || user.status !== "ACTIVE" || user.erasedAt || !pwOk || step === null || BigInt(step) <= admin.mfaLastStep) return deny(!admin ? "unknown" : !pwOk ? "password" : unreadable ? "mfa_secret_unreadable" : "mfa");
-    /* atomic check-and-advance (see login) */
-    const advanced = await prisma.$transaction(async tx => {
-      await tx.$queryRaw`SELECT id FROM users WHERE id = ${user!.id} FOR UPDATE`;
-      const currentUser=await tx.user.findUnique({where:{id:user!.id}});
-      const session=await tx.adminSession.findUnique({where:{id:p.sessionId}});
-      const now=new Date();
-      if(!currentUser || currentUser.status!=="ACTIVE" || currentUser.erasedAt || currentUser.passwordHash!==user!.passwordHash || currentUser.tokenVersion!==user!.tokenVersion || !session || session.revokedAt || session.expiresAt<=now || session.absoluteExpiresAt<=now) return false;
-      const adv = await tx.adminAccount.updateMany({ where: { id: admin.id, mfaLastStep: { lt: BigInt(step) }, status: "ACTIVE", OR:[{lockedUntil:null},{lockedUntil:{lte:new Date()}}] }, data: { mfaLastStep: BigInt(step), failedLogins: 0 } });
-      if (adv.count !== 1) return false;
-      await tx.adminSession.update({ where: { id: p.sessionId }, data: { reauthAt: new Date() } });
-      return true;
-    });
-    if (!advanced) return deny("mfa_replay");
-    await this.audit(p.adminId, "ADMIN_REAUTH", "SUCCESS", fp);
+    if (!admin || !user || admin.status !== "ACTIVE" || (admin.lockedUntil && admin.lockedUntil > new Date()) || user.status !== "ACTIVE" || user.erasedAt || !pwOk) return deny(!pwOk ? "password" : "state");
+    if ((await this.claimEmailCode(admin.id, input.emailCode)) !== "OK") return deny("email_code");
+    const sess = await prisma.adminSession.findUnique({ where: { id: p.sessionId } }); const nowR = new Date();
+    if (!sess || sess.revokedAt || sess.expiresAt <= nowR || sess.absoluteExpiresAt <= nowR) return deny("session");
+    await prisma.adminSession.update({ where: { id: p.sessionId }, data: { reauthAt: nowR } });
+    await prisma.adminAccount.update({ where: { id: admin.id }, data: { failedLogins: 0 } });
+    await this.audit(p.adminId, "ADMIN_REAUTH", "SUCCESS", fp, undefined, { method: "email_code" });
   }
 
   async logout(p: AdminPrincipal, fp: RequestFingerprint) {

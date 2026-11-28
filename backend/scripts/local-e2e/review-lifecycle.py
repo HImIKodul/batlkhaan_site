@@ -14,9 +14,8 @@ line = [l for l in out.stdout.splitlines() if l.startswith("FIXTURES ")]
 if not line: print(out.stdout[-800:], out.stderr[-800:]); sys.exit("fixture generation failed")
 fx = json.loads(line[0][9:]); FIX = fx["fixtures"]; print(f"fixtures {fx['runTag']} created in {time.time()-t0:.0f}s")
 
-# ---- sessions (authenticator + e-mail code for Sadmin; e-mail code for the reviewer; trusted-device cookies are reused between runs)
-while (time.time() % 30) > 4: time.sleep(0.5)
-sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], cr["ADMIN_TOTP_SECRET"], name="sadmin"); check("Sadmin signs in (authenticator + e-mail code / trusted device)", s == 200, str(d)[:200]); st = d["data"]["token"]
+# ---- sessions (e-mail code for every account; trusted-device cookies are reused between runs)
+sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], None, name="sadmin"); check("Sadmin signs in (e-mail code / trusted device)", s == 200, str(d)[:200]); st = d["data"]["token"]
 ac, s, d = admin_login(REV_EMAIL, REV_PW, None, name="reviewer"); check("Admin signs in", s == 200, str(d)[:200]); at = d["data"]["token"]
 AD = lambda m, p, b=None: ac.call(m, "/admin" + p, b, tok=at)
 cu = Client("democustomer"); s, d = cu.call("POST", "/auth/login", {"email": qa["email"], "password": qa["password"]})

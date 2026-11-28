@@ -10,9 +10,8 @@ cid = cr["CUSTOMER_COMPANY_ID"]
 # ---- three accounts only
 check("exactly three accounts in the database", sql("select count(*) from users") == "3" and sql("select count(*) from admin_accounts") == "2")
 check("no other company, QA record or review of another company", sql("select count(*) from companies") == "1" and sql("select count(*) from users where email like 'qa%' or email like 'erased%'") == "0")
-# ---- all three authenticate (new device: e-mail code; Sadmin: authenticator + code)
-while (time.time() % 30) > 4: time.sleep(0.5)
-sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], cr["ADMIN_TOTP_SECRET"]); check("Sadmin signs in (authenticator + e-mail code)", s == 200 and d["data"]["admin"]["role"] == "SUPER_ADMIN", str(d)[:160]); st = d["data"]["token"]
+# ---- all three authenticate with e-mail + password + e-mail code
+sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], None); check("Sadmin signs in (e-mail code)", s == 200 and d["data"]["admin"]["role"] == "SUPER_ADMIN", str(d)[:160]); st = d["data"]["token"]
 ac, s, d = admin_login(cr["REVIEWER_EMAIL"], cr["REVIEWER_PASSWORD"], None); check("Admin signs in (e-mail code)", s == 200 and d["data"]["admin"]["role"] == "REPORT_REVIEWER", str(d)[:160]); at = d["data"]["token"]
 cu = Client(); s, d = cu.call("POST", "/auth/login", {"email": cr["CUSTOMER_EMAIL"], "password": cr["CUSTOMER_PASSWORD"]}); check("User: password accepted, e-mail code required", d.get("data", {}).get("verificationRequired") is True)
 s, d = cu.call("POST", "/auth/login/verify", {"email": cr["CUSTOMER_EMAIL"], "password": cr["CUSTOMER_PASSWORD"], "code": code_for(cr["CUSTOMER_EMAIL"])}); check("User signs in (e-mail code)", s == 200, str(d)[:160]); ct = d["data"]["accessToken"]

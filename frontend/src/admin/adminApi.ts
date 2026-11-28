@@ -3,7 +3,7 @@ import { DOMAIN_ORDER,DOMAIN_NAME_MN } from '../data/domainOrder';
    All permission decisions are made by the server; the role shown in the UI is only used to hide controls that would be refused anyway. */
 const BASE=(import.meta.env.VITE_API_BASE_URL??'/api/v1').replace(/\/$/,'')+'/admin';
 const KEY='mmri.adminToken.v1';
-export type AdminMe={id:string;email:string;role:'SUPER_ADMIN'|'REPORT_REVIEWER'|'BILLING_REVIEWER';permissions:string[];unreadNotifications:number;reauthValid:boolean;usesEmailCode?:boolean};
+export type AdminMe={id:string;email:string;role:'SUPER_ADMIN'|'REPORT_REVIEWER'|'BILLING_REVIEWER';permissions:string[];unreadNotifications:number;reauthValid:boolean};
 export class AdminApiError extends Error{status:number;code?:string;details?:any;constructor(status:number,message:string,code?:string,details?:any){super(message);this.status=status;this.code=code;this.details=details}}
 export const adminSession={get token(){try{return sessionStorage.getItem(KEY)}catch{return null}},set token(v:string|null){try{v?sessionStorage.setItem(KEY,v):sessionStorage.removeItem(KEY)}catch{/* ignore */}}};
 let reauthHandler:(()=>Promise<boolean>)|null=null;
@@ -21,9 +21,9 @@ async function request<T>(method:string,path:string,body?:unknown,retried=false)
  throw new AdminApiError(r.status,safe(j?.error?.message),code,j?.error?.details);
 }
 export const adminApi={
- login:(body:{email:string;password:string;totpCode?:string;emailCode?:string;trustDevice?:boolean})=>request<{token?:string;expiresAt?:string;admin?:{id:string;email:string;role:AdminMe['role']};mfaRequired?:'EMAIL_CODE';resendAfterSeconds?:number}>('POST','/auth/login',{totpCode:'',...body}),
+ login:(body:{email:string;password:string;emailCode?:string;trustDevice?:boolean})=>request<{token?:string;expiresAt?:string;admin?:{id:string;email:string;role:AdminMe['role']};mfaRequired?:'EMAIL_CODE';resendAfterSeconds?:number;expiresInMinutes?:number}>('POST','/auth/login',body),
  sendReauthCode:()=>request<{sent:boolean}>('POST','/auth/email-code',{}),
- logout:()=>request('POST','/auth/logout',{}),me:()=>request<AdminMe>('GET','/auth/me'),reauth:(password:string,totpCode:string,emailCode?:string)=>request('POST','/auth/reauth',emailCode?{password,emailCode}:{password,totpCode}),
+ logout:()=>request('POST','/auth/logout',{}),me:()=>request<AdminMe>('GET','/auth/me'),reauth:(password:string,emailCode:string)=>request('POST','/auth/reauth',{password,emailCode}),
  get:<T=any>(path:string)=>request<T>('GET',path),post:<T=any>(path:string,body:unknown={})=>request<T>('POST',path,body),put:<T=any>(path:string,body:unknown)=>request<T>('PUT',path,body)
 };
 export const fmt=(v?:string|Date|null)=>{if(!v)return '-';const d=new Date(v);if(Number.isNaN(d.getTime()))return '-';const z=(n:number)=>String(n).padStart(2,'0');return `${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`}

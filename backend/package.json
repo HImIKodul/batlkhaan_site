@@ -174,7 +174,6 @@
     "backend:step19:ops:verify": "npm run backend:step19:ops:static && npm run backend:step19:ops:regression",
     "backend:step20:final:verify": "cd .. && bash VERIFY_BACKEND_STEP20_FINAL_FREEZE.sh",
     "admin:bootstrap": "tsx src/admin-cli.ts bootstrap",
-    "admin:reset-mfa": "tsx src/admin-cli.ts reset-mfa",
     "admin:disable": "tsx src/admin-cli.ts disable",
     "admin:enable": "tsx src/admin-cli.ts enable",
     "admin:list": "tsx src/admin-cli.ts list",

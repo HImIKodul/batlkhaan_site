@@ -36,8 +36,7 @@ Start from `backend/.env.example`. For local work set at least:
 | Admin | `http://127.0.0.1:5291/#/admin` | `dev.reviewer@mmri.test` |
 | User (example company "Алтан Говь Трейд ХХК") | `http://127.0.0.1:5291/#/login` | `dev.customer@mmri.test` |
 
-Passwords and the authenticator secret live ONLY in `~/mmri-secrets/local-dev-credentials.env` (never in Git). On a new device every account also needs the six-digit e-mail code; the Sadmin additionally needs the authenticator code
-(`python3 ~/mmri-secrets/local-admin-code.py`). Latest e-mail code of one account (the mock mailer writes it to `backend/.mock-mailbox/outbox.jsonl`):
+Passwords live ONLY in `~/mmri-secrets/local-dev-credentials.env` (never in Git). On a new device every account (Sadmin, Admin, User) signs in with e-mail + password + the six-digit e-mail code; there is no authenticator. Latest e-mail code of one account (the mock mailer writes it to `backend/.mock-mailbox/outbox.jsonl`):
 
     python3 backend/scripts/local-mail-code.py dev.customer@mmri.test
 

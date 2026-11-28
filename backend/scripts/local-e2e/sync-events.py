@@ -1,7 +1,6 @@
 import sys, threading, time
 exec(open('admin-flow.py').read().split("# ---------- A.")[0])
-while (time.time() % 30) > 4: time.sleep(0.5)
-sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], cr["ADMIN_TOTP_SECRET"], name="sadmin"); st = d["data"]["token"]; SA = lambda m, p, b=None: sa.call(m, "/admin" + p, b, tok=st)
+sa, s, d = admin_login(cr["ADMIN_EMAIL"], cr["ADMIN_PASSWORD"], None, name="sadmin"); st = d["data"]["token"]; SA = lambda m, p, b=None: sa.call(m, "/admin" + p, b, tok=st)
 cu = Client("devcustomer"); s, d = cu.call("POST", "/auth/login", {"email": cr["CUSTOMER_EMAIL"], "password": cr["CUSTOMER_PASSWORD"]})
 if d.get("data", {}).get("verificationRequired"): s, d = cu.call("POST", "/auth/login/verify", {"email": cr["CUSTOMER_EMAIL"], "password": cr["CUSTOMER_PASSWORD"], "code": code_for(cr["CUSTOMER_EMAIL"]), "trustDevice": True})
 ct = d["data"]["accessToken"]; cid = cr["CUSTOMER_COMPANY_ID"]; DOM = "operations"; TAG = "QA-sync-" + str(int(time.time()))
